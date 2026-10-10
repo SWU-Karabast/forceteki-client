@@ -108,11 +108,18 @@ const styles = {
             transform: 'translateY(-1px)'
         },
     },
-    noEffectIndicator: {
+    // stacks the card's status tags (e.g. "No effect", "Gained") in its top-left corner
+    tagStack: {
         position: 'absolute',
         top: '0.35rem',
         left: '0.35rem',
         zIndex: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: '0.25rem',
+    },
+    tag: {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -130,6 +137,10 @@ const styles = {
         lineHeight: 1,
         textTransform: 'uppercase',
         userSelect: 'none',
+    },
+    gainedTag: {
+        backgroundColor: 'rgba(33, 65, 74, 0.88)',
+        border: '1px solid rgba(102, 229, 255, 0.85)',
     },
     // sits at the top-left of the frontmost card, straddling its top edge. Tweak `top`/`left` to taste.
     countBadge: {
@@ -198,7 +209,7 @@ export const isBaseSourceCard = (sourceCard?: PopupSourceCard): boolean => {
     return sourceType?.toLowerCase() === CardType.Base;
 };
 
-export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects, count }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean, count?: number }) {
+export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects, gained, count }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean, gained?: boolean, count?: number }) {
     const backgroundImage = useCardImageURL(sourceCard);
     const isLandscapePreview = isBaseSourceCard(sourceCard);
     const isNoEffect = !hasLegalEffects;
@@ -225,14 +236,28 @@ export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffec
                 >
                     <RichText text={text} />
                 </Button>
-                {isNoEffect && (
-                    <Box
-                        component="span"
-                        aria-label="This choice has no effect"
-                        onClick={onClick}
-                        sx={styles.noEffectIndicator}
-                    >
-                        No effect
+                {(isNoEffect || gained) && (
+                    <Box sx={styles.tagStack}>
+                        {isNoEffect && (
+                            <Box
+                                component="span"
+                                aria-label="This choice has no effect"
+                                onClick={onClick}
+                                sx={styles.tag}
+                            >
+                                No effect
+                            </Box>
+                        )}
+                        {gained && (
+                            <Box
+                                component="span"
+                                aria-label="This ability is gained from this card"
+                                onClick={onClick}
+                                sx={[styles.tag, styles.gainedTag]}
+                            >
+                                Gained
+                            </Box>
+                        )}
                     </Box>
                 )}
                 {backgroundImage && <ViewCardButton imageUrl={backgroundImage} isLandscape={isLandscapePreview} />}

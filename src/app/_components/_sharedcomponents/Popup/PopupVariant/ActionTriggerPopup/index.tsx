@@ -81,6 +81,7 @@ export default function ActionTriggerPopupModal({ data }: ButtonProps) {
                                 cardText={button.text}
                                 sourceCard={button.sourceCard}
                                 hasLegalEffects={button.hasLegalEffects}
+                                gained={button.gained}
                                 count={button.count}
                                 onTrigger={() => sendGameMessage([button.command, button.arg, button.uuid])}
                                 // reserve the fence + Pass row on every column when any trigger is optional
