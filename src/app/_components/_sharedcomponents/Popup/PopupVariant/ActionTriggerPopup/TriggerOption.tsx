@@ -15,6 +15,8 @@ interface ITriggerOptionProps {
     onTrigger: () => void;
     sourceCard?: PopupSourceCard;
     hasLegalEffects?: boolean;
+    // true when the ability was gained from the source card rather than printed on the clicked card
+    gained?: boolean;
     count?: number;
     // when present, the card's ability is optional: render the "Or" fence and an inset Pass button
     // beneath the card as the alternative choice for the same ability
@@ -54,6 +56,7 @@ export default function TriggerOption({
     onTrigger,
     sourceCard,
     hasLegalEffects,
+    gained,
     count,
     pass,
     reservePassSpace,
@@ -64,6 +67,7 @@ export default function TriggerOption({
                 text={cardText}
                 sourceCard={sourceCard}
                 hasLegalEffects={hasLegalEffects}
+                gained={gained}
                 count={count}
                 onClick={onTrigger}
             />
