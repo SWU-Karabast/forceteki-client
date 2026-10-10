@@ -24,8 +24,9 @@ export const PASS_BUTTON_WIDTH = `calc(${CARD_WIDTH} - 2rem)`;
 // shrinks to fit instead of overflowing the card. `lines` clamps the caption (with an ellipsis) as a last
 // resort, sized to what fits on the card at each breakpoint.
 const CAPTION_TIERS = [
-    { maxLength: 80, sx: { fontSize: { xs: '11px', lg: '15px' }, lineHeight: 1.3 }, lines: { xs: 7, lg: 8 } },
-    { maxLength: 120, sx: { fontSize: { xs: '10px', lg: '13px' }, lineHeight: 1.3 }, lines: { xs: 7, lg: 9 } },
+    { maxLength: 30, sx: { fontSize: { xs: '13px', lg: '18px' }, lineHeight: 1.25 }, lines: { xs: 5, lg: 5 } },
+    { maxLength: 80, sx: { fontSize: { xs: '11px', lg: '15px' }, lineHeight: 1.4 }, lines: { xs: 6, lg: 8 } },
+    { maxLength: 120, sx: { fontSize: { xs: '10px', lg: '13px' }, lineHeight: 1.4 }, lines: { xs: 7, lg: 9 } },
     { maxLength: Infinity, sx: { fontSize: { xs: '9px', lg: '11.5px' }, lineHeight: 1.25 }, lines: { xs: 8, lg: 11 } },
 ];
 
