@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Box, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
 import type { ISegmentedControlProps } from './SegmentedControl.types';
 
@@ -81,20 +82,24 @@ export default function SegmentedControl<TValue extends string>({
     disabled = false,
 }: ISegmentedControlProps<TValue>) {
     const selectedIndex = options.findIndex((option) => option.value === value);
-    if (selectedIndex < 0) {
-        throw new Error(`SegmentedControl '${name}' has no option for '${value}'`);
-    }
+    useEffect(() => {
+        if (selectedIndex < 0) {
+            console.warn(`SegmentedControl '${name}' has no option for '${value}'`);
+        }
+    }, [name, value, selectedIndex]);
 
     return (
         <Box sx={styles.container}>
-            <Box
-                aria-hidden="true"
-                sx={{
-                    ...styles.indicator,
-                    width: `calc((100% - 6px) / ${options.length})`,
-                    transform: `translateX(${selectedIndex * 100}%)`,
-                }}
-            />
+            {selectedIndex >= 0 && (
+                <Box
+                    aria-hidden="true"
+                    sx={{
+                        ...styles.indicator,
+                        width: `calc((100% - 6px) / ${options.length})`,
+                        transform: `translateX(${selectedIndex * 100}%)`,
+                    }}
+                />
+            )}
             <RadioGroup
                 name={name}
                 aria-label={label}
