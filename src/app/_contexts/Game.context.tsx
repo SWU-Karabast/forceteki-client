@@ -13,7 +13,7 @@ import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
 import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
-import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { PopupButton, PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { ZoneName } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -134,6 +134,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
+            }
+            else if (promptType === 'actionSelection' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('actionTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    buttons: buttons.filter((button: PopupButton) => button.sourceCard),
+                    footerButtons: buttons.filter((button: PopupButton) => !button.sourceCard),
+                    source: PopupSource.PromptState
+                });
             }
             else if (hasSelectedCards(gameState, ['groundArena','spaceArena']) && buttons.length == 2) {
                 return;

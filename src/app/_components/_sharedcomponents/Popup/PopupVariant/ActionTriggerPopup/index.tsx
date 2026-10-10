@@ -2,8 +2,10 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { Box, IconButton, Typography } from '@mui/material';
 import { MouseEvent, useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
+import GradientBorderButton from '@/app/_components/_sharedcomponents/_styledcomponents/GradientBorderButton';
 import {
     containerStyle,
+    footerStyle,
     headerStyle,
     minimizeButtonStyle,
     textStyle,
@@ -38,6 +40,10 @@ const styles = {
         paddingInline: '1rem',
         marginTop: '0.25rem',
         marginBottom: '2rem',
+    },
+    footer: {
+        ...footerStyle,
+        marginTop: 0,
     },
 };
 
@@ -91,6 +97,18 @@ export default function ActionTriggerPopupModal({ data }: ButtonProps) {
                             />
                         ))}
                     </Box>
+                    {data.footerButtons && data.footerButtons.length > 0 && (
+                        <Box sx={styles.footer}>
+                            {data.footerButtons.map((button: PopupButton, index: number) => (
+                                <GradientBorderButton
+                                    key={`${button.uuid}:footer:${index}`}
+                                    onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
+                                >
+                                    <RichText text={button.text} />
+                                </GradientBorderButton>
+                            ))}
+                        </Box>
+                    )}
                 </>
             )}
         </Box>
