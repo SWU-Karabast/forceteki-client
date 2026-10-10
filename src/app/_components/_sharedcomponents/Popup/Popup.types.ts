@@ -57,6 +57,8 @@ export type ActionTriggerPopup = {
     title: string;
     description?: string;
     buttons: PopupButton[];
+    // plain text buttons (e.g. Cancel) rendered below the card row
+    footerButtons?: PopupButton[];
     source: PopupSource;
 };
 
