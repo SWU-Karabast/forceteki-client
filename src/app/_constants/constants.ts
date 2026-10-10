@@ -11,6 +11,7 @@ export enum SwuGameFormat {
     Eternal = 'eternal',
     Limited = 'limited',
     Open = 'open',
+    FauxSuns = 'fauxSuns',
 }
 
 export enum CardPool {
@@ -97,6 +98,7 @@ export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Open]: 'Open',
     [SwuGameFormat.Eternal]: 'Eternal',
     [SwuGameFormat.Limited]: 'Limited',
+    [SwuGameFormat.FauxSuns]: 'Faux Suns',
 };
 
 export const FormatTagLabels: Record<SwuGameFormat, string> = {
@@ -104,6 +106,7 @@ export const FormatTagLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Open]: 'Open',
     [SwuGameFormat.Eternal]: 'Eternal',
     [SwuGameFormat.Limited]: 'Limited',
+    [SwuGameFormat.FauxSuns]: 'Faux Suns',
 };
 
 export const SupportedDeckSources: readonly string[] = supportedDeckHosts;
