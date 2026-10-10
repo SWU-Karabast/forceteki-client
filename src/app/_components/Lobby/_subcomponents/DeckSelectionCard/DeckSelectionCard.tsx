@@ -13,8 +13,6 @@ import {
     FormControlLabel,
     Divider,
     FormControl,
-    Radio,
-    RadioGroup,
     CircularProgress,
 } from '@mui/material';
 import { Info } from '@mui/icons-material';
@@ -22,6 +20,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
+import SegmentedControl from '@/app/_components/_sharedcomponents/SegmentedControl/SegmentedControl';
 import { fetchDeckData, determineDeckSource, DeckSource, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures,
@@ -594,45 +593,18 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
             {lobbyState && (
                 <>
                     <Divider sx={{ mt: 1, borderColor: '#666' }} />
-                    <FormControl component="fieldset" sx={styles.formControlStyle}>
-                        <RadioGroup
-                            row
+                    <FormControl component="fieldset" fullWidth sx={styles.formControlStyle}>
+                        <SegmentedControl
+                            name="deckSource"
+                            label="Deck source"
                             value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
-                            onChange={(
-                                e: ChangeEvent<HTMLInputElement>,
-                                value: string
-                            ) => handleChangeDeckSelectionType(value)}
-                        >
-                            {isSwuStatsLinked && (
-                                <FormControlLabel
-                                    value="SWU Stats Deck"
-                                    control={<Radio sx={styles.checkboxStyle} />}
-                                    label={
-                                        <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                            SWU Stats Deck
-                                        </Typography>
-                                    }
-                                />
-                            )}
-                            <FormControlLabel
-                                value="Saved Deck"
-                                control={<Radio sx={styles.checkboxStyle} />}
-                                label={
-                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        Saved Deck
-                                    </Typography>
-                                }
-                            />
-                            <FormControlLabel
-                                value="New Deck"
-                                control={<Radio sx={styles.checkboxStyle} />}
-                                label={
-                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        New Deck
-                                    </Typography>
-                                }
-                            />
-                        </RadioGroup>
+                            onChange={handleChangeDeckSelectionType}
+                            options={[
+                                ...(isSwuStatsLinked ? [{ value: 'SWU Stats Deck', label: 'SWU Stats Deck' }] : []),
+                                { value: 'Saved Deck', label: 'Saved Deck' },
+                                { value: 'New Deck', label: 'New Deck' },
+                            ]}
+                        />
                     </FormControl>
                     {showSavedDecks && !useSwuStatsDecks && (
                         <FormControl fullWidth sx={styles.formControlStyle}>

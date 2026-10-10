@@ -6,10 +6,9 @@ import {
     CircularProgress,
     FormControl,
     FormControlLabel,
+    FormLabel,
     Link,
     MenuItem,
-    Radio,
-    RadioGroup,
     Tooltip,
     Typography
 } from '@mui/material';
@@ -20,7 +19,7 @@ import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchmakingPreference, MatchmakingPreferenceLabels } from '@/app/_constants/constants';
 import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -32,6 +31,8 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
+import FormatInfoPopup from '../FormatSelectionForm/FormatInfoPopup';
+import SegmentedControl from '../SegmentedControl/SegmentedControl';
 import GameAnnouncementBanner, { CurrentGameAnnouncement } from '../../GameAnnouncementBanner/GameAnnouncementBanner';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
@@ -116,6 +117,11 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
 
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
+    const [matchmakingInfoOpen, setMatchmakingInfoOpen] = useState(false);
+    const [matchmakingPreference, setMatchmakingPreference] = useState<MatchmakingPreference>(() => {
+        const stored = localStorage.getItem('matchmakingPreference');
+        return Object.values(MatchmakingPreference).find((preference) => preference === stored) ?? MatchmakingPreference.NoPreference;
+    });
     const [deckLinkTouched, setDeckLinkTouched] = useState<boolean>(false);
     const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
     const isSwuStatsDeckSelectionLoading = showSavedDecks && useSwuStatsDecks && isSwuStatsLinked && isLoadingSwuStatsDecks;
@@ -138,6 +144,10 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     useEffect(() => {
         handleJsonDeck(deckLink);
     }, [deckLink]);
+
+    useEffect(() => {
+        localStorage.setItem('matchmakingPreference', matchmakingPreference);
+    }, [matchmakingPreference]);
 
     const handleChangeDeckSelectionType = (value: string) => {
         if (value === 'SWU Stats Deck') {
@@ -243,6 +253,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 format: queueConfig.format,
                 cardPool: queueConfig.cardPool,
                 gamesToWinMode: queueConfig.gamesToWinMode,
+                matchmakingPreference,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -266,7 +277,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     setModalOpen(true)
                 }else if(response.status === 400) {
                     // TODO: better error handling between BE and FE
-                    if (result.message?.includes('Invalid game format') || result.message?.includes('You must be logged in')) {
+                    if (result.message?.includes('Invalid game format') || result.message?.includes('Invalid matchmaking preference') || result.message?.includes('You must be logged in')) {
                         setError(null,result.message,'Join Queue Error','error');
                     } else {
                         setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');
@@ -308,6 +319,21 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         labelTextStyle: {
             mb: '.5em',
             color: 'white',
+        },
+        preferenceLabelRow: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            flexWrap: 'wrap',
+            gap: '0.25rem 0.5rem',
+        },
+        learnMoreStyle: {
+            color: 'lightblue',
+            textDecoration: 'underline',
+            textDecorationStyle: 'dotted',
+            fontSize: '0.7rem',
+            cursor: 'pointer',
+            '&:hover': { color: '#6BA3BE' },
         },
         labelTextStyleSecondary: {
             color: '#aaaaaa',
@@ -456,45 +482,18 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 Join Matchmaking Queue
             </Typography>
             <form onSubmit={handleJoinGameQueue}>
-                <FormControl component="fieldset" sx={styles.formControlStyle}>
-                    <RadioGroup
-                        row
+                <FormControl component="fieldset" fullWidth sx={styles.formControlStyle}>
+                    <SegmentedControl
+                        name="deckSource"
+                        label="Deck source"
                         value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
-                        onChange={(
-                            e: ChangeEvent<HTMLInputElement>,
-                            value: string
-                        ) => handleChangeDeckSelectionType(value)}
-                    >
-                        {isSwuStatsLinked && (
-                            <FormControlLabel
-                                value="SWU Stats Deck"
-                                control={<Radio sx={styles.checkboxStyle} />}
-                                label={
-                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        SWU Stats Deck
-                                    </Typography>
-                                }
-                            />
-                        )}
-                        <FormControlLabel
-                            value="Saved Deck"
-                            control={<Radio sx={styles.checkboxStyle} />}
-                            label={
-                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Saved Deck
-                                </Typography>
-                            }
-                        />
-                        <FormControlLabel
-                            value="New Deck"
-                            control={<Radio sx={styles.checkboxStyle} />}
-                            label={
-                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    New Deck
-                                </Typography>
-                            }
-                        />
-                    </RadioGroup>
+                        onChange={handleChangeDeckSelectionType}
+                        options={[
+                            ...(isSwuStatsLinked ? [{ value: 'SWU Stats Deck', label: 'SWU Stats Deck' }] : []),
+                            { value: 'Saved Deck', label: 'Saved Deck' },
+                            { value: 'New Deck', label: 'New Deck' },
+                        ]}
+                    />
                 </FormControl>
                 {showSavedDecks && !useSwuStatsDecks && (
                     <FormControl fullWidth sx={styles.formControlStyle}>
@@ -619,6 +618,46 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     </Typography>
                 )}
 
+                <FormControl component="fieldset" fullWidth aria-label="Matchmaking Preference" disabled={queueState} sx={styles.formControlStyle}>
+                    <FormLabel
+                        id="matchmaking-preference-label"
+                        component="legend"
+                        sx={{
+                            ...styles.labelTextStyle,
+                            width: '100%',
+                            '&.Mui-focused': { color: styles.labelTextStyle.color },
+                        }}
+                    >
+                        <Box component="span" sx={styles.preferenceLabelRow}>
+                            <Box component="span">Matchmaking Preference</Box>
+                            <Link
+                                component="button"
+                                type="button"
+                                underline="hover"
+                                aria-label="About Matchmaking Preference"
+                                sx={styles.learnMoreStyle}
+                                onClick={() => setMatchmakingInfoOpen(true)}
+                            >
+                                About Matchmaking Preference
+                            </Link>
+                        </Box>
+                    </FormLabel>
+                    <SegmentedControl
+                        name="matchmakingPreference"
+                        label="Matchmaking Preference"
+                        value={matchmakingPreference}
+                        onChange={setMatchmakingPreference}
+                        disabled={queueState}
+                        options={Object.values(MatchmakingPreference).map((preference) => ({
+                            value: preference,
+                            label: MatchmakingPreferenceLabels[preference],
+                        }))}
+                    />
+                    <Typography variant="body2" sx={styles.hintMessageStyle}>
+                        Matching broadens over time if no opponents are found
+                    </Typography>
+                </FormControl>
+
                 <FormatSelectionForm
                     format={queueConfig.format}
                     cardPool={queueConfig.cardPool}
@@ -646,6 +685,12 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     {queueState ? 'Queueing...' : 'Join Queue'}
                 </Button>
             </form>
+            <FormatInfoPopup
+                open={matchmakingInfoOpen}
+                onClose={() => setMatchmakingInfoOpen(false)}
+                topic="matchmakingPreference"
+                formatConfigs={formatConfigs}
+            />
         </Box>
     );
 };
