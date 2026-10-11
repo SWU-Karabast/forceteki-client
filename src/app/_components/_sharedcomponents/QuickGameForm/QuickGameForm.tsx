@@ -19,7 +19,7 @@ import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
     IDeckValidationFailures
 } from '@/app/_validators/DeckValidation/DeckValidationTypes';
-import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchmakingPreference, MatchmakingPreferenceLabels } from '@/app/_constants/constants';
+import { GamesToWinMode, SupportedDeckSources, SwuGameFormat, QueueFormatConfigs, IMatchConfiguration, DefaultFormat, CardPool, getFormatsFromConfig, getFormatConfig, MatchmakingCompetitivenessPreference, MatchmakingPreferenceLabels } from '@/app/_constants/constants';
 import { getDeckFetchErrorContent } from '@/app/_utils/deckFetchErrorContent';
 import { parseInputAsDeckData } from '@/app/_utils/checkJson';
 import { StoredDeck } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
@@ -118,9 +118,9 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
     // Common State
     const [queueState, setQueueState] = useState<boolean>(false)
     const [matchmakingInfoOpen, setMatchmakingInfoOpen] = useState(false);
-    const [matchmakingPreference, setMatchmakingPreference] = useState<MatchmakingPreference>(() => {
+    const [matchmakingPreference, setMatchmakingPreference] = useState<MatchmakingCompetitivenessPreference>(() => {
         const stored = localStorage.getItem('matchmakingPreference');
-        return Object.values(MatchmakingPreference).find((preference) => preference === stored) ?? MatchmakingPreference.NoPreference;
+        return Object.values(MatchmakingCompetitivenessPreference).find((preference) => preference === stored) ?? MatchmakingCompetitivenessPreference.NoPreference;
     });
     const [deckLinkTouched, setDeckLinkTouched] = useState<boolean>(false);
     const isSavedDeckSelectionLoading = showSavedDecks && !useSwuStatsDecks && (userLoading || isLoadingSavedDecks);
@@ -648,7 +648,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                         value={matchmakingPreference}
                         onChange={setMatchmakingPreference}
                         disabled={queueState}
-                        options={Object.values(MatchmakingPreference).map((preference) => ({
+                        options={Object.values(MatchmakingCompetitivenessPreference).map((preference) => ({
                             value: preference,
                             label: MatchmakingPreferenceLabels[preference],
                         }))}

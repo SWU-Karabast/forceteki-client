@@ -5,24 +5,24 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
-import { MatchmakingPreference, MatchmakingPreferenceLabels } from '@/app/_constants/constants';
+import { MatchmakingCompetitivenessPreference, MatchmakingPreferenceLabels } from '@/app/_constants/constants';
 import MatchLoader from './MatchLoader';
 
-const preferenceOrder: Record<MatchmakingPreference, readonly MatchmakingPreference[]> = {
-    [MatchmakingPreference.CompetitiveTesting]: [
-        MatchmakingPreference.CompetitiveTesting,
-        MatchmakingPreference.NoPreference,
-        MatchmakingPreference.CasualBrewing,
+const preferenceOrder: Record<MatchmakingCompetitivenessPreference, readonly MatchmakingCompetitivenessPreference[]> = {
+    [MatchmakingCompetitivenessPreference.CompetitiveTesting]: [
+        MatchmakingCompetitivenessPreference.CompetitiveTesting,
+        MatchmakingCompetitivenessPreference.NoPreference,
+        MatchmakingCompetitivenessPreference.CasualBrewing,
     ],
-    [MatchmakingPreference.CasualBrewing]: [
-        MatchmakingPreference.CasualBrewing,
-        MatchmakingPreference.NoPreference,
-        MatchmakingPreference.CompetitiveTesting,
+    [MatchmakingCompetitivenessPreference.CasualBrewing]: [
+        MatchmakingCompetitivenessPreference.CasualBrewing,
+        MatchmakingCompetitivenessPreference.NoPreference,
+        MatchmakingCompetitivenessPreference.CompetitiveTesting,
     ],
-    [MatchmakingPreference.NoPreference]: [
-        MatchmakingPreference.NoPreference,
-        MatchmakingPreference.CompetitiveTesting,
-        MatchmakingPreference.CasualBrewing,
+    [MatchmakingCompetitivenessPreference.NoPreference]: [
+        MatchmakingCompetitivenessPreference.NoPreference,
+        MatchmakingCompetitivenessPreference.CompetitiveTesting,
+        MatchmakingCompetitivenessPreference.CasualBrewing,
     ],
 };
 

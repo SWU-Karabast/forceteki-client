@@ -9,7 +9,7 @@ import {
     DialogTitle,
 } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { SwuGameFormat, FormatLabels, CardPool, CardPoolLabels, MatchmakingPreference, MatchmakingPreferenceLabels, getFormatsFromConfig } from '@/app/_constants/constants';
+import { SwuGameFormat, FormatLabels, CardPool, CardPoolLabels, MatchmakingCompetitivenessPreference, MatchmakingPreferenceLabels, getFormatsFromConfig } from '@/app/_constants/constants';
 import type { IFormatModeConfig } from '@/app/_constants/constants';
 
 type FormatInfoTopic = 'formats' | 'cardPool' | 'matchmakingPreference';
@@ -73,10 +73,10 @@ const cardPoolDescriptions: Record<CardPool, { summary: string; constructed: str
     },
 };
 
-const matchmakingPreferenceDescriptions: Record<MatchmakingPreference, string> = {
-    [MatchmakingPreference.CompetitiveTesting]: 'Test competitive decks and practice tournament-style play.',
-    [MatchmakingPreference.CasualBrewing]: 'Try new deck ideas or play a more relaxed game.',
-    [MatchmakingPreference.NoPreference]: 'Search for either kind of game without a preference of your own.',
+const matchmakingPreferenceDescriptions: Record<MatchmakingCompetitivenessPreference, string> = {
+    [MatchmakingCompetitivenessPreference.CompetitiveTesting]: 'Test competitive decks and practice tournament-style play.',
+    [MatchmakingCompetitivenessPreference.CasualBrewing]: 'Try new deck ideas or play a more relaxed game.',
+    [MatchmakingCompetitivenessPreference.NoPreference]: 'Search for either kind of game without a preference of your own.',
 };
 
 const styles = {
@@ -204,7 +204,7 @@ const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic
                     })
                 ) : (
                     <>
-                        {Object.values(MatchmakingPreference).map((preference) => (
+                        {Object.values(MatchmakingCompetitivenessPreference).map((preference) => (
                             <Box key={preference}>
                                 <Typography sx={styles.sectionTitle}>
                                     {MatchmakingPreferenceLabels[preference]}
