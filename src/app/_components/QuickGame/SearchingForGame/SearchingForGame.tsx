@@ -155,7 +155,7 @@ const SearchingForGame: React.FC = () => {
             {queueMatchmakingStatus && (
                 <Box component="section" aria-labelledby="matching-preferences-heading" sx={styles.preferencePanel}>
                     <Typography id="matching-preferences-heading" variant="body1" sx={styles.preferenceHeading}>
-                        Currently matching
+                        Currently Matching
                     </Typography>
                     <Box component="ul" aria-live="polite" sx={styles.preferenceList}>
                         {preferenceOrder[queueMatchmakingStatus.preference].map((preference) => {
