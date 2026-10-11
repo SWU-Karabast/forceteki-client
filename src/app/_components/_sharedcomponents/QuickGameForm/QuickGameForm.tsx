@@ -651,6 +651,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                         options={Object.values(MatchmakingCompetitivenessPreference).map((preference) => ({
                             value: preference,
                             label: MatchmakingPreferenceLabels[preference],
+                            description: preference === MatchmakingCompetitivenessPreference.NoPreference ? '(Shortest Wait)' : undefined,
                         }))}
                     />
                     <Typography variant="body2" sx={styles.hintMessageStyle}>

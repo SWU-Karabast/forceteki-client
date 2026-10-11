@@ -48,6 +48,9 @@ const styles = {
         '&.Mui-disabled': {
             cursor: 'not-allowed',
         },
+        '& .MuiFormControlLabel-label': {
+            width: '100%',
+        },
         '& .MuiFormControlLabel-label.Mui-disabled': {
             color: 'rgba(255, 255, 255, 0.3)',
         },
@@ -62,14 +65,22 @@ const styles = {
         },
     },
     label: {
+        position: 'relative',
         display: 'block',
         fontSize: '1rem',
         lineHeight: 1.3,
         overflowWrap: 'anywhere',
     },
     description: {
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        right: 0,
         display: 'block',
-        color: 'inherit',
+        color: 'rgba(170, 170, 170, 0.85)',
+        '.Mui-disabled &': {
+            color: 'inherit',
+        },
     },
 };
 
@@ -82,6 +93,7 @@ export default function SegmentedControl<TValue extends string>({
     disabled = false,
 }: ISegmentedControlProps<TValue>) {
     const selectedIndex = options.findIndex((option) => option.value === value);
+    const hasDescriptions = options.some((option) => Boolean(option.description));
     useEffect(() => {
         if (selectedIndex < 0) {
             console.warn(`SegmentedControl '${name}' has no option for '${value}'`);
@@ -111,7 +123,7 @@ export default function SegmentedControl<TValue extends string>({
                         key={option.value}
                         value={option.value}
                         disabled={disabled || option.disabled}
-                        sx={styles.option}
+                        sx={{ ...styles.option, py: hasDescriptions ? '1.25rem' : '0.5rem' }}
                         control={
                             <Radio
                                 disableRipple
