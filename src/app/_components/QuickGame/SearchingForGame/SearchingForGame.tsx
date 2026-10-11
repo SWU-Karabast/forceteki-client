@@ -9,20 +9,20 @@ import { MatchmakingCompetitivenessPreference, MatchmakingPreferenceLabels } fro
 import MatchLoader from './MatchLoader';
 
 const preferenceOrder: Record<MatchmakingCompetitivenessPreference, readonly MatchmakingCompetitivenessPreference[]> = {
-    [MatchmakingCompetitivenessPreference.CompetitiveTesting]: [
-        MatchmakingCompetitivenessPreference.CompetitiveTesting,
+    [MatchmakingCompetitivenessPreference.Competitive]: [
+        MatchmakingCompetitivenessPreference.Competitive,
         MatchmakingCompetitivenessPreference.NoPreference,
-        MatchmakingCompetitivenessPreference.CasualBrewing,
+        MatchmakingCompetitivenessPreference.Casual,
     ],
-    [MatchmakingCompetitivenessPreference.CasualBrewing]: [
-        MatchmakingCompetitivenessPreference.CasualBrewing,
+    [MatchmakingCompetitivenessPreference.Casual]: [
+        MatchmakingCompetitivenessPreference.Casual,
         MatchmakingCompetitivenessPreference.NoPreference,
-        MatchmakingCompetitivenessPreference.CompetitiveTesting,
+        MatchmakingCompetitivenessPreference.Competitive,
     ],
     [MatchmakingCompetitivenessPreference.NoPreference]: [
         MatchmakingCompetitivenessPreference.NoPreference,
-        MatchmakingCompetitivenessPreference.CompetitiveTesting,
-        MatchmakingCompetitivenessPreference.CasualBrewing,
+        MatchmakingCompetitivenessPreference.Competitive,
+        MatchmakingCompetitivenessPreference.Casual,
     ],
 };
 

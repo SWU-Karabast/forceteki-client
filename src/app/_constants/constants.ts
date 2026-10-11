@@ -36,15 +36,15 @@ export enum GamesToWinMode {
 }
 
 export enum MatchmakingCompetitivenessPreference {
-    CompetitiveTesting = 'competitiveTesting',
+    Competitive = 'competitiveTesting',
     NoPreference = 'noPreference',
-    CasualBrewing = 'casualBrewing',
+    Casual = 'casualBrewing',
 }
 
 export const MatchmakingPreferenceLabels: Record<MatchmakingCompetitivenessPreference, string> = {
-    [MatchmakingCompetitivenessPreference.CompetitiveTesting]: 'Competitive',
+    [MatchmakingCompetitivenessPreference.Competitive]: 'Competitive',
     [MatchmakingCompetitivenessPreference.NoPreference]: 'No Preference',
-    [MatchmakingCompetitivenessPreference.CasualBrewing]: 'Casual',
+    [MatchmakingCompetitivenessPreference.Casual]: 'Casual',
 };
 
 export enum MatchmakingCompetitivenessPreferenceSearchStage {

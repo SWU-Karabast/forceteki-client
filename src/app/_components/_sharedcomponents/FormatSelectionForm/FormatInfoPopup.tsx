@@ -74,8 +74,8 @@ const cardPoolDescriptions: Record<CardPool, { summary: string; constructed: str
 };
 
 const matchmakingPreferenceDescriptions: Record<MatchmakingCompetitivenessPreference, string> = {
-    [MatchmakingCompetitivenessPreference.CompetitiveTesting]: 'Play tuned, competitive decks and get practice against the meta.',
-    [MatchmakingCompetitivenessPreference.CasualBrewing]: 'Try new deck ideas or play a more relaxed game.',
+    [MatchmakingCompetitivenessPreference.Competitive]: 'Play tuned, competitive decks and get practice against the meta.',
+    [MatchmakingCompetitivenessPreference.Casual]: 'Try new deck ideas or play a more relaxed game.',
     [MatchmakingCompetitivenessPreference.NoPreference]: 'Search for either kind of game without a preference of your own.',
 };
 
