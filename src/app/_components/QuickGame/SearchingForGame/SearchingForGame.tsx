@@ -111,6 +111,13 @@ const SearchingForGame: React.FC = () => {
     const router = useRouter();
     const lastQueueHeartbeatState = useRef<number>(0);
     const { user, anonymousUserId } = useUser();
+    const competitiveness = queueMatchmakingStatus?.competitiveness;
+    const nextPreference = competitiveness
+        ? preferenceOrder[competitiveness.preference].find((preference) => !competitiveness.allowedOpponentPreferences.includes(preference))
+        : undefined;
+    const secondsUntilExpansion = queueMatchmakingStatus && competitiveness?.nextExpansionAt != null
+        ? Math.max(0, Math.ceil((competitiveness.nextExpansionAt - queueMatchmakingStatus.serverTime) / 1_000))
+        : null;
 
     useEffect(() => {
         timerRef.current = setInterval(() => {
@@ -152,14 +159,14 @@ const SearchingForGame: React.FC = () => {
                     Looking for an opponent
                 </Typography>
             </Box>
-            {queueMatchmakingStatus && (
+            {competitiveness && (
                 <Box component="section" aria-labelledby="matching-preferences-heading" sx={styles.preferencePanel}>
                     <Typography id="matching-preferences-heading" variant="body1" sx={styles.preferenceHeading}>
                         Currently Matching
                     </Typography>
                     <Box component="ul" aria-live="polite" sx={styles.preferenceList}>
-                        {preferenceOrder[queueMatchmakingStatus.preference].map((preference) => {
-                            const included = queueMatchmakingStatus.allowedOpponentPreferences.includes(preference);
+                        {preferenceOrder[competitiveness.preference].map((preference) => {
+                            const included = competitiveness.allowedOpponentPreferences.includes(preference);
                             return (
                                 <Box component="li" key={preference} sx={styles.preferenceRow}>
                                     <Box sx={styles.preferenceIcon}>
@@ -173,7 +180,11 @@ const SearchingForGame: React.FC = () => {
                                         {MatchmakingPreferenceLabels[preference]}
                                     </Typography>
                                     <Typography variant="body2" sx={styles.preferenceStatus}>
-                                        {included ? 'Matching' : 'Not yet'}
+                                        {included
+                                            ? 'Matching'
+                                            : preference === nextPreference && secondsUntilExpansion !== null
+                                                ? `in ${secondsUntilExpansion}s`
+                                                : 'Not yet'}
                                     </Typography>
                                 </Box>
                             );

@@ -225,7 +225,7 @@ const FormatInfoPopup: React.FC<IFormatInfoPopupProps> = ({ open, onClose, topic
                                 Competitive and Casual searches start with opponents who chose the same preference.
                             </Typography>
                             <Typography component="li" sx={styles.detailBody}>
-                                By default, No Preference opponents are included after 15 seconds, and all preferences are included after 30 seconds.
+                                As you wait, your search includes No Preference opponents, then all preferences. The queue screen shows when the next category will be included.
                             </Typography>
                             <Typography component="li" sx={styles.detailBody}>
                                 No Preference is open to all categories immediately, but both players&apos; search windows must allow a match.

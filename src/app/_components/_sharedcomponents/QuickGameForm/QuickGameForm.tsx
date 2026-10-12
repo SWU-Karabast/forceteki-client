@@ -253,7 +253,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 format: queueConfig.format,
                 cardPool: queueConfig.cardPool,
                 gamesToWinMode: queueConfig.gamesToWinMode,
-                matchmakingPreference,
+                matchmakingCompetitivenessPreference: matchmakingPreference,
             };
             const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/enter-queue`,
                 {
@@ -277,7 +277,7 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                     setModalOpen(true)
                 }else if(response.status === 400) {
                     // TODO: better error handling between BE and FE
-                    if (result.message?.includes('Invalid game format') || result.message?.includes('Invalid matchmaking preference') || result.message?.includes('You must be logged in')) {
+                    if (result.message?.includes('Invalid game format') || result.message?.includes('Invalid matchmaking competitiveness preference') || result.message?.includes('You must be logged in')) {
                         setError(null,result.message,'Join Queue Error','error');
                     } else {
                         setError('Couldn\'t import. Deck is invalid.',errors,'Deck Validation Error','error');

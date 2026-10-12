@@ -53,13 +53,17 @@ export enum MatchmakingCompetitivenessPreferenceSearchStage {
     AnyPreference = 'anyPreference',
 }
 
-export interface IQueueMatchmakingStatus {
+export interface IMatchmakingCompetitivenessStatus {
     preference: MatchmakingCompetitivenessPreference;
-    searchStartedAt: number;
-    serverTime: number;
     stage: MatchmakingCompetitivenessPreferenceSearchStage;
     allowedOpponentPreferences: MatchmakingCompetitivenessPreference[];
     nextExpansionAt: number | null;
+}
+
+export interface IQueueMatchmakingStatus {
+    searchStartedAt: number;
+    serverTime: number;
+    competitiveness: IMatchmakingCompetitivenessStatus;
 }
 
 export enum RematchMode {
