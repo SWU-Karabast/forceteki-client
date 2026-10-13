@@ -4,8 +4,21 @@ import {
     IPlayerSearchResult,
     IUsernameChangeResponse,
     ModActionType,
+    RESET_USERNAME_PREFIX,
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+
+const RESET_USERNAME_DIGITS = 4;
+const RESET_USERNAME_PATTERN = new RegExp(`^${RESET_USERNAME_PREFIX}\\d{${RESET_USERNAME_DIGITS}}$`);
+
+/** Builds a reset name such as 'KaraUser0427'. */
+export const generateResetUsername = (): string => {
+    const randomNumber = Math.floor(Math.random() * 10 ** RESET_USERNAME_DIGITS);
+    return `${RESET_USERNAME_PREFIX}${String(randomNumber).padStart(RESET_USERNAME_DIGITS, '0')}`;
+};
+
+/** Whether a username already has the shape produced by generateResetUsername. */
+export const isResetUsername = (username: string): boolean => RESET_USERNAME_PATTERN.test(username);
 
 export const getMuteDisplayText = (moderation?: IModerationAction): string | null => {
     if (!moderation?.endDate) return '';

@@ -123,8 +123,8 @@ export enum ModActionType {
     ChangeUsername = 'ChangeUsername',
 }
 
-/** Placeholder name used by the moderator dashboard's reset shortcut. */
-export const DEFAULT_RESET_USERNAME = 'KarabastUser';
+/** Reset names are this prefix plus a random four-digit number, e.g. KaraUser0427. */
+export const RESET_USERNAME_PREFIX = 'KaraUser';
 
 /**
  * Validation properties mirror ModActionDefinitions on the server.

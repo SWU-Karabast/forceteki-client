@@ -6,18 +6,18 @@ import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponen
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import {
-    DEFAULT_RESET_USERNAME,
     DurationUnit,
     IModActionResponse,
     IPlayerSearchResult,
     IUsernameChangeResponse,
     modActionDefinitions,
     ModActionType,
+    RESET_USERNAME_PREFIX,
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
-import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
+import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, generateResetUsername, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel, isResetUsername } from '@/app/_utils/ModerationUtils';
 
 const actionHelpText: Partial<Record<ModActionType, string>> = {
     [ModActionType.Rename]: 'The player must choose a new username themselves the next time they log in.',
@@ -138,12 +138,16 @@ const UserManagementTab: React.FC = () => {
             return;
         }
 
+        const resetRequested = definition.supportsUsernameReset && resetUsername;
+        // A player who already has a reset name keeps it instead of being given a second one
+        const resetName = resetRequested && !isResetUsername(selectedPlayer.username) ? generateResetUsername() : undefined;
+
         const actionMessages: Record<ModActionType, string> = {
             [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} for ${durationValue} ${durationUnit.toLowerCase()}. Are you sure?`,
             [ModActionType.Warning]: `This will issue a warning to player ${selectedPlayer.username}. Are you sure?`,
             [ModActionType.Rename]: `This will force player ${selectedPlayer.username} to rename. Are you sure?`,
             [ModActionType.ReportingDisabled]: `This will disable reporting for player ${selectedPlayer.username}. Are you sure?`,
-            [ModActionType.UsernameChangesBlocked]: `This will block player ${selectedPlayer.username} from changing their username${resetUsername ? ` and reset it to ${DEFAULT_RESET_USERNAME}` : ''}. Are you sure?`,
+            [ModActionType.UsernameChangesBlocked]: `This will block player ${selectedPlayer.username} from changing their username${resetName ? ` and reset it to ${resetName}` : ''}. Are you sure?`,
             [ModActionType.ChangeUsername]: `This will change the username of player ${selectedPlayer.username} to ${trimmedNewUsername}. Are you sure?`,
         };
 
@@ -170,9 +174,9 @@ const UserManagementTab: React.FC = () => {
                     );
                     let submissionSucceeded = result.success;
                     submissionMessage = result.message;
-                    if (result.success && definition.supportsUsernameReset && resetUsername) {
-                        if (selectedPlayer.username === DEFAULT_RESET_USERNAME) {
-                            submissionMessage += ` The username is already '${DEFAULT_RESET_USERNAME}', so no username update was needed.`;
+                    if (result.success && resetRequested) {
+                        if (!resetName) {
+                            submissionMessage += ` The username is already '${selectedPlayer.username}', so no username update was needed.`;
                         } else {
                             try {
                                 const resetResult = await ServerApiService.submitModActionAsync(
@@ -180,7 +184,7 @@ const UserManagementTab: React.FC = () => {
                                     ModActionType.ChangeUsername,
                                     note.trim(),
                                     undefined,
-                                    { newUsername: DEFAULT_RESET_USERNAME },
+                                    { newUsername: resetName },
                                 );
                                 submissionSucceeded = resetResult.success;
                                 submissionMessage += ` ${resetResult.message}`;
@@ -627,7 +631,7 @@ const UserManagementTab: React.FC = () => {
                                             sx={{ color: '#B0B0B0', '&.Mui-checked': { color: '#2F7DB6' } }}
                                         />
                                     }
-                                    label={`Also reset username to ${DEFAULT_RESET_USERNAME}`}
+                                    label={`Also reset username to ${RESET_USERNAME_PREFIX}XXXX (random number)`}
                                 />
                             )}
 
