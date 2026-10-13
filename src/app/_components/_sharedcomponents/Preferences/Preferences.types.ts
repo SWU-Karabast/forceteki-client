@@ -119,17 +119,24 @@ export enum ModActionType {
     Warning = 'Warning',
     Rename = 'Rename',
     ReportingDisabled = 'ReportingDisabled',
+    UsernameChangesBlocked = 'UsernameChangesBlocked',
+    ChangeUsername = 'ChangeUsername',
 }
 
+/** Placeholder name used by the moderator dashboard's reset shortcut. */
+export const DEFAULT_RESET_USERNAME = 'KarabastUser';
+
 /**
- * Per-type behaviour, mirroring ModActionDefinitions on the server. Keep the two in sync — the server
- * re-validates everything, so a mismatch shows up as a rejected submission rather than a hole.
+ * Validation properties mirror ModActionDefinitions on the server.
+ * supportsUsernameReset enables a client-only shortcut that submits a separate ChangeUsername action.
  */
 export interface IModActionDefinition {
     label: string;
     requiresNote: boolean;
     requiresDuration: boolean;
     cancellable: boolean;
+    requiresNewUsername: boolean;
+    supportsUsernameReset: boolean;
 }
 
 export const modActionDefinitions: Record<ModActionType, IModActionDefinition> = {
@@ -138,24 +145,48 @@ export const modActionDefinitions: Record<ModActionType, IModActionDefinition> =
         requiresNote: true,
         requiresDuration: true,
         cancellable: true,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
     },
     [ModActionType.Warning]: {
         label: 'Warning',
         requiresNote: true,
         requiresDuration: false,
         cancellable: false,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
     },
     [ModActionType.Rename]: {
-        label: 'Force Rename',
+        label: 'Force User to Rename',
         requiresNote: false,
         requiresDuration: false,
         cancellable: false,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
     },
     [ModActionType.ReportingDisabled]: {
         label: 'Disable Reporting',
         requiresNote: true,
         requiresDuration: false,
         cancellable: true,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
+    },
+    [ModActionType.UsernameChangesBlocked]: {
+        label: 'Block Username Changes',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: true,
+        requiresNewUsername: false,
+        supportsUsernameReset: true,
+    },
+    [ModActionType.ChangeUsername]: {
+        label: 'Change Username',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: false,
+        requiresNewUsername: true,
+        supportsUsernameReset: false,
     },
 };
 
@@ -183,6 +214,7 @@ export interface IPlayerSearchResult {
     isMuted: boolean;
     activeRename?: IActiveModActionCacheEntry;
     activeReportingDisabledId?: string | null;
+    activeUsernameChangesBlockedId?: string | null;
 }
 
 export interface IActiveModActionCacheEntry {
@@ -199,6 +231,7 @@ export enum UsernameChangeSource {
     Migration = 'Migration',
     UserInitiated = 'UserInitiated',
     ForcedRename = 'ForcedRename',
+    UsernameChangedByModerator = 'UsernameChangedByModerator',
 }
 
 export interface IUsernameChangeResponse {
