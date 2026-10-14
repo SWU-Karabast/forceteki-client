@@ -124,7 +124,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 playSound('yourTurn');
             }
 
-            const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
+            const { buttons, menuTitle, promptTitle, promptDescription, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
 
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') {
@@ -141,6 +141,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     title: menuTitle,
                     buttons: buttons.filter((button: PopupButton) => button.sourceCard),
                     footerButtons: buttons.filter((button: PopupButton) => !button.sourceCard),
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (promptType === 'modalEffectSelection' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('actionTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    description: promptDescription,
+                    buttons,
                     source: PopupSource.PromptState
                 });
             }
