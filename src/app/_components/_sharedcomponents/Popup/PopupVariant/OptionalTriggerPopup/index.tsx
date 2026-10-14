@@ -32,6 +32,12 @@ const styles = {
     passButton: {
         width: CARD_WIDTH,
     },
+    warning: {
+        color: '#ff9800',
+        textAlign: 'center',
+        maxWidth: '30rem',
+        margin: '0.5rem auto 0',
+    },
 };
 
 export default function OptionalTriggerPopupModal({ data }: ButtonProps) {
@@ -60,6 +66,9 @@ export default function OptionalTriggerPopupModal({ data }: ButtonProps) {
             </Box>
             {!isMinimized && (
                 <>
+                    {data.warning && (
+                        <RichText text={data.warning} sx={styles.warning} component={Typography} />
+                    )}
                     <Box sx={styles.modalContent}>
                         <TriggerButton
                             text={triggerButton.label ?? triggerButton.text}

@@ -178,6 +178,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 return openPopup('optionalTrigger', {
                     uuid: promptUuid,
                     title: menuTitle,
+                    warning: promptState.warningText ?? undefined,
                     buttons,
                     source: PopupSource.PromptState
                 });

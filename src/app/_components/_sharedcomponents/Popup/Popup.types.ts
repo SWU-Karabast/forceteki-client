@@ -67,6 +67,7 @@ export type OptionalTriggerPopup = {
     type: 'optionalTrigger';
     uuid: string;
     title: string;
+    warning?: string;
     buttons: PopupButton[];
     source: PopupSource;
 };
