@@ -1,4 +1,4 @@
-import { IPreferences, IUser, TimerVisibility } from '@/app/_contexts/UserTypes';
+import { DateFormat, IPreferences, IUser, TimerVisibility } from '@/app/_contexts/UserTypes';
 import {
     loadPreferencesFromLocalStorage,
     savePreferencesToLocalStorage,
@@ -128,6 +128,7 @@ const getDefaultPreferences = (): IPreferences => ({
         muteChat: false,
         cardLanguage: CardImageLocale.English,
         timerVisibility: TimerVisibility.Standard,
+        dateFormat: DateFormat.MonthFirst,
         autoResolve: {
             singleTarget: false,
         },

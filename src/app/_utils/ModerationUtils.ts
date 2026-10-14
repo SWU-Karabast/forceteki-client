@@ -1,4 +1,5 @@
-import { IModerationAction } from '@/app/_contexts/UserTypes';
+import { DateFormat, IModerationAction } from '@/app/_contexts/UserTypes';
+import { formatDateTime } from '@/app/_utils/dateFormatUtils';
 import {
     IModActionResponse,
     IPlayerSearchResult,
@@ -39,10 +40,7 @@ export const checkIfModerationExpired = (moderation: IModerationAction, updateMo
     }
 }
 
-export const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
+export const formatDate = (dateStr: string, dateFormat: DateFormat) => formatDateTime(dateStr, dateFormat);
 
 export const formatDuration = (durationDays?: number): string => {
     if (!durationDays) return '';
@@ -50,8 +48,8 @@ export const formatDuration = (durationDays?: number): string => {
     return `${durationDays} day${durationDays !== 1 ? 's' : ''}`;
 };
 
-export const getActionLabel = (action: IModActionResponse): string => {
-    const date = formatDate(action.createdAt);
+export const getActionLabel = (action: IModActionResponse, dateFormat: DateFormat): string => {
+    const date = formatDate(action.createdAt, dateFormat);
     switch (action.actionType) {
         case ModActionType.Mute:
             return `${date} Muted (${formatDuration(action.durationDays)})`;
@@ -98,8 +96,8 @@ export const formatUsernameTransition = (change: IUsernameChangeResponse, option
     return `${wrap(change.previousUsername)} → ${wrap(change.newUsername)}`;
 };
 
-export const getUsernameChangeLabel = (change: IUsernameChangeResponse): string => {
-    const date = formatDate(change.createdAt);
+export const getUsernameChangeLabel = (change: IUsernameChangeResponse, dateFormat: DateFormat): string => {
+    const date = formatDate(change.createdAt, dateFormat);
     switch (change.source) {
         case UsernameChangeSource.AccountCreation:
             return `${date} Account created (${change.newUsername})`;
@@ -193,9 +191,9 @@ export const buildUserHistory = (
  * Force renames are distinguished from user renames, and a resolved force rename
  * reads differently from a pending one (driven by the player's active rename state).
  */
-export const getModActionEntryLabel = (entry: IUserHistoryEntry, selectedPlayer: IPlayerSearchResult): string => {
+export const getModActionEntryLabel = (entry: IUserHistoryEntry, selectedPlayer: IPlayerSearchResult, dateFormat: DateFormat): string => {
     const action = entry.modAction!;
-    const date = formatDate(action.createdAt);
+    const date = formatDate(action.createdAt, dateFormat);
     if (action.actionType === ModActionType.Rename) {
         const isPending = selectedPlayer.activeRename?.id === action.id;
         if (isPending) {
@@ -208,5 +206,5 @@ export const getModActionEntryLabel = (entry: IUserHistoryEntry, selectedPlayer:
         }
         return `${date} Force Rename`;
     }
-    return getActionLabel(action);
+    return getActionLabel(action, dateFormat);
 };
