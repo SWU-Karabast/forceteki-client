@@ -35,6 +35,37 @@ export enum GamesToWinMode {
     BestOfThree = 'bestOfThree',
 }
 
+export enum MatchmakingCompetitivenessPreference {
+    Competitive = 'competitiveTesting',
+    NoPreference = 'noPreference',
+    Casual = 'casualBrewing',
+}
+
+export const MatchmakingPreferenceLabels: Record<MatchmakingCompetitivenessPreference, string> = {
+    [MatchmakingCompetitivenessPreference.Competitive]: 'Competitive',
+    [MatchmakingCompetitivenessPreference.NoPreference]: 'No Preference',
+    [MatchmakingCompetitivenessPreference.Casual]: 'Casual',
+};
+
+export enum MatchmakingCompetitivenessPreferenceSearchStage {
+    SamePreferenceOnly = 'samePreferenceOnly',
+    IncludesNoPreference = 'includesNoPreference',
+    AnyPreference = 'anyPreference',
+}
+
+export interface IMatchmakingCompetitivenessStatus {
+    preference: MatchmakingCompetitivenessPreference;
+    stage: MatchmakingCompetitivenessPreferenceSearchStage;
+    allowedOpponentPreferences: MatchmakingCompetitivenessPreference[];
+    nextExpansionAt: number | null;
+}
+
+export interface IQueueMatchmakingStatus {
+    searchStartedAt: number;
+    serverTime: number;
+    competitiveness: IMatchmakingCompetitivenessStatus;
+}
+
 export enum RematchMode {
     Regular = 'regular',
     Reset = 'reset',

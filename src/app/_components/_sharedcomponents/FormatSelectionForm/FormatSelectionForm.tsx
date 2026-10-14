@@ -1,6 +1,7 @@
-import React, { ChangeEvent, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CardPool, CardPoolLabels, FormatLabels, GamesToWinMode, GamesToWinModeLabels, IFormatModeConfig, SwuGameFormat } from '@/app/_constants/constants';
 import { Box, FormControl, Link, MenuItem, SxProps, Typography } from '@mui/material';
+import SegmentedControl from '../SegmentedControl/SegmentedControl';
 import StyledTextField from '../_styledcomponents/StyledTextField';
 import { Theme } from 'next-auth';
 import FormatInfoPopup from './FormatInfoPopup';
@@ -73,20 +74,23 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
             </Box>
             <StyledTextField
                 select
+                name="format"
                 value={format}
                 required
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setFormat(e.target.value as SwuGameFormat)
-                }
+                SelectProps={{ inputProps: { 'aria-label': 'Format' } }}
+                onChange={(event) => {
+                    const selectedConfig = formatConfigs.find((config) => config.format === event.target.value);
+                    if (!selectedConfig) {
+                        throw new Error(`Unsupported game format '${event.target.value}'`);
+                    }
+                    setFormat(selectedConfig.format);
+                }}
             >
-                {
-                    formatConfigs
-                        .map((config) => {
-                            return <MenuItem key={config.format} value={config.format}>
-                                {FormatLabels[config.format]}
-                            </MenuItem>
-                        })
-                }
+                {formatConfigs.map((config) => (
+                    <MenuItem key={config.format} value={config.format}>
+                        {FormatLabels[config.format]}
+                    </MenuItem>
+                ))}
             </StyledTextField>
         </FormControl>
         {showCardPoolPicker && (
@@ -99,46 +103,32 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
                         About Card Pools
                     </Link>
                 </Box>
-                <StyledTextField
-                    select
+                <SegmentedControl
+                    name="cardPool"
+                    label="Card Pool"
                     value={cardPool}
-                    required
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setCardPool(e.target.value as CardPool)
-                    }
-                >
-                    {
-                        cardPools.map((pool) => (
-                            <MenuItem key={pool} value={pool}>
-                                {CardPoolLabels[pool]}
-                            </MenuItem>
-                        ))
-                    }
-                </StyledTextField>
+                    onChange={setCardPool}
+                    options={cardPools.map((pool) => ({
+                        value: pool,
+                        label: CardPoolLabels[pool],
+                    }))}
+                />
             </FormControl>
         )}
         <FormControl fullWidth sx={formControlStyle}>
             <Typography variant="body1" sx={labelTextStyle}>Match Type</Typography>
-            <StyledTextField
-                select
+            <SegmentedControl
+                name="gamesToWinMode"
+                label="Match Type"
                 value={gamesToWinMode}
-                required
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setGamesToWinMode(e.target.value as GamesToWinMode)
-                }
-            >
-                {
-                    gamesToWinModes
-                        .map((key) => {
-                            const isBo3 = key === GamesToWinMode.BestOfThree;
-                            const disabled = isBo3 && !isBo3Allowed;
-                            return <MenuItem key={key} value={key} disabled={disabled}>
-                                {GamesToWinModeLabels[key]}
-                                {disabled && ' (must be logged in)'}
-                            </MenuItem>
-                        })
-                }
-            </StyledTextField>
+                onChange={setGamesToWinMode}
+                options={gamesToWinModes.map((mode) => ({
+                    value: mode,
+                    label: GamesToWinModeLabels[mode],
+                    disabled: mode === GamesToWinMode.BestOfThree && !isBo3Allowed,
+                    description: mode === GamesToWinMode.BestOfThree && !isBo3Allowed ? '(must be logged in)' : undefined,
+                }))}
+            />
         </FormControl>
         <FormatInfoPopup open={formatInfoOpen} onClose={() => setFormatInfoOpen(false)} topic="formats" formatConfigs={formatConfigs} />
         <FormatInfoPopup open={cardPoolInfoOpen} onClose={() => setCardPoolInfoOpen(false)} topic="cardPool" formatConfigs={formatConfigs} />
