@@ -71,8 +71,6 @@ export default function UpgradeStrip({ aspect, reversed = false, sx, children, .
                                 flex: '0 1 auto',
                                 minWidth: 0,
                                 maxWidth: '100%',
-                                // The space arena uses RTL for card order, not for card names.
-                                direction: 'ltr',
                                 textAlign: 'start',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',

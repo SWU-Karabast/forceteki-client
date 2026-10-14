@@ -40,8 +40,7 @@ const CardValueAdjuster: React.FC<ICardValueAdjusterProps> = ({ sx, card, isIndi
     const styles = {
         valueAdjuster: {
             display: 'flex',
-            flexDirection: 'row', // ensures left-to-right layout
-            direction: 'ltr', // <== override inherited RTL direction
+            flexDirection: 'row',
             position: 'absolute',
             top: '100%',
             width: '100%',
