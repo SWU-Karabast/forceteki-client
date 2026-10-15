@@ -8,8 +8,6 @@ import {
     FormControlLabel,
     MenuItem,
     Typography,
-    Radio,
-    RadioGroup,
     Link,
     Divider,
     Tooltip,
@@ -33,6 +31,7 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { DeckErrorState } from '@/app/_hooks/useDeckErrors';
 import FormatSelectionForm from '../FormatSelectionForm/FormatSelectionForm';
+import SegmentedControl from '../SegmentedControl/SegmentedControl';
 import GameAnnouncementBanner, { CurrentGameAnnouncement } from '../../GameAnnouncementBanner/GameAnnouncementBanner';
 import { IDeckPreferences } from '@/app/_hooks/useDeckManagement';
 
@@ -473,45 +472,18 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
             </Typography>
             <Divider sx={{ mb: '5px' }}/> */}
             <form onSubmit={handleCreateGameSubmit}>
-                <FormControl component="fieldset" sx={styles.formControlStyle}>
-                    <RadioGroup
-                        row
+                <FormControl component="fieldset" fullWidth sx={styles.formControlStyle}>
+                    <SegmentedControl
+                        name="deckSource"
+                        label="Deck source"
                         value={showSavedDecks ? (useSwuStatsDecks && isSwuStatsLinked ? 'SWU Stats Deck' : 'Saved Deck') : 'New Deck'}
-                        onChange={(
-                            e: ChangeEvent<HTMLInputElement>,
-                            value: string
-                        ) => handleChangeDeckSelectionType(value)}
-                    >
-                        {isSwuStatsLinked && (
-                            <FormControlLabel
-                                value="SWU Stats Deck"
-                                control={<Radio sx={styles.checkboxStyle} />}
-                                label={
-                                    <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                        SWU Stats Deck
-                                    </Typography>
-                                }
-                            />
-                        )}
-                        <FormControlLabel
-                            value="Saved Deck"
-                            control={<Radio sx={styles.checkboxStyle} />}
-                            label={
-                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Saved Deck
-                                </Typography>
-                            }
-                        />
-                        <FormControlLabel
-                            value="New Deck"
-                            control={<Radio sx={styles.checkboxStyle} />}
-                            label={
-                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    New Deck
-                                </Typography>
-                            }
-                        />
-                    </RadioGroup>
+                        onChange={handleChangeDeckSelectionType}
+                        options={[
+                            ...(isSwuStatsLinked ? [{ value: 'SWU Stats Deck', label: 'SWU Stats Deck' }] : []),
+                            { value: 'Saved Deck', label: 'Saved Deck' },
+                            { value: 'New Deck', label: 'New Deck' },
+                        ]}
+                    />
                 </FormControl>
                 {showSavedDecks && !useSwuStatsDecks && (
                     <>
@@ -678,34 +650,17 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                     styles={styles}
                 />
                 {/* Privacy Selection */}
-                <FormControl component="fieldset" sx={styles.formControlStyle}>
-                    <RadioGroup
-                        row
+                <FormControl component="fieldset" fullWidth sx={styles.formControlStyle}>
+                    <SegmentedControl
+                        name="lobbyVisibility"
+                        label="Lobby visibility"
                         value={privateGame ? 'Private' : 'Public'}
-                        onChange={(
-                            e: ChangeEvent<HTMLInputElement>,
-                            value: string
-                        ) => setPrivateGame(value === 'Private')}
-                    >
-                        <FormControlLabel
-                            value="Public"
-                            control={<Radio sx={styles.checkboxStyle} />}
-                            label={
-                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Public
-                                </Typography>
-                            }
-                        />
-                        <FormControlLabel
-                            value="Private"
-                            control={<Radio sx={styles.checkboxStyle} />}
-                            label={
-                                <Typography sx={styles.checkboxAndRadioGroupTextStyle}>
-                                    Private
-                                </Typography>
-                            }
-                        />
-                    </RadioGroup>
+                        onChange={(value) => setPrivateGame(value === 'Private')}
+                        options={[
+                            { value: 'Public', label: 'Public' },
+                            { value: 'Private', label: 'Private' },
+                        ]}
+                    />
                 </FormControl>
 
                 {/* Beta Announcement */}

@@ -23,11 +23,6 @@ export interface IChatDisabledInfo {
     borderColor: string;
 }
 
-export enum ModerationFieldState {
-    Enabled = 'enabled',
-    EnabledAndSeen = 'enabledAndSeen',
-}
-
 export enum ModerationType {
     Mute = 'Mute',
     Ban = 'Ban',
@@ -43,6 +38,10 @@ export interface IReportingDisabledState {
     hasSeen: boolean;
 }
 
+export interface IUsernameChangesBlockedState {
+    hasSeen: boolean;
+}
+
 export interface IGetUser {
     id: string;
     username: string;
@@ -50,7 +49,7 @@ export interface IGetUser {
     preferences: IPreferences,
     activeCosmetics?: IActiveCosmetics,
     needsUsernameChange: boolean;
-    mustRequestUsernameChange?: ModerationFieldState | null;
+    usernameChangesBlocked?: IUsernameChangesBlockedState | null;
     reportingDisabled?: IReportingDisabledState | null;
     moderation?: IModerationAction | null,
     undoPopupSeenDate?: Date | null
@@ -112,7 +111,7 @@ export interface IUserContextType {
     updateUsername: (username: string) => void;
     updateWelcomeMessage: () => void;
     updateNeedsUsernameChange: () => void;
-    updateMustRequestUsernameChangeSeen: () => void;
+    updateUsernameChangesBlockedSeen: () => void;
     updateReportingDisabledSeen: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;

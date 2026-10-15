@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Box, MenuItem, Typography } from '@mui/material';
+import { Alert, Box, Checkbox, FormControlLabel, MenuItem, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
@@ -12,10 +12,20 @@ import {
     IUsernameChangeResponse,
     modActionDefinitions,
     ModActionType,
+    RESET_USERNAME_PREFIX,
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
-import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
+import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
+import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, generateResetUsername, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel, isResetUsername } from '@/app/_utils/ModerationUtils';
+
+const actionHelpText: Partial<Record<ModActionType, string>> = {
+    [ModActionType.Rename]: 'The player must choose a new username themselves the next time they log in.',
+    [ModActionType.ChangeUsername]: 'Sets the username directly. Resolves a pending Force Rename and does not lift Block Username Changes.',
+    [ModActionType.UsernameChangesBlocked]: 'The player can no longer change their own username and must request changes from moderators.',
+};
+
+const forceRenameBlockedMessage = 'Force Rename is unavailable while username changes are blocked. Use Change Username instead.';
 
 interface IUserManagementTabProps {
 
@@ -41,6 +51,8 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
     const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Weeks);
     const [note, setNote] = useState('');
     const [isNoteError, setIsNoteError] = useState<boolean>(false);
+    const [newUsername, setNewUsername] = useState('');
+    const [resetUsername, setResetUsername] = useState(false);
     // Action history expanded state
     const [expandedActionId, setExpandedActionId] = useState<string | null>(null);
 
@@ -56,6 +68,13 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
     // Submit/cancel loading
     const [submitLoading, setSubmitLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    const trimmedNewUsername = newUsername.trim();
+    const newUsernameError = !modActionDefinitions[actionType].requiresNewUsername || !trimmedNewUsername
+        ? null
+        : validateDiscordUsername(trimmedNewUsername)
+            ?? (trimmedNewUsername === selectedPlayer?.username ? 'The player already has this username.' : null);
+    const isForceRenameBlocked = actionType === ModActionType.Rename && !!selectedPlayer?.activeUsernameChangesBlockedId;
 
     // ==================== Handlers ====================
     const handleSearch = () => runSearch(searchQuery);
@@ -122,19 +141,31 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
     const handleSubmitAction = () => {
         if (!selectedPlayer) return;
 
+        if (isForceRenameBlocked) {
+            setSearchError(forceRenameBlockedMessage);
+            return;
+        }
+
         const definition = modActionDefinitions[actionType];
         const durationDays = getDurationInDays();
         if (definition.requiresDuration && !durationDays) return;
+        if (definition.requiresNewUsername && (!trimmedNewUsername || newUsernameError)) return;
         if (definition.requiresNote && !note.trim()){
             setIsNoteError(true);
             return;
         }
+
+        const resetRequested = definition.supportsUsernameReset && resetUsername;
+        // A player who already has a reset name keeps it instead of being given a second one
+        const resetName = resetRequested && !isResetUsername(selectedPlayer.username) ? generateResetUsername() : undefined;
 
         const actionMessages: Record<ModActionType, string> = {
             [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} for ${durationValue} ${durationUnit.toLowerCase()}. Are you sure?`,
             [ModActionType.Warning]: `This will issue a warning to player ${selectedPlayer.username}. Are you sure?`,
             [ModActionType.Rename]: `This will force player ${selectedPlayer.username} to rename. Are you sure?`,
             [ModActionType.ReportingDisabled]: `This will disable reporting for player ${selectedPlayer.username}. Are you sure?`,
+            [ModActionType.UsernameChangesBlocked]: `This will block player ${selectedPlayer.username} from changing their username${resetName ? ` and reset it to ${resetName}` : ''}. Are you sure?`,
+            [ModActionType.ChangeUsername]: `This will change the username of player ${selectedPlayer.username} to ${trimmedNewUsername}. Are you sure?`,
         };
 
         setConfirmDialog({
@@ -145,18 +176,49 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
             onConfirm: async () => {
                 setConfirmDialog((prev) => ({ ...prev, open: false }));
                 setSubmitLoading(true);
+                setSuccessMessage(null);
+                setSearchError(null);
+                let submissionMessage: string | undefined;
                 try {
-                    // Refresh mod actions
                     const result = await ServerApiService.submitModActionAsync(
                         selectedPlayer.id,
                         actionType,
                         note.trim(),
                         definition.requiresDuration ? durationDays : undefined,
+                        {
+                            newUsername: definition.requiresNewUsername ? trimmedNewUsername : undefined,
+                        },
                     );
-                    if(result.success){
-                        setSuccessMessage(result.message);
-                    }else{
-                        setSearchError(result.message);
+                    let submissionSucceeded = result.success;
+                    submissionMessage = result.message;
+                    if (result.success && resetRequested) {
+                        if (!resetName) {
+                            submissionMessage += ` The username is already '${selectedPlayer.username}', so no username update was needed.`;
+                        } else {
+                            try {
+                                const resetResult = await ServerApiService.submitModActionAsync(
+                                    selectedPlayer.id,
+                                    ModActionType.ChangeUsername,
+                                    note.trim(),
+                                    undefined,
+                                    { newUsername: resetName },
+                                );
+                                submissionSucceeded = resetResult.success;
+                                submissionMessage += ` ${resetResult.message}`;
+                                if (!resetResult.success) {
+                                    submissionMessage += ' The username-change restriction remains in place. Use Change Username to retry if needed.';
+                                }
+                            } catch (error) {
+                                submissionSucceeded = false;
+                                const failure = error instanceof Error ? error.message : 'Failed to update the username';
+                                submissionMessage += ` The username update failed: ${failure}. The username-change restriction remains in place. Use Change Username to retry.`;
+                            }
+                        }
+                    }
+                    if (submissionSucceeded) {
+                        setSuccessMessage(submissionMessage);
+                    } else {
+                        setSearchError(submissionMessage);
                     }
                     const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
                     setModActions(refreshed.modActions || []);
@@ -164,10 +226,15 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                     // since we have a selected player the refreshed player will always be one.
                     setSelectedPlayer(refreshed.players[0])
                     setNote('');
+                    setNewUsername('');
+                    setResetUsername(false);
                     setDurationValue('');
                     setDurationUnit(DurationUnit.Days);
                 } catch (error) {
-                    setSearchError(error instanceof Error ? error.message : 'Failed to submit action');
+                    const failure = error instanceof Error ? error.message : 'Failed to submit action';
+                    setSearchError(submissionMessage
+                        ? `${submissionMessage} Failed to refresh the player: ${failure}`
+                        : failure);
                 } finally {
                     setSubmitLoading(false);
                 }
@@ -209,7 +276,9 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
     };
 
     const canSubmit = selectedPlayer
-        && (!modActionDefinitions[actionType].requiresDuration || getDurationInDays() > 0);
+        && !isForceRenameBlocked
+        && (!modActionDefinitions[actionType].requiresDuration || getDurationInDays() > 0)
+        && (!modActionDefinitions[actionType].requiresNewUsername || (!!trimmedNewUsername && !newUsernameError));
 
     // ==================== Styles ====================
     const styles = {
@@ -274,6 +343,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            gap: '0.75rem',
             padding: '0.5rem 0.75rem',
             cursor: 'pointer',
             '&:hover': {
@@ -290,10 +360,14 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
             fontSize: '0.75rem',
             fontWeight: 600,
             ml: '0.5rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
         }),
         cancelButton: {
             color: '#ef5350',
             fontSize: '0.75rem',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
             cursor: 'pointer',
             '&:hover': { textDecoration: 'underline' },
         },
@@ -472,7 +546,12 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                                                 Reporting disabled
                                             </Typography>
                                         )}
-                                        {!selectedPlayer.isMuted && !selectedPlayer.activeRename && !selectedPlayer.activeReportingDisabledId && (
+                                        {selectedPlayer.activeUsernameChangesBlockedId && (
+                                            <Typography sx={{ color: '#ef5350', fontSize: '0.875rem', fontWeight: 600 }}>
+                                                Username changes blocked
+                                            </Typography>
+                                        )}
+                                        {!selectedPlayer.isMuted && !selectedPlayer.activeRename && !selectedPlayer.activeReportingDisabledId && !selectedPlayer.activeUsernameChangesBlockedId && (
                                             <Typography sx={{ color: '#9e9e9e', fontSize: '0.875rem', fontWeight: 600 }}>
                                                 No active mod actions
                                             </Typography>
@@ -494,12 +573,20 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                                     select
                                     label="Action type"
                                     value={actionType}
-                                    onChange={(e) => setActionType(e.target.value as ModActionType)}
+                                    onChange={(e) => {
+                                        setActionType(e.target.value as ModActionType);
+                                        setNewUsername('');
+                                        setResetUsername(false);
+                                    }}
                                     size="small"
                                     sx={{ minWidth: '160px' }}
                                 >
                                     <MenuItem value={ModActionType.Warning}>{modActionDefinitions[ModActionType.Warning].label}</MenuItem>
-                                    <MenuItem value={ModActionType.Rename}>{modActionDefinitions[ModActionType.Rename].label}</MenuItem>
+                                    <MenuItem value={ModActionType.Rename}>
+                                        {modActionDefinitions[ModActionType.Rename].label}
+                                    </MenuItem>
+                                    <MenuItem value={ModActionType.ChangeUsername}>{modActionDefinitions[ModActionType.ChangeUsername].label}</MenuItem>
+                                    <MenuItem value={ModActionType.UsernameChangesBlocked}>{modActionDefinitions[ModActionType.UsernameChangesBlocked].label}</MenuItem>
                                     <MenuItem value={ModActionType.Mute}>{modActionDefinitions[ModActionType.Mute].label}</MenuItem>
                                     <MenuItem value={ModActionType.ReportingDisabled}>{modActionDefinitions[ModActionType.ReportingDisabled].label}</MenuItem>
                                 </StyledTextField>
@@ -538,11 +625,56 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                                 />
                             </Box>
 
+                            {modActionDefinitions[actionType].requiresNewUsername && (
+                                <Box sx={{ mb: '0.75rem' }}>
+                                    <StyledTextField
+                                        placeholder="New username"
+                                        value={newUsername}
+                                        onChange={(e) => setNewUsername(e.target.value)}
+                                        size="small"
+                                        errorMessage={newUsernameError ?? ''}
+                                    />
+                                </Box>
+                            )}
+
+                            {modActionDefinitions[actionType].supportsUsernameReset && (
+                                <FormControlLabel
+                                    sx={{ color: 'white', mb: '0.5rem', '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+                                    control={
+                                        <Checkbox
+                                            checked={resetUsername}
+                                            onChange={(e) => setResetUsername(e.target.checked)}
+                                            size="small"
+                                            sx={{ color: '#B0B0B0', '&.Mui-checked': { color: '#2F7DB6' } }}
+                                        />
+                                    }
+                                    label={`Also reset username to ${RESET_USERNAME_PREFIX}XXXX (random number)`}
+                                />
+                            )}
+
+                            {actionHelpText[actionType] && (
+                                <Typography sx={{
+                                    color: isForceRenameBlocked ? '#ffd54f' : '#B0B0B0',
+                                    fontWeight: isForceRenameBlocked ? 700 : 400,
+                                    fontSize: '0.75rem',
+                                    mb: '0.5rem',
+                                }}>
+                                    {isForceRenameBlocked ? forceRenameBlockedMessage : actionHelpText[actionType]}
+                                </Typography>
+                            )}
+
                             {/* Notes */}
                             <Typography sx={{ ...styles.sectionTitle, mt: '0.75rem' }}>Moderator notes for action</Typography>
                             <StyledTextField
                                 placeholder={modActionDefinitions[actionType].requiresNote ? 'Notes about the action (required)' : 'Notes about the action (optional)'}
                                 value={note}
+                                disabled={isForceRenameBlocked}
+                                sx={{
+                                    '& .MuiInputBase-input.Mui-disabled': {
+                                        color: '#B0B0B0',
+                                        WebkitTextFillColor: '#B0B0B0',
+                                    },
+                                }}
                                 onChange={(e) => {
                                     setNote(e.target.value);
                                     setIsNoteError(false);
@@ -576,6 +708,8 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                                     if (entry.kind === 'usernameChange' && entry.usernameChange) {
                                         const change = entry.usernameChange;
                                         const sourceLabel = getUsernameChangeSourceLabel(change.source);
+                                        const isModDrivenChange = change.source === UsernameChangeSource.ForcedRename
+                                            || change.source === UsernameChangeSource.UsernameChangedByModerator;
                                         return (
                                             <Box key={entry.id} sx={styles.actionHistoryItem}>
                                                 <Box
@@ -592,7 +726,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                                                                 transition: 'transform 0.2s',
                                                             }}
                                                         />
-                                                        <Typography sx={{ color: change.source === UsernameChangeSource.ForcedRename ? '#ffd54f' : 'white', fontSize: '0.85rem', mb:'0px' }}>
+                                                        <Typography sx={{ color: isModDrivenChange ? '#ffd54f' : 'white', fontSize: '0.85rem', mb:'0px' }}>
                                                             {getUsernameChangeLabel(change)}
                                                         </Typography>
                                                     </Box>
@@ -600,7 +734,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                                                 {isExpanded && (
                                                     <Box sx={styles.actionHistoryDetails}>
                                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                                                            {change.source === UsernameChangeSource.ForcedRename && (
+                                                            {isModDrivenChange && (
                                                                 <Box>
                                                                     <Typography sx={{ color: '#8C8C8C', fontSize: '0.7rem', mb:'0px' }}>
                                                                         Source
@@ -639,17 +773,18 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                                                 sx={styles.actionHistoryHeader}
                                                 onClick={() => setExpandedActionId(isExpanded ? null : action.id)}
                                             >
-                                                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                                     <ExpandMoreIcon
                                                         sx={{
                                                             color: 'white',
                                                             fontSize: '1.2rem',
+                                                            flexShrink: 0,
                                                             mr: '0.5rem',
                                                             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                                                             transition: 'transform 0.2s',
                                                         }}
                                                     />
-                                                    <Typography sx={{ color: '#ffd54f', fontSize: '0.85rem', mb:'0px' }}>
+                                                    <Typography sx={{ color: '#ffd54f', fontSize: '0.85rem', mb:'0px', minWidth: 0, overflowWrap: 'anywhere' }}>
                                                         {getModActionEntryLabel(entry, selectedPlayer)}
                                                     </Typography>
                                                     {status.label && (

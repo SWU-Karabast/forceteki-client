@@ -92,7 +92,7 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                 selectedAction.actionType,
                 comment.trim(),
                 isMute ? getDurationDays() : undefined,
-                reportId,
+                { reportId },
             );
             if (result.success) {
                 onActionApplied(result.message);
