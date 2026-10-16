@@ -50,11 +50,24 @@ export interface IModActionRequest {
     reportId?: string;
 }
 
+export interface IModActionResult {
+
+    /** Everything requested was applied */
+    success: boolean;
+
+    /**
+     * The action itself was applied, even if a follow-up step failed (e.g. Block Username Changes applied but
+     * the username reset rejected). Callers must refresh their view whenever this is true.
+     */
+    mainActionApplied: boolean;
+    message: string;
+}
+
 /**
  * Submits a mod action. A requested username reset is a separate ChangeUsername action submitted only
  * after the main action succeeded; the result message covers both.
  */
-export const submitModActionAsync = async (request: IModActionRequest): Promise<{ success: boolean; message: string }> => {
+export const submitModActionAsync = async (request: IModActionRequest): Promise<IModActionResult> => {
     const definition = modActionDefinitions[request.actionType];
     const result = await ServerApiService.submitModActionAsync(
         request.playerId,
@@ -68,11 +81,15 @@ export const submitModActionAsync = async (request: IModActionRequest): Promise<
     );
 
     if (!result.success || !definition.supportsUsernameReset || !request.resetRequested) {
-        return result;
+        return { success: result.success, mainActionApplied: result.success, message: result.message };
     }
 
     if (!request.resetName) {
-        return { success: true, message: `${result.message} The username is already '${request.currentUsername}', so no username update was needed.` };
+        return {
+            success: true,
+            mainActionApplied: true,
+            message: `${result.message} The username is already '${request.currentUsername}', so no username update was needed.`,
+        };
     }
 
     try {
@@ -85,12 +102,17 @@ export const submitModActionAsync = async (request: IModActionRequest): Promise<
         );
         const message = `${result.message} ${resetResult.message}`;
         return resetResult.success
-            ? { success: true, message }
-            : { success: false, message: `${message} The username-change restriction remains in place. Use Change Username to retry if needed.` };
+            ? { success: true, mainActionApplied: true, message }
+            : {
+                success: false,
+                mainActionApplied: true,
+                message: `${message} The username-change restriction remains in place. Use Change Username to retry if needed.`,
+            };
     } catch (error) {
         const failure = error instanceof Error ? error.message : 'Failed to update the username';
         return {
             success: false,
+            mainActionApplied: true,
             message: `${result.message} The username update failed: ${failure}. The username-change restriction remains in place. Use Change Username to retry.`,
         };
     }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Badge, Box, Tab, Tabs } from '@mui/material';
 import {
     IPlayerReport,
@@ -30,30 +30,46 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
     const [activeTab, setActiveTab] = useState<UserManagementSubTab>(UserManagementSubTab.OpenReports);
     const [reports, setReports] = useState<IPlayerReport[]>([]);
     const [nextBeforeMonth, setNextBeforeMonth] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    // Starts as loading so the first paint shows the spinner, not an empty queue
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
     const [searchRequest, setSearchRequest] = useState<{ query: string; requestId: number } | null>(null);
 
     const listStatus = activeTab === UserManagementSubTab.ClosedReports ? PlayerReportStatus.Closed : PlayerReportStatus.Open;
 
+    // Only the newest request may update the list, so a slow response for the other tab cannot overwrite it
+    const latestListRequestRef = useRef(0);
+
     const loadReportsAsync = useCallback(async (status: PlayerReportStatus) => {
+        const requestId = ++latestListRequestRef.current;
         setLoading(true);
         setError(null);
         try {
             const result = await ServerApiService.listPlayerReportsAsync(status);
+            if (requestId !== latestListRequestRef.current) {
+                return;
+            }
             setReports(result.reports);
             setNextBeforeMonth(result.nextBeforeMonth);
         } catch (loadError) {
+            if (requestId !== latestListRequestRef.current) {
+                return;
+            }
             setReports([]);
             setNextBeforeMonth(null);
             setError(loadError instanceof Error ? loadError.message : 'Failed to load reports');
         } finally {
-            setLoading(false);
+            if (requestId === latestListRequestRef.current) {
+                setLoading(false);
+            }
         }
     }, []);
 
     useEffect(() => {
+        // Never show the other tab's tickets in this tab's columns while the new list loads
+        setReports([]);
+        setNextBeforeMonth(null);
         if (activeTab !== UserManagementSubTab.FindUser) {
             loadReportsAsync(listStatus);
         }
@@ -63,15 +79,23 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
         if (!nextBeforeMonth) {
             return;
         }
+        const requestId = ++latestListRequestRef.current;
         setLoading(true);
         try {
             const result = await ServerApiService.listPlayerReportsAsync(PlayerReportStatus.Closed, nextBeforeMonth);
+            if (requestId !== latestListRequestRef.current) {
+                return;
+            }
             setReports((current) => [...current, ...result.reports]);
             setNextBeforeMonth(result.nextBeforeMonth);
         } catch (loadError) {
-            setError(loadError instanceof Error ? loadError.message : 'Failed to load older reports');
+            if (requestId === latestListRequestRef.current) {
+                setError(loadError instanceof Error ? loadError.message : 'Failed to load older reports');
+            }
         } finally {
-            setLoading(false);
+            if (requestId === latestListRequestRef.current) {
+                setLoading(false);
+            }
         }
     };
 
@@ -81,6 +105,14 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
         }
         onReportsChanged();
     }, [activeTab, listStatus, loadReportsAsync, onReportsChanged]);
+
+    const handleTabChange = (tab: UserManagementSubTab) => {
+        // Set together with the tab, so the new tab never renders a moment of "no reports" before loading
+        if (tab !== UserManagementSubTab.FindUser) {
+            setLoading(true);
+        }
+        setActiveTab(tab);
+    };
 
     const handleOpenPlayerProfile = (playerId: string) => {
         setSelectedReportId(null);
@@ -113,7 +145,7 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
 
     return (
         <Box>
-            <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)} sx={styles.tabs}>
+            <Tabs value={activeTab} onChange={(_, value) => handleTabChange(value)} sx={styles.tabs}>
                 <Tab label={(
                     <Badge badgeContent={openReportCount ?? 0} sx={styles.badge} max={99}>
                         Open Reports
@@ -125,7 +157,7 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
             </Tabs>
 
             {activeTab === UserManagementSubTab.FindUser ? (
-                <UserManagementTab searchRequest={searchRequest} />
+                <UserManagementTab searchRequest={searchRequest} onSearchRequestHandled={() => setSearchRequest(null)} />
             ) : (
                 <ReportList
                     key={listStatus}

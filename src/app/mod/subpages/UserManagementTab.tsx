@@ -29,9 +29,12 @@ interface IUserManagementTabProps {
 
     /** Search to run on mount or whenever it changes, e.g. when a report opens a player's profile */
     searchRequest?: { query: string; requestId: number } | null;
+
+    /** Called once the search request ran, so returning to this tab later does not repeat it */
+    onSearchRequestHandled?: () => void;
 }
 
-const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest }) => {
+const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, onSearchRequestHandled }) => {
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
     const [searchLoading, setSearchLoading] = useState(false);
@@ -124,6 +127,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
         if (searchRequest?.query) {
             setSearchQuery(searchRequest.query);
             runSearch(searchRequest.query);
+            onSearchRequestHandled?.();
         }
         // runSearch is recreated every render; only a new request should trigger a search
         // eslint-disable-next-line react-hooks/exhaustive-deps

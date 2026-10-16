@@ -55,8 +55,8 @@ export interface IReportActionPanelProps {
     /** The selected player; anonymous players (no profile) cannot be targeted by mod actions */
     target: IPlayerReportPlayerContext;
 
-    /** Called with the server message after an action was issued */
-    onActionApplied: (message: string) => void;
+    /** Called with the server message after an action was issued; `isWarning` when a follow-up step failed */
+    onActionApplied: (message: string, isWarning?: boolean) => void;
     onError: (message: string) => void;
 }
 
@@ -64,5 +64,7 @@ export interface IReportClosePanelProps {
     report: IPlayerReport;
     onClosed: () => void;
     onReopened: () => void;
+
+    /** Closing or reopening failed (e.g. the ticket changed meanwhile); the dialog reloads the ticket */
     onError: (message: string) => void;
 }

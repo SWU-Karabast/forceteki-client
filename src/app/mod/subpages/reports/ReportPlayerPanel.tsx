@@ -101,15 +101,18 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             <Typography sx={styles.roleLabel}>{roleLabel}{selected ? ' · selected' : ''}</Typography>
             <Box sx={styles.nameRow}>
                 <Typography sx={styles.name}>{context.username}</Typography>
-                <Typography
-                    sx={styles.profileLink}
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        onOpenProfile();
-                    }}
-                >
-                    Open profile ↗
-                </Typography>
+                {/* Players without a profile cannot be found in Find User */}
+                {context.createdAt && (
+                    <Typography
+                        sx={styles.profileLink}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onOpenProfile();
+                        }}
+                    >
+                        Open profile ↗
+                    </Typography>
+                )}
             </Box>
             {context.username !== usernameAtReport && (
                 <Typography sx={styles.renamedHint}>was {usernameAtReport} at report time</Typography>

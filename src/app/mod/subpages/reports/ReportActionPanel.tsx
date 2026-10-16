@@ -131,8 +131,10 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                 resetName,
                 reportId,
             });
-            if (result.success) {
-                onActionApplied(result.message);
+            if (result.mainActionApplied) {
+                // A failed follow-up (the username reset) is reported as a warning, but the action itself
+                // is in place, so the ticket has to be refreshed and the form cleared all the same
+                onActionApplied(result.message, !result.success);
                 setSelectedAction(null);
                 setDurationValue('');
                 setNewUsername('');

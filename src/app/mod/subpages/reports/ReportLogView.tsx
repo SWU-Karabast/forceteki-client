@@ -108,7 +108,7 @@ const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog
             <Box sx={styles.logBox}>
                 {report.logsDeletedAt && (
                     <Typography sx={styles.notice}>
-                        The logs were deleted on {formatDate(report.logsDeletedAt)}, {LOG_RETENTION_DAYS} days after the ticket was closed.
+                        The logs were deleted on {formatDate(report.logsDeletedAt)}, when the {LOG_RETENTION_DAYS}-day retention period after closing the ticket had passed.
                     </Typography>
                 )}
                 {log?.truncated && <Typography sx={styles.notice}>Older lines were cut off because the log was too long.</Typography>}

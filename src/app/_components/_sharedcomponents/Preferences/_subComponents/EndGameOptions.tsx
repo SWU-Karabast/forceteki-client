@@ -373,10 +373,10 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report Bug'}
                                 buttonFnc={handleOpenBugReport}
                                 sx={{ minWidth: '140px' }}
-                                disabled={!canReportBug}
+                                disabled={!canReportBug || isReportingDisabled}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                                {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                             </Typography>
                         </Box>
                         <Box sx={styles.contentContainer}>
@@ -498,10 +498,10 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                                 text={'Report Bug'}
                                 buttonFnc={handleOpenBugReport}
                                 sx={{ minWidth: '140px' }}
-                                disabled={!canReportBug}
+                                disabled={!canReportBug || isReportingDisabled}
                             />
                             <Typography sx={styles.typeographyStyle}>
-                                {canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
+                                {isReportingDisabled ? reportingDisabledText : canReportBug ? 'Report a bug to the developer team' : 'Please log in to submit reports'}
                             </Typography>
                         </Box>
                         <Box sx={styles.contentContainer}>

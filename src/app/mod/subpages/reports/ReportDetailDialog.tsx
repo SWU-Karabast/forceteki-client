@@ -33,30 +33,76 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
         onReportChangedRef.current = onReportChanged;
     }, [onReportChanged]);
 
-    const loadAsync = useCallback(async (claimIfUnclaimed: boolean) => {
-        if (!reportId) {
-            return;
+    // Feedback is shown at the top while the action and close panels are at the bottom of a scrolling body,
+    // so a new message scrolls it into view
+    const bodyRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (error || info) {
+            bodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
         }
+    }, [error, info]);
+
+    // Only the newest load may update the dialog; an older one (another report, an earlier reload) is dropped
+    const latestLoadRef = useRef(0);
+
+    // The report the dialog shows now. Handlers awaiting a request check it afterwards, since the moderator may
+    // have switched to another report meanwhile and their closure still refers to the old one.
+    const currentReportIdRef = useRef(reportId);
+    currentReportIdRef.current = reportId;
+    const isShowing = (id: string | null) => !!id && id === currentReportIdRef.current;
+
+    /** @returns false if the report could not be loaded (or the load was superseded) */
+    const loadAsync = useCallback(async (claimIfUnclaimed: boolean): Promise<boolean> => {
+        // A handler from a report that is no longer shown must not reload (and so cancel) the current one
+        if (!reportId || reportId !== currentReportIdRef.current) {
+            return false;
+        }
+        const loadId = ++latestLoadRef.current;
+        const isCurrent = () => loadId === latestLoadRef.current;
+
         setLoading(true);
         try {
-            let result = await ServerApiService.getPlayerReportAsync(reportId);
-            if (claimIfUnclaimed && result.report.status === PlayerReportStatus.Open && !result.report.claimedById) {
-                const claimed = await ServerApiService.claimPlayerReportAsync(reportId);
-                if (claimed.report) {
-                    result = { ...result, report: claimed.report };
-                    onReportChangedRef.current();
-                }
+            const result = await ServerApiService.getPlayerReportAsync(reportId);
+            if (!isCurrent()) {
+                return false;
             }
             setDetail(result);
-            setSelectedPlayerId((current) => current ?? result.report.reportedPlayerId);
+            // Keep the selection only if it belongs to this report
+            setSelectedPlayerId((current) => (current === result.reporter.playerId || current === result.reportedPlayer.playerId
+                ? current
+                : result.reportedPlayer.playerId));
+
+            if (claimIfUnclaimed && result.report.status === PlayerReportStatus.Open && !result.report.claimedById) {
+                try {
+                    const claimed = await ServerApiService.claimPlayerReportAsync(reportId);
+                    // The claim is in place on the server either way, so the list must show it
+                    onReportChangedRef.current();
+                    if (isCurrent() && claimed.report) {
+                        setDetail((current) => (current ? { ...current, report: claimed.report! } : current));
+                    }
+                } catch (claimError) {
+                    // The report itself loaded fine; only taking it over failed
+                    if (isCurrent()) {
+                        setError(`Could not take over the ticket: ${claimError instanceof Error ? claimError.message : 'unknown error'}`);
+                    }
+                }
+            }
+            return true;
         } catch (loadError) {
-            setError(loadError instanceof Error ? loadError.message : 'Failed to load report');
+            if (isCurrent()) {
+                setError(loadError instanceof Error ? loadError.message : 'Failed to load report');
+            }
+            return false;
         } finally {
-            setLoading(false);
+            if (isCurrent()) {
+                setLoading(false);
+            }
         }
     }, [reportId]);
 
     useEffect(() => {
+        // Drops any load still running for the previous report, also when the dialog was just closed
+        latestLoadRef.current++;
         setDetail(null);
         setError(null);
         setInfo(null);
@@ -65,36 +111,80 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
     }, [loadAsync]);
 
     const handleTakeOver = async () => {
-        if (!reportId) {
+        const forReportId = reportId;
+        if (!forReportId) {
             return;
         }
         try {
-            const claimed = await ServerApiService.claimPlayerReportAsync(reportId);
-            if (claimed.report) {
-                setDetail((current) => (current ? { ...current, report: claimed.report! } : current));
-                onReportChangedRef.current();
+            const claimed = await ServerApiService.claimPlayerReportAsync(forReportId);
+            onReportChangedRef.current();
+            if (isShowing(forReportId) && claimed.report) {
+                setDetail((current) => (current?.report.id === forReportId ? { ...current, report: claimed.report! } : current));
             }
         } catch (claimError) {
-            setError(claimError instanceof Error ? claimError.message : 'Failed to take over ticket');
+            if (isShowing(forReportId)) {
+                setError(claimError instanceof Error ? claimError.message : 'Failed to take over ticket');
+            }
         }
     };
 
-    const handleActionApplied = async (message: string) => {
-        setError(null);
-        setInfo(message);
-        await loadAsync(false);
+    const handleActionApplied = async (message: string, isWarning = false) => {
         onReportChangedRef.current();
+        if (!isShowing(reportId)) {
+            return;
+        }
+        if (!isWarning) {
+            setError(null);
+            setInfo(message);
+            await loadAsync(false);
+            return;
+        }
+        // Set after the reload, so a failing reload cannot replace the warning that a follow-up step is missing
+        setInfo(null);
+        const reloaded = await loadAsync(false);
+        if (isShowing(reportId)) {
+            setError(reloaded ? message : `${message} Reloading the ticket failed, so it may not show the action yet.`);
+        }
     };
 
     const handleClosed = () => {
         onReportChangedRef.current();
-        onClose();
+        // A close that finishes after the moderator moved on must not close the report shown now
+        if (isShowing(reportId)) {
+            onClose();
+        }
+    };
+
+    /** Errors from the panels of a report that is no longer shown are dropped */
+    const handlePanelError = (message: string) => {
+        if (isShowing(reportId)) {
+            setError(message);
+        }
+    };
+
+    /**
+     * Closing or reopening failed, usually because another moderator changed the ticket meanwhile: show the
+     * current state, so the moderator is not left retrying against a ticket that is already closed or open.
+     */
+    const handleWorkflowFailed = async (message: string) => {
+        onReportChangedRef.current();
+        if (!isShowing(reportId)) {
+            return;
+        }
+        setInfo(null);
+        await loadAsync(false);
+        if (isShowing(reportId)) {
+            setError(message);
+        }
     };
 
     const handleReopened = async () => {
+        onReportChangedRef.current();
+        if (!isShowing(reportId)) {
+            return;
+        }
         setInfo('Ticket reopened');
         await loadAsync(false);
-        onReportChangedRef.current();
     };
 
     const report = detail?.report;
@@ -237,7 +327,7 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
                 </IconButton>
             </Box>
 
-            <Box sx={styles.body}>
+            <Box sx={styles.body} ref={bodyRef}>
                 {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
                 {info && <Alert severity="success" onClose={() => setInfo(null)}>{info}</Alert>}
 
@@ -310,16 +400,17 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
                             <>
                                 <Divider sx={styles.divider} />
                                 <ReportActionPanel
+                                    key={selectedContext.playerId}
                                     reportId={report.id}
                                     target={selectedContext}
                                     onActionApplied={handleActionApplied}
-                                    onError={setError}
+                                    onError={handlePanelError}
                                 />
                             </>
                         )}
 
                         <Divider sx={styles.divider} />
-                        <ReportClosePanel report={report} onClosed={handleClosed} onReopened={handleReopened} onError={setError} />
+                        <ReportClosePanel report={report} onClosed={handleClosed} onReopened={handleReopened} onError={handleWorkflowFailed} />
                     </>
                 )}
             </Box>
