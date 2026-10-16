@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { Box, Chip, MenuItem, Typography } from '@mui/material';
+import { Box, Checkbox, Chip, FormControlLabel, MenuItem, Tooltip, Typography } from '@mui/material';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
-import { ServerApiService } from '@/app/_services/ServerApiService';
 import {
+    modActionDefinitions,
+    RESET_USERNAME_PREFIX,
+} from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { getNewUsernameError, MOD_ACTION_HELP_TEXT, pickResetUsername, submitModActionAsync } from '@/app/_utils/modActionSubmission';
+import {
+    getQuickActionUnavailableReason,
     IReportQuickAction,
     ONE_WEEK_IN_DAYS,
     REPORT_COMMENT_TEMPLATES,
@@ -25,8 +30,15 @@ const CONFIRMATION_Z_INDEX = 1500;
  * Quick actions against the selected player of a report. Issuing an action links it to the
  * ticket but leaves the ticket open, so several players can be handled in one report.
  */
-const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, targetPlayerId, targetUsername, targetIsAnonymous, onActionApplied, onError }) => {
+const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target, onActionApplied, onError }) => {
+    const targetUsername = target.username;
+    // Players without a profile were playing anonymously
+    const targetIsAnonymous = !target.createdAt;
+
     const [selectedAction, setSelectedAction] = useState<IReportQuickAction | null>(null);
+    const [newUsername, setNewUsername] = useState('');
+    const [resetUsername, setResetUsername] = useState(false);
+    const [resetName, setResetName] = useState<string | undefined>(undefined);
     const [durationValue, setDurationValue] = useState('');
     const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Days);
     const [comment, setComment] = useState('');
@@ -50,7 +62,22 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
 
     const needsDuration = selectedAction?.key === ReportQuickActionKey.MuteCustom;
     const isMute = selectedAction?.key === ReportQuickActionKey.MuteOneWeek || needsDuration;
-    const canApply = !!selectedAction && !submitting && !targetIsAnonymous && (!needsDuration || getDurationDays() > 0);
+    const definition = selectedAction ? modActionDefinitions[selectedAction.actionType] : null;
+    const needsNewUsername = !!definition?.requiresNewUsername;
+    const newUsernameError = needsNewUsername ? getNewUsernameError(newUsername, targetUsername) : null;
+    const unavailableReason = selectedAction ? getQuickActionUnavailableReason(selectedAction, target) : null;
+    const canApply = !!selectedAction
+        && !submitting
+        && !targetIsAnonymous
+        && !unavailableReason
+        && (!needsDuration || getDurationDays() > 0)
+        && (!needsNewUsername || (!!newUsername.trim() && !newUsernameError));
+
+    const selectAction = (action: IReportQuickAction) => {
+        setSelectedAction(action);
+        setNewUsername('');
+        setResetUsername(false);
+    };
 
     const describeAction = (): string => {
         if (!selectedAction) {
@@ -66,6 +93,10 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                 return `force ${targetUsername} to rename`;
             case ReportQuickActionKey.DisableReporting:
                 return `disable reporting for ${targetUsername}`;
+            case ReportQuickActionKey.BlockUsernameChanges:
+                return `block ${targetUsername} from changing their username${resetName ? ` and reset it to ${resetName}` : ''}`;
+            case ReportQuickActionKey.ChangeUsername:
+                return `change the username of ${targetUsername} to ${newUsername.trim()}`;
             default:
                 return selectedAction.label;
         }
@@ -76,6 +107,8 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
             setShowCommentError(true);
             return;
         }
+        // Decided before confirming so the dialog can name the new username
+        setResetName(selectedAction ? pickResetUsername(selectedAction.actionType, resetUsername, targetUsername) : undefined);
         setConfirmOpen(true);
     };
 
@@ -87,17 +120,23 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
 
         setSubmitting(true);
         try {
-            const result = await ServerApiService.submitModActionAsync(
-                targetPlayerId,
-                selectedAction.actionType,
-                comment.trim(),
-                isMute ? getDurationDays() : undefined,
-                { reportId },
-            );
+            const result = await submitModActionAsync({
+                playerId: target.playerId,
+                currentUsername: targetUsername,
+                actionType: selectedAction.actionType,
+                note: comment.trim(),
+                durationDays: isMute ? getDurationDays() : undefined,
+                newUsername,
+                resetRequested: resetUsername,
+                resetName,
+                reportId,
+            });
             if (result.success) {
                 onActionApplied(result.message);
                 setSelectedAction(null);
                 setDurationValue('');
+                setNewUsername('');
+                setResetUsername(false);
                 setComment('');
             } else {
                 onError(result.message);
@@ -157,6 +196,20 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
             fontSize: '0.75rem',
             '&:hover': { color: 'white', borderColor: '#2F7DB6' },
         },
+        resetOption: {
+            color: 'white',
+            mb: '0.25rem',
+            '& .MuiFormControlLabel-label': { fontSize: '0.875rem' },
+        },
+        checkbox: {
+            color: '#B0B0B0',
+            '&.Mui-checked': { color: '#2F7DB6' },
+        },
+        helpText: {
+            color: '#B0B0B0',
+            fontSize: '0.75rem',
+            mb: '0.5rem',
+        },
         anonymousNote: {
             color: '#ffb74d',
             fontSize: '0.8rem',
@@ -178,16 +231,23 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                 </Typography>
             )}
             <Box sx={styles.actionRow}>
-                {REPORT_QUICK_ACTIONS.map((action) => (
-                    <PreferenceButton
-                        key={action.key}
-                        variant="standard"
-                        disabled={submitting || targetIsAnonymous}
-                        sx={styles.actionButton(selectedAction?.key === action.key)}
-                        buttonFnc={() => setSelectedAction(action)}
-                        text={action.label}
-                    />
-                ))}
+                {REPORT_QUICK_ACTIONS.map((action) => {
+                    const reason = getQuickActionUnavailableReason(action, target);
+                    return (
+                        <Tooltip key={action.key} title={reason ?? ''}>
+                            {/* The wrapper keeps the tooltip working on a disabled button */}
+                            <span>
+                                <PreferenceButton
+                                    variant="standard"
+                                    disabled={submitting || targetIsAnonymous || !!reason}
+                                    sx={styles.actionButton(selectedAction?.key === action.key)}
+                                    buttonFnc={() => selectAction(action)}
+                                    text={action.label}
+                                />
+                            </span>
+                        </Tooltip>
+                    );
+                })}
             </Box>
 
             {needsDuration && (
@@ -209,6 +269,36 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                         <MenuItem value={DurationUnit.Weeks}>Weeks</MenuItem>
                     </StyledTextField>
                 </Box>
+            )}
+
+            {needsNewUsername && (
+                <Box sx={styles.durationRow}>
+                    <StyledTextField
+                        placeholder="New username"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                        errorMessage={newUsernameError ?? ''}
+                    />
+                </Box>
+            )}
+
+            {definition?.supportsUsernameReset && (
+                <FormControlLabel
+                    sx={styles.resetOption}
+                    control={(
+                        <Checkbox
+                            checked={resetUsername}
+                            onChange={(e) => setResetUsername(e.target.checked)}
+                            size="small"
+                            sx={styles.checkbox}
+                        />
+                    )}
+                    label={`Also reset username to ${RESET_USERNAME_PREFIX}XXXX (random number)`}
+                />
+            )}
+
+            {selectedAction && MOD_ACTION_HELP_TEXT[selectedAction.actionType] && (
+                <Typography sx={styles.helpText}>{MOD_ACTION_HELP_TEXT[selectedAction.actionType]}</Typography>
             )}
 
             <Box sx={styles.templateRow}>

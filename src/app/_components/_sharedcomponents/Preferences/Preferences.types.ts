@@ -326,7 +326,11 @@ export interface IPlayerReportPlayerContext {
     isMuted: boolean;
     activeRename: IActiveModActionCacheEntry | null;
     activeReportingDisabledId: string | null;
+    activeUsernameChangesBlockedId: string | null;
     modActions: IModActionResponse[];
+
+    /** Newest first */
+    usernameChanges: IUsernameChangeResponse[];
     reportsAgainst: IPlayerReportIndexEntry[];
     reportsFiled: IPlayerReportIndexEntry[];
 }

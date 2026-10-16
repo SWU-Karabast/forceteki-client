@@ -1,10 +1,12 @@
 import { REPORT_TYPES } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import {
     IModActionResponse,
+    IPlayerReportPlayerContext,
     ModActionType,
     modActionDefinitions,
     PlayerReportOutcome,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { FORCE_RENAME_BLOCKED_MESSAGE } from '@/app/_utils/modActionSubmission';
 
 /** Days for the "Mute 1 week" quick action */
 export const ONE_WEEK_IN_DAYS = 7;
@@ -54,6 +56,8 @@ export enum ReportQuickActionKey {
     Warning = 'warning',
     ForceRename = 'forceRename',
     DisableReporting = 'disableReporting',
+    BlockUsernameChanges = 'blockUsernameChanges',
+    ChangeUsername = 'changeUsername',
 }
 
 export interface IReportQuickAction {
@@ -69,7 +73,36 @@ export const REPORT_QUICK_ACTIONS: IReportQuickAction[] = [
     { key: ReportQuickActionKey.Warning, label: 'Warning', actionType: ModActionType.Warning },
     { key: ReportQuickActionKey.ForceRename, label: 'Force rename', actionType: ModActionType.Rename },
     { key: ReportQuickActionKey.DisableReporting, label: modActionDefinitions[ModActionType.ReportingDisabled].label, actionType: ModActionType.ReportingDisabled },
+    { key: ReportQuickActionKey.BlockUsernameChanges, label: modActionDefinitions[ModActionType.UsernameChangesBlocked].label, actionType: ModActionType.UsernameChangesBlocked },
+    { key: ReportQuickActionKey.ChangeUsername, label: modActionDefinitions[ModActionType.ChangeUsername].label, actionType: ModActionType.ChangeUsername },
 ];
+
+/**
+ * Why a quick action cannot be issued against the player right now, or null if it can. Mirrors the
+ * server's refusals so the moderator sees the reason before submitting.
+ */
+export const getQuickActionUnavailableReason = (action: IReportQuickAction, target: IPlayerReportPlayerContext): string | null => {
+    switch (action.actionType) {
+        case ModActionType.Mute:
+            return target.isMuted ? `${target.username} is already muted.` : null;
+        case ModActionType.Rename:
+            if (target.activeUsernameChangesBlockedId) {
+                return FORCE_RENAME_BLOCKED_MESSAGE;
+            }
+            return target.activeRename ? `${target.username} already has a pending force rename.` : null;
+        case ModActionType.ReportingDisabled:
+            return target.activeReportingDisabledId ? `Reporting is already disabled for ${target.username}.` : null;
+        case ModActionType.UsernameChangesBlocked:
+            return target.activeUsernameChangesBlockedId ? `Username changes are already blocked for ${target.username}.` : null;
+        case ModActionType.Warning:
+        case ModActionType.ChangeUsername:
+            return null;
+        default: {
+            const unhandled: never = action.actionType;
+            return unhandled;
+        }
+    }
+};
 
 /** Short name of what a mod action did, e.g. "Mute 7 days", "Warning", "Force rename" */
 export const describeModAction = (action: IModActionResponse): string => {
@@ -82,18 +115,25 @@ export const describeModAction = (action: IModActionResponse): string => {
             return 'Force rename';
         case ModActionType.ReportingDisabled:
             return 'Reporting disabled';
-        default:
-            return action.actionType;
+        case ModActionType.UsernameChangesBlocked:
+            return 'Username changes blocked';
+        case ModActionType.ChangeUsername:
+            return 'Username changed';
+        default: {
+            const unhandled: never = action.actionType;
+            return unhandled;
+        }
     }
 };
 
-/** Starting points for the case description; moderators edit them freely */
+/**
+ * Starting points for the case description of a mod action; moderators edit them freely. Only reasons
+ * for a punishment belong here: closing without one (false report, no violation) is done through the
+ * close panel and should stay a deliberate last step, not a one-click suggestion.
+ */
 export const REPORT_COMMENT_TEMPLATES: string[] = [
     'Insulting the opponent in chat.',
     'Offensive username.',
-    'Abusing undo / game features.',
-    'False report.',
-    'No violation found in chat or game log.',
 ];
 
 /** Compact "time since" for the report list: "just now", "12 min", "3 h", "2 d" */

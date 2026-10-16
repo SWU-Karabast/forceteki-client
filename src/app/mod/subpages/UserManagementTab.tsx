@@ -16,16 +16,14 @@ import {
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
-import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
-import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, generateResetUsername, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel, isResetUsername } from '@/app/_utils/ModerationUtils';
-
-const actionHelpText: Partial<Record<ModActionType, string>> = {
-    [ModActionType.Rename]: 'The player must choose a new username themselves the next time they log in.',
-    [ModActionType.ChangeUsername]: 'Sets the username directly. Resolves a pending Force Rename and does not lift Block Username Changes.',
-    [ModActionType.UsernameChangesBlocked]: 'The player can no longer change their own username and must request changes from moderators.',
-};
-
-const forceRenameBlockedMessage = 'Force Rename is unavailable while username changes are blocked. Use Change Username instead.';
+import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
+import {
+    FORCE_RENAME_BLOCKED_MESSAGE,
+    getNewUsernameError,
+    MOD_ACTION_HELP_TEXT,
+    pickResetUsername,
+    submitModActionAsync,
+} from '@/app/_utils/modActionSubmission';
 
 interface IUserManagementTabProps {
 
@@ -70,10 +68,9 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const trimmedNewUsername = newUsername.trim();
-    const newUsernameError = !modActionDefinitions[actionType].requiresNewUsername || !trimmedNewUsername
-        ? null
-        : validateDiscordUsername(trimmedNewUsername)
-            ?? (trimmedNewUsername === selectedPlayer?.username ? 'The player already has this username.' : null);
+    const newUsernameError = modActionDefinitions[actionType].requiresNewUsername
+        ? getNewUsernameError(newUsername, selectedPlayer?.username)
+        : null;
     const isForceRenameBlocked = actionType === ModActionType.Rename && !!selectedPlayer?.activeUsernameChangesBlockedId;
 
     // ==================== Handlers ====================
@@ -142,7 +139,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
         if (!selectedPlayer) return;
 
         if (isForceRenameBlocked) {
-            setSearchError(forceRenameBlockedMessage);
+            setSearchError(FORCE_RENAME_BLOCKED_MESSAGE);
             return;
         }
 
@@ -155,9 +152,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
             return;
         }
 
-        const resetRequested = definition.supportsUsernameReset && resetUsername;
-        // A player who already has a reset name keeps it instead of being given a second one
-        const resetName = resetRequested && !isResetUsername(selectedPlayer.username) ? generateResetUsername() : undefined;
+        const resetName = pickResetUsername(actionType, resetUsername, selectedPlayer.username);
 
         const actionMessages: Record<ModActionType, string> = {
             [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} for ${durationValue} ${durationUnit.toLowerCase()}. Are you sure?`,
@@ -180,41 +175,18 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                 setSearchError(null);
                 let submissionMessage: string | undefined;
                 try {
-                    const result = await ServerApiService.submitModActionAsync(
-                        selectedPlayer.id,
+                    const result = await submitModActionAsync({
+                        playerId: selectedPlayer.id,
+                        currentUsername: selectedPlayer.username,
                         actionType,
-                        note.trim(),
-                        definition.requiresDuration ? durationDays : undefined,
-                        {
-                            newUsername: definition.requiresNewUsername ? trimmedNewUsername : undefined,
-                        },
-                    );
-                    let submissionSucceeded = result.success;
+                        note: note.trim(),
+                        durationDays,
+                        newUsername: trimmedNewUsername,
+                        resetRequested: resetUsername,
+                        resetName,
+                    });
+                    const submissionSucceeded = result.success;
                     submissionMessage = result.message;
-                    if (result.success && resetRequested) {
-                        if (!resetName) {
-                            submissionMessage += ` The username is already '${selectedPlayer.username}', so no username update was needed.`;
-                        } else {
-                            try {
-                                const resetResult = await ServerApiService.submitModActionAsync(
-                                    selectedPlayer.id,
-                                    ModActionType.ChangeUsername,
-                                    note.trim(),
-                                    undefined,
-                                    { newUsername: resetName },
-                                );
-                                submissionSucceeded = resetResult.success;
-                                submissionMessage += ` ${resetResult.message}`;
-                                if (!resetResult.success) {
-                                    submissionMessage += ' The username-change restriction remains in place. Use Change Username to retry if needed.';
-                                }
-                            } catch (error) {
-                                submissionSucceeded = false;
-                                const failure = error instanceof Error ? error.message : 'Failed to update the username';
-                                submissionMessage += ` The username update failed: ${failure}. The username-change restriction remains in place. Use Change Username to retry.`;
-                            }
-                        }
-                    }
                     if (submissionSucceeded) {
                         setSuccessMessage(submissionMessage);
                     } else {
@@ -652,14 +624,14 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest })
                                 />
                             )}
 
-                            {actionHelpText[actionType] && (
+                            {MOD_ACTION_HELP_TEXT[actionType] && (
                                 <Typography sx={{
                                     color: isForceRenameBlocked ? '#ffd54f' : '#B0B0B0',
                                     fontWeight: isForceRenameBlocked ? 700 : 400,
                                     fontSize: '0.75rem',
                                     mb: '0.5rem',
                                 }}>
-                                    {isForceRenameBlocked ? forceRenameBlockedMessage : actionHelpText[actionType]}
+                                    {isForceRenameBlocked ? FORCE_RENAME_BLOCKED_MESSAGE : MOD_ACTION_HELP_TEXT[actionType]}
                                 </Typography>
                             )}
 

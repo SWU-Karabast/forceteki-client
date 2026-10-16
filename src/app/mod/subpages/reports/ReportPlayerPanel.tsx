@@ -8,7 +8,15 @@ import { IReportPlayerPanelProps } from './reportTypes';
  * One side of a report (reporter or reported player). Clicking the card selects the player as the
  * target for quick actions and for the history column.
  */
+/** How many earlier usernames the card lists; the full list is in the history column */
+const MAX_PREVIOUS_NAMES_SHOWN = 3;
+
 const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, context, usernameAtReport, selected, onSelect, onOpenProfile }) => {
+    // Newest first, without the current name and without repeats
+    const previousNames = [...new Set(context.usernameChanges.map((change) => change.previousUsername))]
+        .filter((name): name is string => !!name && name !== context.username);
+    const shownPreviousNames = previousNames.slice(0, MAX_PREVIOUS_NAMES_SHOWN).join(', ')
+        + (previousNames.length > MAX_PREVIOUS_NAMES_SHOWN ? ` +${previousNames.length - MAX_PREVIOUS_NAMES_SHOWN}` : '');
     const openMutes = context.modActions.filter((action) => action.actionType === ModActionType.Mute && !action.cancelledAt);
     const runningMute = openMutes.find((action) => action.expiresAt && new Date(action.expiresAt) > new Date());
     const hasPendingMute = openMutes.some((action) => !action.startedAt);
@@ -108,9 +116,11 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             )}
             <Typography sx={styles.stat}>Reports against: {context.reportsAgainst.length}</Typography>
             <Typography sx={styles.stat}>Reports filed: {context.reportsFiled.length}</Typography>
+            {previousNames.length > 0 && <Typography sx={styles.stat}>Previous names: {shownPreviousNames}</Typography>}
             {muteText && <Typography sx={styles.statusMuted}>{muteText}</Typography>}
             {context.activeRename && <Typography sx={styles.statusRename}>Pending force rename</Typography>}
             {context.activeReportingDisabledId && <Typography sx={styles.statusRename}>Reporting disabled</Typography>}
+            {context.activeUsernameChangesBlockedId && <Typography sx={styles.statusRename}>Username changes blocked</Typography>}
         </Box>
     );
 };

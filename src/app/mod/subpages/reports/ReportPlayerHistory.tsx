@@ -3,10 +3,19 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import {
     IModActionResponse,
     IPlayerSearchResult,
+    IUsernameChangeResponse,
     PlayerReportRole,
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import { formatDate, getActionLabel, getActionStatus } from '@/app/_utils/ModerationUtils';
+import {
+    buildUserHistory,
+    formatDate,
+    formatUsernameTransition,
+    getActionStatus,
+    getModActionEntryLabel,
+    getUsernameChangeLabel,
+    getUsernameChangeSourceLabel,
+} from '@/app/_utils/ModerationUtils';
 import { describeModAction, getOffenseLabel, getOutcomeOption } from '@/app/_utils/playerReportUtils';
 import { IReportPlayerHistoryProps } from './reportTypes';
 
@@ -23,8 +32,11 @@ interface IHistoryRow {
     isCurrentTicket: boolean;
 }
 
-const describeActionInDetail = (action: IModActionResponse, statusLabel: string): string => {
+const describeActionInDetail = (action: IModActionResponse, statusLabel: string, rename?: IUsernameChangeResponse): string => {
     const parts = [`${describeModAction(action)}${statusLabel ? ` (${statusLabel})` : ''} by ${action.moderatorUsername} on ${formatDate(action.createdAt)}`];
+    if (rename) {
+        parts.push(formatUsernameTransition(rename, { quote: true }));
+    }
     if (action.note) {
         parts.push(`"${action.note}"`);
     }
@@ -46,13 +58,19 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
             isMuted: context.isMuted,
             activeRename: context.activeRename ?? undefined,
             activeReportingDisabledId: context.activeReportingDisabledId,
+            activeUsernameChangesBlockedId: context.activeUsernameChangesBlockedId,
         };
+
+        // Pairs each forced or moderator rename with the action that caused it
+        const history = buildUserHistory(context.modActions, context.usernameChanges);
+        const renameByActionId = new Map(history.filter((entry) => entry.mergedUsernameChange).map((entry) => [entry.id, entry.mergedUsernameChange!]));
 
         const reportIds = new Set([...context.reportsAgainst, ...context.reportsFiled].map((entry) => entry.reportId));
         const isFoldedIntoTicket = (action: IModActionResponse) => !!action.relatedReportId && reportIds.has(action.relatedReportId);
 
         // Only actions issued outside a ticket (e.g. from Find User) get a row of their own
-        const actionRows: IHistoryRow[] = context.modActions.filter((action) => !isFoldedIntoTicket(action)).map((action) => {
+        const actionRows: IHistoryRow[] = history.filter((entry) => entry.modAction && !isFoldedIntoTicket(entry.modAction)).map((entry) => {
+            const action = entry.modAction!;
             const details = [`Moderator: ${action.moderatorUsername}`];
             if (action.note) {
                 details.push(`Note: ${action.note}`);
@@ -73,10 +91,23 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
             return {
                 key: `action-${action.id}`,
                 createdAt: action.createdAt,
-                label: getActionLabel(action),
+                label: getModActionEntryLabel(entry, playerForStatus),
                 status: getActionStatus(action, playerForStatus),
                 details,
                 isCurrentTicket: action.relatedReportId === currentReportId,
+            };
+        });
+
+        // Name changes not caused by a mod action, e.g. the player renaming themselves
+        const usernameRows: IHistoryRow[] = history.filter((entry) => entry.usernameChange).map((entry) => {
+            const change = entry.usernameChange!;
+            return {
+                key: `username-${change.id}`,
+                createdAt: change.createdAt,
+                label: getUsernameChangeLabel(change),
+                status: { label: '', color: '#9E9E9E' },
+                details: [getUsernameChangeSourceLabel(change.source), formatUsernameTransition(change)],
+                isCurrentTicket: false,
             };
         });
 
@@ -98,7 +129,7 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
                 isReported ? `${context.username} was reported for ${getOffenseLabel(entry.offense)}` : `${context.username} reported someone for ${getOffenseLabel(entry.offense)}`,
                 entry.status === PlayerReportStatus.Open ? 'Ticket open' : `Ticket closed: ${outcome?.label ?? entry.outcome ?? 'unknown'}`,
                 ...(actionsFromTicket.length > 0
-                    ? actionsFromTicket.map((action) => describeActionInDetail(action, getActionStatus(action, playerForStatus).label))
+                    ? actionsFromTicket.map((action) => describeActionInDetail(action, getActionStatus(action, playerForStatus).label, renameByActionId.get(action.id)))
                     : [`No mod action against ${context.username} in this ticket`]),
             ];
 
@@ -112,7 +143,7 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
             };
         });
 
-        return [...actionRows, ...reportRows].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        return [...actionRows, ...usernameRows, ...reportRows].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     }, [context, currentReportId]);
 
     // ----------------Styles----------------//
@@ -172,7 +203,7 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
         <Box>
             <Typography sx={styles.title}>History of {context.username}</Typography>
             {rows.length === 0 ? (
-                <Typography sx={styles.empty}>No earlier reports or mod actions.</Typography>
+                <Typography sx={styles.empty}>No earlier reports, mod actions or username changes.</Typography>
             ) : (
                 <Box sx={styles.list}>
                     {rows.map((row) => (

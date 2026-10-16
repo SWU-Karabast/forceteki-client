@@ -51,11 +51,9 @@ export interface IReportPlayerHistoryProps {
 
 export interface IReportActionPanelProps {
     reportId: string;
-    targetPlayerId: string;
-    targetUsername: string;
 
-    /** Anonymous players have no account, so mod actions cannot be issued against them */
-    targetIsAnonymous: boolean;
+    /** The selected player; anonymous players (no profile) cannot be targeted by mod actions */
+    target: IPlayerReportPlayerContext;
 
     /** Called with the server message after an action was issued */
     onActionApplied: (message: string) => void;
