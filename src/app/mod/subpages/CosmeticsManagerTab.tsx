@@ -39,7 +39,13 @@ interface ValidationRules {
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const CosmeticsManagerTab: React.FC = () => {
+interface ICosmeticsManagerTabProps {
+
+    /** Moderators manage cardbacks only; the rest of this tab is admin-only, as are its endpoints. */
+    isAdmin: boolean;
+}
+
+const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) => {
     const { cosmetics, setCosmetics, fetchCosmetics } = useCosmetics();
     const { showErrorScreen } = useErrorScreen();
     const [filteredCosmetics, setFilteredCosmetics] = useState<ICosmeticEntity[]>([]);
@@ -481,7 +487,7 @@ const CosmeticsManagerTab: React.FC = () => {
             {/* Header Controls */}
             <Box sx={styles.cosmeticsHeader}>
                 <Box sx={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
-                    {isDev && (
+                    {isDev && isAdmin && (
                         <PreferenceButton
                             variant={'standard'}
                             text="Dev Cleanup"
@@ -549,7 +555,8 @@ const CosmeticsManagerTab: React.FC = () => {
                                     <Typography variant="caption" color="gray">
                                         {cosmetic.type} • {cosmetic.id}
                                     </Typography>
-                                    {cosmetic.title?.toLowerCase() !== 'default' && (
+                                    {cosmetic.title?.toLowerCase() !== 'default'
+                                        && (isAdmin || cosmetic.type === RegisteredCosmeticType.Cardback) && (
                                         <Button
                                             size="small"
                                             color="error"
@@ -604,7 +611,7 @@ const CosmeticsManagerTab: React.FC = () => {
                             label="Cosmetic Type"
                         >
                             <MenuItem value="cardback">Cardback (718x1000)</MenuItem>
-                            <MenuItem value="background">Background (1920x1080px)</MenuItem>
+                            {isAdmin && <MenuItem value="background">Background (1920x1080px)</MenuItem>}
                             {/* <MenuItem value="playmat">Playmat (2680x1200px)</MenuItem>*/}
                         </Select>
                     </FormControl>
