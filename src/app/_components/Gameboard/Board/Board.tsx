@@ -9,12 +9,14 @@ import { ICardData, LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/Ca
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import OngoingEffectsPanel from '@/app/_components/Gameboard/_subcomponents/PlayerTray/OngoingEffectsPanel';
 import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
+import { useTheme } from '@mui/material/styles';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
 }) => {
     const { gameState, connectedPlayer, isSpectator } = useGame();
     const { isPortrait } = useScreenOrientation();
+    const theme = useTheme();
     const playerIds = Object.keys(gameState.players);
 
     const opponentId = playerIds.find((id) => id !== connectedPlayer) || '';
@@ -104,7 +106,11 @@ const Board: React.FC<IBoardProps> = ({
             position: 'relative',
             width: isPortrait ? '20%' :
                 'clamp(8rem, 20vh, 14rem)',
-            margin: isPortrait ? '0 .1rem' : '0 1rem',
+            margin: 0,
+
+            [theme.breakpoints.up('lg')]: {
+                margin: isPortrait ? '0 .1rem' : '0 1rem',
+            },
         },
         middleColumnContent: {
             display: 'flex',
@@ -121,7 +127,11 @@ const Board: React.FC<IBoardProps> = ({
             alignItems: 'center',
             width: '100%',
             gap: 'clamp(1px, 1.0vh, 10px)',
-            padding: isPortrait ? '0 .1rem' : '0 1rem',
+            padding: isPortrait ? '0 .1rem' : '0 .5rem',
+
+            [theme.breakpoints.up('lg')]: {
+                padding: isPortrait ? '0 .1rem' : '0 1rem',
+            },
         },
         leaderBaseWrapper: {
             width: '100%',
@@ -193,26 +203,36 @@ const Board: React.FC<IBoardProps> = ({
             position: 'relative',
         },
         middleColumnBorderRight: {
-            opacity: 0.3,
-            background: `
-            url('border-lrt.svg') no-repeat right top,
-            url('border-lrb.svg') no-repeat right bottom`,
-            mixBlendMode: 'soft-light',
-            right: '0',
-            width: '20%',
-            height: '100%',
-            position: 'absolute',
+            display: 'none',
+
+            [theme.breakpoints.up('lg')]: {
+                display: 'block',
+                opacity: 0.3,
+                background: `
+                url('border-lrt.svg') no-repeat right top,
+                url('border-lrb.svg') no-repeat right bottom`,
+                mixBlendMode: 'soft-light',
+                right: '0',
+                width: '20%',
+                height: '100%',
+                position: 'absolute',
+            }
         },
         middleColumnBorderLeft: {
-            opacity: 0.3,
-            background: `
-            url('border-rlt.svg') no-repeat left top,
-            url('border-rlb.svg') no-repeat left bottom`,
-            mixBlendMode: 'soft-light',
-            left: '0',
-            width: '80%',
-            height: '100%',
-            position: 'absolute',
+            display: 'none',
+
+            [theme.breakpoints.up('lg')]: {
+                display: 'block',
+                opacity: 0.3,
+                background: `
+                url('border-rlt.svg') no-repeat left top,
+                url('border-rlb.svg') no-repeat left bottom`,
+                mixBlendMode: 'soft-light',
+                left: '0',
+                width: '80%',
+                height: '100%',
+                position: 'absolute',
+            },
         },
         initiativeWrapper: {
             position: 'absolute',
