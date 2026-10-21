@@ -107,7 +107,7 @@ const Board: React.FC<IBoardProps> = ({
             width: isPortrait ? '20%' :
                 'clamp(8rem, 20vh, 14rem)',
             margin: 0,
-            
+
             [theme.breakpoints.up('lg')]: {
                 margin: isPortrait ? '0 .1rem' : '0 1rem',
             },
@@ -128,7 +128,7 @@ const Board: React.FC<IBoardProps> = ({
             width: '100%',
             gap: 'clamp(1px, 1.0vh, 10px)',
             padding: isPortrait ? '0 .1rem' : '0 .5rem',
-            
+
             [theme.breakpoints.up('lg')]: {
                 padding: isPortrait ? '0 .1rem' : '0 1rem',
             },
