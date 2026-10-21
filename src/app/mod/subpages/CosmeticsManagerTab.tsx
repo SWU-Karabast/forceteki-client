@@ -23,6 +23,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { ICosmeticEntity, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { v4 as uuidv4 } from 'uuid';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { ServerApiService } from '@/app/_services/ServerApiService';
 
 interface ImageDimensions {
@@ -46,6 +47,7 @@ interface ICosmeticsManagerTabProps {
 
 const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) => {
     const { cosmetics, setCosmetics, fetchCosmetics } = useCosmetics();
+    const { showErrorScreen } = useErrorScreen();
     const [filteredCosmetics, setFilteredCosmetics] = useState<ICosmeticEntity[]>([]);
     const [availableTypes, setAvailableTypes] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -371,7 +373,11 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
         }
         const response = await ServerApiService.deleteCosmeticAsync(cosmeticId);
         if (!response.success) {
-            alert('Failed to delete cosmetic');
+            showErrorScreen({
+                title: 'Couldn\'t delete cosmetic',
+                message: `The cosmetic "${cosmeticId}" was not deleted.`,
+                detail: response.message,
+            });
             console.error('Delete error:', response.message);
         }
 
