@@ -97,6 +97,10 @@ export const LobbyFormatConfigs: IFormatModeConfig[] = [
     { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.NextSet, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    // Faux Suns is offered in local development only, so it can be played before it is enabled in production
+    ...(process.env.NODE_ENV === 'development'
+        ? [{ format: SwuGameFormat.FauxSuns, cardPools: [CardPool.Current, CardPool.NextSet, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] }]
+        : []),
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [
