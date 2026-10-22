@@ -51,6 +51,9 @@ export type IArticle = {
     date: string;
     image: string;
     imageAlt: string;
+
+    /** CSS object-position for the cropped banner, e.g. 'center top' or '50% -40px'. Defaults to centered. */
+    imagePosition?: string;
     link?: string;
 };
 

@@ -95,19 +95,7 @@ export const articles: IArticle[] = [
         date: '10/7/26',
         image: s3ImageURL('ui/homeworlds-preview-banner.webp'),
         imageAlt: 'News Announcement',
-    },
-    {
-        title: '🛠️ Update: Auto-Target is here',
-        content: `
-        <p>Streamline your gameplay! Auto-Target skips the manual selection step whenever an action or ability has exactly one legal target —  no choice to make, no click needed.</p>
-
-        <p>Find it in <strong>Preferences → Game Options → Gameplay</strong> from either the Home page or in a game. <em>Off by default</em>.</p>
-
-        <p>This is the first in a series of settings we're rolling out to streamline gameplay for players who know their deck inside and out. So keep an eye on the game preferences pane in future updates!</p>
-        `,
-        date: '7/23/26',
-        image: '/auto-target.jpg',
-        imageAlt: 'Auto-Target Setting',
+        imagePosition: 'center 35%',
     },
 ];
 
