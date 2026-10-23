@@ -8,12 +8,7 @@ import { CardImageLocale } from '@/app/_utils/s3Utils';
 
 /**
  * Generic function to save preferences based on user authentication status
- * @param user The current user (authenticated or null for anonymous)
- * @param partialPreferences The preferences to save/update
- * @param updateUserPreferences Function to update the user context
- * @returns Promise<{success: boolean, updatedPreferences: IPreferences}>
  */
-// TODO Expand this to make it more generalized later on
 export const savePreferencesGeneric = async (
     user: IUser | null,
     partialPreferences: Partial<IPreferences>,
@@ -23,11 +18,10 @@ export const savePreferencesGeneric = async (
         const success = await savePreferencesToServer(user, partialPreferences);
 
         if (success) {
-            // Deep merge for nested objects like sound and cosmetics
+            // Deep merge for nested objects like sound, cosmetics, keyboardShortcuts, gameOptions
             const updatedUserPreferences = {
                 ...user.preferences,
                 ...partialPreferences,
-                // Explicitly handle nested objects
                 ...(partialPreferences.sound && {
                     sound: {
                         ...user.preferences.sound,
@@ -40,20 +34,26 @@ export const savePreferencesGeneric = async (
                         ...partialPreferences.cosmetics
                     }
                 }),
+                ...(partialPreferences.keyboardShortcuts && {
+                    keyboardShortcuts: {
+                        ...user.preferences.keyboardShortcuts,
+                        ...partialPreferences.keyboardShortcuts
+                    } // <--- FIXED: Added closing brace
+                }),
                 ...(partialPreferences.gameOptions && {
                     gameOptions: {
                         ...user.preferences.gameOptions,
                         ...partialPreferences.gameOptions
                     }
                 })
-            }
+            };
+
             updateUserPreferences(updatedUserPreferences);
 
             const currentLocalPreferences = loadPreferencesFromLocalStorage();
             const updatedLocalPreferences = {
                 ...currentLocalPreferences,
                 ...partialPreferences,
-                // Explicitly handle nested objects for localStorage too
                 ...(partialPreferences.sound && {
                     sound: {
                         ...currentLocalPreferences.sound,
@@ -65,6 +65,12 @@ export const savePreferencesGeneric = async (
                         ...currentLocalPreferences.cosmetics,
                         ...partialPreferences.cosmetics
                     }
+                }),
+                ...(partialPreferences.keyboardShortcuts && {
+                    keyboardShortcuts: {
+                        ...currentLocalPreferences.keyboardShortcuts,
+                        ...partialPreferences.keyboardShortcuts
+                    } // <--- FIXED: Added closing brace
                 }),
                 ...(partialPreferences.gameOptions && {
                     gameOptions: {
@@ -84,7 +90,6 @@ export const savePreferencesGeneric = async (
         const updatedPreferences = {
             ...currentPreferences,
             ...partialPreferences,
-            // Explicitly handle nested objects
             ...(partialPreferences.sound && {
                 sound: {
                     ...currentPreferences.sound,
@@ -95,6 +100,12 @@ export const savePreferencesGeneric = async (
                 cosmetics: {
                     ...currentPreferences.cosmetics,
                     ...partialPreferences.cosmetics
+                }
+            }),
+            ...(partialPreferences.keyboardShortcuts && {
+                keyboardShortcuts: {
+                    ...currentPreferences.keyboardShortcuts,
+                    ...partialPreferences.keyboardShortcuts
                 }
             }),
             ...(partialPreferences.gameOptions && {
@@ -121,9 +132,11 @@ const getDefaultPreferences = (): IPreferences => ({
     cosmetics: {
         cardback: undefined,
         background: undefined,
-        // playmat: undefined,
-        // disablePlaymats: false,
     },
+    keyboardShortcuts: {
+        passTurn: 'SPACE',
+        undo: 'U',
+    }, // <--- FIXED: Added closing brace and comma
     gameOptions: {
         muteChat: false,
         cardLanguage: CardImageLocale.English,

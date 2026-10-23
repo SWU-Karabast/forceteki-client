@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     Drawer,
     Box,
@@ -37,6 +37,7 @@ import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { LobbyConfirmationPopupModule } from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
 import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import { Theme } from '@mui/material/styles';
+import { useKeyboardShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
 
 // ------------------------STYLES------------------------//
 const drawerBorder = '1px solid rgba(255, 255, 255, 0.16)';
@@ -217,14 +218,6 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
     const { gameState, sendGameMessage, connectedPlayer } = useGame();
     const correctPlayer = gameState.players[connectedPlayer];
     const quickUndoState: QuickUndoAvailableState | null = correctPlayer?.availableSnapshots?.quickSnapshotAvailable;
-    const handleUndoButton = () => {
-        sendGameMessage(['rollbackToSnapshot',{
-            type: 'quick',
-            playerId: connectedPlayer,
-            actionOffset: 0
-        }])
-    }
-
     let undoButtonDisabled;
     switch (quickUndoState) {
         case QuickUndoAvailableState.NoSnapshotAvailable:
@@ -236,6 +229,18 @@ const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }
             undoButtonDisabled = false;
             break;
     }
+
+    const handleUndoButton = useCallback(() => {
+        if (undoButtonDisabled) return;
+
+        sendGameMessage(['rollbackToSnapshot',{
+            type: 'quick',
+            playerId: connectedPlayer,
+            actionOffset: 0
+        }]);
+    }, [connectedPlayer, sendGameMessage, undoButtonDisabled]);
+
+    useKeyboardShortcuts({ undo: handleUndoButton });
 
     let undoButtonStyle;
     switch (quickUndoState) {

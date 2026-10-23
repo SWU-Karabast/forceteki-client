@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -7,6 +7,7 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
 import PulseButton from '@/app/components/Button/PulseButton';
+import { useKeyboardShortcuts } from '@/app/_hooks/useKeyboardShortcuts';
 
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
@@ -58,7 +59,7 @@ const CardActionTray: React.FC = () => {
     const playerState = gameState.players[connectedPlayer];
     const styles = createStyles(isPortrait);
 
-    const showTrayButtons = () => {
+    const showTrayButtons = useCallback(() => {
         if (playerState.promptState.promptType === 'displayCards') {
             // Buttons for the display cards prompt are rendered within the popup itself, not in the action tray
             return false;
@@ -72,9 +73,9 @@ const CardActionTray: React.FC = () => {
             return true;
         }
         return false;
-    };
+    }, [gameState, playerState.promptState]);
 
-    const buttonDisabled = (button: IButtonsProps) => {
+    const buttonDisabled = useCallback((button: IButtonsProps) => {
         if (button.arg === 'done') {
             const distributeValues = playerState.promptState.distributeAmongTargets;
             if (distributeValues) {
@@ -86,7 +87,21 @@ const CardActionTray: React.FC = () => {
         }
 
         return !!button.disabled;
-    };
+    }, [distributionPromptData, playerState.promptState]);
+
+    const handlePassTurn = useCallback(() => {
+        if (!showTrayButtons()) return;
+
+        const passButton = playerState.promptState.buttons.find(
+            (button: IButtonsProps) => button.arg === 'pass' || button.arg === 'passAbility' || button.text === 'Pass'
+        );
+
+        if (passButton && !buttonDisabled(passButton)) {
+            sendGameMessage([passButton.command, passButton.arg, passButton.uuid]);
+        }
+    }, [buttonDisabled, playerState.promptState.buttons, sendGameMessage, showTrayButtons]);
+
+    useKeyboardShortcuts({ passTurn: handlePassTurn });
 
     return (
         <Grid
