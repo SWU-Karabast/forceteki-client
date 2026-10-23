@@ -12,6 +12,7 @@ import { SithvaultDeckProvider } from '../SithvaultDeckProvider';
 import { SwubaseDeckProvider } from '../SwubaseDeckProvider';
 import { SwucardhubDeckProvider } from '../SwucardhubDeckProvider';
 import { SwudbDeckProvider } from '../SwudbDeckProvider';
+import { SwurecDeckProvider } from '../SwurecDeckProvider';
 import { SwuforgeDeckProvider } from '../SwuforgeDeckProvider';
 import { SwumetastatsDeckProvider } from '../SwumetastatsDeckProvider';
 import { SwUnlimitedDbDeckProvider } from '../SwUnlimitedDbDeckProvider';
@@ -49,6 +50,7 @@ const providers: readonly DeckProviderBase[] = [
     new HoloscanDeckProvider(),
     new SwupediaDeckProvider(),
     new SithvaultDeckProvider(),
+    new SwurecDeckProvider(),
 ];
 
 /**
