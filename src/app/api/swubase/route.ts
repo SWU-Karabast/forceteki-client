@@ -30,13 +30,10 @@ export async function GET(req: Request) {
 
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.userId) {
+        if (!session?.jwtToken || !linkedUserId) {
             throw new Error('No valid user session');
         }
-        if (session.user.userId !== linkedUserId) {
-            throw new Error('User ID mismatch in SWU Base link');
-        }
-        await linkUserToSwuBase(session.user.userId, linkToken);
+        await linkUserToSwuBase(session.jwtToken, linkedUserId, linkToken);
         return NextResponse.redirect(new URL(CONFIG.redirects.success, CONFIG.returnUrl));
     } catch (error) {
         console.error('[SWUBase] Callback failed:', error instanceof Error ? error.message : error);
@@ -44,11 +41,16 @@ export async function GET(req: Request) {
     }
 }
 
-async function linkUserToSwuBase(userId: string, linkToken: string) {
+// The game server works out which account to link from the user's session token, which is forwarded as the cookie,
+// and checks it is the account the link was started from.
+async function linkUserToSwuBase(sessionToken: string, expectedUserId: string, linkToken: string) {
     const response = await fetch(`${CONFIG.gameServerUrl}/api/link-swubase`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, linkToken: linkToken, internalApiKey: process.env.INTRASERVICE_SECRET }),
+        headers: {
+            'Content-Type': 'application/json',
+            Cookie: `next-auth.session-token=${sessionToken}`,
+        },
+        body: JSON.stringify({ expectedUserId, linkToken: linkToken, internalApiKey: process.env.INTRASERVICE_SECRET }),
     });
 
     if (!response.ok) {

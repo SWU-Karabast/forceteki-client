@@ -35,7 +35,7 @@ const UserContext = createContext<IUserContextType>({
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { data: session, update, status } = useSession(); // Get session from next-auth
+    const { data: session, status } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
     const router = useRouter();
@@ -78,7 +78,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
                         timerPopupSeenDate: serverUser.timerPopupSeenDate,
                     });
-                    await update({ userId: serverUser.id });
                     // Fetch mod status
                     const modStatus = await import('@/app/_services/ServerApiService').then(m => m.ServerApiService.userIsModAsync());
                     setIsMod(await modStatus);

@@ -83,10 +83,7 @@ export const authOptions: AuthOptions = {
         },
     },
     callbacks: {
-        async jwt({ token, account, user, trigger, session }) {
-            if (trigger === 'update' && session?.userId) {
-                token.userId = session.userId;
-            }
+        async jwt({ token, account, user }) {
             if (account) {
                 token.id = `${account.provider}_${user?.id}`;  // Add the properly formatted ID
                 token.provider = account.provider;
@@ -110,7 +107,6 @@ export const authOptions: AuthOptions = {
                 email: token.email || session.user?.email,
                 image: token.picture || session.user?.image,
                 provider: token.provider as string || 'unknown',
-                userId: token.userId
             };
             return session;
         },

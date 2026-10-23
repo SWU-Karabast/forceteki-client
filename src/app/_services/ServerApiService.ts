@@ -36,6 +36,19 @@ export class ServerApiService {
         }
     }
 
+    /**
+     * Makes the account for the current sign-in session if it does not have one yet. Safe to call for a
+     * session that already has an account.
+     */
+    public static async createUserAsync(): Promise<{ id: string; username: string }> {
+        const response = await this.fetchWithErrorHandling<{
+            success: boolean;
+            user: { id: string; username: string };
+        }>(`${this.baseUrl}/api/create-user`, { method: 'POST', body: JSON.stringify({}) });
+
+        return response.user;
+    }
+
     // Cosmetics API methods
     public static async getCosmeticsAsync(): Promise<{ cosmetics: ICosmeticEntity[], isContributor: boolean }> {
         const response = await this.fetchWithErrorHandling<{
