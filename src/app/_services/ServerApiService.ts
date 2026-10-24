@@ -1,6 +1,6 @@
 import {
     IFindUserResponse, IModActionResponse,
-    ICosmeticEntity
+    ICosmeticEntity, IServerSettings
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
 
@@ -164,6 +164,7 @@ export class ServerApiService {
         actionType: string,
         note: string,
         durationDays?: number,
+        usernameOptions?: { newUsername?: string },
     ): Promise<{ success: boolean; message: string; }> {
         return await this.fetchWithErrorHandling<{
             success: boolean;
@@ -172,7 +173,7 @@ export class ServerApiService {
             `${this.baseUrl}/api/mod/submit-action`,
             {
                 method: 'POST',
-                body: JSON.stringify({ playerId, actionType, note, durationDays }),
+                body: JSON.stringify({ playerId, actionType, note, durationDays, ...usernameOptions }),
             }
         );
     }
@@ -201,6 +202,29 @@ export class ServerApiService {
             {
                 method: 'POST',
                 body: JSON.stringify({ searchQuery: playerId }),
+            }
+        );
+    }
+
+    // Server settings API methods
+    public static async getServerSettingsAsync(): Promise<IServerSettings> {
+        return await this.fetchWithErrorHandling<IServerSettings>(
+            `${this.baseUrl}/api/server-settings`,
+            { method: 'GET' }
+        );
+    }
+
+    public static async setServerSettingsAsync(
+        updates: { gamesEnabled?: boolean; maintenanceMessage?: string },
+    ): Promise<{ success: boolean; settings: IServerSettings }> {
+        return await this.fetchWithErrorHandling<{
+            success: boolean;
+            settings: IServerSettings;
+        }>(
+            `${this.baseUrl}/api/mod/server-settings`,
+            {
+                method: 'POST',
+                body: JSON.stringify(updates),
             }
         );
     }

@@ -165,6 +165,17 @@ const styles = {
     headerCircularButton: {
         padding: '8px',
     },
+    headerLeaveGameAction: {
+        '@media (orientation: landscape) and (max-width: 875px)': {
+            display: 'none',
+        },
+    },
+    menuLeaveGameAction: {
+        display: 'none',
+        '@media (orientation: landscape) and (max-width: 875px)': {
+            display: 'flex',
+        },
+    },
     quickUndoButtonEnabled: {
         borderColor: 'rgba(255, 255, 255, 0.12)',
     },
@@ -290,6 +301,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const isMobileLandscape = useMediaQuery('(orientation: landscape) and (max-width: 932px)');
+    const isLeaveGameMenuItemVisible = useMediaQuery('(orientation: landscape) and (max-width: 875px)');
     const usesTemporaryDrawer = isMobile && !isMobileLandscape;
     const {
         gameState,
@@ -483,7 +495,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                         <IconButton
                             aria-label="Leave game"
                             onClick={handleLeaveGameClick}
-                            sx={[styles.drawerActionButton, styles.headerCircularButton]}
+                            sx={[styles.drawerActionButton, styles.headerCircularButton, styles.headerLeaveGameAction]}
                         >
                             <LogoutIcon />
                         </IconButton>
@@ -527,16 +539,22 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
                             </MenuItem>
                         )}
+                        {(!isSpectator || isLeaveGameMenuItemVisible) && (
+                            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                        )}
+                        <MenuItem onClick={handleLeaveGameClick} sx={styles.menuLeaveGameAction}>
+                            <ListItemIcon sx={styles.menuIcon}>
+                                <LogoutIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>Leave game</ListItemText>
+                        </MenuItem>
                         {!isSpectator && (
-                            <>
-                                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
-                                <MenuItem onClick={handleConcedeClick}>
-                                    <ListItemIcon sx={styles.menuIcon}>
-                                        <OutlinedFlagIcon fontSize="small" />
-                                    </ListItemIcon>
-                                    <ListItemText>Concede game</ListItemText>
-                                </MenuItem>
-                            </>
+                            <MenuItem onClick={handleConcedeClick}>
+                                <ListItemIcon sx={styles.menuIcon}>
+                                    <OutlinedFlagIcon fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Concede game</ListItemText>
+                            </MenuItem>
                         )}
                     </Menu>
                 </Box>

@@ -69,6 +69,7 @@ export interface ICardData {
     type: string;
     subcards?: ICardData[];
     capturedCards?: ICardData[];
+    upgrades?: ICardData[];
     aspects?: IAspect[];
     printedType?: string;
     sentinel?: boolean;
@@ -143,6 +144,7 @@ export interface ILeaderBaseCardProps {
     title?: string;
     card: ICardData | null;
     capturedCards?: ICardData[];
+    upgrades?: ICardData[];
     disabled?: boolean;
     cardStyle?: LeaderBaseCardStyle;
     isLeader?: boolean;

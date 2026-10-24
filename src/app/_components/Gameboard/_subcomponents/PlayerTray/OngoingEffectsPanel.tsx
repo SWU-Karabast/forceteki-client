@@ -1,9 +1,10 @@
 import React from 'react';
-import { Box, Popover, Typography, useMediaQuery } from '@mui/material';
+import { Box, Popover, Typography } from '@mui/material';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useGame } from '@/app/_contexts/Game.context';
 import { useOngoingEffectHighlight } from '@/app/_contexts/OngoingEffectHighlight.context';
 import { useOverflow } from '@/app/_hooks/useOverflow';
+import { useLongPress } from '@/app/_hooks/useLongPress';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import {
@@ -28,9 +29,6 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         [ongoingEffects, trayPlayer],
     );
 
-    // Touch devices open the preview via tap and need it interactive; mouse (hover) devices need it
-    // pointer-transparent so hovering the popover doesn't steal the pointer off the tile and flicker it closed.
-    const isCoarsePointer = useMediaQuery('(pointer: coarse)');
     // group effects by source card
     const effectGroups: IOngoingEffectSummary[][] = React.useMemo(() => {
         const bySource = new Map<string, IOngoingEffectSummary[]>();
@@ -54,7 +52,20 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [hoveredGroup, setHoveredGroup] = React.useState<IOngoingEffectSummary[] | null>(null);
     const hoverTimeout = React.useRef<number | undefined>(undefined);
+    const [isTouchPreview, setIsTouchPreview] = React.useState(false);
 
+    const longPressHandlers = useLongPress({
+        onLongPress: (target) => {
+            const group = effectGroups.find((effects) => effects[0].sourceCardUuid === target.dataset.effectUuid);
+            if (!group) return;
+            clearTimeout(hoverTimeout.current);
+            setIsTouchPreview(true);
+            setAnchorElement(target);
+            setHoveredGroup(group);
+            setHighlightedEffects(group);
+        },
+        onRelease: () => undefined,
+    });
 
     const dedupedDescriptions = React.useMemo(() => {
         if (!hoveredGroup) return [];
@@ -64,11 +75,12 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
     }, [hoveredGroup]);
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>, group: IOngoingEffectSummary[]) => {
-        // Touch devices open via tap (handleTap)
-        if (window.matchMedia('(pointer: coarse)').matches) return;
+        // Match card previews: touch uses long press, while hybrid devices can still hover.
+        if (window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(any-pointer: fine)').matches) return;
 
         const target = event.currentTarget;
         hoverTimeout.current = window.setTimeout(() => {
+            setIsTouchPreview(false);
             setAnchorElement(target);
             setHoveredGroup(group);
             setHighlightedEffects(group);
@@ -98,19 +110,18 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         };
     }, [setHighlightedEffects]);
 
-    const handleTap = (event: React.MouseEvent<HTMLElement>, group: IOngoingEffectSummary[]) => {
-        // tap is touch-only.
-        if (!window.matchMedia('(pointer: coarse)').matches) return;
-
-        const isSameGroup = hoveredGroup?.[0].sourceCardUuid === group[0].sourceCardUuid;
-        if (isSameGroup) {
-            handlePreviewClose();
-        } else {
-            setAnchorElement(event.currentTarget);
-            setHoveredGroup(group);
-            setHighlightedEffects(group);
-        }
-    };
+    // Like card previews, keep touch previews open until the next interaction.
+    React.useEffect(() => {
+        if (!anchorElement || !isTouchPreview) return;
+        const onPointerDown = () => {
+            clearTimeout(hoverTimeout.current);
+            setAnchorElement(null);
+            setHoveredGroup(null);
+            setHighlightedEffects([]);
+        };
+        document.addEventListener('pointerdown', onPointerDown);
+        return () => document.removeEventListener('pointerdown', onPointerDown);
+    }, [anchorElement, isTouchPreview, setHighlightedEffects]);
     const countVisibleTargets = (group: IOngoingEffectSummary[]) => new Set(group.flatMap((e) => e.targets)).size;
     const hoveredTargetsCount = hoveredGroup ? countVisibleTargets(hoveredGroup) : 0;
 
@@ -154,6 +165,9 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
             border: `2px solid ${borderColor}`,
             position: 'relative',
             cursor: 'pointer',
+            userSelect: 'none',
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
             transition: 'transform 0.15s ease, box-shadow 0.15s ease',
         },
         targetCountBadge: {
@@ -276,8 +290,8 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                                 backgroundImage: `url(${imageUrl})`,
                             }}
                             onMouseEnter={(e) => handlePreviewOpen(e, group)}
-                            onMouseLeave={handlePreviewClose}
-                            onClick={(e) => handleTap(e, group)}
+                            onMouseLeave={isTouchPreview ? undefined : handlePreviewClose}
+                            {...longPressHandlers}
                             data-effect-uuid={group[0].sourceCardUuid}
                             data-card-name={source.sourceTitle}
                             aria-label={`Ongoing effects from ${source.sourceTitle}: ${group.length} effect${group.length === 1 ? '' : 's'}, ${uniqueTargetCount} visible target${uniqueTargetCount === 1 ? '' : 's'}${hiddenFromOpponent ? ', only visible to you' : ''}`}
@@ -301,7 +315,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
                 onClose={handlePreviewClose}
                 // Tooltip is non-interactive; suppress focus management to avoid aria-hidden warnings on close.
                 disableAutoFocus
-                sx={{ pointerEvents: isCoarsePointer ? 'auto' : 'none' }}
+                sx={{ pointerEvents: isTouchPreview ? 'auto' : 'none' }}
                 anchorOrigin={{ vertical: 'center', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'center', horizontal: 'left' }}
                 slotProps={{ paper: { sx: { backgroundColor: 'transparent', boxShadow: 'none' } } }}

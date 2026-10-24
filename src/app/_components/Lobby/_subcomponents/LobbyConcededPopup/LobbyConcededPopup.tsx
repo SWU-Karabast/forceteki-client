@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { ILobbyUserProps } from '@/app/_components/Lobby/LobbyTypes';
 import { MatchmakingType, RematchMode, Bo3SetEndedReason, IBo3SetEndResult } from '@/app/_constants/constants';
 import { scoreTableStyles, sortPlayersConnectedFirst } from '@/app/_components/_sharedcomponents/Bo3/Bo3ScoreTable.styles';
+import { useServerSettings } from '@/app/_contexts/ServerSettings.context';
 
 interface ILobbyConcededPopupProps {
     gameType: MatchmakingType;
@@ -26,6 +27,7 @@ interface ILobbyConcededPopupProps {
 const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) => {
     const router = useRouter();
     const { lobbyState, connectedPlayer, sendLobbyMessage, sendMessage, resetStates, isSpectator } = useGame();
+    const { gamesEnabled, hasLoaded } = useServerSettings();
 
     const isQuickMatch = gameType === MatchmakingType.Quick;
 
@@ -134,7 +136,7 @@ const LobbyConcededPopup: React.FC<ILobbyConcededPopupProps> = ({ gameType }) =>
     }
 
     // Check if maintenance mode is enabled
-    const isMaintenanceMode = process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true';
+    const isMaintenanceMode = hasLoaded && !gamesEnabled;
 
     // ------------------------STYLES------------------------//
     const styles = {

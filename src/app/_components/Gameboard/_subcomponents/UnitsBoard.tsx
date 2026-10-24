@@ -170,6 +170,10 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             justifyContent: 'start',
             
         },
+        unitStyle: {
+            // The space arena grids are RTL only to fill from the right; card contents stay LTR.
+            direction: 'ltr',
+        },
     };
 
 
@@ -179,7 +183,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid}>
+                        <Box key={card.uuid} sx={styles.unitStyle}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
@@ -189,7 +193,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} >
+                        <Box key={card.uuid} sx={styles.unitStyle}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}

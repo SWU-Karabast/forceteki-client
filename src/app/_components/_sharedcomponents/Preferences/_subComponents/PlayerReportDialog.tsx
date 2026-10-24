@@ -76,11 +76,10 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
 
     // Handle report result from server
     useEffect(() => {
-        setSuccess(playerReportState?.success);
-        if(!success){
-            setError(playerReportState?.message);
-        }
-    }, [playerReportState?.id]);
+        if (!playerReportState?.id) return;
+        setSuccess(!!playerReportState.success);
+        setError(playerReportState.success ? '' : playerReportState.message ?? '');
+    }, [playerReportState?.id, playerReportState?.success, playerReportState?.message]);
 
     const handleReportTypeSelect = (type: PlayerReportType) => {
         setSelectedReportType(type);

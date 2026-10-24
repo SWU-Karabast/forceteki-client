@@ -1,4 +1,29 @@
 import { ICardData, CardStyle, IServerCardData, ISetCode, IPreviewCard } from './CardTypes'
+import type { UpgradeAspect } from './UpgradeStrip';
+
+export const getCardPrimaryAspect = (card: ICardData): UpgradeAspect => {
+    if (!card.aspects) {
+        return 'neutral';
+    }
+    if (card.aspects.includes('villainy') && card.aspects.length === 1) {
+        return 'villainy';
+    }
+    if (card.aspects.includes('heroism') && card.aspects.length === 1) {
+        return 'heroism';
+    }
+    switch (true) {
+        case card.aspects.includes('aggression'):
+            return 'aggression';
+        case card.aspects.includes('command'):
+            return 'command';
+        case card.aspects.includes('cunning'):
+            return 'cunning';
+        case card.aspects.includes('vigilance'):
+            return 'vigilance';
+        default:
+            return 'neutral';
+    }
+};
 
 type BorderColorOptions = {
     card: ICardData;
@@ -30,6 +55,17 @@ export const parseSetId = (fullCardId: string) => {
     };
 };
 
+/**
+ * Card Status
+ */
+type CardStatusFn = (card: ICardData, cardStyle: CardStyle) => boolean;
+
+export const cannotBeAttacked: CardStatusFn = (card) => !!card.cannotBeAttacked;
+export const hasSentinel: CardStatusFn = (card, cardStyle) => cardStyle === CardStyle.InPlay && !!card.sentinel
+export const isBlanked: CardStatusFn = (card) => !!card.isBlanked;
+export const blockedFromPlay: CardStatusFn = (card) => !!card.blockedFromPlayReason;
+// Held by someone other than its owner.
+export const isStolen: CardStatusFn = (card) => !!card.controllerId && !!card.ownerId && card.controllerId !== card.ownerId;
 
 export const getBorderColor = (options:BorderColorOptions) => {
     const {
