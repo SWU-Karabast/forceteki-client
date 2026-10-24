@@ -86,28 +86,16 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: '🛠️ Update: Auto-Target is here',
+        title: 'Homeworlds is Released',
         content: `
-        <p>Streamline your gameplay! Auto-Target skips the manual selection step whenever an action or ability has exactly one legal target —  no choice to make, no click needed.</p>
+        <p>Homeworlds (Set 9) cards are fully implemented and available in all game modes. Now that the set is released, these cards are part of the "Current" card pool.</p>
 
-        <p>Find it in <strong>Preferences → Game Options → Gameplay</strong> from either the Home page or in a game. <em>Off by default</em>.</p>
-
-        <p>This is the first in a series of settings we're rolling out to streamline gameplay for players who know their deck inside and out. So keep an eye on the game preferences pane in future updates!</p>
-        `,
-        date: '7/23/26',
-        image: '/auto-target.jpg',
-        imageAlt: 'Auto-Target Setting',
-    },
-    {
-        title: 'Ashes of the Empire is now legal in Premier!',
-        content: `
-        <p>Ashes of the Empire (Set 8) is now legal in the Premier format! The "Next Set" card pools have been disabled in all formats until the next preview season.</p>
-    
         <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we're always looking for new contributors.</p><p></p>
 	  `,
-        date: '7/13/26',
-        image: s3ImageURL('ui/ash-news-banner.webp'),
+        date: '10/7/26',
+        image: s3ImageURL('ui/homeworlds-preview-banner.webp'),
         imageAlt: 'News Announcement',
+        imagePosition: 'center 35%',
     },
 ];
 

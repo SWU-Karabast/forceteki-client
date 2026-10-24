@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { IJoinableGameProps } from '../../HomePageTypes';
 import { ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import OverlappingCards from '../OverlappingCards/OverlappingCards';
@@ -18,6 +19,7 @@ import Bo3Icon from '/public/bo3.svg';
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
+    const { showErrorScreen } = useErrorScreen();
 
     const joinLobby = async (lobbyId: string) => {
         try {
@@ -37,7 +39,11 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Error joining lobby:', errorData.message);
-                alert(errorData.message);
+                showErrorScreen({
+                    title: 'Couldn\'t join that game',
+                    message: 'You weren\'t able to join this lobby. It may have filled up or been closed.',
+                    detail: errorData.message,
+                });
                 return;
             }
             router.push('/lobby');

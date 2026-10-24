@@ -2,8 +2,10 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { Box, IconButton, Typography } from '@mui/material';
 import { MouseEvent, useState } from 'react';
 import { BiMinus, BiPlus } from 'react-icons/bi';
+import GradientBorderButton from '@/app/_components/_sharedcomponents/_styledcomponents/GradientBorderButton';
 import {
     containerStyle,
+    footerStyle,
     headerStyle,
     minimizeButtonStyle,
     textStyle,
@@ -11,7 +13,7 @@ import {
 } from '../../Popup.styles';
 import { ActionTriggerPopup, PopupButton } from '../../Popup.types';
 import RichText from '../../../RichText/RichText';
-import TriggerButton from './TriggerButton';
+import TriggerOption from './TriggerOption';
 
 interface ButtonProps {
     data: ActionTriggerPopup;
@@ -38,12 +40,17 @@ const styles = {
         paddingInline: '1rem',
         marginTop: '0.25rem',
         marginBottom: '2rem',
-    }
+    },
+    footer: {
+        ...footerStyle,
+        marginTop: 0,
+    },
 };
 
 export default function ActionTriggerPopupModal({ data }: ButtonProps) {
     const { sendGameMessage } = useGame();
     const [isMinimized, setIsMinimized] = useState(false);
+    const anyOptional = data.buttons.some((button) => button.optional);
 
     const handleMinimize = (e: MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
@@ -69,18 +76,40 @@ export default function ActionTriggerPopupModal({ data }: ButtonProps) {
                     )}
                     <Box sx={styles.modalContent}>
                         {data.buttons.map((button: PopupButton, index: number) => (
-                            <TriggerButton
+                            <TriggerOption
                                 key={`${button.uuid}:${index}`}
-                                text={button.text}
+                                cardText={button.text}
                                 sourceCard={button.sourceCard}
                                 hasLegalEffects={button.hasLegalEffects}
+                                gained={button.gained}
                                 count={button.count}
-                                onClick={() => {
-                                    sendGameMessage([button.command, button.arg, button.uuid]);
-                                }}
+                                onTrigger={() => sendGameMessage([button.command, button.arg, button.uuid])}
+                                // reserve the fence + Pass row on every column when any trigger is optional
+                                // so the cards stay bottom-aligned, even on non-optional columns
+                                reservePassSpace={anyOptional}
+                                pass={
+                                    button.optional && button.passArg
+                                        ? {
+                                            text: button.passText ?? 'Pass',
+                                            onPass: () => sendGameMessage([button.command, button.passArg, button.uuid]),
+                                        }
+                                        : undefined
+                                }
                             />
                         ))}
                     </Box>
+                    {data.footerButtons && data.footerButtons.length > 0 && (
+                        <Box sx={styles.footer}>
+                            {data.footerButtons.map((button: PopupButton, index: number) => (
+                                <GradientBorderButton
+                                    key={`${button.uuid}:footer:${index}`}
+                                    onClick={() => sendGameMessage([button.command, button.arg, button.uuid])}
+                                >
+                                    <RichText text={button.text} />
+                                </GradientBorderButton>
+                            ))}
+                        </Box>
+                    )}
                 </>
             )}
         </Box>

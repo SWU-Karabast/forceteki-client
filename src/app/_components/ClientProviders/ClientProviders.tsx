@@ -6,8 +6,10 @@ import { PopupProvider } from '@/app/_contexts/Popup.context';
 import { ThemeContextProvider } from '@/app/_contexts/Theme.context';
 import { TimerVisibilityProvider } from '@/app/_contexts/TimerVisibility.context';
 import { UserProvider } from '@/app/_contexts/User.context';
+import { ErrorScreenProvider } from '@/app/_contexts/ErrorScreen.context';
 import { SessionProvider } from 'next-auth/react';
 import { OngoingEffectHighlightProvider } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { ServerSettingsProvider } from '@/app/_contexts/ServerSettings.context';
 
 interface IClientProvidersProps {
     children: React.ReactNode;
@@ -16,19 +18,23 @@ interface IClientProvidersProps {
 const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
     return (
         <SessionProvider>
-            <UserProvider>
-                <CardImageLocaleProvider>
-                    <TimerVisibilityProvider>
-                        <PopupProvider>
-                            <OngoingEffectHighlightProvider>
-                                <CosmeticsProvider>
-                                    <ThemeContextProvider>{children}</ThemeContextProvider>
-                                </CosmeticsProvider>
-                            </OngoingEffectHighlightProvider>
-                        </PopupProvider>
-                    </TimerVisibilityProvider>
-                </CardImageLocaleProvider>
-            </UserProvider>
+            <ServerSettingsProvider>
+                <UserProvider>
+                    <CardImageLocaleProvider>
+                        <TimerVisibilityProvider>
+                            <PopupProvider>
+                                <OngoingEffectHighlightProvider>
+                                    <CosmeticsProvider>
+                                        <ThemeContextProvider>
+                                            <ErrorScreenProvider>{children}</ErrorScreenProvider>
+                                        </ThemeContextProvider>
+                                    </CosmeticsProvider>
+                                </OngoingEffectHighlightProvider>
+                            </PopupProvider>
+                        </TimerVisibilityProvider>
+                    </CardImageLocaleProvider>
+                </UserProvider>
+            </ServerSettingsProvider>
         </SessionProvider>
     );
 };

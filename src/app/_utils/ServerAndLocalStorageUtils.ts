@@ -248,12 +248,12 @@ export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean
     }
 }
 
-export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): Promise<boolean> => {
+export const setUsernameChangesBlockedSeenAsync = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
             user
         }
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-must-request-username-change-seen`,
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-username-changes-blocked-seen`,
             {
                 method: 'POST',
                 headers: {
@@ -267,7 +267,7 @@ export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): 
         if (!response.ok) {
             throw new Error(result.message);
         }
-        return result
+        return !!result.success
     }catch (error) {
         console.error(error);
         throw error;
@@ -293,7 +293,7 @@ export const setReportingDisabledSeenAsync = async(user: IUser | null): Promise<
         if (!response.ok) {
             throw new Error(result.message);
         }
-        return result
+        return !!result.success
     }catch (error) {
         console.error(error);
         throw error;

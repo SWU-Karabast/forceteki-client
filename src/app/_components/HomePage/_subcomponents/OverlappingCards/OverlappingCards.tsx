@@ -3,6 +3,7 @@ import React from 'react';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { Box, BoxProps, Popover } from '@mui/material';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
+import { extendSx } from '@/app/_utils/utils';
 
 const styles = {
     cardPopover: {
@@ -75,7 +76,7 @@ export default function OverlappingCards({ baseCard, leaderCard, ...boxProps }: 
         setPreviewImage(null);
     };
     return (
-        <Box sx={[styles.container, ...(Array.isArray(sx) ? sx : [sx])]} {...otherBoxProps}>
+        <Box sx={extendSx(styles.container, sx)} {...otherBoxProps}>
             <Box sx={styles.cardsContainer}>
                 <Box
                     sx={{ ...styles.leaderStyleCard, backgroundImage:`url(${s3CardImageURL(baseCard, locale)})` }}

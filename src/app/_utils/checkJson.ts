@@ -31,7 +31,7 @@ export interface DeckJSON {
     isPresentInDb?: boolean;
 }
 
-const ALLOWED_ROOT_KEYS = ['metadata', 'leader', 'base', 'deck', 'sideboard', 'deckID', 'deckSource'];
+const ALLOWED_ROOT_KEYS = ['metadata', 'leader', 'secondleader', 'base', 'deck', 'sideboard', 'deckID', 'deckSource'];
 const ALLOWED_METADATA_KEYS = ['name', 'author'];
 const ALLOWED_CARD_KEYS = ['id', 'count'];
 const CARD_ID_REGEX = /^[A-Z0-9]{3,4}_\d{1,3}$/;

@@ -4,8 +4,21 @@ import {
     IPlayerSearchResult,
     IUsernameChangeResponse,
     ModActionType,
+    RESET_USERNAME_PREFIX,
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+
+const RESET_USERNAME_DIGITS = 4;
+const RESET_USERNAME_PATTERN = new RegExp(`^${RESET_USERNAME_PREFIX}\\d{${RESET_USERNAME_DIGITS}}$`);
+
+/** Builds a reset name such as 'KaraUser0427'. */
+export const generateResetUsername = (): string => {
+    const randomNumber = Math.floor(Math.random() * 10 ** RESET_USERNAME_DIGITS);
+    return `${RESET_USERNAME_PREFIX}${String(randomNumber).padStart(RESET_USERNAME_DIGITS, '0')}`;
+};
+
+/** Whether a username already has the shape produced by generateResetUsername. */
+export const isResetUsername = (username: string): boolean => RESET_USERNAME_PATTERN.test(username);
 
 export const getMuteDisplayText = (moderation?: IModerationAction): string | null => {
     if (!moderation?.endDate) return '';
@@ -59,8 +72,16 @@ export const getActionLabel = (action: IModActionResponse): string => {
             return `${date} Warning`;
         case ModActionType.Rename:
             return `${date} Renamed`;
-        default:
-            return `${date} ${action.actionType}`;
+        case ModActionType.ReportingDisabled:
+            return `${date} Reporting disabled`;
+        case ModActionType.UsernameChangesBlocked:
+            return `${date} Username changes blocked`;
+        case ModActionType.ChangeUsername:
+            return `${date} Username changed by moderator`;
+        default: {
+            const unhandled: never = action.actionType;
+            return `${date} ${unhandled}`;
+        }
     }
 };
 
@@ -81,6 +102,19 @@ export const getActionStatus = (action: IModActionResponse, selectedPlayer:IPlay
         if(selectedPlayer.activeRename?.id === action.id){
             return { label: 'Pending', color: '#ff9800' };
         }
+    }
+    if (action.actionType === ModActionType.ReportingDisabled) {
+        // Only the action the server reports as active is live; duplicates in history are superseded.
+        if (selectedPlayer.activeReportingDisabledId === action.id) {
+            return { label: 'Active', color: '#ef5350' };
+        }
+        return { label: 'Inactive', color: '#9E9E9E' };
+    }
+    if (action.actionType === ModActionType.UsernameChangesBlocked) {
+        if (selectedPlayer.activeUsernameChangesBlockedId === action.id) {
+            return { label: 'Active', color: '#ef5350' };
+        }
+        return { label: 'Inactive', color: '#9E9E9E' };
     }
     return { label: '', color: '#9E9E9E' };
 };
@@ -107,9 +141,14 @@ export const getUsernameChangeLabel = (change: IUsernameChangeResponse): string 
             return `${date} Pre-existing username (${change.newUsername})`;
         case UsernameChangeSource.ForcedRename:
             return `${date} Force Rename: ${formatUsernameTransition(change, { quote: true })}`;
+        case UsernameChangeSource.UsernameChangedByModerator:
+            return `${date} Username changed by moderator: ${formatUsernameTransition(change, { quote: true })}`;
         case UsernameChangeSource.UserInitiated:
-        default:
             return `${date} Name Changed: ${formatUsernameTransition(change, { quote: true })}`;
+        default: {
+            const unhandled: never = change.source;
+            return `${date} ${unhandled}: ${formatUsernameTransition(change, { quote: true })}`;
+        }
     }
 };
 
@@ -121,14 +160,20 @@ export const getUsernameChangeSourceLabel = (source: UsernameChangeSource): stri
             return 'Migration';
         case UsernameChangeSource.ForcedRename:
             return 'Forced rename';
-        default:
+        case UsernameChangeSource.UsernameChangedByModerator:
+            return 'Changed by moderator';
+        case UsernameChangeSource.UserInitiated:
             return 'User-initiated';
+        default: {
+            const unhandled: never = source;
+            return unhandled;
+        }
     }
 };
 
 /**
  * A unified history entry that is either a mod action or a standalone username change.
- * Forced renames are merged into their related Rename mod action via `mergedUsernameChange`.
+ * Forced renames and moderator renames are merged into their related mod action via `mergedUsernameChange`.
  */
 export interface IUserHistoryEntry {
     id: string;
@@ -141,17 +186,19 @@ export interface IUserHistoryEntry {
 
 /**
  * Builds a single chronological history list from mod actions and username changes.
- * A ForcedRename username change is deduped into its related Rename mod action entry
- * (so the forced rename and its resulting name change render as one row).
+ * A username change made because of a mod action (a forced rename, or a rename by a moderator) is deduped
+ * into its related mod action entry, so the action and its resulting name change render as one row.
  */
 export const buildUserHistory = (
     modActions: IModActionResponse[],
     usernameChanges: IUsernameChangeResponse[],
 ): IUserHistoryEntry[] => {
-    const forcedByModActionId = new Map<string, IUsernameChangeResponse>();
+    const changeByModActionId = new Map<string, IUsernameChangeResponse>();
     for (const change of usernameChanges) {
-        if (change.source === UsernameChangeSource.ForcedRename && change.relatedModActionId) {
-            forcedByModActionId.set(change.relatedModActionId, change);
+        const isModActionResult = change.source === UsernameChangeSource.ForcedRename
+            || change.source === UsernameChangeSource.UsernameChangedByModerator;
+        if (isModActionResult && change.relatedModActionId) {
+            changeByModActionId.set(change.relatedModActionId, change);
         }
     }
 
@@ -159,7 +206,7 @@ export const buildUserHistory = (
     const entries: IUserHistoryEntry[] = [];
 
     for (const action of modActions) {
-        const merged = forcedByModActionId.get(action.id);
+        const merged = changeByModActionId.get(action.id);
         if (merged) {
             consumedChangeIds.add(merged.id);
         }
@@ -207,6 +254,12 @@ export const getModActionEntryLabel = (entry: IUserHistoryEntry, selectedPlayer:
             return `${date} Force Rename: ${formatUsernameTransition(entry.mergedUsernameChange, { quote: true })}`;
         }
         return `${date} Force Rename`;
+    }
+    if (action.actionType === ModActionType.UsernameChangesBlocked && entry.mergedUsernameChange) {
+        return `${date} Username changes blocked (reset: ${formatUsernameTransition(entry.mergedUsernameChange, { quote: true })})`;
+    }
+    if (action.actionType === ModActionType.ChangeUsername && entry.mergedUsernameChange) {
+        return `${date} Username changed by moderator: ${formatUsernameTransition(entry.mergedUsernameChange, { quote: true })}`;
     }
     return getActionLabel(action);
 };

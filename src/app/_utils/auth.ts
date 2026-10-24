@@ -4,7 +4,6 @@ import DiscordProvider from 'next-auth/providers/discord';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import type { JWT } from 'next-auth/jwt';
 import jwt from 'jsonwebtoken';
-import { ServerApiService } from '../_services/ServerApiService';
 
 
 const TwoMonthsInSeconds = 60 * 24 * 60 * 60; // 60 days
@@ -33,6 +32,9 @@ export const authOptions: AuthOptions = {
         DiscordProvider({
             clientId: process.env.DISCORD_CLIENT_ID!,
             clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+            // Discord includes an `iss` param in its OAuth callback, which openid-client
+            // can only validate if the provider declares the expected issuer
+            issuer: 'https://discord.com',
         }),
         ...(process.env.NODE_ENV === 'development'
             ? [CredentialsProvider({
@@ -43,7 +45,7 @@ export const authOptions: AuthOptions = {
                 },
                 async authorize(credentials) {
                     const userKey = credentials?.user as keyof typeof developmentUsers;
-                    return developmentUsers[userKey] ?? null;
+                    return userKey === 'Order66' || userKey === 'ThisIsTheWay' ? developmentUsers[userKey] : null;
                 },
             })]
             : []),

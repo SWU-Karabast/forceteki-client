@@ -8,8 +8,8 @@ import React, {
     useState,
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
-import { IUserContextType, IPreferences, IModerationAction, ModerationFieldState } from './UserTypes';
+import { usePathname } from 'next/navigation';
+import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
 import { v4 as uuid } from 'uuid';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
@@ -24,7 +24,7 @@ const UserContext = createContext<IUserContextType>({
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
-    updateMustRequestUsernameChangeSeen: () => {},
+    updateUsernameChangesBlockedSeen: () => {},
     updateReportingDisabledSeen: () => {},
     updateUserPreferences: () => {},
     updateModerationSeenStatus: () => {},
@@ -38,7 +38,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const { data: session, update, status } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
-    const router = useRouter();
     const pathname = usePathname();
     const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
     const [isMod, setIsMod] = useState(false);
@@ -65,7 +64,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         preferences: serverUser.preferences,
                         activeCosmetics: serverUser.activeCosmetics,
                         needsUsernameChange: serverUser.needsUsernameChange,
-                        mustRequestUsernameChange: serverUser.mustRequestUsernameChange,
+                        usernameChangesBlocked: serverUser.usernameChangesBlocked,
                         reportingDisabled: serverUser.reportingDisabled,
                         moderation: serverUser.moderation,
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
@@ -171,12 +170,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
-    const updateMustRequestUsernameChangeSeen = () => {
+    const updateUsernameChangesBlockedSeen = () => {
         setUser((prevUser) => {
             if(!prevUser) return null;
+            if(!prevUser.usernameChangesBlocked) return prevUser;
             return {
                 ...prevUser,
-                mustRequestUsernameChange: ModerationFieldState.EnabledAndSeen
+                usernameChangesBlocked: { ...prevUser.usernameChangesBlocked, hasSeen: true }
             }
         })
     }
@@ -184,9 +184,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const updateReportingDisabledSeen = () => {
         setUser((prevUser) => {
             if(!prevUser) return null;
+            if(!prevUser.reportingDisabled) return prevUser;
             return {
                 ...prevUser,
-                reportingDisabled: ModerationFieldState.EnabledAndSeen
+                reportingDisabled: { ...prevUser.reportingDisabled, hasSeen: true }
             }
         })
     }
@@ -245,7 +246,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             updateUndoPopupSeenDate,
             updateTimerPopupSeenDate,
             updateNeedsUsernameChange,
-            updateMustRequestUsernameChangeSeen,
+            updateUsernameChangesBlockedSeen,
             updateReportingDisabledSeen,
             updateUserPreferences,
             updateModerationSeenStatus
