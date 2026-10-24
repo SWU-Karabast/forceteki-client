@@ -3,10 +3,12 @@ import { Box, Grid } from '@mui/material';
 import { debugBorder, isBreakpointOverlayEnabled } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
-import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
+import { ICardData, CardStyle, IOngoingEffectSummary } from '../../_sharedcomponents/Cards/CardTypes';
+import { groupUnits } from '../../_sharedcomponents/Cards/unitStacking';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import BreakpointOverlay from './BreakpointOverlay';
+import TokenStack from '../../_sharedcomponents/Cards/TokenStack';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -77,7 +79,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         }));
     };
 
-    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { gameState, connectedPlayer, getOpponent, distributionPromptData } = useGame();
 
     const rawPlayerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
     const rawOpponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];
@@ -97,6 +99,14 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     // attach capturedCards to the unit cards
     const playerUnits = attachCapturedCards(playerUnitsWithUpgrades, allCapturedCards);
     const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
+
+    // During a distribution prompt, tokens stack by the amount assigned to them (0 when none)
+    const assigned = new Map(
+        (distributionPromptData?.valueDistribution ?? []).map((entry) => [entry.uuid, entry.amount] as [string, number])
+    );
+    const ongoingEffects: IOngoingEffectSummary[] = gameState?.ongoingEffects ?? [];
+    const playerGroups = groupUnits(playerUnits, ongoingEffects, assigned);
+    const opponentGroups = groupUnits(opponentUnits, ongoingEffects, assigned);
 
     // Portrait mode grid configuration -- far less here as we are dealing with
     // one set of breakpoints (we don't have landscape ones.. yet)
@@ -176,27 +186,28 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         },
     };
 
+    const renderGroup = (group: ICardData[]) => (
+        <Box key={group[0].uuid} sx={styles.unitStyle}>
+            {group.length > 1 ? (
+                <TokenStack cards={group} />
+            ) : (
+                <GameCard card={group[0]} subcards={group[0].subcards} capturedCards={group[0].capturedCards} cardStyle={CardStyle.InPlay}/>
+            )}
+        </Box>
+    );
 
     return (
         <Box sx={styles.mainBoxStyle}>
             <Grid direction="column" sx={styles.containerStyle}>
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
-                    {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={styles.unitStyle}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
-                        </Box>
-                    ))}
+                    {opponentGroups.map(renderGroup)}
                 </Box>
                 {/* Enforce some minimum spacing between the two player's grids */}
                 <Box sx={{ flex: '1 1 10px', minHeight: '10px', width: '100%' }} />
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
-                    {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={styles.unitStyle}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
-                        </Box>
-                    ))}
+                    {playerGroups.map(renderGroup)}
                 </Box>
             </Grid>
             {/* Show BreakpointOverlay when enabled in environment variables */}
