@@ -71,8 +71,8 @@ const GameBoard = () => {
     // we set tabs
     // ['endGame','keyboardShortcuts','cardSleeves','gameOptions']
     const preferenceTabs = winners
-        ? ['endGame','soundOptions','gameOptions']
-        : ['currentGame','soundOptions','gameOptions'];
+        ? ['endGame','keyboardShortcuts','soundOptions','gameOptions']
+        : ['currentGame','keyboardShortcuts','soundOptions','gameOptions'];
 
     // Get game number from winHistory for Bo3 mode
     const winHistory = lobbyState?.winHistory;

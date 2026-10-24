@@ -71,6 +71,15 @@ export interface ICosmeticsPreferences {
     // disablePlaymats?: boolean;
 }
 
+export interface IKeyboardShortcuts {
+    passTurn?: string;
+    undo?: string;
+}
+
+export interface KeyboardLayoutProps {
+    keyboardShortcuts?: IKeyboardShortcuts;
+}
+
 export interface IGameOptions {
     muteChat?: boolean;
     cardLanguage?: CardImageLocale;
@@ -97,6 +106,7 @@ export enum PlayerTimeRemainingStatus {
 export interface IPreferences {
     sound?: ISoundPreferences;
     cosmetics?: ICosmeticsPreferences;
+    keyboardShortcuts?: IKeyboardShortcuts;
     gameOptions?: IGameOptions;
 }
 
