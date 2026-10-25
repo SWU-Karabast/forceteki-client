@@ -158,7 +158,10 @@ function LobbyReadyButtons({ readyStatus, isOwner, blockError = false, hasDeck =
                         Both players are ready.
                     </Typography>
                 </Box>
-                <CardActions sx={styles.buttonsContainerStyle}>
+                <CardActions
+                    disableSpacing
+                    sx={{ ...styles.buttonsContainerStyle, gap: '1rem', alignItems: 'flex-start', paddingTop: '4px' }}
+                >
                     <Button variant="contained" onClick={handleStartGame}>
                         Start Game
                     </Button>
