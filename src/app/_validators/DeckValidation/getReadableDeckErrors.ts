@@ -51,6 +51,15 @@ export function getReadableDeckErrors(
     if(failures[DeckValidationFailureReason.DeckSetToPrivate]) {
         messages.push('The deck is set to private. Change the deck to unlisted or public.');
     }
+    if (failures[DeckValidationFailureReason.DuplicateLeaders]) {
+        messages.push(`The two leaders are the same card, but ${formatString} requires them to be different.`);
+    }
+    if (failures[DeckValidationFailureReason.MissingSecondLeader]) {
+        messages.push(`${formatString} requires two leaders, but only one was provided.`);
+    }
+    if (failures[DeckValidationFailureReason.MixedAlignmentLeaders]) {
+        messages.push('Decks cannot pair a Heroism leader with a Villainy leader.');
+    }
 
     // Object-like errors (MinDecklistSizeNotMet, etc.)
     if (failures[DeckValidationFailureReason.MinDecklistSizeNotMet]) {

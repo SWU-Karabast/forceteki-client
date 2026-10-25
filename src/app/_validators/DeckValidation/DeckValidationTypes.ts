@@ -10,6 +10,15 @@ export enum DeckValidationFailureReason {
     MaxSideboardSizeExceeded = 'maxSideboardSizeExceeded',
     TooManyCopiesOfCard = 'tooManyCopiesOfCard',
     UnknownCardId = 'unknownCardId',
+
+    /** TwinSuns only: the two leaders are the same card (or different printings of the same card). */
+    DuplicateLeaders = 'duplicateLeaders',
+
+    /** TwinSuns only: deck has a primary leader but is missing a secondary leader. */
+    MissingSecondLeader = 'missingSecondLeader',
+
+    /** TwinSuns only: one leader has the Heroism aspect and the other has Villainy — an illegal pairing. */
+    MixedAlignmentLeaders = 'mixedAlignmentLeaders',
 }
 
 export enum DecklistLocation {
@@ -64,4 +73,13 @@ export interface IDeckValidationFailures {
         actualCopies: number;
     }[];
     [DeckValidationFailureReason.UnknownCardId]?: { id: string }[];
+
+    /** Twin Suns only: the two leaders are the same card (or different printings of the same card). */
+    [DeckValidationFailureReason.DuplicateLeaders]?: boolean;
+
+    /** Twin Suns only: the deck has a primary leader but no secondary leader. */
+    [DeckValidationFailureReason.MissingSecondLeader]?: boolean;
+
+    /** Twin Suns only: one leader has the Heroism aspect and the other has Villainy — an illegal pairing. */
+    [DeckValidationFailureReason.MixedAlignmentLeaders]?: boolean;
 }
