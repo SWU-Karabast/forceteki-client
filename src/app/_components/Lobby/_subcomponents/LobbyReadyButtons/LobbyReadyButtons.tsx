@@ -120,7 +120,7 @@ function LobbyReadyButtons({ readyStatus, isOwner, blockError = false, hasDeck =
                     </Typography>
                     {readyStatus && (
                         <Typography component="span" sx={{ margin: 0, fontSize: '1rem', fontWeight: 400, lineHeight: 1 }}>
-                            · {opponentReady ? 'Both players ready' : 'Waiting for rival'}
+                            · {opponentReady ? 'Both players ready' : 'Waiting for opponent'}
                         </Typography>
                     )}
                 </Box>
