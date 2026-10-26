@@ -78,7 +78,7 @@ describe('adaptState (full assembly)', () => {
     });
 
     it('fills leader and base from the header', () => {
-        expect(gs.players.p1.leader.setId).toEqual({ set: 'SOR', number: 10 }); // P1Leader SOR#010
+        expect(gs.players.p1.leaders[0].setId).toEqual({ set: 'SOR', number: 10 }); // P1Leader SOR#010
         expect(gs.players.p1.base.setId).toEqual({ set: 'SOR', number: 27 });   // P1Base SOR#027
     });
 
@@ -104,15 +104,15 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
 
     it('undeployed leader shows its art (zone base) and dims when exhausted', () => {
         const gs = adaptState(state(), doc, ids, { leaderExhausted: { 1: true } });
-        expect(gs.players.p1.leader.zone).toBe('base'); // isDeployed=false -> art renders
-        expect(gs.players.p1.leader.exhausted).toBe(true); // -> Karabast dimming
-        expect(gs.players.p2.leader.exhausted).toBeFalsy();
+        expect(gs.players.p1.leaders[0].zone).toBe('base'); // isDeployed=false -> art renders
+        expect(gs.players.p1.leaders[0].exhausted).toBe(true); // -> Karabast dimming
+        expect(gs.players.p2.leaders[0].exhausted).toBeFalsy();
     });
 
     it('glows the leader on its action frame', () => {
         const gs = adaptState(state(), doc, ids, { highlightIds: ['JTL#018'] });
-        expect(gs.players.p1.leader.selected).toBe(true);
-        expect(gs.players.p2.leader.selected).toBe(false);
+        expect(gs.players.p1.leaders[0].selected).toBe(true);
+        expect(gs.players.p2.leaders[0].selected).toBe(false);
     });
 
     it('a deployed leader flips the slot to the placeholder and renders as an in-play unit', () => {
@@ -121,8 +121,8 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
             shields: 0, experience: 0, statusTokens: {}, captured: [],
         };
         const gs = adaptState(state([leaderUnit]), doc, ids, { leaderExhausted: { 1: true } });
-        expect(gs.players.p1.leader.zone).not.toBe('base'); // deployed -> placeholder
-        expect(gs.players.p1.leader.exhausted).toBeFalsy(); // slot not dimmed while deployed
+        expect(gs.players.p1.leaders[0].zone).not.toBe('base'); // deployed -> placeholder
+        expect(gs.players.p1.leaders[0].exhausted).toBeFalsy(); // slot not dimmed while deployed
         expect(gs.players.p1.cardPiles.spaceArena.some((c: { uuid: string }) => c.uuid === 'JTL#018')).toBe(true);
     });
 });
@@ -412,8 +412,8 @@ describe('captives, live stats and leader status (SWU-PGN 3c4ed35d)', () => {
         s.players[1]!.leader = { id: doc.header.p1Leader, deployed: false, exhausted: true, epicActionUsed: true };
         s.players[1]!.deckSize = 17;
         const gs = adaptState(s, doc, ids);
-        expect(gs.players.p1.leader.exhausted).toBe(true);
-        expect(gs.players.p1.leader.zone).toBe('base');
+        expect(gs.players.p1.leaders[0].exhausted).toBe(true);
+        expect(gs.players.p1.leaders[0].zone).toBe('base');
         expect(gs.players.p1.numCardsInDeck).toBe(17);
     });
 });
@@ -463,14 +463,14 @@ describe('every §11 field reaches the board (spec conformance, forceteki 3c4ed3
 
     it('renders the leader from the file: base zone while undeployed, exhausted flag, spent Epic Action', () => {
         const gs = adaptState(state({}, { leader: { id: 'SOR#010', deployed: false, exhausted: true, epicActionUsed: true } }), doc, ids);
-        const l = gs.players.p1.leader;
+        const l = gs.players.p1.leaders[0];
         expect(l.zone).toBe('base');
         expect(l.exhausted).toBe(true);
         expect(l.epicActionSpent).toBe(true);
-        expect(gs.players.p2.leader.epicActionSpent).toBeUndefined();
+        expect(gs.players.p2.leaders[0].epicActionSpent).toBeUndefined();
         // The file's flag wins over the caller's EXHAUST/READY scan.
         const ready = adaptState(state({}, { leader: { id: 'SOR#010', deployed: false, exhausted: false, epicActionUsed: false } }), doc, ids, { leaderExhausted: { 1: true } });
-        expect(ready.players.p1.leader.exhausted).toBeFalsy();
+        expect(ready.players.p1.leaders[0].exhausted).toBeFalsy();
     });
 
     it('a leader deployed as a pilot flips the slot, rides on its host, and carries its exhausted flag there', () => {
@@ -478,7 +478,7 @@ describe('every §11 field reaches the board (spec conformance, forceteki 3c4ed3
             cards: [unit({ id: 'SOR#050', zone: 'space', upgrades: ['SOR#010'] })],
             leader: { id: 'SOR#010', deployed: true, exhausted: true, epicActionUsed: true },
         }), doc, ids);
-        expect(gs.players.p1.leader.zone).not.toBe('base');
+        expect(gs.players.p1.leaders[0].zone).not.toBe('base');
         const pilot = (gs.players.p1.cardPiles.spaceArena as Array<Record<string, unknown>>).find((c) => c.uuid === 'SOR#010')!;
         expect(pilot.parentCardId).toBe('SOR#050');
         expect(pilot.exhausted).toBe(true);

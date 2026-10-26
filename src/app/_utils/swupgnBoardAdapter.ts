@@ -483,7 +483,8 @@ function adaptPlayer(
         id: playerId,
         aspects,
         user: { username: playerId },
-        leader,
+        // Matches the live gameState, where a player carries an array of leaders (forceteki#2390).
+        leaders: [leader],
         base,
         hasInitiative: false, // set by adaptState from ReducedState.initiative
         isActionPhaseActivePlayer: active,

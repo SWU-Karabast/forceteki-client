@@ -223,7 +223,7 @@ describe('§22 earlier 1.0 files', () => {
         expect(s.players[1]!.leader).toBeUndefined();
         expect(s.players[1]!.deckSize).toBeUndefined();
         const gs = adaptState(s, doc, SEATS, { leaderExhausted: { 1: true }, deckRemaining: { 1: 0, 2: 0 } });
-        expect(gs.players.P1.leader.exhausted).toBe(true);
+        expect(gs.players.P1.leaders[0].exhausted).toBe(true);
         expect(gs.players.P1.numCardsInDeck).toBe(0);
         expect(gs.initiativeClaimed).toBe(true); // only "someone holds it" is known
         expect(writerGeneration(withEvents(events))).toEqual([expect.stringContaining('Keyframes carry no leader')]);
@@ -260,7 +260,7 @@ describe('§22 earlier 1.0 files', () => {
         const s = fold([...R1(), flip(false, 'R1.A.9'), flip(false, 'R1.A.10')]);
         expect(s.players[1]!.leader?.onStartingSide).toBe(false);
         expect(s.players[2]!.leader?.onStartingSide).toBeUndefined();
-        expect(adaptState(s, base(), SEATS).players.P1.leader.onStartingSide).toBe(false);
+        expect(adaptState(s, base(), SEATS).players.P1.leaders[0].onStartingSide).toBe(false);
         // And back again, from a fold that never saw the first flip.
         expect(fold([...R1(), flip(true, 'R1.A.9')]).players[1]!.leader?.onStartingSide).toBe(true);
         // These leaders never deploy, so early in a file nothing has named the seat's leader:

@@ -3,7 +3,7 @@ import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { CardStyle } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 
-interface UseLeaderCardFlipPreviewReturn {
+export interface UseLeaderCardFlipPreviewReturn {
     // style properties
     aspectRatio: string;
     width: string;
@@ -17,7 +17,6 @@ interface UseLeaderCardFlipPreviewParams {
     setPreviewImage: (url: string | null) => void;
     frontCardStyle: CardStyle;
     backCardStyle: CardStyle;
-    isDeployed?: boolean;
     isLeader: boolean;
     // Card object for starting side logic
     card?: {
@@ -36,26 +35,15 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
         setPreviewImage,
         frontCardStyle,
         backCardStyle,
-        isDeployed = false,
         isLeader = false,
-        card,
     } = params;
-
+    const notDeployed = !!anchorElement?.getAttribute('data-card-not-deployed');
     const locale = useCardImageLocale();
     const [frontPreviewImage, setFrontPreviewImage] = useState<string | null>(null);
     const [backPreviewImage, setBackPreviewImage] = useState<string | null>(null);
 
     // set starting side internally (handles Chancellor Palpatine special case)
-    const startingSide = useMemo(() => {
-        if (!card) return undefined;
-
-        let StartingSide = card.onStartingSide;
-        // TODO fix this when we refactor S3utils and gamecard - this is for chancellor palpatine
-        if (StartingSide === undefined && card.id === 'TWI_017') {
-            StartingSide = true;
-        }
-        return StartingSide;
-    }, [card]);
+    const startingSide: boolean | undefined = cardId === 'TWI_017' ? anchorElement?.getAttribute('data-card-side') === '0' : undefined;
 
     // Internal states
     const [internalIsCtrl, setInternalIsCtrl] = useState(false);
@@ -76,14 +64,14 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
                 width: 'clamp(200px, 60vw, 16rem)',
             };
         }
-        const isLeaderActive = isLeader && isDeployed;
+        const isLeaderActive = isLeader && !notDeployed;
         const hasDefinedStartingSide = startingSide !== undefined;
         const usePortraitMode = !hasDefinedStartingSide && ((isLeaderActive && !internalIsCtrl) || (!isLeaderActive && internalIsCtrl));
         return {
             aspectRatio: usePortraitMode ? '1 / 1.4' : '1.4 / 1',
             width: usePortraitMode ? 'clamp(200px, 60vw, 15rem)' : 'clamp(280px, 80vw, 24rem)',
         };
-    }, [isLeader, isDeployed, internalIsCtrl, startingSide, anchorElement]);
+    }, [isLeader, notDeployed, internalIsCtrl, startingSide, anchorElement]);
 
     useEffect(() => {
         if (!anchorElement || !cardId) return;
@@ -99,13 +87,13 @@ export function useLeaderCardFlipPreview(params: UseLeaderCardFlipPreviewParams)
                 count: 0,
                 types: 'leader',
                 onStartingSide: startingSide
-            }, locale, frontCardStyle);
+            }, locale, CardStyle.PlainLeader);
             backURL = s3CardImageURL({
                 id: cardId,
                 count: 0,
                 types: 'leader',
                 onStartingSide: !startingSide
-            }, locale, frontCardStyle);
+            }, locale, CardStyle.PlainLeader);
         } else {
             frontURL = s3CardImageURL({
                 id: cardId,

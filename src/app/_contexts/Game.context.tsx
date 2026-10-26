@@ -14,8 +14,9 @@ import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
 import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
-import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { PopupButton, PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { ZoneName } from '../_constants/constants';
+import type { IQueueMatchmakingStatus } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
@@ -25,6 +26,7 @@ import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 import { ReplayContext } from '@/app/_contexts/Replay.context';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 interface IGameContextType {
@@ -49,6 +51,7 @@ interface IGameContextType {
      *  (last played card) are shown, since there is no hidden information to protect. */
     isReplay?: boolean;
     lastQueueHeartbeat: number;
+    queueMatchmakingStatus: IQueueMatchmakingStatus | null;
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
@@ -72,8 +75,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [statsSubmitNotification, setStatsSubmitNotification] = useState<IStatsNotification | null>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
+    const [queueMatchmakingStatus, setQueueMatchmakingStatus] = useState<IQueueMatchmakingStatus | null>(null);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
     const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
+    const { showErrorScreen } = useErrorScreen();
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
@@ -95,7 +100,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const opponentId = Object.keys(gamestate.players).find(id => id !== connectedPlayerId) || '';
         const opponent = gamestate.players[opponentId];
         const zones = [];
-        if (playerState?.leader.selectable || playerState?.base.selectable) {
+        if (playerState?.leaders?.some((leader: any) => leader.selectable) || playerState?.base.selectable) {
             zones.push(`player-${ZoneName.Base}`);
         }
         for (const zoneName in playerState?.cardPiles) {
@@ -103,7 +108,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 zones.push(`player-${zoneName}`);
             }
         }
-        if (opponent?.leader.selectable || opponent?.base.selectable) {
+        if (opponent?.leaders?.some((leader: any) => leader.selectable) || opponent?.base.selectable) {
             zones.push(`opponent-${ZoneName.Base}`);
         }
         for (const zoneName in opponent?.cardPiles) {
@@ -130,7 +135,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 playSound('yourTurn');
             }
 
-            const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
+            const { buttons, menuTitle, promptTitle, promptDescription, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
 
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') {
@@ -140,6 +145,24 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
+            }
+            else if (promptType === 'actionSelection' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('actionTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    buttons: buttons.filter((button: PopupButton) => button.sourceCard),
+                    footerButtons: buttons.filter((button: PopupButton) => !button.sourceCard),
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (promptType === 'modalEffectSelection' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('actionTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    description: promptDescription,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
             }
             else if (hasSelectedCards(gameState, ['groundArena','spaceArena']) && buttons.length == 2) {
                 return;
@@ -283,6 +306,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const connectedPlayerId = user?.id || anonymousUserId || '';
         if (!connectedPlayerId) return;
         setConnectedPlayer(connectedPlayerId);
+        setQueueMatchmakingStatus(null);
         clearPopups();
         const spectatorParam = searchParams.get('spectator');
         const isSpectatorMode = spectatorParam === 'true';
@@ -299,9 +323,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('connection_error', (error: any) => {
+            setQueueMatchmakingStatus(null);
             console.error('Error joining lobby:', error);
-            alert(error);
-            router.push('/');
+            showErrorScreen({
+                title: 'Couldn\'t join the game',
+                message: 'We couldn\'t connect you to this game. It may have already ended or no longer exists.',
+                detail: typeof error === 'string' ? error : error?.message,
+                actions: (dismiss) => [{
+                    label: 'Return to main menu',
+                    variant: 'concede',
+                    onClick: () => {
+                        dismiss();
+                        router.push('/');
+                    },
+                }],
+            });
         });
 
         newSocket.on('matchmakingFailed', (error: any) => {
@@ -310,11 +346,30 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('inactiveDisconnect', () => {
-            alert('You have been disconnected due to inactivity');
+            // The server removes the user from the lobby on an inactivity disconnect,
+            // so there is nothing to rejoin - returning home is the only way forward.
+            showErrorScreen({
+                title: 'Disconnected due to inactivity',
+                message: 'You were removed from the game because there was no activity for a while. The game has gone on without you.',
+                actions: (dismiss) => [{
+                    label: 'Return to main menu',
+                    variant: 'concede',
+                    onClick: () => {
+                        dismiss();
+                        resetStates();
+                        router.push('/');
+                    },
+                }],
+            });
             newSocket.disconnect();
         });
 
+        newSocket.on('disconnect', () => {
+            setQueueMatchmakingStatus(null);
+        });
+
         newSocket.on('gamestate', (gameState: any) => {
+            setQueueMatchmakingStatus(null);
             if(isSpectatorMode){
                 setConnectedPlayer(Object.keys(gameState.players)[0])
             }
@@ -357,14 +412,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('lobbystate', (lobbyState: any) => {
+            setQueueMatchmakingStatus(null);
             setLobbyState(lobbyState);
             if (process.env.NODE_ENV === 'development') {
                 console.log('Lobby state received:', lobbyState);
             }
         })
-
-        newSocket.on('queueHeartbeat', () => {
+        
+        newSocket.on('queueHeartbeat', (_serverTime: number, matchmakingStatus?: IQueueMatchmakingStatus) => {
             setLastQueueHeartbeat(Date.now());
+            setQueueMatchmakingStatus(matchmakingStatus ?? null);
         });
 
         newSocket.on('bugReportResult', (result: any) => {
@@ -406,6 +463,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups, status, session?.jwtToken]);
 
     const sendMessage = (message: string, args: any[] = []) => {
+        if (message === 'manualDisconnect' || message === 'requeue') {
+            setQueueMatchmakingStatus(null);
+        }
         socket?.emit(message, ...args);
     };
 
@@ -458,6 +518,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const resetStates = () => {
         setLobbyState(null);
         setGameState(null);
+        setQueueMatchmakingStatus(null);
         resetMessages();
     }
 
@@ -493,6 +554,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 distributionPromptData,
                 isSpectator,
                 lastQueueHeartbeat,
+                queueMatchmakingStatus,
                 isAnonymousPlayer,
                 hasChatDisabled,
                 createNewSocket,
@@ -535,6 +597,7 @@ const FALLBACK_GAME_CONTEXT: IGameContextType = {
     distributionPromptData: null,
     isSpectator: true,
     lastQueueHeartbeat: 0,
+    queueMatchmakingStatus: null,
     isAnonymousPlayer: noopBoolFn,
     hasChatDisabled: noopBoolFn,
     gameIsEnded: noopBoolFn,

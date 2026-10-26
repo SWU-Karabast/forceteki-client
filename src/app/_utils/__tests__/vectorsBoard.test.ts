@@ -53,16 +53,16 @@ describe.each(VECTORS)('board at the final frame: %s', (name) => {
         // The BASE's Epic Action, a separate ability from the leader's.
         expect(p.base.epicActionSpent, 'baseEpicActionUsed').toBe(e.baseEpicActionUsed || undefined);
         // Only a double-sided leader carries a face; absent must stay absent, never `false`.
-        expect(p.leader.onStartingSide, 'leader onStartingSide').toBe(e.leader!.onStartingSide);
+        expect(p.leaders[0].onStartingSide, 'leader onStartingSide').toBe(e.leader!.onStartingSide);
         // Base HP: printed max from the keyframe, damage from the absolute hp the file states.
         expect(p.base.hp, 'baseMaxHp').toBe(e.baseMaxHp);
         expect(p.base.damage, 'base damage').toBe(e.baseMaxHp - e.baseHp);
         expect(p.hasInitiative).toBe(expected.initiative === seat);
         // The leader's four flags (§11 LeaderState).
-        expect(p.leader.uuid).toBe(e.leader!.id);
-        expect(p.leader.zone === 'base', 'leader undeployed').toBe(!e.leader!.deployed);
-        expect(!!p.leader.exhausted, 'leader exhausted').toBe(!e.leader!.deployed && e.leader!.exhausted);
-        expect(!!p.leader.epicActionSpent, 'epicActionUsed').toBe(e.leader!.epicActionUsed);
+        expect(p.leaders[0].uuid).toBe(e.leader!.id);
+        expect(p.leaders[0].zone === 'base', 'leader undeployed').toBe(!e.leader!.deployed);
+        expect(!!p.leaders[0].exhausted, 'leader exhausted').toBe(!e.leader!.deployed && e.leader!.exhausted);
+        expect(!!p.leaders[0].epicActionSpent, 'epicActionUsed').toBe(e.leader!.epicActionUsed);
     });
 
     it('initiativeTaken drives the claimed flag', () => {
