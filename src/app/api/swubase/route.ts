@@ -41,8 +41,8 @@ export async function GET(req: Request) {
     }
 }
 
-// The game server works out which account to link from the user's session token, which is forwarded as the cookie,
-// and checks it is the account the link was started from.
+// The game server works out which account to link from the user's session token, which is forwarded as the cookie.
+// The account id from the callback URL is sent too, and must match that account.
 async function linkUserToSwuBase(sessionToken: string, expectedUserId: string, linkToken: string) {
     const response = await fetch(`${CONFIG.gameServerUrl}/api/link-swubase`, {
         method: 'POST',
