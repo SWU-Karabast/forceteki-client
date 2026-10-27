@@ -107,7 +107,7 @@ const styles = {
     unreadBadge: {
         position: 'absolute',
         top: '-4px',
-        right: '16px',
+        right: '8px',
         zIndex: 1,
         minWidth: '22px',
         height: '22px',
@@ -363,10 +363,12 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
     const doesUserHaveChatMuted = user?.preferences?.gameOptions?.muteChat;
     const opponentId = getOpponent(connectedPlayer);
-    const { unreadMessageIndices, markMessagesRead } = useUnreadChatMessages(
+    const isChatVisible = sidebarOpen && drawerEntered;
+    const { unreadMessageIndices, unreadDividerIndex, markMessagesRead } = useUnreadChatMessages(
         gameMessages,
         gameState.id,
         isSpectator ? '' : opponentId,
+        isChatVisible,
     );
     const isAnonymousOpponent = isAnonymousPlayer(opponentId);
     const opponentChatDisabled = hasChatDisabled(opponentId);
@@ -602,8 +604,9 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 handleChatOnChange={handleChatOnChange}
                 handleChatSubmit={handleGameChat}
                 pauseAutoScroll
-                isVisible={sidebarOpen && drawerEntered}
+                isVisible={isChatVisible}
                 unreadMessageIndices={unreadMessageIndices}
+                unreadDividerIndex={unreadDividerIndex}
                 onMessagesRead={markMessagesRead}
             />
 

@@ -52,5 +52,6 @@ export interface IChatProps {
     pauseAutoScroll?: boolean;
     isVisible?: boolean;
     unreadMessageIndices?: ReadonlySet<number>;
+    unreadDividerIndex?: number | null;
     onMessagesRead?: (indices: number[]) => void;
 }

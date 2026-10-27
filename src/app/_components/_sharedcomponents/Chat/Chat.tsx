@@ -36,6 +36,7 @@ const Chat: React.FC<IChatProps> = ({
     pauseAutoScroll = false,
     isVisible = true,
     unreadMessageIndices,
+    unreadDividerIndex = null,
     onMessagesRead,
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled } = useGame();
@@ -338,6 +339,7 @@ const Chat: React.FC<IChatProps> = ({
     const unreadMessageCount = unreadStartIndex === null
         ? 0
         : Math.max(0, chatHistory.length - unreadStartIndex);
+    const newMessagesDividerIndex = unreadDividerIndex ?? (unreadMessageCount > 0 ? unreadStartIndex : null);
 
     useEffect(() => {
         if (!isScrollPaused) {
@@ -410,11 +412,11 @@ const Chat: React.FC<IChatProps> = ({
         },
         newMessagesDivider: {
             my: '0.25rem',
-            color: '#FFFE50',
+            color: '#f44336',
             fontSize: '0.7rem',
+            fontWeight: 700,
             '&::before, &::after': {
-                borderColor: '#FFFE50',
-                opacity: 0.7,
+                borderColor: '#f44336',
             },
         },
         chatMessageStack: {
@@ -540,7 +542,7 @@ const Chat: React.FC<IChatProps> = ({
                     <Box sx={styles.chatMessageStack}>
                         {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => (
                             <React.Fragment key={`${chatEntry.date}-${index}`}>
-                                {unreadStartIndex === index && unreadMessageCount > 0 && (
+                                {newMessagesDividerIndex === index && (
                                     <Divider sx={styles.newMessagesDivider}>New messages</Divider>
                                 )}
                                 {formatMessage(chatEntry?.message, index)}
