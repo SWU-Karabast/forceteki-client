@@ -38,7 +38,7 @@ const TokenStack: React.FC<{ cards: ICardData[] }> = ({ cards }) => {
                     left: '-6%',
                     zIndex: 3,
                     px: '0.35em',
-                    borderRadius: '999px',
+                    borderRadius: '45%',
                     backgroundColor: 'rgba(0, 0, 0, 0.85)',
                     border: '1.5px solid white',
                     color: 'white',
