@@ -543,11 +543,14 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                 </Typography>
             </Box>
 
-            <Box sx={{ ...styles.functionContainer, mt: '2rem' }}>
-                <Typography sx={styles.typographyContainer} variant={'h3'}>Game Log</Typography>
-                <Divider sx={{ mb: '20px' }} />
-                <DownloadGameLog />
-            </Box>
+            {/* The server answers getGameLog only for players, never for a spectator. */}
+            {!isSpectator && (
+                <Box sx={{ ...styles.functionContainer, mt: '2rem' }}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Game Log</Typography>
+                    <Divider sx={{ mb: '20px' }} />
+                    <DownloadGameLog />
+                </Box>
+            )}
 
             {hasStatsMessages && (
                 <Box sx={{ ...styles.functionContainer, mt: '35px', mb: '0px', height: '7rem' }}>
