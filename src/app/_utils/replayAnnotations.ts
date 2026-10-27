@@ -1,5 +1,5 @@
 import type { Annotation, SwuPgnDocument } from '@/lib/swupgn';
-import { openDB, ANNOTATIONS_STORE } from './replayStorage';
+import { openDB, closeWhenSettled, ANNOTATIONS_STORE } from './replayStorage';
 
 /**
  * A working-copy annotation: a reader Annotation plus a client-only `_id` for stable
@@ -14,7 +14,26 @@ export interface WorkingAnnotation extends Annotation {
 interface AnnotationRecord {
     replayId: string;
     annotations: WorkingAnnotation[];
+    // `_id`s of notes deleted in any tab. A stale tab still holding a deleted note in memory
+    // would otherwise put it back on its next save, so the merge drops every id listed here.
+    deleted?: string[];
     lastModified: number;
+}
+
+/**
+ * Union two note lists by `_id`. A note in both takes the `overlay` copy (this tab's edit);
+ * order is base first, then the overlay's new notes. Ids in `deleted` are dropped.
+ */
+export function mergeAnnotations(
+    base: WorkingAnnotation[],
+    overlay: WorkingAnnotation[],
+    deleted: Iterable<string> = [],
+): WorkingAnnotation[] {
+    const byId = new Map<string, WorkingAnnotation>();
+    for (const a of base) byId.set(a._id, a);
+    for (const a of overlay) byId.set(a._id, a);
+    for (const id of deleted) byId.delete(id);
+    return [...byId.values()];
 }
 
 /** Load the working-copy notes for a replay, or [] if none / no replayId. */
@@ -23,6 +42,7 @@ export async function loadAnnotations(replayId: string | null): Promise<WorkingA
     const db = await openDB();
     return new Promise((resolve, reject) => {
         const tx = db.transaction(ANNOTATIONS_STORE, 'readonly');
+        closeWhenSettled(db, tx);
         const request = tx.objectStore(ANNOTATIONS_STORE).get(replayId);
         request.onsuccess = () => {
             const rec = request.result as AnnotationRecord | undefined;
@@ -32,16 +52,40 @@ export async function loadAnnotations(replayId: string | null): Promise<WorkingA
     });
 }
 
-/** Persist the working-copy notes for a replay. No-op without a replayId (in-memory only). */
-export async function saveAnnotations(replayId: string | null, annotations: WorkingAnnotation[], now = 0): Promise<void> {
+/**
+ * Persist the working-copy notes for a replay. No-op without a replayId (in-memory only).
+ * Another tab may have saved notes since this one loaded, so the write reads the stored
+ * record and merges into it by `_id` rather than overwriting it. `deletedIds` are the notes
+ * this tab removed; they join the record's tombstones so no tab resurrects them.
+ */
+export async function saveAnnotations(
+    replayId: string | null,
+    annotations: WorkingAnnotation[],
+    now = 0,
+    deletedIds: string[] = [],
+): Promise<void> {
     if (!replayId) return;
     const db = await openDB();
-    const record: AnnotationRecord = { replayId, annotations, lastModified: now };
     return new Promise((resolve, reject) => {
         const tx = db.transaction(ANNOTATIONS_STORE, 'readwrite');
-        tx.objectStore(ANNOTATIONS_STORE).put(record);
+        closeWhenSettled(db, tx);
+        const store = tx.objectStore(ANNOTATIONS_STORE);
+        const request = store.get(replayId);
+        request.onsuccess = () => {
+            const stored = request.result as AnnotationRecord | undefined;
+            const deleted = [...new Set([...(stored?.deleted ?? []), ...deletedIds])];
+            const record: AnnotationRecord = {
+                replayId,
+                annotations: mergeAnnotations(stored?.annotations ?? [], annotations, deleted),
+                ...(deleted.length ? { deleted } : {}),
+                lastModified: now,
+            };
+            store.put(record);
+        };
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+        // A commit that fails (QuotaExceededError) aborts the transaction and fires no error.
+        tx.onabort = () => reject(tx.error ?? new Error('Replay notes transaction aborted'));
     });
 }
 

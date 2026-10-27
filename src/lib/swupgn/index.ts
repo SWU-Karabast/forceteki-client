@@ -8,11 +8,13 @@
 // re-export `validate` below.
 export * from './types';
 export { parse } from './parse';
-export { fold, foldFrames, reduce, stateAt, isSeat, asIdList, isCompleteKeyframe, emptyState } from './fold';
+export type { ParseNotes, ParsedDocument } from './parse';
+export { fold, foldFrames, frameCost, reduce, stateAt, isSeat, asIdList, isCompleteKeyframe, emptyState } from './fold';
 export { render } from './render';
+export { isTopLevelActionRecord } from './actionLinks';
 export { serialize } from './serialize';
 export type { NameResolver } from './cardNames';
 export { baseId, indexResolver } from './cardNames';
-export { normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, isTokenPseudoCard, tokenName, tokenArtId } from './tokens';
+export { normalizeTokenEvents, dropInertRecords, dropFrameworkSources, normalizeEvents, repairUpgradePlays, isStatusTokenCard, isTokenPseudoCard, tokenName, tokenArtId } from './tokens';
 export { checkKeyframes } from './integrity';
 export type { IntegrityResult, KeyframeMismatch } from './integrity';

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { readPrefs, writePrefs, DEFAULT_PREFS } from '../replayPrefs';
+import { readPrefs, DEFAULT_PREFS } from '../replayPrefs';
 
 describe('replayPrefs', () => {
-    it('round-trips', () => expect(readPrefs(writePrefs({ speed: 1.5, stepBy: 'record', animate: false }))).toEqual({ speed: 1.5, stepBy: 'record', animate: false }));
+    it('round-trips', () => expect(readPrefs(JSON.stringify({ speed: 1.5, stepBy: 'record', animate: false }))).toEqual({ speed: 1.5, stepBy: 'record', animate: false }));
     it('falls back per field on junk', () => {
         expect(readPrefs(null)).toEqual(DEFAULT_PREFS);
         expect(readPrefs('{"speed":99,"stepBy":"x","animate":"no"}')).toEqual(DEFAULT_PREFS);

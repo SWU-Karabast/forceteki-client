@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Card, Grid, Typography, IconButton } from '@mui/material';
+import { Box, Card, Grid, Typography, IconButton, useTheme } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ReplayProvider, useReplay } from '@/app/_contexts/Replay.context';
@@ -19,7 +19,7 @@ import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 import { parse, SwuPgnDocument } from '@/lib/swupgn';
 import { loadReplay } from '@/app/_utils/replayStorage';
-import { replayUrl, storeReplayContent } from '@/app/_utils/replayHandoff';
+import { replayUrl, storeReplayContent, replayTooHeavy } from '@/app/_utils/replayHandoff';
 import { formatResult } from '@/app/_utils/replayMoves';
 import { useCardNameMap } from '@/app/_utils/swupgnCardNames';
 
@@ -43,9 +43,13 @@ function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: 2,
+                // On a phone the result chip wraps to its own line, and the right padding keeps
+                // the absolutely placed exit button clear of the names.
+                flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                gap: { xs: 1, sm: 2 },
                 py: 1,
-                px: 3,
+                pl: 3,
+                pr: { xs: 6, sm: 3 },
                 background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 100%)',
                 borderBottom: '1px solid rgba(255,255,255,0.15)',
                 zIndex: 10,
@@ -66,7 +70,7 @@ function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
             >
                 <CloseOutlined />
             </IconButton>
-            <Box sx={{ textAlign: 'right', minWidth: '120px' }}>
+            <Box sx={{ textAlign: 'right', minWidth: { xs: 0, sm: '120px' } }}>
                 <Typography variant="body1" sx={{
                     color: isP1Winner ? 'var(--initiative-blue)' : 'white',
                     fontWeight: 'bold',
@@ -89,7 +93,7 @@ function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
             }}>
                 vs
             </Typography>
-            <Box sx={{ textAlign: 'left', minWidth: '120px' }}>
+            <Box sx={{ textAlign: 'left', minWidth: { xs: 0, sm: '120px' } }}>
                 <Typography variant="body1" sx={{
                     color: isP2Winner ? 'var(--initiative-blue)' : 'white',
                     fontWeight: 'bold',
@@ -104,9 +108,11 @@ function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
                     </Typography>
                 )}
             </Box>
+            {/* A phone-only line break, so the result chip always takes a line of its own. */}
+            {formattedResult && <Box sx={{ display: { xs: 'block', sm: 'none' }, flexBasis: '100%', height: 0 }} />}
             {formattedResult && (
                 <Box sx={{
-                    ml: 2,
+                    ml: { xs: 0, sm: 2 },
                     px: 1.5,
                     py: 0.5,
                     borderRadius: '4px',
@@ -131,6 +137,12 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
     // The animator's coordinate space: <main> holds BOTH trays and the board, so a
     // hand -> arena flight measures in one frame of reference.
     const mainRef = useRef<HTMLElement>(null);
+    const theme = useTheme();
+    // Collapsed by default on a phone: the panel is fixed at 88vw, so open-by-default
+    // covers the board completely and leaves the game as a sliver down one edge. Same
+    // breakpoint as the panel's `{ xs, sm }` sx values, so the two rules cannot split.
+    const [panelCollapsed, setPanelCollapsed] = useState(() =>
+        typeof window !== 'undefined' && window.matchMedia(theme.breakpoints.down('sm').replace(/^@media\s*/, '')).matches);
 
     if (!gameState?.players) {
         return (
@@ -142,17 +154,23 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
 
     return (
         <>
-            <Grid container sx={{ height: '100dvh', overflow: 'hidden', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1200 }}>
+            {/* The background sits on the container so it still fills the strip beside the
+                header when <main> narrows for the open panel. */}
+            <Grid container sx={{
+                height: '100dvh', overflow: 'hidden', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1200,
+                backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')}?v=2)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}>
                 <Box
                     component="main"
                     ref={mainRef}
                     sx={{
-                        width: '100%',
+                        // From md up the open panel (360px) sits beside the board, not over it;
+                        // a phone or small tablet keeps the overlay.
+                        width: panelCollapsed ? '100%' : { xs: '100%', md: 'calc(100% - 360px)' },
                         height: '100dvh',
                         position: 'relative',
-                        backgroundImage: `url(${s3ImageURL('ui/board-background-1.webp')}?v=2)`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
                         display: 'flex',
                         flexDirection: 'column',
                     }}
@@ -176,7 +194,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                 </Box>
                 <PopupShell sidebarOpen={false} />
             </Grid>
-            <ReplayPanel />
+            <ReplayPanel collapsed={panelCollapsed} setCollapsed={setPanelCollapsed} />
             <LastActionCaption />
             <TransportControls />
         </>
@@ -188,8 +206,8 @@ function ReplayBoard({ doc, rawContent, replayId, initialFrame, clipStart, clipE
     rawContent: string | null;
     replayId: string | null;
     initialFrame: number | string;
-    clipStart: number | null;
-    clipEnd: number | null;
+    clipStart: string | null;
+    clipEnd: string | null;
 }) {
     // SET#NUM→name map from public/card-names.json (npm run gen:card-data). Empty until
     // it loads, then the move list / captions re-render with names; unknown ids fall back.
@@ -207,15 +225,15 @@ export default function ReplayPage() {
     const [doc, setDoc] = useState<SwuPgnDocument | null>(null);
     const [rawContent, setRawContent] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
     const replayId = searchParams.get('id');
-    const fromParam = searchParams.get('from');
-    const toParam = searchParams.get('to');
-    const clipStart = fromParam != null ? Number(fromParam) : null;
-    const clipEnd = toParam != null ? Number(toParam) : null;
-    // `t` is a `seq` ("R4.A.8u"), which survives the reader dropping inert records. Older
-    // links carry a bare frame index; both are accepted (see ReplayProvider.initialFrame).
+    // `t`, `from` and `to` are each a `seq` ("R4.A.8u"), which survives the reader dropping
+    // inert records. Older links carry a bare frame index; both are accepted and resolved
+    // against the stream by ReplayProvider, so they stay strings here.
+    const clipStart = searchParams.get('from');
+    const clipEnd = searchParams.get('to');
     const tParam = searchParams.get('t');
     const initialFrame = tParam || clipStart || 0;
 
@@ -223,31 +241,43 @@ export default function ReplayPage() {
     useEffect(() => {
         if (!replayId || doc) return;
 
+        setLoadError(null);
         setLoading(true);
         loadReplay(replayId)
             .then((content) => {
                 if (content) {
                     const parsed = parse(content);
-                    if (parsed.events.length > 0) {
+                    // A replay stored before the frame budget existed is refused here, so
+                    // reopening it from Recent Replays cannot hang the tab.
+                    const heavy = parsed.events.length > 0 ? replayTooHeavy(parsed) : null;
+                    if (heavy) {
+                        setLoadError(heavy);
+                    } else if (parsed.events.length > 0) {
                         setDoc(parsed);
                         setRawContent(content);
+                    } else {
+                        // It IS stored, so "isn't stored on this device" would be wrong.
+                        setLoadError('This stored replay could not be read: it has no game records.');
                     }
                 }
             })
             .catch((err) => {
-                // Load/parse of a stored replay failed; the page falls back to the
-                // upload prompt. Log so the failure isn't silently swallowed.
+                // Load/parse of a stored replay failed; say so above the upload prompt
+                // rather than claiming the replay isn't stored.
                 console.warn('Failed to load stored replay', replayId, err);
+                setLoadError(`This stored replay could not be read: ${err instanceof Error ? err.message : String(err)}`);
             })
             .finally(() => setLoading(false));
     }, [replayId]);
 
     // When a file is uploaded, store it and update the URL
     const handleReplayLoaded = async (loaded: SwuPgnDocument, content: string) => {
+        setLoadError(null);
         setDoc(loaded);
         setRawContent(content);
         try {
-            const { id } = await storeReplayContent(content);
+            // FileUpload has parsed and budget-checked `loaded` already.
+            const { id } = await storeReplayContent(content, loaded);
             router.replace(replayUrl(id, searchParams), { scroll: false });
         } catch (err) {
             // Storage failed (e.g. QuotaExceededError); replay still works in-memory,
@@ -293,11 +323,17 @@ export default function ReplayPage() {
                 }}>
                     {loading
                         ? 'Loading replay...'
-                        : replayId
+                        : replayId && !loadError
                             ? 'This replay isn\'t stored on this device. Replays live in your browser, not on a server, so a link on its own can\'t open one — drop the .swupgn file below and the link will jump to the exact moment it points at.'
                             : 'Upload a game replay file to watch every turn play out in the simulator.'
                     }
                 </Typography>
+                {/* A stored replay the viewer refused: an error, said as one, above the upload box. */}
+                {!loading && loadError && (
+                    <Typography variant="body2" role="alert" sx={{ color: 'error.main', mt: -1 }}>
+                        {loadError}
+                    </Typography>
+                )}
                 <FileUpload onReplayLoaded={handleReplayLoaded} />
                 <RecentReplays />
             </Card>

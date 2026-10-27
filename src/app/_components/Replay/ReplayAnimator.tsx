@@ -39,7 +39,14 @@ const ReplayAnimator: React.FC<{ containerRef: React.RefObject<HTMLElement | nul
         timers.current.forEach((t) => window.clearTimeout(t)); timers.current = [];
         hidden.current.forEach((el) => { el.style.opacity = ''; }); hidden.current = [];
         overlay.replaceChildren();
-        // 2. measure the committed frame
+        // 2. measure the committed frame, unless no animation can follow it: measuring forces a
+        // layout and serializes every card, on every frame of a scrub or autoplay.
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!animate || reduced) {
+            prevRects.current = null;
+            prevIndex.current = currentIndex;
+            return;
+        }
         const geom = createBoardGeometry(container);
         const next = geom.measureAll();
         const old = prevRects.current;
@@ -48,8 +55,7 @@ const ReplayAnimator: React.FC<{ containerRef: React.RefObject<HTMLElement | nul
         const now = performance.now(); const dt = now - lastRun.current; lastRun.current = now;
         // 3. animate only a deliberate forward step of exactly one beat
         const fromBeat = beatAt(beats, from), toBeat = beatAt(beats, currentIndex);
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (!old || !animate || reduced || currentIndex <= from || toBeat.index !== fromBeat.index + 1 || dt < RAPID_STEP_MS) return;
+        if (!old || currentIndex <= from || toBeat.index !== fromBeat.index + 1 || dt < RAPID_STEP_MS) return;
         // 4. plan and run
         const cRect = container.getBoundingClientRect();
         const ids = { 1: 'Player 1', 2: 'Player 2' } as const;
@@ -102,8 +108,9 @@ function fromHtml(html: string): HTMLElement {
 }
 
 /** The card's own art, for a face-down play that has no rendered face to clone: the
- *  intent's uuid IS the card's `SET#NUM` id. */
-const faceArt = (uuid: string, locale: CardImageLocale) => s3CardImageURL({ setId: parseSetId(uuid), type: '', id: uuid }, locale);
+ *  intent's uuid IS the card's `SET#NUM` id. It comes from an untrusted file, so an id of
+ *  any other shape gets no art and the cardback stays. */
+const faceArt = (uuid: string, locale: CardImageLocale) => (P.isCardArtId(uuid) ? s3CardImageURL({ setId: parseSetId(uuid), type: '', id: uuid }, locale) : undefined);
 
 function run(i: Intent, s: P.Stage, locale: CardImageLocale): void {
     switch (i.type) {

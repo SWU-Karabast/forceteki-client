@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo } from 'react';
-import { Box, Typography, Tooltip } from '@mui/material';
+import { Box, Typography, Tooltip, ButtonBase } from '@mui/material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useCardCostMap } from '@/app/_utils/swupgnCardCosts';
 import { resourcingReport, type PlayerRoundResourcing, type ResourcingReport as ResourcingReportData } from '@/app/_utils/resourcingReport';
@@ -15,43 +15,57 @@ const fmtNum = (v: number | null) => (v == null ? '—' : String(v));
  * was paid once an aspect penalty or a discount applied: that column is labelled `Cost*`.
  */
 const RoundTable: React.FC<{ rows: PlayerRoundResourcing[]; paid: boolean; onSeek: (round: number) => void }> = ({ rows, paid, onSeek }) => (
-    <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
-        <Box component="thead">
-            <Box component="tr" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>
-                {['Rnd', 'Res', 'Play', 'Draw', 'Pool', paid ? 'Paid' : 'Cost*', 'Float'].map((h) => (
-                    <Box component="th" key={h} sx={{ py: 0.5, px: 0.75, fontWeight: 600, textAlign: h === 'Rnd' ? 'left' : 'right' }}>{h}</Box>
+    // The scroller is a safety net: at the panel's narrowest a 7-column table can still
+    // outgrow its column, and it should scroll rather than crush its cells.
+    <Box sx={{ overflowX: 'auto' }}>
+        <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+            <Box component="thead">
+                <Box component="tr" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>
+                    {['Rnd', 'Res', 'Play', 'Draw', 'Pool', paid ? 'Paid' : 'Cost*', 'Float'].map((h) => (
+                        <Box component="th" key={h} sx={{ py: 0.5, px: 0.75, fontWeight: 600, textAlign: h === 'Rnd' ? 'left' : 'right' }}>{h}</Box>
+                    ))}
+                </Box>
+            </Box>
+            <Box component="tbody">
+                {rows.map((r) => (
+                    <Box
+                        component="tr"
+                        key={r.round}
+                        onClick={() => onSeek(r.round)}
+                        sx={{
+                            cursor: 'pointer', color: 'rgba(255,255,255,0.85)',
+                            backgroundColor: r.underspent ? 'rgba(255,107,107,0.14)' : 'transparent',
+                            '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
+                        }}
+                    >
+                        {/* The row stays a real table row so a screen reader keeps its columns;
+                            the keyboard and assistive-tech route to the seek is this cell's
+                            button. The row's own click is a wider target for the mouse. */}
+                        <Box component="td" sx={{ py: 0.5, px: 0.75, fontWeight: 700 }}>
+                            <ButtonBase
+                                aria-label={`Jump to round ${r.round}`}
+                                onClick={(e) => { e.stopPropagation(); onSeek(r.round); }}
+                                sx={{
+                                    font: 'inherit', color: 'inherit', borderRadius: '2px',
+                                    '&.Mui-focusVisible': { outline: '2px solid #fff', outlineOffset: 2 },
+                                }}
+                            >
+                                {r.round}
+                            </ButtonBase>
+                        </Box>
+                        <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{r.resourced}</Box>
+                        <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{r.played}</Box>
+                        <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{r.drawn}</Box>
+                        <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{fmtNum(r.pool)}</Box>
+                        <Tooltip title={paid && r.spent != null ? `Printed cost of the cards played: ${r.spent}` : ''}>
+                            <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{fmtNum(paid ? r.paid : r.spent)}</Box>
+                        </Tooltip>
+                        <Tooltip title={r.underspent ? 'Left resources unspent' : ''}>
+                            <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right', fontWeight: r.underspent ? 800 : 400 }}>{fmtNum(r.float)}</Box>
+                        </Tooltip>
+                    </Box>
                 ))}
             </Box>
-        </Box>
-        <Box component="tbody">
-            {rows.map((r) => (
-                <Box
-                    component="tr"
-                    key={r.round}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Jump to round ${r.round}`}
-                    onClick={() => onSeek(r.round)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSeek(r.round); } }}
-                    sx={{
-                        cursor: 'pointer', color: 'rgba(255,255,255,0.85)',
-                        backgroundColor: r.underspent ? 'rgba(255,107,107,0.14)' : 'transparent',
-                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
-                    }}
-                >
-                    <Box component="td" sx={{ py: 0.5, px: 0.75, fontWeight: 700 }}>{r.round}</Box>
-                    <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{r.resourced}</Box>
-                    <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{r.played}</Box>
-                    <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{r.drawn}</Box>
-                    <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{fmtNum(r.pool)}</Box>
-                    <Tooltip title={paid && r.spent != null ? `Printed cost of the cards played: ${r.spent}` : ''}>
-                        <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right' }}>{fmtNum(paid ? r.paid : r.spent)}</Box>
-                    </Tooltip>
-                    <Tooltip title={r.underspent ? 'Left resources unspent' : ''}>
-                        <Box component="td" sx={{ py: 0.5, px: 0.75, textAlign: 'right', fontWeight: r.underspent ? 800 : 400 }}>{fmtNum(r.float)}</Box>
-                    </Tooltip>
-                </Box>
-            ))}
         </Box>
     </Box>
 );
@@ -87,6 +101,7 @@ const DecisionList: React.FC<{ seat: Seat }> = ({ seat }) => {
                             borderColor: d.frame === currentIndex ? 'var(--selection-blue)' : 'transparent',
                             backgroundColor: d.frame === currentIndex ? 'rgba(255,255,255,0.08)' : 'transparent',
                             '&:hover': { backgroundColor: 'rgba(255,255,255,0.06)' },
+                            '&:focus-visible': { outline: '2px solid #fff', outlineOffset: -2 },
                         }}
                     >
                         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)', display: 'block', fontWeight: 600 }}>
@@ -113,7 +128,7 @@ const PlayerColumn: React.FC<{ seat: Seat; name: string; report: ResourcingRepor
     };
 
     return (
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ flex: 1, minWidth: 260 }}>
             <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 700, mb: 1 }}>{name}</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 1.5 }}>
                 <Stat label="Resourced" value={s.totalResourced} />
@@ -167,7 +182,8 @@ const ResourcingReport: React.FC = () => {
                     *Cost is each card&apos;s printed cost. This file predates the resource counters, so what was actually paid (after aspect penalties and discounts) is not recorded.
                 </Typography>
             )}
-            <Box sx={{ display: 'flex', gap: 3 }}>
+            {/* Wraps to one column per row once two 260px tables no longer fit side by side. */}
+            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                 <PlayerColumn seat={1} name={doc.header.p1 || 'Player 1'} report={report} />
                 <PlayerColumn seat={2} name={doc.header.p2 || 'Player 2'} report={report} />
             </Box>

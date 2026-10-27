@@ -1,7 +1,12 @@
 import type { CardIndexRecord } from './types';
 
 /** Resolves a SET#NUM[:copy] id to a display name. Copy suffixes are stripped before lookup. */
-export interface NameResolver { nameOf(id: string): string; }
+export interface NameResolver {
+    nameOf(id: string): string;
+
+    /** The card's other side's name (`CardIndexRecord.backSideName`), if it has one. */
+    backNameOf?(id: string): string | undefined;
+}
 
 export function baseId(ref: string): string {
     return String(ref).replace(/:\d+$/, '');
@@ -18,7 +23,13 @@ export function indexResolver(cards: readonly CardIndexRecord[] = []): NameResol
     // CLIENT-OWNED: entries and `name` come off JSON.parse of an upload. A `null` line threw
     // here; a numeric name reached DeckTab's `localeCompare`; a newline reached serialize(),
     // where a rendered story line beginning `%%%` would end the exported STORY section.
-    const byId = new Map(cards.filter((c) => !!c && typeof c === 'object')
-        .map((c) => [c.id, typeof c.name === 'string' ? c.name.replace(/[\r\n]+/g, ' ') : undefined]));
-    return { nameOf: (id: string) => byId.get(baseId(id)) ?? baseId(id) };
+    // Upstream drops the whole entry instead; flattening keeps a bad entry's other side.
+    const flat = (v: unknown) => (typeof v === 'string' ? v.replace(/[\r\n]+/g, ' ') : undefined);
+    const entries = cards.filter((c) => !!c && typeof c === 'object');
+    const byId = new Map(entries.map((c) => [c.id, flat(c.name)]));
+    const backById = new Map(entries.map((c) => [c.id, flat(c.backSideName)]));
+    return {
+        nameOf: (id: string) => byId.get(baseId(id)) ?? baseId(id),
+        backNameOf: (id: string) => backById.get(baseId(id)),
+    };
 }

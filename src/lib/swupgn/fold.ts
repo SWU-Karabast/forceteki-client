@@ -57,6 +57,13 @@ function isCompleteSeat(p: unknown): p is PlayerState {
     if (!Array.isArray(ps.cards) || !Array.isArray(ps.hand) || !Array.isArray(ps.discard)) {
         return false;
     }
+    // Spec §13: a keyframe list over MAX_ZONE_LIST is a damaged checkpoint, not a board. An
+    // optional list that is not an array (`resources: null`) is read as absent, as
+    // normalizePlayer reads it, not as damage.
+    const optional = [ps.baseUpgrades, ps.baseCaptured, ps.resources].filter((l) => Array.isArray(l));
+    if (![ps.cards, ps.hand, ps.discard, ...optional].every((l) => Array.isArray(l) && l.length <= MAX_ZONE_LIST)) {
+        return false;
+    }
     return ps.cards.every((c) => typeof c === 'object' && c !== null);
 }
 
@@ -102,10 +109,13 @@ function player(s: ReducedState, seat: Seat): PlayerState | undefined {
     if (!isSeat(seat)) {
         return undefined;
     }
-    if (!s.players[seat]) {
-        s.players[seat] = emptyPlayer(seat);
+    const existing = s.players[seat];
+    if (existing) {
+        return existing;
     }
-    return s.players[seat]!;
+    const created = emptyPlayer(seat);
+    s.players[seat] = created;
+    return created;
 }
 
 /** Resolve a target ref like "base@2" or "SOR#095:2" to the owning seat (best-effort). */
@@ -128,9 +138,21 @@ function findCard(s: ReducedState, id: string): CardInstanceState | undefined {
     return undefined;
 }
 
+/** A record's `count`, or `fallback` when the file gives something that is not a finite number. */
+function countOr(count: unknown, fallback: number): number {
+    return typeof count === 'number' && Number.isFinite(count) ? count : fallback;
+}
+
 function newCard(id: string, zone: string): CardInstanceState {
     return { id, zone, damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [] };
 }
+
+/**
+ * Hard ceiling on any per-seat list the fold grows from an untrusted file: arena cards, hand,
+ * discard, resources. A real game never comes close; a crafted one is trying to make a reader
+ * do unbounded work. Past it, records are dropped rather than folded.
+ */
+const MAX_ZONE_LIST = 1000;
 
 /**
  * Put a card in an arena, ONCE.
@@ -147,7 +169,19 @@ function placeCard(s: ReducedState, seat: Seat, id: string, zone: string): void 
         existing.zone = zone;
         return;
     }
-    player(s, seat)?.cards.push(newCard(id, zone));
+    const ps = player(s, seat);
+    if (!ps) {
+        return;
+    }
+    // Same cap, and for the same reason, as `addOnce` on the zone lists: this is the OTHER
+    // unbounded growth path, and it is the expensive one. `findCard` scans every card in play,
+    // so a file of N unique MOVEs into an arena folds in O(N^2) -- 40k records (under 4 MB,
+    // schema-valid) took seconds of synchronous work, which in a browser is the tab and in Node
+    // is the event loop. A real game never approaches this; only a crafted file does.
+    if (ps.cards.length >= MAX_ZONE_LIST) {
+        return;
+    }
+    ps.cards.push(newCard(id, zone));
 }
 
 /** Remove `id` from every seat's arena list, wherever it is. */
@@ -181,12 +215,16 @@ function attachTo(s: ReducedState, hostId: string, id: string): void {
 }
 
 /**
- * Take `id` off every card's `upgrades` and `captured` lists. Keyed on the zone transition
- * (a card left an arena, or the capture zone), not on `kind`: a pilot's exit says `kind:
- * "unit"`, and no exit record names a host (spec §10.1).
+ * Take `id` off every card's `upgrades` and `captured` lists, and off every base's captives.
+ * Keyed on the zone transition (a card left an arena, or the capture zone), not on `kind`: a
+ * pilot's exit says `kind: "unit"`, and no exit record names a host (spec §10.1).
  */
 function detach(s: ReducedState, id: string): void {
     for (const seat of [1, 2] as Seat[]) {
+        const held = s.players[seat]?.baseCaptured;
+        if (Array.isArray(held)) {
+            removeOne(held, id);
+        }
         for (const c of s.players[seat]?.cards ?? []) {
             const u = c.upgrades.indexOf(id);
             if (u >= 0) {
@@ -198,6 +236,43 @@ function detach(s: ReducedState, id: string): void {
                 captured.splice(k, 1);
                 c.captured = captured;
             }
+        }
+    }
+}
+
+/**
+ * The seat's base-upgrade list, created on first use. Like `resources`, it stays ABSENT until a
+ * move or a keyframe supplies one, so a file written before `baseUpgrades` existed folds to a
+ * state with no `baseUpgrades` rather than to a base that misleadingly holds nothing.
+ */
+function baseUpgradeList(ps: PlayerState): string[] {
+    if (!Array.isArray(ps.baseUpgrades)) {
+        ps.baseUpgrades = [];
+    }
+    return ps.baseUpgrades;
+}
+
+/**
+ * Attach a printed upgrade to seat `seat`'s base, once (Fortify). The attaching MOVE and the
+ * PLAY_UPGRADE beside it both name the base, so this is idempotent. Token upgrades never attach
+ * to a base, and the two reserved base tokens (credits, the Force) are counted, not attached.
+ */
+function attachToBase(s: ReducedState, seat: Seat, id: string): void {
+    if (isTokenId(id)) {
+        return;
+    }
+    const ps = player(s, seat);
+    if (ps) {
+        addOnce(baseUpgradeList(ps), id);
+    }
+}
+
+/** Take `id` off every seat's base. Keyed on the zone transition, like `detach`: exits name no host. */
+function detachFromBases(s: ReducedState, id: string): void {
+    for (const seat of [1, 2] as Seat[]) {
+        const list = s.players[seat]?.baseUpgrades;
+        if (Array.isArray(list)) {
+            removeOne(list, id);
         }
     }
 }
@@ -240,23 +315,22 @@ function countBaseToken(ps: PlayerState, id: string, delta: 1 | -1): void {
 }
 
 const ARENA_ZONES = new Set(['ground', 'space']);
-const isArena = (z: string): boolean => ARENA_ZONES.has(z);
+
+/** A zone whose arrival puts a card in play: `ground` or `space`. */
+export const isArena = (z: string): boolean => ARENA_ZONES.has(z);
 
 /**
  * Zone-list membership. Every card id is unique for the whole game (the `:N` copy suffix, spec
  * §6.1), so a list can hold an id at most once and adding is idempotent by id. That is what lets
  * a MOVE and the summary record beside it (DRAW, DISCARD, DEFEAT, PLAY_EVENT) both name the same
  * card without the card landing in the pile twice.
- */
-/**
- * Zone lists are bounded by the size of a deck, so a list longer than this cannot be a real game.
- * The cap exists because this parses UNTRUSTED files in a browser: `addOnce` scans the list, so a
+ *
+ * Zone lists are bounded by the size of a deck, so a list longer than MAX_ZONE_LIST cannot be a
+ * real game. The cap exists because this parses UNTRUSTED files in a browser: `addOnce` scans the list, so a
  * single `{"t":"DRAW","cards":[...200k unique strings...]}` would otherwise cost ~2e10 string
  * comparisons and hang the tab. Past the cap the id is dropped rather than the file rejected --
  * degrading is the fold's contract, and no honest file reaches it.
  */
-const MAX_ZONE_LIST = 1000;
-
 function addOnce(list: string[], id: string): void {
     if (list.length >= MAX_ZONE_LIST) {
         return;
@@ -302,10 +376,11 @@ function setActive(s: ReducedState, active: unknown): void {
  * MOVE (the single source of truth), NOT from DRAW/RESOURCE/PLAY, which are higher-level
  * summary records that always coincide with the underlying MOVEs (a DRAW carries the
  * cumulative count of the deck→hand MOVEs just emitted; double-counting them would
- * diverge from the keyframe). DRAW still records the omniscient `hand[]` contents and
- * PLAY/PLAY_UPGRADE still place a card so unit-level fold tests that drive PLAY without
- * a paired MOVE keep working; MOVE placement is idempotent by id so PLAY+MOVE in real
- * streams does not double-add.
+ * diverge from the keyframe). `hand[]` and `discard[]` contents follow the MOVEs too; DRAW
+ * and DISCARD also add their cards, idempotently (by id) with the MOVEs beside them.
+ * PLAY/PLAY_UPGRADE still place a card so unit-level fold tests that drive PLAY without a
+ * paired MOVE keep working; MOVE placement is idempotent by id so PLAY+MOVE in real streams
+ * does not double-add.
  */
 function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: string; p?: Seat; kind?: 'unit' | 'upgrade'; attachedTo?: string; exhausted?: boolean }): void {
     // Leaving an arena, or the capture zone, ends every attachment and every captivity of
@@ -317,6 +392,18 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
     // CLIENT-OWNED. The role this move enacts: `kind` when stated; otherwise, per spec
     // §22.1, a move that names a host is an attachment (files written before `kind`).
     const kind = eventKind(e);
+    // A base's own attachments (Fortify), by the same two rules: leaving `base` ends the
+    // attachment whatever the record says, and arriving as an upgrade attaches it to the base
+    // `attachedTo` names. Neither needs `p` -- the base ref names the seat -- but a writer that
+    // predates `attachedTo` on base moves is read by its `p`.
+    if (e.from === 'base' && e.to !== 'base') {
+        detachFromBases(s, e.card);
+    } else if (e.to === 'base' && e.from !== 'base' && kind === 'upgrade') {
+        const seat = (e.attachedTo != null ? seatOfBaseRef(e.attachedTo) : null) ?? e.p;
+        if (seat != null) {
+            attachToBase(s, seat, e.card);
+        }
+    }
 
     if (e.p == null) {
         // Without a seat we can only update zone on an already-tracked card; counts are
@@ -403,9 +490,11 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
     // really does leave the hand.
     if (kind === 'upgrade') {
         if (ARENA_ZONES.has(e.to) && e.attachedTo) {
-            // CLIENT-OWNED: a same-arena move naming a NEW host (an upgrade changing units)
-            // moves it over; the writer never emits one, but the viewer keys off the record.
+            // An upgrade has one host. One that arrives naming a host comes off any other (moved
+            // between hosts across arenas), and a unit in play that is attached as a pilot stops
+            // being a unit: arena `cards[]` holds units only, as the keyframe does.
             detach(s, e.card);
+            removeFromArenas(s, e.card);
             attachTo(s, e.attachedTo, e.card);
         }
         const upgrade = findCard(s, e.card);
@@ -415,11 +504,19 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         return;
     }
 
+    // A unit is never anyone's upgrade. A pilot ejected from a space vehicle moves
+    // space -> ground, arena to arena, so the exit rule above never detached it.
+    if (ARENA_ZONES.has(e.to)) {
+        detach(s, e.card);
+    }
     const existing = findCard(s, e.card);
     if (ARENA_ZONES.has(e.to)) {
         if (existing) {
             existing.zone = e.to;
-        } else {
+        } else if (ps.cards.length < MAX_ZONE_LIST) {
+            // MOVE is the arena's real author (§12.1) -- PLAY only summarises -- so this is the
+            // path a crafted file grows, and it must carry the same ceiling placeCard does.
+            // findCard() scans every card in play, so an unbounded arena folds in O(n^2).
             ps.cards.push(newCard(e.card, e.to));
         }
     } else if (existing && ARENA_ZONES.has(existing.zone)) {
@@ -477,7 +574,13 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
             // (as this used to) put a phantom "unit" in the arena that no keyframe agrees
             // with — a real upgrade, SEC#038, showed up that way in a recorded game.
             if (e.target) {
-                attachTo(s, e.target, e.card);
+                const baseSeat = seatOfBaseRef(e.target);
+                if (baseSeat != null) {
+                    // Fortify: the host is a base, which no `cards` entry stands for.
+                    attachToBase(s, baseSeat, e.card);
+                } else {
+                    attachTo(s, e.target, e.card);
+                }
             }
             break;
         }
@@ -606,9 +709,18 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         }
         case 'CAPTURE': {
             // The MOVE out of the arena already removed the card (idempotent here); the
-            // captor now holds it. A base captor (`base@N`) is not modelled: nothing today
-            // captures with a base, and the card is out of play either way.
+            // captor now holds it: a unit in its `captured`, a base (Arrest) in its seat's
+            // `baseCaptured`, created on first use like `baseUpgrades`.
             removeFromArenas(s, e.card);
+            const baseSeat = typeof e.by === 'string' ? seatOfBaseRef(e.by) : null;
+            const holder = baseSeat != null ? player(s, baseSeat) : undefined;
+            if (holder) {
+                if (!Array.isArray(holder.baseCaptured)) {
+                    holder.baseCaptured = [];
+                }
+                addOnce(holder.baseCaptured, e.card);
+                break;
+            }
             const captor = e.by ? findCard(s, e.by) : undefined;
             if (captor) {
                 const captured = arr<string>(captor.captured);
@@ -682,9 +794,20 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
             break;
         }
         case 'DEFEAT': {
+            // A base: it is nobody's attachment and in no list; it is defeated, which its HP
+            // need not show (an ability can defeat a base outright).
+            const baseSeat = seatOfBaseRef(e.card);
+            if (baseSeat != null) {
+                const ps = player(s, baseSeat);
+                if (ps) {
+                    ps.baseDefeated = true;
+                }
+                break;
+            }
             // A defeated card stops being anyone's upgrade or captive, whether or not it was
-            // ever an arena card of its own (an upgrade never is).
+            // ever an arena card of its own (an upgrade never is) -- and that includes a base's.
             detach(s, e.card);
+            detachFromBases(s, e.card);
             for (const seat of [1, 2] as Seat[]) {
                 const ps = s.players[seat];
                 if (!ps) {
@@ -721,21 +844,34 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
             break;
         }
         case 'RESOURCE': break;
-        case 'SHIELD_GAIN': { const c = findCard(s, e.card); if (c) { c.shields += e.count ?? 1; } break; }
-        case 'SHIELD_USE': { const c = findCard(s, e.card); if (c) { c.shields = Math.max(0, c.shields - (e.count ?? 1)); } break; }
+        case 'SHIELD_GAIN': { const c = findCard(s, e.card); if (c) {
+            c.shields += countOr(e.count, 1);
+        } break; }
+        case 'SHIELD_USE': { const c = findCard(s, e.card); if (c) {
+            c.shields = Math.max(0, c.shields - countOr(e.count, 1));
+        } break; }
         // `count` may be negative: a token leaving its host is recorded as the same event with a
         // negative delta (see SwuPgnRecorder.tokenRecord). Counts clamp at 0, and a status token
         // that reaches 0 is DELETED rather than left as `{advantage: 0}` — an engine keyframe
         // reports a host with no tokens as `statusTokens: {}`, and the integrity gate compares
         // the two by JSON equality.
-        case 'EXPERIENCE_GAIN': { const c = findCard(s, e.card); if (c) { c.experience = Math.max(0, c.experience + e.count); } break; }
+        case 'EXPERIENCE_GAIN': { const c = findCard(s, e.card); if (c) {
+            c.experience = Math.max(0, c.experience + countOr(e.count, 0));
+        } break; }
         case 'STATUS_TOKEN': {
             const c = findCard(s, e.card);
-            if (c) {
-                const next = Math.max(0, (c.statusTokens[e.token] ?? 0) + e.count);
-                c.statusTokens = Object.fromEntries(
-                    Object.entries({ ...c.statusTokens, [e.token]: next }).filter(([, n]) => n > 0)
-                );
+            if (c && typeof e.token === 'string') {
+                // Updated in place, on own keys only: the token name comes from the file, so it
+                // must never read or write an inherited property, and copying the whole map per
+                // record made a file with many token names fold in quadratic time.
+                const tokens = c.statusTokens;
+                const held = Object.prototype.hasOwnProperty.call(tokens, e.token);
+                const next = Math.max(0, (held ? tokens[e.token] : 0) + countOr(e.count, 0));
+                if (next > 0 && (held || Object.keys(tokens).length < MAX_ZONE_LIST)) {
+                    Object.defineProperty(tokens, e.token, { value: next, enumerable: true, writable: true, configurable: true });
+                } else if (held && next === 0) {
+                    Reflect.deleteProperty(tokens, e.token);
+                }
             }
             break;
         }
@@ -744,7 +880,8 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         case 'KEEP_HAND': case 'MODAL_CHOICE': case 'SHUFFLE':
         case 'SEARCH': case 'REVEAL':
         case 'TRIGGER': case 'PHASE_END': case 'ROUND_END': case 'GAME_END':
-        // UNDO is a note: the records it retracted are already gone from the stream (§18).
+        // UNDO is a note ABOUT the file, not an event in the game: the records it retracted were
+        // removed, so there is nothing left to undo when folding.
         case 'UNDO':
             break;
         default: { const _exhaustive: never = e; void _exhaustive; break; }
@@ -808,7 +945,7 @@ function normalizePlayer(seat: Seat, r: PlayerState): PlayerState {
         cards: r.cards.slice(0, MAX_KEYFRAME_LIST).map(normalizeCard),
         deckSize: typeof r.deckSize === 'number' && Number.isFinite(r.deckSize) ? r.deckSize : undefined,
         leader: normalizeLeader(r.leader),
-        // Both stay ABSENT when the keyframe does not carry them -- absent is "not recorded",
+        // Each of these stays ABSENT when the keyframe does not carry it -- absent is "not recorded",
         // and the gate only compares each when it is there. Written as explicit keys, not a
         // conditional spread, so a hostile non-array `resources` cannot ride through `...r`;
         // `undefined` is dropped by the clone below, which is what keeps absent absent.
@@ -816,6 +953,11 @@ function normalizePlayer(seat: Seat, r: PlayerState): PlayerState {
         // MOVE in and out of the row.
         resources: Array.isArray(r.resources) ? stringList(r.resources) : undefined,
         baseEpicActionUsed: typeof r.baseEpicActionUsed === 'boolean' ? r.baseEpicActionUsed : undefined,
+        // Fortify upgrades and a base's captives (Arrest), on the same terms as `resources`.
+        baseUpgrades: Array.isArray(r.baseUpgrades) ? stringList(r.baseUpgrades) : undefined,
+        baseCaptured: Array.isArray(r.baseCaptured) ? stringList(r.baseCaptured) : undefined,
+        // Written only when true (§11), so anything else is absent.
+        baseDefeated: r.baseDefeated === true ? true : undefined,
     };
 }
 
@@ -839,7 +981,16 @@ export function snapToKeyframe(s: ReducedState, kf: ReducedState): ReducedState 
     for (const seat of [1, 2] as Seat[]) {
         const kp = kfPlayers[seat];
         if (isCompleteSeat(kp)) {
-            players[seat] = normalizePlayer(seat, kp);
+            const snapped = normalizePlayer(seat, kp);
+            // A keyframe that does not state the base's holdings has not recorded them (§11: absent
+            // is "not recorded"), so what the records attached stays attached: a pilot file folds
+            // Fortify from its MOVEs and states no `baseUpgrades` in its keyframes.
+            const prior = s.players[seat];
+            if (snapped.baseUpgrades === undefined && Array.isArray(prior?.baseUpgrades)) snapped.baseUpgrades = prior.baseUpgrades;
+            if (snapped.baseCaptured === undefined && Array.isArray(prior?.baseCaptured)) snapped.baseCaptured = prior.baseCaptured;
+            // A defeated base stays defeated: a writer may record DEFEAT base@N without restating it.
+            if (prior?.baseDefeated === true) snapped.baseDefeated = true;
+            players[seat] = snapped;
         }
     }
     const next = clone({
@@ -906,18 +1057,76 @@ export function foldFrames(events: GameEvent[]): ReducedState[] {
 }
 
 /**
- * Fold up to and including `seq`.
+ * How much one frame costs foldFrames to keep: its serialized size, which is what the clone
+ * copies. Counting only the known lists undercounts a keyframe's pass-through fields and a
+ * card's statusTokens, and a light board's fixed per-seat overhead.
+ */
+function frameSize(s: ReducedState): number {
+    return JSON.stringify(s).length;
+}
+
+/**
+ * CLIENT-OWNED: what foldFrames would hold for `events`, in serialized characters summed over
+ * every frame, without holding it: one fold, each frame measured and dropped. Stops counting
+ * past `budget`. Each list is capped, but a file can keep a wide board for many records (2000
+ * arena cards, then 5000 PASSes, is a 400 KB file that cost 2.7 GB), so a viewer checks this
+ * before it builds the frame table.
+ */
+export function frameCost(events: GameEvent[], budget = Infinity): number {
+    let s = emptyState();
+    let total = 0;
+    for (let i = 0; i < events.length && total <= budget; i++) {
+        s = foldRange(events, i, i, s);
+        total += frameSize(s);
+    }
+    return total;
+}
+
+/**
+ * CLIENT-OWNED: whether a keyframe states everything snapToKeyframe would otherwise carry over
+ * from the fold before it: the base's holdings, and a base already defeated (`firstDefeat` is
+ * the index of each seat's first base DEFEAT record). Only such a keyframe makes what came
+ * before it disposable.
+ */
+function isSelfSufficientKeyframe(kf: ReducedState, at: number, firstDefeat: Partial<Record<Seat, number>>): boolean {
+    return ([1, 2] as Seat[]).every((seat) => {
+        const p = kf.players?.[seat];
+        const defeatBefore = (firstDefeat[seat] ?? Infinity) < at;
+        return Array.isArray(p?.baseUpgrades) && Array.isArray(p?.baseCaptured) && (!defeatBefore || p?.baseDefeated === true);
+    });
+}
+
+/**
+ * Fold up to and including `seq`; the same state `fold()` and `foldFrames()` reach there.
  *
- * Starts from the last usable keyframe at or before `seq` rather than from the beginning:
- * everything before a keyframe is disposable, and a replay scrubber calls this once per
- * position, which made a full scrub O(n^2) in the stream length.
+ * Starts from the last usable keyframe at or before `seq` rather than from the beginning, since
+ * a replay scrubber calls this once per position and a full scrub was O(n^2). A keyframe that
+ * does not state the base's holdings (a pilot file), or does not restate a base defeated before
+ * it, does not make the past disposable: the snap keeps what the records established, so the
+ * fold starts further back, or from the beginning.
  */
 export function stateAt(events: GameEvent[], seq: string): ReducedState {
     const idx = events.findIndex((e) => e?.seq === seq);
+    // An unknown seq folds the whole list. That is the DOCUMENTED contract (spec §12.3).
     const end = idx >= 0 ? idx : events.length - 1;
+    // Where each seat's base was first defeated: by a DEFEAT record, or by a keyframe stating it
+    // (snapToKeyframe carries either across a later keyframe that does not restate it).
+    const firstDefeat: Partial<Record<Seat, number>> = {};
+    for (let i = 0; i <= end; i++) {
+        const e = events[i];
+        if (e == null || typeof e !== 'object') continue;
+        const seats: Seat[] = [];
+        if (e.t === 'DEFEAT') {
+            const seat = seatOfBaseRef(e.card);
+            if (seat != null) seats.push(seat);
+        } else if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe && typeof e.keyframe === 'object') {
+            for (const seat of [1, 2] as Seat[]) if (e.keyframe.players?.[seat]?.baseDefeated === true) seats.push(seat);
+        }
+        for (const seat of seats) if (firstDefeat[seat] === undefined) firstDefeat[seat] = i;
+    }
     for (let i = end; i >= 0; i--) {
         const e = events[i];
-        if (e != null && typeof e === 'object' && hasSnapKeyframe(e)) {
+        if (e != null && typeof e === 'object' && hasSnapKeyframe(e) && isSelfSufficientKeyframe(e.keyframe, i, firstDefeat)) {
             return foldRange(events, i + 1, end, snapToKeyframe(emptyState(), e.keyframe));
         }
     }

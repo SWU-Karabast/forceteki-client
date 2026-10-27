@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { parse, type SwuPgnDocument, type GameEvent } from '@/lib/swupgn';
-import { fileIssues, writerGeneration } from '../swupgnFileIssues';
+import { parse, serialize, type SwuPgnDocument, type GameEvent } from '@/lib/swupgn';
+import { fileIssues, writerGeneration, skippedSectionList } from '../swupgnFileIssues';
+import { noEventsMessage } from '../replayHandoff';
 
 const VECTOR = readFileSync(path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors/minimal.swupgn'), 'utf-8');
 
@@ -158,10 +159,30 @@ describe('writerGeneration — which 1.0 writer wrote the file (§22, §22.1)', 
             ...doc.events,
             ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'base@1', epic: true }),
             ev({ t: 'ABILITY_ACTIVATE', p: 1, card: doc.header.p1Leader, epic: true }),
+            // Value: protects=a mirror match's seat-2 leader copy (`SET#NUM:2`, §11) using its Epic Action is a leader, not the early-writer base shape; fails_when=leaderIds compares raw ids again; why_new=no test used a copy id; seam=none; no_claim=none beyond protects
+            ev({ t: 'ABILITY_ACTIVATE', p: 2, card: `${doc.header.p2Leader}:2`, epic: true }),
             // A non-epic activation by card id is unremarkable either way.
             ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'SOR#028', epic: false }),
         ];
         expect(writerGeneration({ ...doc, events })).toEqual([]);
+    });
+});
+
+// Regression proof — fails at HEAD: yes (the pilot PASS row fired) · passes at base: manual (314202d, before the row existed) · passes after fix: yes (claimedThisPhase)
+// Value: protects=File Health quiet on a current file whose opponent plays out the phase after a claim; fails_when=pilot PASS row counts a PASS after own action following CLAIM_INITIATIVE; why_new=no vector claims the initiative; seam=none; no_claim=the five other pilot rows
+describe('writerGeneration — a current file that claims the initiative is not a pilot file (§22, CR 6)', () => {
+    it('a PASS after the same player\'s own actions, once the opponent has claimed, is the Pass action', () => {
+        // The claimer has passed for the phase (spec §10.2: CLAIM_INITIATIVE is its own action
+        // and no PASS follows it), so the opponent acts alone and its PASS ends the phase.
+        const doc = parse(VECTOR);
+        const after: GameEvent[] = [
+            { seq: 'R3.start', t: 'ROUND_START', round: 3 },
+            { seq: 'R3.A.start', t: 'PHASE_START', phase: 'action' },
+            { seq: 'R3.A.1', t: 'CLAIM_INITIATIVE', p: 1 },
+            { seq: 'R3.A.2', t: 'PLAY', p: 2, card: 'SOR#095:9', zone: 'ground' },
+            { seq: 'R3.A.3', t: 'PASS', p: 2 },
+        ] as GameEvent[];
+        expect(writerGeneration({ ...doc, events: [...doc.events, ...after] })).toEqual([]);
     });
 });
 
@@ -175,5 +196,69 @@ describe('every event type the fold handles is a known type (§10, §18)', () =>
         ] as GameEvent[]);
 
         expect(fileIssues(doc).filter((i) => /unknown event type/.test(i.message))).toEqual([]);
+    });
+});
+
+describe('fileIssues — what parse() read but could not use (§5.2, §18)', () => {
+    // Value: protects=a garbled RecorderErrors is reported, survives export, and a garbled WriterRevision is still not a pilot file; fails_when=parse stops recording unreadable count tags or File Health/serialize ignore them; why_new=strict counts made malformed tags indistinguishable from absent; seam=none; no_claim=the writer's actual error count
+    it('reports an unreadable count tag, keeps it on export, and does not call the file a pilot', () => {
+        const text = VECTOR.replace('\n%%%', '\n[RecorderErrors "3.0"]\n[WriterRevision "one"]\n%%%');
+        const doc = parse(text);
+        expect(doc.header.recorderErrors).toBeUndefined();
+        expect(fileIssues(doc).map((i) => i.message)).toEqual(expect.arrayContaining([
+            expect.stringContaining('[RecorderErrors "3.0"] is present but not a count'),
+            expect.stringContaining('[WriterRevision "one"] is present but not a count'),
+        ]));
+        expect(parse(serialize(doc)).unreadableTags).toEqual({ RecorderErrors: '3.0', WriterRevision: 'one' });
+        const pilotPass = [...doc.events, { seq: 'R9.A.1', t: 'PLAY', p: 1, card: 'X', zone: 'ground' }, { seq: 'R9.A.2', t: 'PASS', p: 1 }] as GameEvent[];
+        expect(writerGeneration({ ...doc, events: pilotPass })).toEqual([]);
+    });
+
+    // Value: protects=a skipped section is named in File Health so a misspelled banner is visible; fails_when=parse stops recording skipped section names; why_new=skipping unknown sections made them silent; seam=none; no_claim=what the skipped section contained
+    it('names a section it skipped', () => {
+        const doc = parse(VECTOR.replace('%%% EVENTS', '%%% EVENT\n{"seq":"x","t":"PASS","p":1}\n\n%%% EVENTS'));
+        expect(fileIssues(doc).map((i) => i.message)).toEqual(expect.arrayContaining([expect.stringContaining('%%% EVENT)')]));
+    });
+});
+
+describe('writerGeneration — the per-phase tracker resets at each phase (§22)', () => {
+    const pilot = (events: GameEvent[]) => writerGeneration({ ...parse(VECTOR), events: [...parse(VECTOR).events, ...events] });
+    const start = (r: number) => [{ seq: `R${r}.start`, t: 'ROUND_START', round: r }, { seq: `R${r}.A.start`, t: 'PHASE_START', phase: 'action' }] as GameEvent[];
+    // Value: protects=a seat's PASS opening a new phase is not counted against its last action of the previous one; fails_when=lastAction survives the phase boundary; why_new=only same-phase cases were tested; seam=none; no_claim=current-writer files (gated by WriterRevision)
+    it('a PASS that opens a phase is not a pilot PASS', () => {
+        expect(pilot([...start(8), { seq: 'R8.A.1', t: 'PLAY', p: 1, card: 'X', zone: 'ground' }, ...start(9), { seq: 'R9.A.1', t: 'PASS', p: 1 }] as GameEvent[])
+            .some((l) => l.includes('PASS written after every action'))).toBe(false);
+    });
+    // Value: protects=a claim only excuses the opponent's PASS in its own phase; fails_when=claimedThisPhase survives the phase boundary; why_new=the claim regression test covers one phase only; seam=none; no_claim=current-writer files
+    it('a claim does not outlive its phase', () => {
+        expect(pilot([...start(8), { seq: 'R8.A.1', t: 'CLAIM_INITIATIVE', p: 1 }, ...start(9),
+            { seq: 'R9.A.1', t: 'PLAY', p: 2, card: 'Y', zone: 'ground' }, { seq: 'R9.A.2', t: 'PASS', p: 2 }] as GameEvent[]))
+            .toEqual(expect.arrayContaining([expect.stringContaining('PASS written after every action')]));
+    });
+});
+
+describe('a long unreadable count tag and an empty file', () => {
+    // Value: protects=an unreadable count tag of any length goes back out on export intact; fails_when=parse keeps a shortened value for serialize; why_new=the round-trip test used short values; seam=none; no_claim=File Health's display (shortened on purpose)
+    it('round-trips a 60-character garbled RecorderErrors intact and shows it shortened', () => {
+        const garbled = 'x'.repeat(60);
+        const doc = parse(VECTOR.replace('\n%%%', `\n[RecorderErrors "${garbled}"]\n%%%`));
+        expect(parse(serialize(doc)).unreadableTags?.RecorderErrors).toBe(garbled);
+        expect(fileIssues(doc).some((i) => i.message.includes(`${'x'.repeat(40)}…`))).toBe(true);
+    });
+    // Value: protects=a file whose events sit under a misspelled banner says which section was skipped; fails_when=the empty-file error drops skippedSections; why_new=parse no longer throws on an unknown section; seam=none; no_claim=the upload UI wiring
+    it('names a skipped section when a file has no events', () => {
+        const doc = parse(VECTOR.replace('%%% EVENTS', '%%% EVENT'));
+        expect(doc.events).toHaveLength(0);
+        expect(noEventsMessage(doc)).toBe('No events found in replay file (skipped unknown section: %%% EVENT).');
+    });
+});
+
+// Value: protects=a file with thousands of junk %%% banners (or one huge name) cannot turn File Health, the no-events message or the export warning into a page-sized alert; fails_when=skippedSectionList prints the whole list or whole names again; why_new=the lists were printed in full; seam=none; no_claim=parse()'s own cap on sections
+describe('skippedSectionList', () => {
+    it('names at most three sections, each cut short, and counts the rest', () => {
+        expect(skippedSectionList(['EVENT'])).toBe('%%% EVENT');
+        expect(skippedSectionList(['A', 'B'], false)).toBe('A, B');
+        const many = skippedSectionList(['A', 'B', 'X'.repeat(100), ...Array.from({ length: 5000 }, (_, i) => `S${i}`)]);
+        expect(many).toBe(`%%% A, %%% B, %%% ${'X'.repeat(39)}… and 5000 more`);
     });
 });

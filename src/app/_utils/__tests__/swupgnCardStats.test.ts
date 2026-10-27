@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { statOf } from '../swupgnCardStats';
 
 describe('statOf', () => {
@@ -11,21 +11,3 @@ describe('statOf', () => {
     });
 });
 
-describe('loadCardStatMap', () => {
-    afterEach(() => {
-        vi.restoreAllMocks();
-        vi.resetModules();
-    });
-
-    it('returns an empty map and resets the cache so a retry can succeed', async () => {
-        const fetchMock = vi.fn()
-            .mockResolvedValueOnce({ ok: false, status: 404 })
-            .mockResolvedValueOnce({ ok: true, json: async () => ({ 'LOF#164': { power: 4, hp: 5 } }) });
-        vi.stubGlobal('fetch', fetchMock);
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
-        const mod = await import('../swupgnCardStats');
-        expect(await mod.loadCardStatMap()).toEqual({});
-        expect(await mod.loadCardStatMap()).toEqual({ 'LOF#164': { power: 4, hp: 5 } });
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-    });
-});

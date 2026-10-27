@@ -46,16 +46,19 @@ export interface AttackCue { atk: string; def: string }
  */
 export function attackByFrame(events: GameEvent[]): Array<AttackCue | undefined> {
     const out: Array<AttackCue | undefined> = new Array(events.length);
-    let cur: { cue: AttackCue; re: RegExp } | undefined;
+    let cur: { cue: AttackCue; seq: string; re: RegExp } | undefined;
     for (let i = 0; i < events.length; i++) {
         const e = events[i];
         if (e == null || typeof e !== 'object') { out[i] = undefined; continue; }
         if (e.t === 'ATTACK') {
-            cur = { cue: { atk: String(e.atk), def: String(e.def) }, re: new RegExp(`^${String(e.seq).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[a-z]+$`) };
+            cur = { cue: { atk: String(e.atk), def: String(e.def) }, seq: String(e.seq), re: new RegExp(`^${String(e.seq).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[a-z]+$`) };
             out[i] = cur.cue;
             continue;
         }
-        if (cur && cur.re.test(String(e.seq))) { out[i] = cur.cue; continue; }
+        // A record filed `for` another action is that action's precursor (§9.1), even when its
+        // letter hangs off the attack's seq: the next play's cost and arrival are not the attack.
+        const filedElsewhere = typeof e.for === 'string' && e.for !== cur?.seq;
+        if (cur && cur.re.test(String(e.seq)) && !filedElsewhere) { out[i] = cur.cue; continue; }
         cur = undefined;
         out[i] = undefined;
     }

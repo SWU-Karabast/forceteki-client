@@ -1,7 +1,7 @@
 // The MEASUREMENT seam between the live board DOM and the pure animation planner:
 // everything `planBeat` needs about where things are on screen, read in one pass
 // off a committed frame. Keeping it here (rather than inline in the animator)
-// means the selectors Task 4 tagged live in exactly one place.
+// means the data-card-uuid / data-testid / data-card-type selectors live in exactly one place.
 import type { Seat } from '@/lib/swupgn';
 import type { Snap } from './animPrimitives';
 import type { Snapshot } from './frameAnimationPlan';
@@ -13,7 +13,7 @@ const rectOf = (el: HTMLElement, html: string): Snap | null => {
     return r.width === 0 || r.height === 0 ? null : { x: r.left, y: r.top, w: r.width, h: r.height, html };
 };
 
-const esc = (s: string) => (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(s) : s.replace(/["\\]/g, '\\$&'));
+const esc = (s: string) => CSS.escape(s);
 
 /** The measured rect of an element that is only ever a reference point (no clone). */
 export const snapOf = (el: HTMLElement | null): Snap | null => (el ? rectOf(el, '') : null);

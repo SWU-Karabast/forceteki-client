@@ -33,7 +33,7 @@ describe('classifyBeat', () => {
         expect(at('R3.A.1').some((t) => t.kind === 'damage')).toBe(false);   // combat damage is the lunge's, not a bolt
     });
     it('an ability defeat: a bolt from the leader, then the defeat', () => {
-        const ts = at('R2.A.6a');   // Krennic's action ability is its own beat (Task 2)
+        const ts = at('R2.A.6a');   // Krennic's action ability is its own beat (buildBeats anchors a beat on every player action)
         expect(ts).toContainEqual({ kind: 'defeat', card: 'LAW#159', seat: 2, reason: 'ability', by: 'LAW#008' });
     });
     it('an upgrade play attaches to its host', () => {
@@ -76,3 +76,18 @@ describe('classifyBeat', () => {
 });
 
 const byKind = (a: { kind: string }, b: { kind: string }) => a.kind.localeCompare(b.kind);
+
+describe('a MOVE into or out of the capture zone animates on its own (§6.2 zone `capture`)', () => {
+    // Value: protects=capture and release animate from the MOVE alone; fails_when=the zone is compared against a name the format never writes; why_new=every capture test also had a CAPTURE/RESCUE record; seam=none; no_claim=the CAPTURE-record path
+    it('classifies arena -> capture as a capture and capture -> arena as a release', () => {
+        const events = [
+            { seq: 'R1.A.1', t: 'MOVE', card: 'U', from: 'hand', to: 'ground', p: 2, kind: 'unit' },
+            { seq: 'R1.A.2', t: 'MOVE', card: 'U', from: 'ground', to: 'capture', p: 1 },
+            { seq: 'R1.A.3', t: 'MOVE', card: 'U', from: 'capture', to: 'ground', p: 2, kind: 'unit' },
+        ] as GameEvent[];
+        const frames = foldFrames(events);
+        const one = (i: number) => classifyBeat({ index: 0, kind: 'action', start: i, end: i, anchor: i } as Beat, events, frames[i - 1], frames[i]);
+        expect(one(1).map((t) => t.kind)).toContain('capture');
+        expect(one(2).map((t) => t.kind)).toContain('release');
+    });
+});

@@ -3,7 +3,7 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { render } from '@/lib/swupgn';
 import { useReplay } from '@/app/_contexts/Replay.context';
-import { storySeekIndex, storyLineTargets, roundOf } from '@/app/_utils/storySeek';
+import { storySeekIndex, storyLineTargets, storyNumbersAbilities, roundOf } from '@/app/_utils/storySeek';
 
 /**
  * The game as prose, straight from the file's `%%% STORY` section.
@@ -19,6 +19,44 @@ import { storySeekIndex, storyLineTargets, roundOf } from '@/app/_utils/storySee
  * the prose changes — an unrecognised line just renders as text.
  */
 
+interface IStoryLineProps {
+    line: string;
+
+    /** The frame a numbered action line seeks to; `null` for plain prose. */
+    target: number | null;
+    isCurrent: boolean;
+    onSeek: (frame: number) => void;
+}
+
+/** One story line. Memoised with stable props (`onSeek` is the context's `useCallback`'d
+ *  `seekTo`), so a playback tick re-renders only the lines whose `isCurrent` flips, not
+ *  the whole story. The ref marks a line in the current round for scroll-follow. */
+const StoryLine = React.memo(React.forwardRef<HTMLDivElement, IStoryLineProps>(function StoryLine(
+    { line, target, isCurrent, onSeek }, ref,
+) {
+    if (target == null) {
+        return <Box component="div" sx={{ color: line.trimStart().startsWith('↳') ? 'rgba(255,255,255,0.5)' : undefined }}>{line || ' '}</Box>;
+    }
+    return (
+        <Box
+            ref={ref}
+            component="div"
+            role="button"
+            tabIndex={0}
+            onClick={() => onSeek(target)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSeek(target); } }}
+            sx={{
+                cursor: 'pointer', borderRadius: '3px',
+                backgroundColor: isCurrent ? 'rgba(255,255,255,0.12)' : 'transparent',
+                '&:hover': { backgroundColor: 'rgba(255,255,255,0.07)' },
+                '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: '-2px' },
+            }}
+        >
+            {line || ' '}
+        </Box>
+    );
+}));
+
 const StoryTab: React.FC = () => {
     const { doc, events, currentIndex, seekTo } = useReplay();
 
@@ -30,7 +68,7 @@ const StoryTab: React.FC = () => {
 
     // Frame per story line, keyed the way the story numbers its actions (spec §16): built from
     // EVENTS (the truth), never from the prose.
-    const targets = useMemo(() => storyLineTargets(lines, storySeekIndex(events)), [lines, events]);
+    const targets = useMemo(() => storyLineTargets(lines, storySeekIndex(events, storyNumbersAbilities(lines, events))), [lines, events]);
 
     const currentRound = useMemo(() => {
         for (let i = currentIndex; i >= 0; i--) {
@@ -47,41 +85,29 @@ const StoryTab: React.FC = () => {
 
     return (
         <Box sx={{ p: 1.5 }}>
+            {/* Below md the theme's root font is 10-12px, which takes 0.72rem to about 7px
+                on a phone; the 11px floor applies only there. */}
             <Box
                 component="pre"
                 aria-label="Game story"
                 sx={{
                     m: 0, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                    fontSize: '0.72rem', lineHeight: 1.5, whiteSpace: 'pre',
+                    fontSize: { xs: 'max(11px, 0.72rem)', md: '0.72rem' }, lineHeight: 1.5, whiteSpace: 'pre',
                     overflowX: 'auto', color: 'rgba(255,255,255,0.8)',
                 }}
             >
                 {lines.map((line, i) => {
                     const r = roundOf(line);
-                    const target = targets[i];
-                    const isCurrentRound = r != null && r === currentRound;
-
-                    if (target == null) {
-                        return <Box key={i} component="div" sx={{ color: line.trimStart().startsWith('↳') ? 'rgba(255,255,255,0.5)' : undefined }}>{line || ' '}</Box>;
-                    }
+                    const target = targets[i] ?? null;
                     return (
-                        <Box
+                        <StoryLine
                             key={i}
-                            ref={isCurrentRound ? activeRef : undefined}
-                            component="div"
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => seekTo(target)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); seekTo(target); } }}
-                            sx={{
-                                cursor: 'pointer', borderRadius: '3px',
-                                backgroundColor: target === currentIndex ? 'rgba(255,255,255,0.12)' : 'transparent',
-                                '&:hover': { backgroundColor: 'rgba(255,255,255,0.07)' },
-                                '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: '-2px' },
-                            }}
-                        >
-                            {line || ' '}
-                        </Box>
+                            ref={target != null && r != null && r === currentRound ? activeRef : undefined}
+                            line={line}
+                            target={target}
+                            isCurrent={target != null && target === currentIndex}
+                            onSeek={seekTo}
+                        />
                     );
                 })}
             </Box>

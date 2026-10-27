@@ -4,6 +4,9 @@ const META_STORE = 'replayMeta';     // lightweight metadata only, for the list 
 export const ANNOTATIONS_STORE = 'replayAnnotations'; // working-copy notes, keyed by replayId
 const DB_VERSION = 3;
 
+// How long an upgrade blocked by another tab may wait before openDB gives up.
+const DB_BLOCKED_TIMEOUT_MS = 5000;
+
 /**
  * Open the shared replay DB. Exported so the annotations layer
  * (replayAnnotations.ts) shares one DB + version line — IndexedDB versions are
@@ -12,40 +15,42 @@ const DB_VERSION = 3;
 export function openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onupgradeneeded = (event) => {
+        // Create any store that is missing. An upgrade from an older version only adds stores;
+        // existing replays survive untouched.
+        request.onupgradeneeded = () => {
             const db = request.result;
-            const tx = request.transaction;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME);
             }
-            // v2: split metadata into its own store so listReplays() never has to
-            // deserialize every replay's full rawContent. Backfill from existing
-            // v1 records via the version-change transaction.
+            // Metadata lives in its own store so listReplays() never has to deserialize
+            // every replay's full rawContent.
             if (!db.objectStoreNames.contains(META_STORE)) {
                 db.createObjectStore(META_STORE);
-                if (tx && event.oldVersion >= 1 && db.objectStoreNames.contains(STORE_NAME)) {
-                    const cursorReq = tx.objectStore(STORE_NAME).openCursor();
-                    cursorReq.onsuccess = () => {
-                        const cursor = cursorReq.result;
-                        if (!cursor) return;
-                        const rec = cursor.value;
-                        if (rec && typeof rec === 'object' && rec.meta && rec.id) {
-                            tx.objectStore(META_STORE).put({ id: rec.id, ...rec.meta }, rec.id);
-                        }
-                        cursor.continue();
-                    };
-                }
             }
-            // v3: working-copy annotations store, keyed by replayId. Additive; existing
-            // replays/meta survive the upgrade untouched.
+            // Working-copy annotations, keyed by replayId.
             if (!db.objectStoreNames.contains(ANNOTATIONS_STORE)) {
                 db.createObjectStore(ANNOTATIONS_STORE, { keyPath: 'replayId' });
             }
         };
-        // Another tab holding an older version open blocks this upgrade. Surface it
-        // instead of hanging silently; that tab's onversionchange (below) closes it.
-        request.onblocked = () => console.warn('Replay DB upgrade blocked by another open tab');
+        // Another tab holding an older version open blocks this upgrade. That tab's
+        // onversionchange (below) closes it; one from before that handler never does, so give
+        // up after a while rather than leave every caller waiting.
+        let blockedTimer: ReturnType<typeof setTimeout> | undefined;
+        let gaveUp = false;
+        request.onblocked = () => {
+            console.warn('Replay DB upgrade blocked by another open tab');
+            blockedTimer ??= setTimeout(() => {
+                gaveUp = true;
+                reject(new Error('Replay storage is blocked by another open tab'));
+            }, DB_BLOCKED_TIMEOUT_MS);
+        };
         request.onsuccess = () => {
+            clearTimeout(blockedTimer);
+            // The other tab closed after this call gave up: nobody holds this connection.
+            if (gaveUp) {
+                request.result.close();
+                return;
+            }
             const db = request.result;
             // If another tab requests a newer version, close this connection so its
             // upgrade isn't blocked (prevents a cross-tab deadlock).
@@ -54,6 +59,17 @@ export function openDB(): Promise<IDBDatabase> {
         };
         request.onerror = () => reject(request.error);
     });
+}
+
+/**
+ * Close the connection once a transaction settles (commit, error or abort), so a helper
+ * never leaves an open connection behind for every call it serves.
+ */
+export function closeWhenSettled(db: IDBDatabase, tx: IDBTransaction): void {
+    const close = () => db.close();
+    tx.addEventListener('complete', close);
+    tx.addEventListener('error', close);
+    tx.addEventListener('abort', close);
 }
 
 /** The header fields that identify a replay, as the parsed document names them. */
@@ -137,10 +153,13 @@ export async function storeReplay(
     const metaRecord: StoredReplayMeta = { id, ...record.meta };
     return new Promise((resolve, reject) => {
         const tx = db.transaction([STORE_NAME, META_STORE], 'readwrite');
+        closeWhenSettled(db, tx);
         tx.objectStore(STORE_NAME).put(record, id);
         tx.objectStore(META_STORE).put(metaRecord, id);
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+        // A commit that fails (QuotaExceededError) aborts the transaction and fires no error.
+        tx.onabort = () => reject(tx.error ?? new Error('Replay storage transaction aborted'));
     });
 }
 
@@ -148,12 +167,11 @@ export async function loadReplay(id: string): Promise<string | null> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readonly');
+        closeWhenSettled(db, tx);
         const request = tx.objectStore(STORE_NAME).get(id);
         request.onsuccess = () => {
-            const result = request.result;
-            if (!result) return resolve(null);
-            // New records store { rawContent }; legacy records stored the raw string.
-            resolve(typeof result === 'string' ? result : result.rawContent ?? null);
+            const result = request.result as StoredReplay | undefined;
+            resolve(result?.rawContent ?? null);
         };
         request.onerror = () => reject(request.error);
     });
@@ -162,12 +180,12 @@ export async function loadReplay(id: string): Promise<string | null> {
 /**
  * List stored replays, newest first. Reads only the lightweight meta store, so
  * the full rawContent of each replay is never deserialized for the list view.
- * Legacy string-only records (no meta) never had a meta entry and are skipped.
  */
 export async function listReplays(): Promise<StoredReplayMeta[]> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
         const tx = db.transaction(META_STORE, 'readonly');
+        closeWhenSettled(db, tx);
         const request = tx.objectStore(META_STORE).getAll();
         request.onsuccess = () => {
             const metas: StoredReplayMeta[] = (request.result ?? []).filter(
@@ -184,10 +202,16 @@ export async function listReplays(): Promise<StoredReplayMeta[]> {
 export async function deleteReplay(id: string): Promise<void> {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-        const tx = db.transaction([STORE_NAME, META_STORE], 'readwrite');
+        // Notes go with the replay: ids are a content hash, so re-uploading the same file
+        // would otherwise bring the deleted replay's notes back.
+        const tx = db.transaction([STORE_NAME, META_STORE, ANNOTATIONS_STORE], 'readwrite');
+        closeWhenSettled(db, tx);
         tx.objectStore(STORE_NAME).delete(id);
         tx.objectStore(META_STORE).delete(id);
+        tx.objectStore(ANNOTATIONS_STORE).delete(id);
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+        // A commit that fails (QuotaExceededError) aborts the transaction and fires no error.
+        tx.onabort = () => reject(tx.error ?? new Error('Replay storage transaction aborted'));
     });
 }

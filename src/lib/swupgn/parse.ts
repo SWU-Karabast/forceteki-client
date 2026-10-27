@@ -16,6 +16,19 @@ function parseHeaderLine(line: string, raw: Record<string, string>): void {
  * silently into whatever consumed it. A wrong-but-finite value fails loudly at the point of
  * use; NaN fails nowhere and corrupts everything downstream.
  */
+/**
+ * A header count that is not a base-10 integer is corrupt, not zero.
+ *
+ * `finiteOr` runs at PARSE time, before any schema sees the value, so `[Undos "garbage"]` used
+ * to become `undos: 0` and validate clean -- silently reporting "no undos happened" for a file
+ * whose audit metadata was mangled. Returning undefined instead leaves the tag absent, which
+ * the schema and every reader already handle, and keeps "absent" honestly distinct from "zero".
+ */
+function strictCount(value: string): number | undefined {
+    // CLIENT-OWNED: a digit run past 2^53 is not a count either (400 nines parse to Infinity).
+    return (/^\s*\d+\s*$/).test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : undefined;
+}
+
 function finiteOr(value: string, fallback: number): number {
     const n = Number(value);
     return Number.isFinite(n) ? n : fallback;
@@ -49,7 +62,7 @@ function buildHeader(raw: Record<string, string>): Header {
         format: raw['Format'], cardPool: req('CardPool'), engine: req('Engine'),
         seed: req('Seed'),
         // The 'as' casts below are intentional: structural parsing trusts the raw
-        // string values here; enum/value validation is performed by validate() (Task 4),
+        // string values here; enum/value validation is performed by validate(),
         // not the parser.
         perspective: (raw['Perspective'] as Header['perspective']) ?? null,
         p1Id: req('P1Id'), p2Id: req('P2Id'), p1: req('P1'), p2: req('P2'),
@@ -57,18 +70,26 @@ function buildHeader(raw: Record<string, string>): Header {
         p2Leader: req('P2Leader'), p2Base: req('P2Base'),
         result: req('Result') as Header['result'], reason: req('Reason'),
         rounds: finiteOr(req('Rounds'), 0),
-        ...(raw['RecorderErrors'] != null ? { recorderErrors: finiteOr(raw['RecorderErrors'], 0) } : {}),
+        ...(strictCount(raw['RecorderErrors'] ?? '') !== undefined ? { recorderErrors: strictCount(raw['RecorderErrors']) } : {}),
+        ...(strictCount(raw['Undos'] ?? '') !== undefined ? { undos: strictCount(raw['Undos']) } : {}),
+        ...(strictCount(raw['WriterRevision'] ?? '') !== undefined ? { writerRevision: strictCount(raw['WriterRevision']) } : {}),
         ...(raw['EndDate'] != null ? { endDate: raw['EndDate'] } : {}),
         ...(raw['Match'] != null ? { match: raw['Match'] } : {}),
-        ...(raw['Undos'] != null ? { undos: finiteOr(raw['Undos'], 0) } : {}),
-        ...(raw['GameNumber'] != null ? { gameNumber: finiteOr(raw['GameNumber'], 0) } : {}),
+        ...(strictCount(raw['GameNumber'] ?? '') !== undefined ? { gameNumber: strictCount(raw['GameNumber']) } : {}),
     };
 }
 
 type Section = 'NONE' | 'UNKNOWN' | 'STORY' | 'DECKS' | 'CARDS' | 'SETUP' | 'EVENTS' | 'ANNOTATIONS';
 
 /** Sections whose lines are NDJSON records. `STORY` is deliberately not one of them. */
-const JSON_SECTIONS = ['DECKS', 'CARDS', 'SETUP', 'EVENTS', 'ANNOTATIONS'];
+export const JSON_SECTIONS = ['DECKS', 'CARDS', 'SETUP', 'EVENTS', 'ANNOTATIONS'];
+
+/**
+ * Every `%%%` banner this version knows. Exported so `validate()` warns on exactly the set
+ * `parse()` accepts -- two hand-maintained copies drift, and the warning then fires on a
+ * section the reader does happily parse, or stays silent on one it drops.
+ */
+export const KNOWN_SECTIONS: readonly string[] = ['STORY', ...JSON_SECTIONS];
 
 /** Drop leading/trailing blank lines a section banner's spacing leaves around the prose. */
 function trimBlankEdges(lines: string[]): string[] {
@@ -83,8 +104,24 @@ function trimBlankEdges(lines: string[]): string[] {
     return lines.slice(start, end);
 }
 
-export function parse(text: string): SwuPgnDocument {
+/**
+ * CLIENT-OWNED: what parse() read but could not use, for File Health. A header count that is
+ * present but unreadable is absent from `header` (strictCount), and that must not read as "none":
+ * a garbled RecorderErrors would pass a partial file as complete. A skipped section (a later
+ * version's, §18, or a misspelled banner) is named so it is not silently empty.
+ */
+export interface ParseNotes {
+    unreadableTags?: Record<string, string>;
+    skippedSections?: string[];
+}
+export type ParsedDocument = SwuPgnDocument & ParseNotes;
+
+/** The §5.2 header counts strictCount reads. */
+const COUNT_TAGS = ['RecorderErrors', 'Undos', 'WriterRevision', 'GameNumber'];
+
+export function parse(text: string): ParsedDocument {
     const raw: Record<string, string> = {};
+    const skipped = new Set<string>();
     const story: string[] = [];
     const decks: DeckRecord[] = [];
     const cards: CardIndexRecord[] = [];
@@ -115,8 +152,17 @@ export function parse(text: string): SwuPgnDocument {
             continue;
         }
         if (line.startsWith('%%%')) {
-            const name = line.slice(3).trim().toUpperCase();
+            const name = line.slice(3).trim()
+                .toUpperCase();
             section = (name === 'STORY' || JSON_SECTIONS.includes(name) ? name : 'UNKNOWN') as Section;
+            if (section === 'UNKNOWN' && skipped.size < 20) {
+                skipped.add(name.slice(0, 40));
+            }
+            continue;
+        }
+        // CLIENT-OWNED: skip a later version's section before JSON.parse, so one whose lines
+        // are prose (STORY-style) is ignored too, as §18 asks, instead of failing the file.
+        if (section === 'UNKNOWN') {
             continue;
         }
         let rec: unknown;
@@ -143,10 +189,16 @@ export function parse(text: string): SwuPgnDocument {
                 events.push(rec as GameEvent);
                 break;
             case 'ANNOTATIONS': annotations.push(rec as Annotation); break;
-            case 'UNKNOWN': throw new Error(`SWU-PGN: JSON record in unrecognized section on line ${i + 1}`);
             default: throw new Error(`SWU-PGN: record before any %%% section on line ${i + 1}`);
         }
     }
 
-    return { header: buildHeader(raw), story: trimBlankEdges(story), decks, cards, setup, events, annotations };
+    const unreadable = Object.fromEntries(COUNT_TAGS
+        .filter((tag) => raw[tag] != null && strictCount(raw[tag]) === undefined)
+        .map((tag) => [tag, raw[tag]]));
+    return {
+        header: buildHeader(raw), story: trimBlankEdges(story), decks, cards, setup, events, annotations,
+        ...(Object.keys(unreadable).length ? { unreadableTags: unreadable } : {}),
+        ...(skipped.size ? { skippedSections: [...skipped] } : {}),
+    };
 }

@@ -1,4 +1,5 @@
-import type { SwuPgnDocument, GameEvent } from '@/lib/swupgn';
+import { baseId, type SwuPgnDocument, type GameEvent, type ParseNotes } from '@/lib/swupgn';
+import { isLetteredSeq, isNumberedAction } from './swupgnMoves';
 
 /**
  * What the spec tells a reader to SURFACE about a file, short of refusing it.
@@ -28,9 +29,20 @@ const ZONES = new Set(['deck', 'hand', 'resource', 'ground', 'space', 'discard',
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-export function fileIssues(doc: SwuPgnDocument): FileIssue[] {
+export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     const out: FileIssue[] = [];
     const h = doc.header;
+
+    // A count tag that is present but unreadable is not "none": a garbled RecorderErrors may
+    // be hiding dropped events, so say so rather than presenting the file as complete.
+    for (const [tag, value] of Object.entries(doc.unreadableTags ?? {})) {
+        out.push({ severity: 'warning', message: `[${tag} "${value.length > 40 ? `${value.slice(0, 40)}…` : value}"] is present but not a count, so it was ignored${tag === 'RecorderErrors' ? ': the writer may have dropped events, and this file is not known to be complete' : ''} (§5.2).` });
+    }
+    // §18: a section this reader does not know is skipped. Name it, so a misspelled banner
+    // (`%%% EVENT`) is not just a file with nothing in it.
+    if (doc.skippedSections?.length) {
+        out.push({ severity: 'info', message: `Skipped ${plural(doc.skippedSections.length, 'section')} this reader does not know (${skippedSectionList(doc.skippedSections)}): a newer format's, or a misspelled banner (§18).` });
+    }
 
     // §5.3 provenance sentinels: accept the file, but do not present it as traceable.
     if (/@unknown$/.test(h.engine)) {
@@ -90,13 +102,22 @@ export function fileIssues(doc: SwuPgnDocument): FileIssue[] {
 }
 
 /**
+ * The names of sections parse() skipped, for a message: a file can carry any number of unknown
+ * `%%%` banners of any length, so at most three are named, each cut short, plus how many more.
+ */
+export function skippedSectionList(names: readonly string[], banner = true): string {
+    const shown = names.slice(0, 3).map((n) => `${banner ? '%%% ' : ''}${n.length > 40 ? `${n.slice(0, 39)}…` : n}`);
+    return names.length > 3 ? `${shown.join(', ')} and ${names.length - 3} more` : shown.join(', ');
+}
+
+/**
  * Which writer generation produced this file, and what that costs the replay (spec §22, §22.1).
  *
  * The format never bumped its version for these, so the header cannot say; each row of §22's
  * table names the record that gives the generation away. One line per detected generation,
  * each ending with what it means for fidelity. A current file yields nothing.
  */
-export function writerGeneration(doc: SwuPgnDocument): string[] {
+export function writerGeneration(doc: SwuPgnDocument & ParseNotes): string[] {
     const out: string[] = [];
     const events = (Array.isArray(doc.events) ? doc.events : []).filter((e): e is GameEvent => e != null && typeof e === 'object');
     const has = (t: string) => events.some((e) => e.t === t);
@@ -131,7 +152,8 @@ export function writerGeneration(doc: SwuPgnDocument): string[] {
         out.push('Keyframes carry no captives: a captured unit is filed under its captor from CAPTURE records alone and never verified (§22).');
     }
     const resourced = new Set<string>();
-    const leaderIds = new Set([doc.header.p1Leader, doc.header.p2Leader].map(String));
+    // By base id: in a mirror match seat 2's leader is `SET#NUM:2` (§11), the header names `SET#NUM`.
+    const leaderIds = new Set([doc.header.p1Leader, doc.header.p2Leader].map((id) => baseId(String(id))));
     let baseEpicByCardId = 0;
     let controlNoZone = 0;
     let captureNoCaptor = 0;
@@ -154,7 +176,7 @@ export function writerGeneration(doc: SwuPgnDocument): string[] {
         } else if (e.t === 'GAME_END' && !/\.game-end$/.test(String(e.seq))) {
             gameEndShared++;
         } else if (e.t === 'ABILITY_ACTIVATE' && e.epic === true
-            && !/^base@[12]$/.test(String(e.card)) && !leaderIds.has(String(e.card))) {
+            && !/^base@[12]$/.test(String(e.card)) && !leaderIds.has(baseId(String(e.card)))) {
             // §22: a base activating its own Epic Action used to name itself by card id. Only
             // `base@N` resolves to a seat (§6.3), so the spent flag is lost. An epic activation
             // that names neither a base nor either seat's leader is that early writer.
@@ -192,6 +214,54 @@ export function writerGeneration(doc: SwuPgnDocument): string[] {
     }
     if (baseEpicByCardId > 0) {
         out.push(`${plural(baseEpicByCardId, 'Epic Action')} activated by a card the file names by id rather than base@N (early writer): a base's spent Epic Action is not shown (§22).`);
+    }
+    // §22, "1.0 writer changes before first release": a 1.0 file with no WriterRevision is a
+    // pilot file. That alone is no line here (the hand-written `minimal` vector carries no tag
+    // either); each pilot behaviour that changes what the replay shows gets its own below.
+    const baseIds = new Set([doc.header.p1Base, doc.header.p2Base].map(String));
+    let passAfterOwnAction = 0;
+    let deployAsSecondAction = 0;
+    let frameworkSrc = 0;
+    let baseByCardId = 0;
+    let shortDraw = 0;
+    let fortifyNoHost = 0;
+    let lastAction: GameEvent | undefined;
+    // Once a player claims the initiative they are out of the phase, so the opponent acts
+    // alone and its own PASS ends the phase (CR 6): a PASS after its own action, legitimately.
+    let claimedThisPhase = false;
+    for (const e of events) {
+        if (e.t === 'PASS' && !isLetteredSeq(e.seq) && !claimedThisPhase && lastAction && 'p' in lastAction && lastAction.p === e.p) passAfterOwnAction++;
+        if (e.t === 'DEPLOY_LEADER' && !isLetteredSeq(e.seq) && lastAction?.t === 'ABILITY_ACTIVATE'
+            && (lastAction.kind === 'epic' || lastAction.epic === true) && baseId(String(lastAction.card)) === baseId(String(e.card))) deployAsSecondAction++;
+        if ((e.t === 'DAMAGE' || e.t === 'HEAL') && typeof e.src === 'string' && /^Framework effect/.test(e.src)) frameworkSrc++;
+        if (((e.t === 'DAMAGE' || e.t === 'HEAL') && baseIds.has(String(e.src))) || (e.t === 'DEFEAT' && baseIds.has(String(e.defeatedBy)))) baseByCardId++;
+        if (e.t === 'DRAW' && Array.isArray(e.cards) && e.cards.length > 0 && e.count !== e.cards.length) shortDraw++;
+        if (e.t === 'MOVE' && e.to === 'base' && e.from !== 'base' && e.kind === 'upgrade' && !e.attachedTo) fortifyNoHost++;
+        if (isNumberedAction(e)) lastAction = e;
+        else if (e.t === 'PHASE_START' || e.t === 'ROUND_START') { lastAction = undefined; claimedThisPhase = false; }
+        if (e.t === 'CLAIM_INITIATIVE') claimedThisPhase = true;
+    }
+    // §22: a file that states a WriterRevision is not a pilot file, so none of these rows
+    // describe it; a match there is a coincidence of play, not the early writer.
+    // A WriterRevision that is present but unreadable still says the file is not a pilot file.
+    const pilot = doc.header.writerRevision == null && doc.unreadableTags?.WriterRevision == null;
+    if (pilot && passAfterOwnAction > 0) {
+        out.push('PASS written after every action (pilot writer): each action is followed by a "passes" line, and action numbers differ from a current file of the same game (§22).');
+    }
+    if (pilot && deployAsSecondAction > 0) {
+        out.push(`${plural(deployAsSecondAction, 'leader deploy')} numbered as an action of ${deployAsSecondAction === 1 ? 'its' : 'their'} own after the Epic Action that performed ${deployAsSecondAction === 1 ? 'it' : 'them'} (pilot writer): one action reads as two (§22).`);
+    }
+    if (pilot && frameworkSrc > 0) {
+        out.push('Damage the rules dealt (drawing from an empty deck) names "Framework effect" as its source (pilot writer): read as no source (§22).');
+    }
+    if (pilot && baseByCardId > 0) {
+        out.push(`A base is named by its card id rather than base@N in ${plural(baseByCardId, 'record')} (pilot writer): damage, heals and defeats that base dealt are not tied to its seat (§22).`);
+    }
+    if (pilot && shortDraw > 0) {
+        out.push(`${plural(shortDraw, 'DRAW')} counting the cards asked for, not the cards drawn (pilot writer): the hand follows the cards listed (§22).`);
+    }
+    if (pilot && fortifyNoHost > 0 && !keyframeSeats.some((p) => Array.isArray(p.baseUpgrades))) {
+        out.push(`${plural(fortifyNoHost, 'Fortify upgrade')} played onto a base the file does not name, and no keyframe lists base upgrades (pilot writer): each is placed on its player's own base, unverified (§22).`);
     }
     if (/^forceteki@\d+\.\d+\.\d+$/.test(doc.header.engine)) {
         out.push(`[Engine "${doc.header.engine}"] is a package version, not a commit: the build that wrote this file cannot be pinpointed (§5.3).`);

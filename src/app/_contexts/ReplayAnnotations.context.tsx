@@ -1,9 +1,9 @@
 'use client';
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
 import type { Annotation, SwuPgnDocument } from '@/lib/swupgn';
 import { serialize } from '@/lib/swupgn';
 import {
-    loadAnnotations, saveAnnotations, mergeForExport, type WorkingAnnotation,
+    loadAnnotations, saveAnnotations, mergeAnnotations, mergeForExport, type WorkingAnnotation,
 } from '@/app/_utils/replayAnnotations';
 import { getAnnotationAuthor, setAnnotationAuthor } from '@/app/_utils/annotationAuthor';
 import { downloadSwuPgn } from '@/app/_utils/downloadBlob';
@@ -53,24 +53,42 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
     const [working, setWorking] = useState<WorkingAnnotation[]>([]);
     const [author, setAuthorState] = useState<string>('');
 
-    // Load the working copy + author when the replay changes.
-    useEffect(() => {
-        let active = true;
-        setAuthorState(getAnnotationAuthor(''));
-        loadAnnotations(replayId).then((anns) => {
-            if (active) setWorking(anns);
-        });
-        return () => { active = false; };
-    }, [replayId]);
+    // The replayId whose stored notes the working copy holds (null: none loaded yet).
+    const loadedFor = useRef<string | null>(null);
 
     // Each mutation persists the working copy to IndexedDB (no-op without a replayId —
     // an un-saved upload stays in-memory but is still exportable). A failed write (e.g.
     // QuotaExceededError) is logged rather than silently dropped, so the on-disk copy
     // diverging from the in-memory notes is at least visible in the console.
-    const persist = useCallback((next: WorkingAnnotation[]) => {
-        saveAnnotations(replayId, next, Date.now()).catch((err) =>
+    const persist = useCallback((next: WorkingAnnotation[], deletedIds: string[] = []) => {
+        saveAnnotations(replayId, next, Date.now(), deletedIds).catch((err) =>
             console.warn('Failed to persist replay annotations', err));
     }, [replayId]);
+
+    // Load the working copy + author when the replay changes. After an upload the board
+    // mounts with replayId=null and the id arrives later: notes made in between are merged
+    // with the stored ones (and saved, since persist was a no-op until now), not replaced.
+    useEffect(() => {
+        let active = true;
+        setAuthorState(getAnnotationAuthor(''));
+        // Switching from one stored replay to another: the old replay's notes are not this one's.
+        const carryOver = loadedFor.current === null;
+        if (!carryOver) setWorking([]);
+        loadAnnotations(replayId).then((anns) => {
+            if (!active) return;
+            loadedFor.current = replayId;
+            setWorking((prev) => {
+                if (!carryOver || prev.length === 0) return anns;
+                const merged = mergeAnnotations(anns, prev);
+                persist(merged);
+                return merged;
+            });
+        }).catch((err) => {
+            // Keep the working notes; only the stored copy is unavailable.
+            console.warn('Failed to load replay annotations', err);
+        });
+        return () => { active = false; };
+    }, [replayId, persist]);
 
     const addAnnotation = useCallback((ref: string, fields: { nag?: string; text?: string; parent?: string }) => {
         const note: WorkingAnnotation = {
@@ -102,7 +120,7 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
     const deleteAnnotation = useCallback((id: string) => {
         setWorking((prev) => {
             const next = prev.filter((w) => w._id !== id);
-            persist(next);
+            persist(next, [id]);
             return next;
         });
     }, [persist]);

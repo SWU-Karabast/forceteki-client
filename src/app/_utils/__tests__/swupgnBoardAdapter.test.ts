@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { cardFromId, cardFromInstance, ZONE_MAP, adaptState, ownerSeatMap } from '../swupgnBoardAdapter';
 import { statOf } from '../swupgnCardStats';
+import { s3CardImageURL, CardImageLocale } from '../s3Utils';
+import type { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { parse, stateAt, foldFrames, normalizeEvents, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -20,10 +22,27 @@ describe('cardFromId', () => {
         expect(c.ownerId).toBe('p1');
     });
 
+    // Value: protects=a token unit newer than card-stats.json still draws token art; fails_when=type fallback reverts to 'unit' so s3CardImageURL builds a set-card path; why_new=no test fed an unknown token id; seam=none; no_claim=the token image actually exists on S3
+    it('types a token the card data does not know as tokenUnit, so its art comes from the token path', () => {
+        const tok = cardFromId('TOKEN:new-trooper#4242424242:2', 'groundArena', 'p1', 'p1');
+        expect(tok.type).toBe('tokenUnit');
+        expect(s3CardImageURL(tok as unknown as ICardData, CardImageLocale.English)).toContain('cards/_tokens/');
+        // Card data still wins when it knows the token, and a set card it does not know is a unit.
+        expect(cardFromId('TOKEN:new-trooper#4242424242', 'groundArena', 'p1', 'p1', { type: 'tokenUpgrade' }).type).toBe('tokenUpgrade');
+        expect(cardFromId('XXX#999', 'groundArena', 'p1', 'p1').type).toBe('unit');
+    });
+
     it('strips the :copy suffix for setId but keeps it in uuid (instance identity)', () => {
         const c = cardFromId('SHD#257:3', 'hand', 'p2', 'p2');
         expect(c.setId).toEqual({ set: 'SHD', number: 257 });
         expect(c.uuid).toBe('SHD#257:3');
+    });
+
+    // Value: protects=a file card id cannot put CSS-breaking text into the board's art url; fails_when=parseSetId splits any id on '#' again; why_new=the faceArt gate covers only the animator, not the tray, discard and preview sinks; seam=none; no_claim=the rendered sx stylesheet
+    it('gives an id of any other shape an empty set, so no art url is built from it', () => {
+        expect(cardFromId('X),url(//example.invalid/a?#1', 'discard', 'p1', 'p1').setId.set).toBe('');
+        expect(cardFromId('SOR#010;}', 'discard', 'p1', 'p1').setId.set).toBe('');
+        expect(cardFromId('TOKEN:beast#6445363199:2', 'groundArena', 'p1', 'p1').setId).toEqual({ set: 'TOKEN:beast', number: 6445363199 });
     });
 });
 

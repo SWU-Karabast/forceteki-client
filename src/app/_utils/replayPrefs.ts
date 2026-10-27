@@ -30,7 +30,3 @@ export function readPrefs(raw: string | null): ReplayPrefs {
     const animate = typeof p.animate === 'boolean' ? p.animate : DEFAULT_PREFS.animate;
     return { speed, stepBy, animate };
 }
-
-export function writePrefs(p: ReplayPrefs): string {
-    return JSON.stringify(p);
-}

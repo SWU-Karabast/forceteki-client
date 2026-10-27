@@ -168,14 +168,17 @@ const DiscussionTab: React.FC = () => {
                         No notes here yet. Start the thread below.
                     </Typography>
                 )}
-                {threads.map((node, i) => (
-                    <NoteCard
-                        key={idOf(node.note) ?? i}
-                        node={node}
-                        onReply={(parentId, text) => seq && addAnnotation(seq, { text, parent: parentId })}
-                        onDelete={(id) => deleteAnnotation(id)}
-                    />
-                ))}
+                {threads.map((node, i) => {
+                    const noteKey = idOf(node.note) ?? i;
+                    return (
+                        <NoteCard
+                            key={noteKey}
+                            node={node}
+                            onReply={(parentId, text) => seq && addAnnotation(seq, { text, parent: parentId })}
+                            onDelete={(id) => deleteAnnotation(id)}
+                        />
+                    );
+                })}
             </Box>
             {seq && (
                 <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.1)', pt: 1, mt: 1 }}>

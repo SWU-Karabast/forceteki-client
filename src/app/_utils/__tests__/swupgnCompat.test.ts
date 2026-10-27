@@ -407,3 +407,83 @@ describe('§22.1 files that say SWU-PGN/1.1', () => {
         ]);
     });
 });
+
+describe('§22 pilot 1.0 files (before WriterRevision)', () => {
+    it('PASS after every action: named, since action numbers differ from a current file', () => {
+        const doc = withEvents([...R1(), ev({ t: 'PLAY', p: 1, card: 'SOR#108', zone: 'ground' }, 'R1.A.1'), ev({ t: 'PASS', p: 1 }, 'R1.A.2')]);
+        expect(writerGeneration(doc)).toEqual([expect.stringContaining('PASS written after every action')]);
+        // A file that states a WriterRevision is not a pilot file, whatever the play looks like.
+        expect(writerGeneration({ ...doc, header: { ...doc.header, writerRevision: 1 } })).toEqual([]);
+    });
+
+    it('a leader deploy numbered after its own Epic Action: named, one action reads as two', () => {
+        const doc = withEvents([...R1(),
+            ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'SOR#010', kind: 'epic', epic: true }, 'R1.A.1'),
+            ev({ t: 'DEPLOY_LEADER', p: 1, card: 'SOR#010', zone: 'ground', epic: true }, 'R1.A.2')]);
+        expect(writerGeneration(doc)).toEqual([expect.stringContaining('numbered as an action of its own')]);
+        // The current shape, a lettered deploy, says nothing.
+        expect(writerGeneration(withEvents([...R1(),
+            ev({ t: 'ABILITY_ACTIVATE', p: 1, card: 'SOR#010', kind: 'epic', epic: true }, 'R1.A.1'),
+            ev({ t: 'DEPLOY_LEADER', p: 1, card: 'SOR#010', zone: 'ground', epic: true }, 'R1.A.1c')]))).toEqual([]);
+    });
+
+    it('"Framework effect" as a damage source: named, and read as no source', () => {
+        const doc = withEvents([...R1(), ev({ t: 'DAMAGE', src: 'Framework effect:2', tgt: 'base@1', amt: 1, damageType: 'ability', hp: 29 })]);
+        expect(writerGeneration(doc)).toEqual([expect.stringContaining('Framework effect')]);
+        // Value: protects=the "read as no source" promise: the viewer's stream carries no Framework src, a card src survives; fails_when=dropFrameworkSources leaves normalizeEvents; why_new=the row was tested, the read was not; seam=none; no_claim=bookmark wording (replayDecisions)
+        const read = normalizeEvents(doc.events);
+        expect(read.find((e) => e.t === 'DAMAGE' && e.tgt === 'base@1')).not.toHaveProperty('src');
+        const cardSrc = normalizeEvents([ev({ t: 'DAMAGE', src: 'SOR#108', tgt: 'base@1', amt: 1, damageType: 'ability', hp: 29 })]);
+        expect(cardSrc[0]).toHaveProperty('src', 'SOR#108');
+    });
+
+    it('a base named by its card id in src/defeatedBy: named', () => {
+        const doc = base();
+        const withSrc = withEvents([...R1(), ev({ t: 'DAMAGE', src: doc.header.p1Base, tgt: 'SOR#108', amt: 2, damageType: 'ability', hp: 3 })]);
+        expect(writerGeneration(withSrc)).toEqual([expect.stringContaining('named by its card id rather than base@N')]);
+        // Value: protects=the DEFEAT defeatedBy branch of the base-by-card-id row; fails_when=the defeatedBy check is dropped; why_new=only a DAMAGE src fed the row; seam=none; no_claim=none beyond protects
+        const withDefeatedBy = withEvents([...R1(), ev({ t: 'DEFEAT', card: 'SOR#108', reason: 'ability', defeatedBy: doc.header.p1Base })]);
+        expect(writerGeneration(withDefeatedBy)).toEqual([expect.stringContaining('named by its card id rather than base@N')]);
+    });
+
+    // Value: protects=a lettered PASS is a sub-step: it neither counts as the pilot PASS nor resets the tracker; fails_when=the !isLetteredSeq guard or the isNumberedAction gate is dropped; why_new=no test feeds a lettered PASS; seam=none; no_claim=claim-initiative resets (tested above)
+    it('a lettered PASS is not a pilot PASS, and does not reset the tracker', () => {
+        const play = ev({ t: 'PLAY', p: 1, card: 'SOR#108', zone: 'ground' }, 'R1.A.1');
+        const lettered = ev({ t: 'PASS', p: 1 }, 'R1.A.1b');
+        expect(writerGeneration(withEvents([...R1(), play, lettered]))).toEqual([]);
+        expect(writerGeneration(withEvents([...R1(), play, lettered, ev({ t: 'PASS', p: 1 }, 'R1.A.2')])))
+            .toEqual([expect.stringContaining('PASS written after every action')]);
+    });
+
+    it('DRAW.count was the number asked for: named, and the hand follows the cards listed', () => {
+        const doc = withEvents([...R1(), ev({ t: 'DRAW', p: 1, count: 2, cards: ['SOR#108:5'] })]);
+        expect(writerGeneration(doc)).toEqual([expect.stringContaining('counting the cards asked for')]);
+    });
+
+    it('a Fortify upgrade with no host and no keyframe baseUpgrades: placed on its player\'s base, and named', () => {
+        const events = [...R1(), ev({ t: 'MOVE', card: 'HMW#147', from: 'hand', to: 'base', p: 1, kind: 'upgrade' }),
+            ev({ t: 'PLAY_UPGRADE', p: 1, card: 'HMW#147', zone: 'base', target: 'SEC#029' }, 'R1.A.10')];
+        expect(fold(events).players[1]!.baseUpgrades).toEqual(['HMW#147']);
+        expect(writerGeneration(withEvents(events))).toEqual([expect.stringContaining('Fortify upgrade played onto a base the file does not name')]);
+    });
+
+    it('WriterRevision round-trips, and a pilot file has none', () => {
+        expect(base().header.writerRevision).toBeUndefined();
+        const doc = { ...base(), header: { ...base().header, writerRevision: 1, undos: 2 } };
+        expect(parse(serialize(doc)).header).toMatchObject({ writerRevision: 1, undos: 2 });
+    });
+});
+
+describe('§22 pilot Fortify row: a keyframe that lists base upgrades verifies the placement', () => {
+    // Value: protects=the unverified-Fortify warning is withheld when a keyframe states baseUpgrades; fails_when=the keyframeSeats baseUpgrades check is dropped and every pilot Fortify warns; why_new=the row test has no keyframe stating baseUpgrades; seam=none; no_claim=the other pilot rows
+    it('says nothing when a keyframe carries baseUpgrades', () => {
+        const kfEvent = base().events.find((e) => (e.t === 'ROUND_START' || e.t === 'ROUND_END') && 'keyframe' in e && e.keyframe) as GameEvent & { keyframe: ReducedState };
+        expect(kfEvent).toBeDefined();
+        const kf = JSON.parse(JSON.stringify(kfEvent.keyframe)) as ReducedState;
+        kf.players[1] = { ...kf.players[1]!, baseUpgrades: ['HMW#147'] };
+        const events = [...R1(), ev({ t: 'MOVE', card: 'HMW#147', from: 'hand', to: 'base', p: 1, kind: 'upgrade' }),
+            ev({ t: 'PLAY_UPGRADE', p: 1, card: 'HMW#147', zone: 'base', target: 'SEC#029' }, 'R1.A.10'),
+            ev({ t: 'ROUND_END', round: 1, keyframe: kf }, 'R1.end')];
+        expect(writerGeneration(withEvents(events)).filter((l) => /Fortify upgrade/.test(l))).toEqual([]);
+    });
+});

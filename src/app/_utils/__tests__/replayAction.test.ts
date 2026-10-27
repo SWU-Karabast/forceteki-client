@@ -20,6 +20,12 @@ describe('frameAction', () => {
         expect(a.kind).toBe('ability');
     });
 
+    // Value: protects=an UNDO with no `by` reads "A player takes back a move", as render() words it; fails_when=the caption interpolates an absent `by` again (" takes back a move"); why_new=no UNDO caption test existed; seam=none; no_claim=render()'s own line
+    it('names the player who takes back a move, or "A player" when the file does not say', () => {
+        expect(frameAction({ seq: 'R1.A.3-undo', t: 'UNDO', at: 'R1.A.3', by: 2 } as GameEvent, n).label).toBe('Player 2 takes back a move');
+        expect(frameAction({ seq: 'R1.A.3-undo', t: 'UNDO', at: 'R1.A.3' } as GameEvent, n).label).toBe('A player takes back a move');
+    });
+
     it('describes a deploy', () => {
         const a = frameAction({ seq: '1', t: 'DEPLOY_LEADER', p: 1, card: 'JTL#018', zone: 'space' } as GameEvent, n);
         expect(a.label).toBe('Player 1 deploys JTL#018');

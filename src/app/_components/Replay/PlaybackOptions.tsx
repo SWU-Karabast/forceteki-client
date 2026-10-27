@@ -22,8 +22,8 @@ const GROUP_SX = {
 };
 
 /** The Tune button's popover: speed, step unit and card animation, each a persisted
- *  preference (Task 14). Every ToggleButtonGroup is plain MUI buttons — Tab reaches
- *  them, Space/Enter picks. */
+ *  preference saved to localStorage under `replay:playback` (see replayPrefs.ts).
+ *  Every ToggleButtonGroup is plain MUI buttons — Tab reaches them, Space/Enter picks. */
 const PlaybackOptions: React.FC<PlaybackOptionsProps> = ({ anchorEl, onClose }) => {
     const { speed, setSpeed, stepBy, setStepBy, animate, setAnimate } = useReplay();
 

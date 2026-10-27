@@ -167,8 +167,23 @@ export function dropInertRecords(events: GameEvent[], keepSeqs: ReadonlySet<stri
 export function normalizeEvents(events: GameEvent[], keepSeqs?: ReadonlySet<string>): GameEvent[] {
     // repairUpgradePlays matches a MOVE to the PLAY_UPGRADE right after it, so it runs on the
     // stream with inert records already gone; one between them would otherwise defeat it.
-    const repaired = repairUpgradePlays(dropInertRecords(normalizeTokenEvents(events), keepSeqs));
+    const repaired = repairUpgradePlays(dropInertRecords(normalizeTokenEvents(dropFrameworkSources(events)), keepSeqs));
     return repaired.length > 0 ? repaired : events;
+}
+
+/**
+ * The pilot writer (§22) names damage the rules dealt (drawing from an empty deck) with a
+ * `src` of "Framework effect…", which is no card. Read it as no source, as File Health says,
+ * so no consumer draws a hit from a card that is not on the board.
+ */
+export function dropFrameworkSources(events: GameEvent[]): GameEvent[] {
+    return events.map((e) => {
+        if (e == null || typeof e !== 'object' || (e.t !== 'DAMAGE' && e.t !== 'HEAL')) return e;
+        if (typeof e.src !== 'string' || !/^Framework effect/.test(e.src)) return e;
+        const copy = { ...e };
+        delete copy.src;
+        return copy;
+    });
 }
 
 /**
@@ -193,9 +208,12 @@ export function repairUpgradePlays(events: GameEvent[]): GameEvent[] {
         if (e == null || typeof e !== 'object') continue;
         const kf = (e as { keyframe?: ReducedState }).keyframe;
         if (!kf) continue;
+        // Raw keyframe content from an uploaded file: a list that is not an array is skipped,
+        // never iterated (a `upgrades: 5` would otherwise throw and blank the viewer).
         for (const ps of Object.values(kf.players ?? {})) {
-            for (const c of ps?.cards ?? []) {
-                for (const u of c?.upgrades ?? []) hostOf.set(u, c.id);
+            for (const c of Array.isArray(ps?.cards) ? ps.cards : []) {
+                if (typeof c?.id !== 'string' || !Array.isArray(c.upgrades)) continue;
+                for (const u of c.upgrades) if (typeof u === 'string') hostOf.set(u, c.id);
             }
         }
     }

@@ -28,8 +28,7 @@ const RecentReplays: React.FC = () => {
             .finally(() => setLoaded(true));
     }, []);
 
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
-        e.stopPropagation();
+    const handleDelete = async (id: string) => {
         try {
             await deleteReplay(id);
             setReplays((prev) => prev.filter((r) => r.id !== id));
@@ -47,44 +46,60 @@ const RecentReplays: React.FC = () => {
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 220, overflowY: 'auto' }}>
                 {replays.map((r) => (
-                    <SeekRow
+                    // Two sibling controls in one row: the open control covers the title and
+                    // meta, and Remove sits beside it rather than inside it, so neither button
+                    // is nested in the other.
+                    <Box
                         key={r.id}
-                        onClick={() => router.push(`/Replay?id=${encodeURIComponent(r.id)}`)}
-                        label={`Open replay ${r.player1} vs ${r.player2}`}
                         sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 1,
-                            px: 1.25,
-                            py: 0.75,
+                            gap: 0.5,
+                            pr: 1.25,
                             borderRadius: '6px',
                             backgroundColor: 'rgba(255,255,255,0.04)',
                             border: '1px solid rgba(255,255,255,0.08)',
                             '&:hover': { backgroundColor: 'rgba(0,186,255,0.1)', borderColor: 'rgba(0,186,255,0.3)' },
                         }}
                     >
-                        <PlayArrow sx={{ color: 'var(--initiative-blue)', fontSize: '1.1rem' }} />
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography variant="body2" sx={{ color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {r.player1} vs {r.player2}
-                            </Typography>
-                            {r.result && (
-                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)' }}>
-                                    {formatResult(r.result)}
+                        <SeekRow
+                            onClick={() => router.push(`/Replay?id=${encodeURIComponent(r.id)}`)}
+                            label={`Open replay ${r.player1} vs ${r.player2}`}
+                            sx={{
+                                flex: 1,
+                                minWidth: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                pl: 1.25,
+                                pr: 0.5,
+                                py: 0.75,
+                                borderRadius: '6px',
+                            }}
+                        >
+                            <PlayArrow sx={{ color: 'var(--initiative-blue)', fontSize: '1.1rem' }} />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="body2" sx={{ color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {r.player1} vs {r.player2}
+                                </Typography>
+                                {r.result && (
+                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)' }}>
+                                        {formatResult(r.result)}
+                                    </Typography>
+                                )}
+                            </Box>
+                            {formatSavedAt(r.savedAt) && (
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>
+                                    {formatSavedAt(r.savedAt)}
                                 </Typography>
                             )}
-                        </Box>
-                        {formatSavedAt(r.savedAt) && (
-                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>
-                                {formatSavedAt(r.savedAt)}
-                            </Typography>
-                        )}
+                        </SeekRow>
                         <Tooltip title="Remove">
-                            <IconButton size="small" aria-label={`Remove replay ${r.player1} vs ${r.player2}`} onClick={(e) => handleDelete(e, r.id)} sx={{ color: 'rgba(255,255,255,0.35)', '&:hover': { color: '#f44336' } }}>
+                            <IconButton size="small" aria-label={`Remove replay ${r.player1} vs ${r.player2}`} onClick={() => handleDelete(r.id)} sx={{ color: 'rgba(255,255,255,0.35)', '&:hover': { color: '#f44336' } }}>
                                 <DeleteOutline fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                    </SeekRow>
+                    </Box>
                 ))}
             </Box>
         </Box>

@@ -21,9 +21,10 @@ describe('activeSeatByFrame — whose action it is (the live trays\' turn aura)'
         expect(active[at('R2.A.start')]).toBe(frames[at('R2.A.start')].initiative);
         expect(active[at('R2.A.1')]).toBe(1);   // P1 attacks
         expect(active[at('R2.A.1a')]).toBe(1);  // the damage of that attack names no seat: still P1
-        expect(active[at('R2.A.2a')]).toBe(2);  // P2 pays for a play, filed under P1's pass
-        expect(active[at('R2.A.2c')]).toBe(2);  // STATS names no seat: still P2
-        expect(active[at('R2.A.3')]).toBe(2);
+        expect(active[at('R2.A.1b')]).toBe(2);  // P2 pays for its play, a precursor filed `for` R2.A.2
+        expect(active[at('R2.A.1d')]).toBe(2);  // STATS names no seat: still P2
+        expect(active[at('R2.A.2')]).toBe(2);
+        expect(active[at('R2.A.3')]).toBe(1);   // P1 passes
     });
 
     it('is unset outside the action phase, where the trays colour by phase', () => {
@@ -33,7 +34,7 @@ describe('activeSeatByFrame — whose action it is (the live trays\' turn aura)'
     });
 
     it('drives isActionPhaseActivePlayer on exactly one player', () => {
-        const i = at('R2.A.3');
+        const i = at('R2.A.2');
         const gs = adaptState(frames[i], load('organic').doc, SEATS, { activeSeat: active[i] });
         expect(gs.players.P2.isActionPhaseActivePlayer).toBe(true);
         expect(gs.players.P1.isActionPhaseActivePlayer).toBe(false);
@@ -48,16 +49,16 @@ describe('attackByFrame — the attack/defend arrows while an attack resolves', 
     const attacks = attackByFrame(events);
 
     it('covers the ATTACK and the consequences filed under it, not the next action', () => {
-        expect(attacks[at('R2.A.1')]).toEqual({ atk: 'SOR#128:3', def: 'base@2' });
-        expect(attacks[at('R2.A.1a')]).toEqual({ atk: 'SOR#128:3', def: 'base@2' });
+        expect(attacks[at('R2.A.1')]).toEqual({ atk: 'IC27#097:3', def: 'base@2' });
+        expect(attacks[at('R2.A.1a')]).toEqual({ atk: 'IC27#097:3', def: 'base@2' });
+        expect(attacks[at('R2.A.1b')]).toBeUndefined(); // filed `for` the next action, a play
         expect(attacks[at('R2.A.2')]).toBeUndefined();
-        expect(attacks[at('R2.A.0b')]).toBeUndefined();
     });
 
     it('marks the attacker and the defending base on the board', () => {
         const i = at('R2.A.1a');
         const gs = adaptState(frames[i], doc, SEATS, { attack: attacks[i] });
-        const atk = gs.players.P1.cardPiles.groundArena.find((c: { uuid: string }) => c.uuid === 'SOR#128:3');
+        const atk = gs.players.P1.cardPiles.groundArena.find((c: { uuid: string }) => c.uuid === 'IC27#097:3');
         expect(atk.isAttacker).toBe(true);
         expect(gs.players.P2.base.isDefender).toBe(true);
         expect(gs.players.P1.base.isDefender).toBeUndefined();

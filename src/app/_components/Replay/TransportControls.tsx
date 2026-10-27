@@ -141,7 +141,7 @@ const TransportControls: React.FC = () => {
 
             <Tooltip title="Step back (←)">
                 <span>
-                    <IconButton aria-label="Step back one frame" onClick={stepBack} disabled={currentIndex === 0} sx={{ color: 'white' }}>
+                    <IconButton aria-label="Step back" onClick={stepBack} disabled={currentIndex === 0} sx={{ color: 'white' }}>
                         <SkipPrevious />
                     </IconButton>
                 </span>
@@ -149,7 +149,7 @@ const TransportControls: React.FC = () => {
 
             <Tooltip title="Step forward (→)">
                 <span>
-                    <IconButton aria-label="Step forward one frame" onClick={stepForward} disabled={currentIndex >= totalFrames - 1} sx={{ color: 'white' }}>
+                    <IconButton aria-label="Step forward" onClick={stepForward} disabled={currentIndex >= totalFrames - 1} sx={{ color: 'white' }}>
                         <SkipNext />
                     </IconButton>
                 </span>
@@ -221,9 +221,10 @@ const TransportControls: React.FC = () => {
                 Nothing here is the only copy of its information: position and round both
                 ride the slider's value label, and the perspective is in the swap button's
                 aria-label. Playback speed is the one real loss; stepping and scrubbing
-                still work, and a speed picker that survives 375px needs a menu, not a row. */}
+                still work, and a speed picker that survives 375px needs a menu, not a row.
+                The row returns at md (900px), not sm: at 600px it squeezes the scrubber. */}
             <Typography variant="body2" sx={{
-                display: { xs: 'none', sm: 'block' },
+                display: { xs: 'none', md: 'block' },
                 color: 'rgba(255,255,255,0.7)', minWidth: '70px', textAlign: 'center',
             }}>
                 {currentBeat.index + 1} / {beats.length}
@@ -231,7 +232,7 @@ const TransportControls: React.FC = () => {
 
             {currentRound && (
                 <Typography variant="body2" sx={{
-                    display: { xs: 'none', sm: 'block' },
+                    display: { xs: 'none', md: 'block' },
                     color: 'rgba(255,255,255,0.5)', minWidth: '140px', textAlign: 'center',
                 }}>
                     {currentRound}
@@ -245,7 +246,7 @@ const TransportControls: React.FC = () => {
                 onChange={handleSpeedChange}
                 size="small"
                 sx={{
-                    display: { xs: 'none', sm: 'flex' },
+                    display: { xs: 'none', md: 'flex' },
                     '& .MuiToggleButton-root': {
                         color: 'rgba(255,255,255,0.5)',
                         borderColor: 'rgba(255,255,255,0.2)',
@@ -267,7 +268,7 @@ const TransportControls: React.FC = () => {
             </ToggleButtonGroup>
 
             <Typography variant="body2" sx={{
-                display: { xs: 'none', sm: 'block' },
+                display: { xs: 'none', md: 'block' },
                 color: 'rgba(255,255,255,0.7)', minWidth: '64px', textAlign: 'right',
             }}>
                 {currentPerspective}

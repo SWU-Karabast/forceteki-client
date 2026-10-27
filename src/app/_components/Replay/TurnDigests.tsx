@@ -8,7 +8,7 @@ import SeekRow from './SeekRow';
 
 /** Turn-by-turn digest, rendered inline as a panel tab body. */
 const TurnDigests: React.FC = () => {
-    const { doc, nameOf, seekToSeq, header } = useReplay();
+    const { doc, nameAtSeq, seekToSeq, header } = useReplay();
     const digests = useMemo(() => turnDigests(doc), [doc]);
 
     const p1 = header.p1 || 'Player 1';
@@ -42,17 +42,20 @@ const TurnDigests: React.FC = () => {
                             </Typography>
                         );
                     })}
-                    {d.bookmarks.map((b, i) => (
-                        <SeekRow
-                            key={`${b.seq}-${i}`}
-                            onClick={() => seekToSeq(b.seq)}
-                            sx={{ ml: 1, '&:hover': { textDecoration: 'underline' } }}
-                        >
-                            <Typography variant="caption" sx={{ color: '#ffc857', display: 'block' }}>
-                                ★ {bookmarkLabel(b, nameOf)}
-                            </Typography>
-                        </SeekRow>
-                    ))}
+                    {d.bookmarks.map((b, i) => {
+                        const rowKey = `${b.seq}-${i}`;
+                        return (
+                            <SeekRow
+                                key={rowKey}
+                                onClick={() => seekToSeq(b.seq)}
+                                sx={{ ml: 1, '&:hover': { textDecoration: 'underline' } }}
+                            >
+                                <Typography variant="caption" sx={{ color: '#ffc857', display: 'block' }}>
+                                    ★ {bookmarkLabel(b, (id) => nameAtSeq(id, b.seq))}
+                                </Typography>
+                            </SeekRow>
+                        );
+                    })}
                 </Box>
             ))}
             {digests.length === 0 && (

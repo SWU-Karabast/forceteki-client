@@ -52,6 +52,13 @@ describe.each(VECTORS)('board at the final frame: %s', (name) => {
         }
         // The BASE's Epic Action, a separate ability from the leader's.
         expect(p.base.epicActionSpent, 'baseEpicActionUsed').toBe(e.baseEpicActionUsed || undefined);
+        // What sits on the base (Fortify, Arrest) and whether it fell, however it fell.
+        expect(p.base.upgrades.map((c: Card) => c.uuid).sort(), 'baseUpgrades').toEqual([...(e.baseUpgrades ?? [])].sort());
+        // A base's captives ride the captured pile parented to the base: Board rebuilds the base's
+        // `capturedCards` from that pile, exactly as for a unit captor.
+        const baseHeld = p.cardPiles.capturedZone.filter((c: Card) => c.parentCardId === p.base.uuid).map((c: Card) => c.uuid);
+        expect(baseHeld.sort(), 'baseCaptured').toEqual([...(e.baseCaptured ?? [])].sort());
+        expect(!!p.base.defeated, 'baseDefeated').toBe(e.baseDefeated === true);
         // Only a double-sided leader carries a face; absent must stay absent, never `false`.
         expect(p.leaders[0].onStartingSide, 'leader onStartingSide').toBe(e.leader!.onStartingSide);
         // Base HP: printed max from the keyframe, damage from the absolute hp the file states.
@@ -136,5 +143,38 @@ describe('a played unit comes in exhausted (minimal vector, spec §10.1 entering
         expect([entered.power, entered.hp, entered.keywords]).toEqual([4, 5, ['overwhelm']]);
         // Readied at regroup, and nothing pending there.
         expect(wampa('R1.G.11').exhausted).toBe(false);
+    });
+});
+
+describe('the base carries what is on it, between keyframes too (spec §10.3, §11)', () => {
+    const load = (name: string) => {
+        const doc = parse(readFileSync(path.join(DIR, `${name}.swupgn`), 'utf-8'));
+        const events = normalizeEvents(doc.events);
+        const frames = foldFrames(events);
+        const at = (seq: string) => adaptState(frames[events.findIndex((e) => e.seq === seq)], doc, SEATS, { nameOf: (id) => id });
+        return { at };
+    };
+
+    it('homeworlds: a Fortify upgrade is on its base from the play that attached it, not from the next keyframe', () => {
+        const { at } = load('homeworlds');
+        expect(at('R1.A.0b').players.P1.base.upgrades).toEqual([]);
+        expect(at('R1.A.0c').players.P1.base.upgrades.map((c: Card) => c.uuid)).toEqual(['HMW#147']); // its MOVE into base
+        expect(at('R1.A.1').players.P1.base.upgrades.map((c: Card) => c.uuid)).toEqual(['HMW#147']);
+    });
+
+    it('arrest: the captive is held by the base until the regroup rescue', () => {
+        const { at } = load('arrest');
+        const heldByBase = (gs: ReturnType<typeof at>) => gs.players.P1.cardPiles.capturedZone
+            .filter((c: Card) => c.parentCardId === gs.players.P1.base.uuid).map((c: Card) => c.uuid);
+        expect(heldByBase(at('R2.A.1c'))).toEqual(['LAW#253:3']);
+        expect(heldByBase(at('R2.G.1'))).toEqual([]);
+    });
+
+    it('death-star: a base defeated outright reads defeated with HP still on it', () => {
+        const { at } = load('death-star');
+        const base = at('R8.G.3').players.P2.base;
+        expect(base.defeated).toBe(true);
+        expect(base.hp - base.damage).toBe(9);
+        expect(at('R8.G.2').players.P2.base.defeated).toBeUndefined();
     });
 });

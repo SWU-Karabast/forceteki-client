@@ -2,16 +2,18 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import { parse, SwuPgnDocument } from '@/lib/swupgn';
+import { parse, SwuPgnDocument, type ParseNotes } from '@/lib/swupgn';
+import { noEventsMessage, replayTooHeavy } from '@/app/_utils/replayHandoff';
 
 interface FileUploadProps {
     onReplayLoaded: (doc: SwuPgnDocument, content: string) => void;
 }
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB (compressed upload cap)
-// Ceiling on the DECOMPRESSED .swupgn so a zip bomb can't expand to
-// gigabytes and OOM/freeze the tab after passing the compressed-size check.
-const MAX_DECOMPRESSED_SIZE = 250 * 1024 * 1024; // 250 MB
+// A real replay is a few hundred KB, zipped or not.
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB (upload cap)
+// Ceiling on the DECOMPRESSED .swupgn, enforced while it inflates (extractReplayFromZip), so a
+// zip bomb stops here instead of expanding to gigabytes.
+const MAX_DECOMPRESSED_SIZE = 50 * 1024 * 1024; // 50 MB
 
 const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
     const [isDragging, setIsDragging] = useState(false);
@@ -23,7 +25,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
         setError(null);
 
         if (file.size > MAX_FILE_SIZE) {
-            setError(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is 100 MB.`);
+            setError(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is ${MAX_FILE_SIZE / 1024 / 1024} MB.`);
             return;
         }
 
@@ -31,27 +33,28 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
 
         try {
             let rawContent: string;
-            let doc: SwuPgnDocument;
+            let doc: SwuPgnDocument & ParseNotes;
 
             if (file.name.endsWith('.swupgn')) {
                 rawContent = await file.text();
                 doc = parse(rawContent);
             } else if (file.name.endsWith('.zip')) {
                 const buffer = await file.arrayBuffer();
-                const { unzip, strFromU8 } = await import('fflate');
-                // Async unzip runs decompression off the main thread (in a worker
-                // when available) so a large archive doesn't freeze the UI.
-                const unzipped = await new Promise<Record<string, Uint8Array>>((resolve, reject) => {
-                    unzip(new Uint8Array(buffer), (err, data) => (err ? reject(err) : resolve(data)));
-                });
-                const replayFilename = Object.keys(unzipped).find((name) => name.endsWith('.swupgn'));
-                if (!replayFilename) {
-                    setError('No .swupgn file found in zip.');
-                    return;
+                const [{ strFromU8 }, { extractReplayFromZip, ReplayTooLargeError }] = await Promise.all([
+                    import('fflate'), import('@/app/_utils/unzipReplay'),
+                ]);
+                let decompressed: Uint8Array | null;
+                try {
+                    decompressed = await extractReplayFromZip(new Uint8Array(buffer), MAX_DECOMPRESSED_SIZE);
+                } catch (zipErr) {
+                    if (zipErr instanceof ReplayTooLargeError) {
+                        setError(zipErr.message);
+                        return;
+                    }
+                    throw zipErr;
                 }
-                const decompressed = unzipped[replayFilename];
-                if (decompressed.length > MAX_DECOMPRESSED_SIZE) {
-                    setError(`Replay too large once unzipped (${(decompressed.length / 1024 / 1024).toFixed(0)} MB). Max is ${MAX_DECOMPRESSED_SIZE / 1024 / 1024} MB.`);
+                if (!decompressed) {
+                    setError('No .swupgn file found in zip.');
                     return;
                 }
                 rawContent = strFromU8(decompressed);
@@ -62,7 +65,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
             }
 
             if (doc.events.length === 0) {
-                setError('No events found in replay file.');
+                setError(noEventsMessage(doc));
+                return;
+            }
+            const heavy = replayTooHeavy(doc);
+            if (heavy) {
+                setError(heavy);
                 return;
             }
             onReplayLoaded(doc, rawContent);
@@ -146,14 +154,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
                     </>
                 )}
                 {error && (
-                    <Typography variant="body2" sx={{ color: '#f44336', mt: 1 }}>
+                    <Typography variant="body2" role="alert" sx={{ color: 'error.main', mt: 1 }}>
                         {error}
                     </Typography>
                 )}
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5 }}>
                 <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
-                    Max upload: 100 MB
+                    Max upload: {MAX_FILE_SIZE / 1024 / 1024} MB
                 </Typography>
                 <PreferenceButton
                     variant="warning"

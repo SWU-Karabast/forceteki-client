@@ -51,9 +51,20 @@ describe('parse — malformed input', () => {
         expect(() => parse(text)).toThrow(/invalid JSON/);
     });
 
-    it('throws on a JSON record under an unrecognized %%% section', () => {
-        const text = '[Game "SWU-PGN/1.1"]\n%%% BOGUS\n{"seq":"1","t":"PASS","p":1}';
-        expect(() => parse(text)).toThrow(/unrecognized section/);
+    it('skips a JSON record under an unrecognized %%% section (§18: a later version\'s section)', () => {
+        const text = SAMPLE.replace('%%% EVENTS', '%%% BOGUS\n{"seq":"1","t":"PASS","p":1}\n\n%%% EVENTS');
+        expect(parse(text).events).toEqual(parse(SAMPLE).events);
+    });
+
+    // Value: protects=a mangled Undos/RecorderErrors/WriterRevision/GameNumber tag reads as absent, not 0; fails_when=strictCount reverted to finiteOr (garbage -> 0); why_new=only well-formed counts were round-tripped; seam=none; no_claim=validate() schema warnings
+    it('reads header counts only when they are base-10 integers; anything else is absent, never 0', () => {
+        const withTags = (tags: string) => parse(SAMPLE.replace('[Rounds "3"]', `[Rounds "3"]\n${tags}`)).header;
+        const ok = withTags('[Undos " 2 "]\n[RecorderErrors "0"]\n[WriterRevision "1"]\n[GameNumber "3"]');
+        expect(ok).toMatchObject({ undos: 2, recorderErrors: 0, writerRevision: 1, gameNumber: 3 });
+        const bad = withTags('[Undos "garbage"]\n[RecorderErrors "1.5"]\n[WriterRevision "-1"]\n[GameNumber "1e3"]');
+        for (const k of ['undos', 'recorderErrors', 'writerRevision', 'gameNumber']) {
+            expect(k in bad, k).toBe(false);
+        }
     });
 
     it('throws on a JSON record before any %%% section', () => {
@@ -156,5 +167,19 @@ describe('parse refuses a record that is not a JSON object', () => {
             expect(text).not.toBe(sample);
             expect(() => parse(text)).toThrow(/is not a JSON object/);
         }
+    });
+});
+
+describe('parse — later-version sections and oversized counts', () => {
+    // Value: protects=a later version's prose section is ignored, not a hard failure (§18); fails_when=UNKNOWN sections are JSON-parsed again; why_new=the existing case only used a JSON line; seam=none; no_claim=none beyond protects
+    it('skips a prose line under an unknown section', () => {
+        const text = SAMPLE.replace('%%% EVENTS', '%%% COMMENTARY\nPlayer 1 opens strong.\n\n%%% EVENTS');
+        expect(parse(text).events).toEqual(parse(SAMPLE).events);
+    });
+
+    // Value: protects=a header count past 2^53 reads absent, not Infinity; fails_when=strictCount drops its safe-integer check; why_new=strict-count test used small malformed values only; seam=none; no_claim=display of the tag
+    it('drops a header count that overflows', () => {
+        const text = SAMPLE.replace('\n%%%', `\n[WriterRevision "${'9'.repeat(400)}"]\n%%%`);
+        expect(parse(text).header.writerRevision).toBeUndefined();
     });
 });

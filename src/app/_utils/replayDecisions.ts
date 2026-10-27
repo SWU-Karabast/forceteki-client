@@ -1,4 +1,4 @@
-import type { SwuPgnDocument, Seat } from '@/lib/swupgn';
+import { dropFrameworkSources, type SwuPgnDocument, type Seat } from '@/lib/swupgn';
 
 // Decision review (P3): surface the explicit branch points the omniscient archive records
 // (CHOICE / MODAL_CHOICE — "offered A/B/C, chose B") and auto-bookmark the swingy moments
@@ -52,7 +52,8 @@ export function decisionPoints(doc: SwuPgnDocument): DecisionPoint[] {
  */
 export function autoBookmarks(doc: SwuPgnDocument, bigDamageThreshold = 4): Bookmark[] {
     const out: Bookmark[] = [];
-    for (const e of doc.events) {
+    // The viewer reads a pilot writer's "Framework effect" source as no source; so do bookmarks.
+    for (const e of dropFrameworkSources(doc.events)) {
         switch (e.t) {
             case 'DEFEAT':
                 out.push({ seq: e.seq, kind: 'DEFEAT', card: e.card, reason: e.reason });
@@ -85,11 +86,21 @@ const fmtTarget = (tgt?: string) => {
     return m ? `Player ${m[1]}'s base` : tgt;
 };
 
+// DEFEAT.reason in words. A reason older files wrote ('damage') passes through as written;
+// 'unknown' says nothing.
+const DEFEAT_REASON_WORDS: Record<string, string> = {
+    attack: 'in combat', ability: 'by an ability', nonCombatDamage: 'by damage', uniqueRule: 'by the unique rule', frameworkEffect: 'by the rules', unknown: '',
+};
+const defeatReason = (reason?: string) => (reason && Object.hasOwn(DEFEAT_REASON_WORDS, reason) ? DEFEAT_REASON_WORDS[reason] : reason);
+
 /** One-line caption for a key moment, shared by the Decisions and Digest tabs. */
 export function bookmarkLabel(b: Bookmark, nameOf: (id: string) => string): string {
     switch (b.kind) {
-        case 'BIG_DAMAGE': return `${nameOf(b.src ?? '')} hits ${fmtTarget(b.tgt)} for ${b.amt}`;
-        case 'DEFEAT': return `${nameOf(b.card ?? '')} defeated${b.reason ? ` (${b.reason})` : ''}`;
+        case 'BIG_DAMAGE': return `${b.src ? nameOf(b.src) : 'Drawing from an empty deck'} hits ${fmtTarget(b.tgt)} for ${b.amt}`;
+        case 'DEFEAT': {
+            const why = defeatReason(b.reason);
+            return `${nameOf(b.card ?? '')} defeated${why ? ` (${why})` : ''}`;
+        }
         case 'OVERWHELM': return `${seatLabel(b.p)} overwhelms ${fmtTarget(b.tgt)} for ${b.amt}`;
         case 'INITIATIVE': return `${seatLabel(b.p)} claimed initiative`;
         case 'GAME_END': return `Game end${b.reason ? ` — ${b.reason}` : ''}`;

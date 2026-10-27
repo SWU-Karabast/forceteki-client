@@ -10,6 +10,14 @@ import { DURATION } from './replayTiming';
 export interface Snap { x: number; y: number; w: number; h: number; html: string }
 export interface Point { x: number; y: number }
 
+/** True for a real `SET#NUM` card id, with an optional `:N` copy suffix. Card ids come
+ *  from an untrusted .swupgn file and end up in an art URL, so anything else gets no art. */
+export const isCardArtId = (id: string): boolean => /^[A-Z0-9]+#\d+(:\d+)?$/.test(id);
+
+/** A CSS `url()` value with the url quoted, so no character in it can close the
+ *  function early and smuggle in a second url. */
+export const cssUrl = (url: string): string => `url(${JSON.stringify(url)})`;
+
 export interface Stage {
     rate: number; // playbackRate for every animation
     findCard(uuid: string): HTMLElement | null; // the LIVE node
@@ -245,7 +253,7 @@ function artNode(s: Stage, url: string, backing = ''): HTMLElement {
     const n = s.node();
     Object.assign(n.style, {
         position: 'absolute', inset: '0', borderRadius: '7px', backgroundColor: backing,
-        backgroundImage: `url(${url})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
+        backgroundImage: cssUrl(url), backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat',
     } as Partial<CSSStyleDeclaration>);
     return n;
 }

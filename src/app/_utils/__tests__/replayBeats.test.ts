@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse, normalizeEvents, indexResolver, type GameEvent } from '@/lib/swupgn';
-import { buildBeats, beatAt, captionForBeat, chapterMarks } from '../replayBeats';
+import { buildBeats, beatAt, captionForBeat, chapterMarks, playbackStep, type Beat } from '../replayBeats';
 import { frameAction, storyName } from '../replayAction';
 
 const doc = parse(readFileSync(join(__dirname, '../../../lib/swupgn/__tests__/fixtures/game-463c3022.swupgn'), 'utf8'));
@@ -90,5 +90,30 @@ describe('chapterMarks', () => {
         expect(marks.filter((m) => m.kind === 'phase')).toHaveLength(14);   // setup + 7 action + 6 regroup (the game ends in R7's action phase)
         expect(marks[0]).toEqual({ value: 0, label: 'Setup', kind: 'phase' });
         for (const m of marks) expect(beats[m.value].kind).toBe('banner');
+    });
+});
+
+// Value: protects=Play and autoplay advance by beat, stop at the last frame, and a clip caps at its end and loops to its start; fails_when=the next-frame rule skips a beat, runs past the end or the clip, or stops a clip instead of looping; why_new=the rule lived inside the provider with no test; seam=none; no_claim=dwell timing and the React effect wiring
+describe('playbackStep', () => {
+    const beats = [
+        { index: 0, kind: 'action', start: 0, end: 2, anchor: 0 },
+        { index: 1, kind: 'action', start: 3, end: 5, anchor: 3 },
+        { index: 2, kind: 'action', start: 6, end: 9, anchor: 6 },
+    ] as Beat[];
+    it('advances to the end of this beat, or of the next one from an end', () => {
+        expect(playbackStep(beats, 0, 10, null)).toEqual({ kind: 'advance', to: 2 });
+        expect(playbackStep(beats, 2, 10, null)).toEqual({ kind: 'advance', to: 5 });
+    });
+    it('stops at the last frame of the game', () => {
+        expect(playbackStep(beats, 9, 10, null)).toEqual({ kind: 'stop' });
+    });
+    it('caps at a clip end and loops back to its start', () => {
+        expect(playbackStep(beats, 3, 10, { start: 3, end: 4 })).toEqual({ kind: 'advance', to: 4 });
+        expect(playbackStep(beats, 4, 10, { start: 3, end: 4 })).toEqual({ kind: 'loop', to: 3 });
+        // Scrubbed past the clip's end: back to its start.
+        expect(playbackStep(beats, 8, 10, { start: 3, end: 4 })).toEqual({ kind: 'loop', to: 3 });
+    });
+    it('stops on a one-frame clip instead of looping onto itself', () => {
+        expect(playbackStep(beats, 4, 10, { start: 4, end: 4 })).toEqual({ kind: 'stop' });
     });
 });

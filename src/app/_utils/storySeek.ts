@@ -1,18 +1,24 @@
 import type { GameEvent } from '@/lib/swupgn';
-import { NUMBERED_ACTIONS as NUMBERED } from './swupgnMoves';
+import { NUMBERED_ACTIONS as NUMBERED, isLetteredSeq, isNumberedAction } from './swupgnMoves';
+import { isPlayerAction } from './replayAction';
 
 /**
  * Maps the numbered lines of a `%%% STORY` back to frames, using the story's own numbering
- * (spec §16): only PLAY, PLAY_EVENT, PLAY_UPGRADE, PLAY_SMUGGLE, DEPLOY_LEADER, ATTACK, PASS
- * and CLAIM_INITIATIVE get a number, and the counter resets at every ROUND_START and every
- * PHASE_START. Built from EVENTS (the truth), never from the prose, so a wording change
- * cannot break it; an ability activation or a claimed initiative used to shift every click
- * after it onto the wrong event.
+ * (spec §16): PLAY, PLAY_EVENT, PLAY_UPGRADE, PLAY_SMUGGLE, DEPLOY_LEADER, ATTACK, PASS,
+ * CLAIM_INITIATIVE and an action or Epic Action ABILITY_ACTIVATE get a number unless their seq
+ * is lettered, and the counter resets at every ROUND_START and every PHASE_START. Built from
+ * EVENTS (the truth), not from the prose, so a wording change cannot break it (the one prose
+ * read is `storyNumbersAbilities`, which only tells an early writer's story apart); an ability
+ * activation or a claimed initiative used to shift every click after it onto the wrong event.
+ *
+ * `numbersAbilities` is false for a STORY written before the writer numbered action abilities
+ * (forceteki 7dd39a098) — see `storyNumbersAbilities`.
  *
  * Keys: `R{round}` for a round banner, `R{round}.{phaseOrdinal}.{n}` for the n-th numbered
  * action of that round's k-th phase block (k counts ` ── phase ──` lines since the banner).
  */
-export function storySeekIndex(events: GameEvent[]): Map<string, number> {
+export function storySeekIndex(events: GameEvent[], numbersAbilities = true): Map<string, number> {
+    const numbered = numbersAbilities ? isNumberedAction : (e: GameEvent) => NUMBERED.has(e.t) && !isLetteredSeq(e.seq);
     const m = new Map<string, number>();
     let round = 0;
     let phase = 0;
@@ -26,7 +32,7 @@ export function storySeekIndex(events: GameEvent[]): Map<string, number> {
             continue;
         }
         if (e.t === 'PHASE_START') { phase += 1; action = 0; continue; }
-        if (NUMBERED.has(e.t)) {
+        if (numbered(e)) {
             action += 1;
             const key = `R${round}.${phase}.${action}`;
             if (!m.has(key)) m.set(key, i);
@@ -64,4 +70,14 @@ export function storyLineTargets(lines: string[], index: Map<string, number>): A
         const n = actionNumberOf(line);
         return n != null ? index.get(`R${round}.${phase}.${n}`) : undefined;
     });
+}
+
+/**
+ * Whether `lines` number action abilities. An early writer's STORY indents them as
+ * `↳ X uses an ability`; a game with an action ability whose story numbers no `uses` line is
+ * one of those, and counting the abilities would shift every click after the first.
+ */
+export function storyNumbersAbilities(lines: string[], events: GameEvent[]): boolean {
+    const hasAbilityAction = events.some((e) => e != null && typeof e === 'object' && isPlayerAction(e) && !isLetteredSeq(e.seq));
+    return !hasAbilityAction || lines.some((l) => actionNumberOf(l) != null && / uses /.test(l));
 }

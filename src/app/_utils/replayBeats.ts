@@ -1,5 +1,5 @@
 import type { GameEvent, Seat, NameResolver } from '@/lib/swupgn';
-import { NUMBERED_ACTIONS } from './swupgnMoves';
+import { NUMBERED_ACTIONS, isLetteredSeq } from './swupgnMoves';
 import { frameAction, isPlayerAction } from './replayAction';
 
 /**
@@ -25,7 +25,9 @@ export function buildBeats(events: GameEvent[]): Beat[] {
     // actions, plus a RESOURCE that stands on its own (setup, regroup) -- a RESOURCE filed as a
     // consequence of an action (an ability that resources a card) rides with that action.
     const actionFrames = new Map<string, number>();
-    events.forEach((e, i) => { if (NUMBERED_ACTIONS.has(e.t)) actionFrames.set(e.seq, i); });
+    // A lettered one (a leader deployed by its own Epic Action, `R8.A.1c`) is a sub-step of the
+    // action above it and rides in that beat.
+    events.forEach((e, i) => { if (NUMBERED_ACTIONS.has(e.t) && !isLetteredSeq(e.seq)) actionFrames.set(e.seq, i); });
     events.forEach((e, i) => { if (e.t === 'RESOURCE' && !actionFrames.has(baseSeq(e.seq))) actionFrames.set(e.seq, i); });
     // A leader's or unit's ACTION or Epic Action ability is the player's action (CR 6.1) and the
     // writer numbers it as one (Part D-2), so it anchors a beat and owns its lettered
@@ -81,6 +83,21 @@ export function beatAt(beats: Beat[], frame: number): Beat {
     let lo = 0, hi = beats.length - 1;
     while (lo < hi) { const mid = (lo + hi) >> 1; if (beats[mid].end < frame) lo = mid + 1; else hi = mid; }
     return beats[lo];
+}
+
+/**
+ * Where playback goes from `frame`: the end of the beat it is in (or of the next beat, when it
+ * already sits on an end), never past the last frame, which is the clip's end when there is a
+ * clip. At the last frame a clip loops to its start and normal playback stops; so does a clip
+ * of a single frame, which has nowhere to loop to (looping onto the frame it is on would leave
+ * autoplay "playing" with nothing scheduled).
+ */
+export type PlaybackStep = { kind: 'advance'; to: number } | { kind: 'loop'; to: number } | { kind: 'stop' };
+export function playbackStep(beats: Beat[], frame: number, totalFrames: number, clip: { start: number; end: number } | null): PlaybackStep {
+    const lastFrame = clip ? clip.end : totalFrames - 1;
+    if (frame >= lastFrame) return clip && clip.start < clip.end ? { kind: 'loop', to: clip.start } : { kind: 'stop' };
+    const b = beatAt(beats, frame);
+    return { kind: 'advance', to: Math.min(frame < b.end ? b.end : (beats[b.index + 1]?.end ?? lastFrame), lastFrame) };
 }
 
 /** What the caption bar says for a whole beat: the anchor's label, plus how many records resolved it. */

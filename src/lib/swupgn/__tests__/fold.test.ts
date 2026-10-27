@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, tokenArtId, parse, checkKeyframes } from '../index';
+import { fold, foldFrames, reduce, stateAt, isCompleteKeyframe, normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, tokenArtId, parse, checkKeyframes } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
 
 const SAMPLE = readFileSync(path.join(__dirname, 'fixtures/sample-game.swupgn'), 'utf-8');
@@ -91,7 +91,7 @@ describe('reduce — hand & discard contents (MOVE-driven, no double-add)', () =
         let s = base();
         s = reduce(s, { seq: '1', t: 'MOVE', card: 'U', from: 'deck', to: 'ground', p: 1 });
         // Both a DEFEAT and a ground->discard MOVE reference the same card; no double-add.
-        s = reduce(s, { seq: '2', t: 'DEFEAT', card: 'U', reason: 'combat' });
+        s = reduce(s, { seq: '2', t: 'DEFEAT', card: 'U', reason: 'attack' });
         s = reduce(s, { seq: '3', t: 'MOVE', card: 'U', from: 'ground', to: 'discard', p: 1 });
         expect(p1(s).discard.filter((id) => id === 'U')).toHaveLength(1);
     });
@@ -118,7 +118,7 @@ describe('reduce — combat & token state', () => {
     it('DEFEAT moves the card id to discard and removes it from play', () => {
         let s = base();
         s = reduce(s, { seq: '1', t: 'MOVE', card: 'U', from: 'hand', to: 'ground', p: 1 });
-        s = reduce(s, { seq: '2', t: 'DEFEAT', card: 'U', reason: 'combat' });
+        s = reduce(s, { seq: '2', t: 'DEFEAT', card: 'U', reason: 'attack' });
         expect(p1(s).cards.find((c) => c.id === 'U')).toBeUndefined();
         expect(p1(s).discard).toContain('U');
     });
@@ -145,6 +145,32 @@ describe('reduce — combat & token state', () => {
         s = reduce(s, { seq: '4', t: 'STATUS_TOKEN', card: 'U', token: 'shield', count: 1 });
         s = reduce(s, { seq: '5', t: 'STATUS_TOKEN', card: 'U', token: 'shield', count: 2 });
         expect(p1(s).cards.find((c) => c.id === 'U')!.statusTokens.shield).toBe(3);
+    });
+
+    // Value: protects=token/shield/xp counts from an uploaded file never go NaN or read inherited keys; fails_when=countOr or own-key token lookup reverted; why_new=no test fed non-numeric counts or prototype-named tokens; seam=none; no_claim=no UI rendering of tokens
+    it('a non-numeric count falls back, and a token named like an Object property is an ordinary own key', () => {
+        let s = base();
+        s = reduce(s, { seq: '1', t: 'MOVE', card: 'U', from: 'hand', to: 'ground', p: 1 });
+        const u = () => p1(s).cards.find((c) => c.id === 'U')!;
+        s = reduce(s, { seq: '2', t: 'SHIELD_GAIN', card: 'U', count: 'x' } as unknown as GameEvent);
+        expect(u().shields).toBe(1);
+        s = reduce(s, { seq: '3', t: 'EXPERIENCE_GAIN', card: 'U', count: null } as unknown as GameEvent);
+        expect(u().experience).toBe(0);
+        s = reduce(s, { seq: '4', t: 'STATUS_TOKEN', card: 'U', token: 'advantage', count: 'NaN' } as unknown as GameEvent);
+        expect(u().statusTokens).toEqual({});
+        // `constructor`/`toString` are inherited on a plain object: reading them as a count
+        // used to turn the sum into NaN and drop the token.
+        s = reduce(s, { seq: '5', t: 'STATUS_TOKEN', card: 'U', token: 'constructor', count: 2 });
+        s = reduce(s, { seq: '6', t: 'STATUS_TOKEN', card: 'U', token: '__proto__', count: 1 });
+        s = reduce(s, { seq: '7', t: 'STATUS_TOKEN', card: 'U', token: 'toString', count: -1 });
+        expect(Object.keys(u().statusTokens).sort()).toEqual(['__proto__', 'constructor']);
+        expect(u().statusTokens.constructor).toBe(2);
+        expect(Object.getOwnPropertyDescriptor(u().statusTokens, '__proto__')?.value).toBe(1);
+        expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+        expect(Object.getPrototypeOf(u().statusTokens)).toBe(Object.prototype);
+        // A non-string token name is not a token.
+        s = reduce(s, { seq: '8', t: 'STATUS_TOKEN', card: 'U', token: 7, count: 1 } as unknown as GameEvent);
+        expect(Object.keys(u().statusTokens)).toHaveLength(2);
     });
 });
 
@@ -571,9 +597,26 @@ describe('a keyframe off an untrusted file is coerced to the PlayerState shape',
         expect(p1(s).cards).toEqual([{ id: 'SOR#001', zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [] }]);
     });
 
-    it('caps every keyframe list, so one line cannot make every frame clone 50k strings', () => {
+    it('carries baseUpgrades, baseCaptured and baseDefeated only when well-typed', () => {
+        const snap = (over: Record<string, unknown>) => p1(fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf(over) }] as unknown as GameEvent[]));
+        expect(snap({ baseUpgrades: ['HMW#147', 7], baseCaptured: ['LAW#253:3'], baseDefeated: true })).toMatchObject({ baseUpgrades: ['HMW#147', '7'], baseCaptured: ['LAW#253:3'], baseDefeated: true });
+        const bad = snap({ baseUpgrades: 'HMW#147', baseCaptured: { 0: 'x' }, baseDefeated: 'yes' });
+        expect(bad.baseUpgrades).toBeUndefined();
+        expect(bad.baseCaptured).toBeUndefined();
+        expect(bad.baseDefeated).toBeUndefined();
+    });
+
+    it('ignores a keyframe whose lists no real game can reach (§13: a damaged checkpoint)', () => {
         const big = Array.from({ length: 5000 }, (_, i) => `X#${i}`);
-        const ups = Array.from({ length: 5000 }, (_, i) => `U#${i}`);
+        for (const field of ['hand', 'discard', 'baseUpgrades', 'baseCaptured', 'resources']) {
+            const s = fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ handSize: 7, [field]: big }) }] as unknown as GameEvent[]);
+            expect(p1(s).handSize, field).toBe(0);
+        }
+    });
+
+    it('caps every keyframe list, so one line cannot make every frame clone 1000 strings', () => {
+        const big = Array.from({ length: 900 }, (_, i) => `X#${i}`);
+        const ups = Array.from({ length: 900 }, (_, i) => `U#${i}`);
         const s = fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ hand: big, discard: big, cards: big.map((id) => ({ id, zone: 'ground', upgrades: ups })) }) }] as unknown as GameEvent[]);
         expect(p1(s).hand.length).toBe(200);
         expect(p1(s).discard.length).toBe(200);
@@ -844,5 +887,310 @@ describe('a keyframe cannot smuggle a bad shape into the new §11 fields', () =>
         // `active` is indexed as players[active] by a reader: never written from a non-seat.
         expect(fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: { ...kf({}), active: '__proto__' } }] as unknown as GameEvent[]).active).toBeUndefined();
         expect(fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: { ...kf({}), active: 2 } }] as unknown as GameEvent[]).active).toBe(2);
+    });
+});
+
+describe('Homeworlds review gaps: arena moves, base releases, leaders coming home', () => {
+    const mv = (seq: string, card: string, from: string, to: string, extra: object = {}) =>
+        ({ seq, t: 'MOVE', card, from, to, p: 1, ...extra }) as GameEvent;
+
+    // Value: protects=an ejected pilot stops being its vehicle's upgrade; fails_when=fold drops the detach on a unit arriving in an arena; why_new=no vector moves a pilot space->ground; seam=none; no_claim=keyframe gating
+    it('a pilot ejected space -> ground is a ground unit and no longer on its vehicle', () => {
+        const s = fold([
+            mv('1', 'V', 'hand', 'space', { kind: 'unit' }),
+            mv('2', 'P', 'hand', 'space', { kind: 'upgrade', attachedTo: 'V' }),
+            mv('3', 'P', 'space', 'ground', { kind: 'unit' }),
+        ]);
+        expect(p1(s).cards.find((c) => c.id === 'V')!.upgrades).toEqual([]);
+        expect(p1(s).cards.find((c) => c.id === 'P')?.zone).toBe('ground');
+    });
+
+    // Value: protects=a unit attached as a pilot leaves cards[]; fails_when=removeFromArenas on an attaching MOVE is dropped; why_new=the same-arena host test never starts from a standing unit; seam=none; no_claim=render
+    it('a unit standing in an arena that is attached as a pilot stops being an arena card', () => {
+        const s = fold([
+            mv('1', 'HOST', 'hand', 'space', { kind: 'unit' }),
+            mv('2', 'X', 'hand', 'ground', { kind: 'unit' }),
+            mv('3', 'X', 'ground', 'space', { kind: 'upgrade', attachedTo: 'HOST' }),
+        ]);
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['HOST']);
+        expect(p1(s).cards[0].upgrades).toEqual(['X']);
+    });
+
+    // Value: protects=a crafted file of unique arena MOVEs/PLAYs cannot fold in O(n^2); fails_when=either MAX_ZONE_LIST arena guard is removed; why_new=only hand/discard/keyframe caps were tested; seam=none; no_claim=wall-clock timing
+    it('caps the arena on both the MOVE and the PLAY path', () => {
+        const moves = Array.from({ length: 3000 }, (_, i) => mv(`R1.A.${i}`, `X#${i}`, 'hand', 'ground'));
+        expect(p1(fold(moves)).cards.length).toBe(1000);
+        const plays = Array.from({ length: 3000 }, (_, i) => ({ seq: `R1.A.${i}`, t: 'PLAY', p: 1, card: `Y#${i}`, zone: 'ground' }) as GameEvent);
+        expect(p1(fold(plays)).cards.length).toBe(1000);
+    });
+
+    // Value: protects=a leader MOVE arena->base undeploys it (the side-aware names rely on it); fails_when=the leader's MOVE home stops clearing deployed; why_new=no vector has a leader come home; seam=none; no_claim=render's own side tracking
+    it('a deployed leader coming home is undeployed and off the arena', () => {
+        const s = fold([
+            { seq: '1', t: 'DEPLOY_LEADER', p: 1, card: 'HMW#004', zone: 'space' } as GameEvent,
+            mv('2', 'HMW#004', 'space', 'base', { kind: 'unit' }),
+        ]);
+        expect(p1(s).leader!.deployed).toBe(false);
+        expect(p1(s).cards.find((c) => c.id === 'HMW#004')).toBeUndefined();
+    });
+
+    // Value: protects=a DEFEAT alone takes a Fortify upgrade off its base and a captive off a base; fails_when=detachFromBases or the baseCaptured detach in DEFEAT is dropped; why_new=the vectors always pair DEFEAT with a MOVE that already detached; seam=none; no_claim=none beyond protects
+    it('a DEFEAT with no MOVE releases a Fortify upgrade and a base captive', () => {
+        const s = fold([
+            mv('1', 'HMW#147', 'hand', 'base', { kind: 'upgrade', attachedTo: 'base@1' }),
+            { seq: '2', t: 'CAPTURE', p: 1, card: 'LAW#253:3', by: 'base@1' } as GameEvent,
+            { seq: '3', t: 'DEFEAT', card: 'HMW#147', reason: 'ability' } as GameEvent,
+            { seq: '4', t: 'DEFEAT', card: 'LAW#253:3', reason: 'ability' } as GameEvent,
+        ]);
+        expect(p1(s).baseUpgrades).toEqual([]);
+        expect(p1(s).baseCaptured).toEqual([]);
+    });
+});
+
+describe('pass-2 review gaps: mirror leaders, keyframe snaps of leader and base state', () => {
+    // Value: protects=a mirror match's leaders move independently in the fold; fails_when=leader lookup matches by baseId instead of the exact id; why_new=the mirror resolver test builds its state by hand; seam=none; no_claim=render's story
+    it('deploying and bringing home one mirror leader leaves the other seat alone', () => {
+        const s = fold([
+            { seq: '1', t: 'DEPLOY_LEADER', p: 1, card: 'HMW#004', zone: 'space' },
+            { seq: '2', t: 'DEPLOY_LEADER', p: 2, card: 'HMW#004:2', zone: 'space' },
+            { seq: '3', t: 'MOVE', card: 'HMW#004', from: 'space', to: 'base', p: 1, kind: 'unit' },
+            { seq: '4', t: 'LEADER_FLIP', p: 2, card: 'HMW#004:2', onStartingSide: true },
+        ] as GameEvent[]);
+        expect(p1(s).leader!.deployed).toBe(false);
+        expect(s.players[2]!.leader!.deployed).toBe(true);
+        expect(p1(s).leader!.onStartingSide).toBeUndefined();
+    });
+
+    // Value: protects=a keyframe keeps each mirror leader's own id and coerces deployed to a boolean; fails_when=normalizeLeader strips the copy suffix or keeps a non-boolean deployed; why_new=the exact-id resolver depends on both; seam=none; no_claim=none beyond protects
+    it('snaps mirror leader ids verbatim and deployed as a boolean', () => {
+        const leader = (id: string, deployed: unknown) => ({ id, deployed, exhausted: false, epicActionUsed: false });
+        const ks = (p2: object) => fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: {
+            round: 1, phase: 'action', initiative: 1,
+            players: { 1: { seat: 1, hand: [], discard: [], cards: [], leader: leader('TWI#017', true) }, 2: { seat: 2, hand: [], discard: [], cards: [], ...p2 } },
+        } }] as unknown as GameEvent[]);
+        const s = ks({ leader: leader('TWI#017:2', 'yes') });
+        expect(p1(s).leader).toMatchObject({ id: 'TWI#017', deployed: true });
+        expect(s.players[2]!.leader).toMatchObject({ id: 'TWI#017:2', deployed: false });
+    });
+
+    // Value: protects=a pilot file's Fortify upgrades survive a keyframe that does not state baseUpgrades; fails_when=snapToKeyframe clears an unstated baseUpgrades; why_new=every Fortify vector also carries keyframe baseUpgrades; seam=none; no_claim=the integrity gate (it skips unstated fields)
+    it('keeps fold-tracked base holdings across a keyframe that does not state them', () => {
+        const kf = { round: 2, phase: 'action', initiative: 1, players: {
+            1: { seat: 1, hand: [], discard: [], cards: [] }, 2: { seat: 2, hand: [], discard: [], cards: [] } } };
+        const s = fold([
+            { seq: '1', t: 'MOVE', card: 'HMW#147', from: 'hand', to: 'base', p: 1, kind: 'upgrade' },
+            { seq: '2', t: 'CAPTURE', p: 1, card: 'LAW#253:3', by: 'base@1' },
+            { seq: 'R2.start', t: 'ROUND_START', round: 2, keyframe: kf },
+        ] as unknown as GameEvent[]);
+        expect(p1(s).baseUpgrades).toEqual(['HMW#147']);
+        expect(p1(s).baseCaptured).toEqual(['LAW#253:3']);
+        // A keyframe that does state them wins.
+        const stated = fold([
+            { seq: '1', t: 'MOVE', card: 'HMW#147', from: 'hand', to: 'base', p: 1, kind: 'upgrade' },
+            { seq: 'R2.start', t: 'ROUND_START', round: 2, keyframe: { ...kf, players: { ...kf.players, 1: { ...kf.players[1], baseUpgrades: [] } } } },
+        ] as unknown as GameEvent[]);
+        expect(p1(stated).baseUpgrades).toEqual([]);
+    });
+});
+
+describe('pass-3 review gaps: carried base holdings, stateAt, a defeated base', () => {
+    const kf = (round: number, p1: object = {}) => ({ round, phase: 'action', initiative: 1, players: {
+        1: { seat: 1, hand: [], discard: [], cards: [], ...p1 }, 2: { seat: 2, hand: [], discard: [], cards: [] } } });
+    const pilotStream = [
+        { seq: 'R1.A.1', t: 'MOVE', card: 'HMW#147', from: 'hand', to: 'base', p: 1, kind: 'upgrade' },
+        { seq: 'R1.A.2', t: 'CAPTURE', p: 1, card: 'LAW#253:3', by: 'base@1' },
+        { seq: 'R2.start', t: 'ROUND_START', round: 2, keyframe: kf(2) },
+        { seq: 'R2.A.1', t: 'MOVE', card: 'HMW#147', from: 'base', to: 'discard', p: 1 },
+        { seq: 'R2.A.2', t: 'MOVE', card: 'LAW#253:3', from: 'capture', to: 'ground', p: 2, kind: 'unit' },
+        { seq: 'R2.A.3', t: 'RESCUE', p: 2, card: 'LAW#253:3' },
+    ] as unknown as GameEvent[];
+
+    // Value: protects=stateAt reaches the same board as fold/foldFrames on a file whose keyframes omit base holdings; fails_when=stateAt restarts from a keyframe that does not state them; why_new=the carry-over made the two entry points disagree; seam=none; no_claim=performance of the restart
+    it('stateAt agrees with foldFrames at every record of a pilot-shaped stream', () => {
+        const frames = foldFrames(pilotStream);
+        pilotStream.forEach((e, i) => expect(stateAt(pilotStream, e.seq), e.seq).toEqual(frames[i]));
+    });
+
+    // Value: protects=carried holdings still leave on a MOVE out of base / out of capture, and earlier frames keep them; fails_when=the carried list aliases the prior frame or a release stops clearing it; why_new=the carry test ended at the keyframe; seam=none; no_claim=keyframe gating
+    it('releases carried holdings without touching earlier frames', () => {
+        const frames = foldFrames(pilotStream);
+        expect(frames[2].players[1]!.baseUpgrades).toEqual(['HMW#147']);
+        expect(frames[2].players[1]!.baseCaptured).toEqual(['LAW#253:3']);
+        expect(frames[5].players[1]!.baseUpgrades).toEqual([]);
+        expect(frames[5].players[1]!.baseCaptured).toEqual([]);
+        expect(frames[5].players[2]!.cards.map((c) => c.id)).toContain('LAW#253:3');
+    });
+
+    // Value: protects=a base defeated by its DEFEAT record stays defeated across a keyframe that does not restate it; fails_when=snapToKeyframe drops a prior baseDefeated; why_new=only keyframes that state it were tested; seam=none; no_claim=the integrity gate's own comparison
+    it('keeps a base defeated across a keyframe that does not restate it', () => {
+        const s = fold([
+            { seq: 'R1.A.1', t: 'DEFEAT', card: 'base@2', reason: 'ability' },
+            { seq: 'R1.end', t: 'ROUND_END', round: 1, keyframe: kf(1) },
+        ] as unknown as GameEvent[]);
+        expect(s.players[2]!.baseDefeated).toBe(true);
+    });
+});
+
+describe('audit gaps: what attaches to a base, and to which one', () => {
+    // Value: protects=a PLAY_UPGRADE naming base@N puts a Fortify upgrade on that seat's base; fails_when=the base branch reverts to attachTo(), which finds no card for base@N; why_new=every Fortify fixture pairs the PLAY with a MOVE that already attached; seam=none; no_claim=keyframe snaps
+    it('a PLAY_UPGRADE onto base@N with no MOVE beside it attaches to that base', () => {
+        const s = fold([{ seq: 'R1.A.1', t: 'PLAY_UPGRADE', p: 1, card: 'HMW#147', zone: 'base', target: 'base@1', cost: 2 } as GameEvent]);
+        expect(p1(s).baseUpgrades).toEqual(['HMW#147']);
+        expect(s.players[2]?.baseUpgrades).toBeUndefined();
+        expect(p1(s).cards).toEqual([]);
+    });
+
+    // Value: protects=a MOVE's attachedTo base@N, not its p, picks the base; and a token is never a base upgrade; fails_when=seat falls back to e.p first, or the isTokenId guard is dropped; why_new=fixtures only attach to the mover's own base; seam=none; no_claim=credit/Force counting
+    it('attaches to the base attachedTo names, and never attaches a token', () => {
+        const s = fold([
+            { seq: '1', t: 'MOVE', card: 'HMW#147', from: 'hand', to: 'base', p: 1, kind: 'upgrade', attachedTo: 'base@2' },
+            { seq: '2', t: 'MOVE', card: 'TOKEN:credit#1', from: 'outsideTheGame', to: 'base', p: 1, kind: 'upgrade', attachedTo: 'base@1' },
+        ] as GameEvent[]);
+        expect(s.players[2]!.baseUpgrades).toEqual(['HMW#147']);
+        expect(p1(s).baseUpgrades ?? []).toEqual([]);
+    });
+});
+
+describe('pass-4 review gaps: hostile keyframes, unit captives, stateAt parity', () => {
+    // Value: protects=a keyframe with a non-array cards/upgrades list cannot throw out of normalizeEvents and blank the viewer; fails_when=repairUpgradePlays iterates raw keyframe lists without an Array.isArray guard; why_new=render() was hardened against `upgrades: 5`, this sibling reader was not; seam=none; no_claim=what the fold does with the bad keyframe
+    it('repairUpgradePlays skips keyframe lists that are not arrays', () => {
+        const kf = { players: { 1: { cards: [{ id: 'A', upgrades: 5 }, null, { id: 7, upgrades: ['U'] }], hand: [], discard: [] }, 2: { cards: 5, hand: [], discard: [] } } };
+        const ev = [{ seq: 'R1', t: 'ROUND_START', round: 1, keyframe: kf }, { seq: 'R1.A.1', t: 'PASS', p: 1 }] as unknown as GameEvent[];
+        expect(() => repairUpgradePlays(ev)).not.toThrow();
+        expect(() => normalizeEvents(ev)).not.toThrow();
+    });
+
+    // Value: protects=a unit captor holds its captive once and the captive leaves every arena; fails_when=detach() or the CAPTURE captor lookup regresses; why_new=vectors only check final boards, where nothing is held; seam=none; no_claim=base captors (tested above)
+    it('a unit captor holds its captive', () => {
+        const s = fold([
+            { seq: '1', t: 'MOVE', card: 'CAP', from: 'hand', to: 'ground', p: 1, kind: 'unit' },
+            { seq: '2', t: 'MOVE', card: 'U', from: 'hand', to: 'ground', p: 2, kind: 'unit' },
+            { seq: '3', t: 'MOVE', card: 'U', from: 'ground', to: 'capture', p: 2, kind: 'unit' },
+            { seq: '4', t: 'CAPTURE', p: 1, card: 'U', by: 'CAP' },
+        ] as unknown as GameEvent[]);
+        expect(p1(s).cards[0].captured).toEqual(['U']);
+        expect(s.players[2]!.cards).toEqual([]);
+    });
+
+    // Value: protects=a captive stated on a keyframe captor is released by its MOVE capture->arena; fails_when=snapToKeyframe drops card.captured or the release stops detaching it; why_new=no test snaps a keyframe with a unit holding a captive; seam=none; no_claim=stateAt (covered by the vector parity test)
+    it('a captive stated on a keyframe captor is released by its MOVE', () => {
+        const card = (id: string, extra = {}) => ({ id, zone: 'ground', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [], ...extra });
+        const kfr = { round: 2, phase: 'action', initiative: 1, players: { 1: { seat: 1, hand: [], discard: [], cards: [card('CAP', { captured: ['U'] })] }, 2: { seat: 2, hand: [], discard: [], cards: [] } } };
+        const s = fold([
+            { seq: 'R2.start', t: 'ROUND_START', round: 2, keyframe: kfr },
+            { seq: 'R2.A.1', t: 'MOVE', card: 'U', from: 'capture', to: 'ground', p: 2, kind: 'unit' },
+        ] as unknown as GameEvent[]);
+        expect(p1(s).cards[0].captured).toEqual([]);
+        expect(s.players[2]!.cards.map((c) => c.id)).toEqual(['U']);
+    });
+
+    // Value: protects=stateAt(seq) is the board foldFrames shows at that seq's first frame, on every vector (pilots, leaders, captives, Fortify); fails_when=the stateAt restart rule picks a keyframe that loses carried state; why_new=parity was only pinned on one hand-built pilot stream; seam=none; no_claim=files unlike any vector
+    const vdir = path.join(__dirname, 'fixtures/vectors');
+    const vectors = readdirSync(vdir).filter((f) => f.endsWith('.swupgn'));
+    it.each(vectors)('stateAt agrees with foldFrames at every first-seen seq: %s', (file) => {
+        const ev = normalizeEvents(parse(readFileSync(path.join(vdir, file), 'utf8')).events);
+        const frames = foldFrames(ev);
+        const seen = new Set<string>();
+        ev.forEach((e, i) => {
+            if (seen.has(e.seq)) return;
+            seen.add(e.seq);
+            expect(stateAt(ev, e.seq), e.seq).toEqual(frames[i]);
+        });
+    });
+});
+
+describe('stateAt keeps a base defeated before a keyframe', () => {
+    const seat = (n: number, extra = {}) => ({ seat: n, hand: [], discard: [], cards: [], baseUpgrades: [], baseCaptured: [], ...extra });
+    const stream = (p2: object) => [
+        { seq: 'R1.A.1', t: 'DEFEAT', card: 'base@2', reason: 'ability' },
+        { seq: 'R1.end', t: 'ROUND_END', round: 1, keyframe: { round: 1, phase: 'action', initiative: 1, players: { 1: seat(1), 2: p2 } } },
+        { seq: 'R2.A.1', t: 'PASS', p: 1 },
+    ] as unknown as GameEvent[];
+
+    // Value: protects=stateAt agrees with foldFrames on baseDefeated when a holdings-stating keyframe omits an earlier defeat; fails_when=the restart rule ignores a base DEFEAT before the keyframe; why_new=QA probes 002/003 reproduced stateAt returning no defeat; seam=none; no_claim=keyframes that state baseDefeated:false (the format has no such value)
+    it('folds from further back when the keyframe does not restate the defeat', () => {
+        const ev = stream(seat(2));
+        const frames = foldFrames(ev);
+        ev.forEach((e, i) => expect(stateAt(ev, e.seq), e.seq).toEqual(frames[i]));
+        expect(stateAt(ev, 'R2.A.1').players[2]!.baseDefeated).toBe(true);
+    });
+
+    // Value: protects=a defeat stated only by an earlier keyframe (no DEFEAT record), and a defeat restated then omitted, survive stateAt as in foldFrames; fails_when=firstDefeat counts only DEFEAT records; why_new=cycle-2 review reproduced the keyframe-only case; seam=none; no_claim=none beyond protects
+    it('keeps a defeat a keyframe stated, across a later keyframe that omits it', () => {
+        const kf = (round: number, p2: object) => ({ round, phase: 'action', initiative: 1, players: { 1: seat(1), 2: p2 } });
+        const keyframeOnly = [
+            { seq: 'R1.end', t: 'ROUND_END', round: 1, keyframe: kf(1, seat(2, { baseDefeated: true })) },
+            { seq: 'R2.end', t: 'ROUND_END', round: 2, keyframe: kf(2, seat(2)) },
+            { seq: 'R3.A.1', t: 'PASS', p: 1 },
+        ] as unknown as GameEvent[];
+        const chained = [
+            { seq: 'R1.A.1', t: 'DEFEAT', card: 'base@2', reason: 'ability' },
+            { seq: 'R1.end', t: 'ROUND_END', round: 1, keyframe: kf(1, seat(2, { baseDefeated: true })) },
+            { seq: 'R2.end', t: 'ROUND_END', round: 2, keyframe: kf(2, seat(2)) },
+            { seq: 'R3.A.1', t: 'PASS', p: 1 },
+        ] as unknown as GameEvent[];
+        for (const ev of [keyframeOnly, chained]) {
+            const frames = foldFrames(ev);
+            ev.forEach((e, i) => expect(stateAt(ev, e.seq), e.seq).toEqual(frames[i]));
+            expect(stateAt(ev, 'R3.A.1').players[2]!.baseDefeated).toBe(true);
+        }
+    });
+
+    it('still restarts from a keyframe that restates it', () => {
+        const ev = stream(seat(2, { baseDefeated: true }));
+        expect(stateAt(ev, 'R2.A.1')).toEqual(foldFrames(ev)[2]);
+    });
+});
+
+describe('isCompleteKeyframe reads a null optional list as absent', () => {
+    // Value: protects=a keyframe whose writer emits `resources: null` (or a null base list) is still snapped to, while an oversized list still marks it damaged; fails_when=the optional-list filter treats null as a list again; why_new=the MAX_ZONE_LIST guard added this path untested; seam=none; no_claim=a writer that actually emits null
+    it('accepts null optional lists, and still refuses an oversized one', () => {
+        const seat = (extra = {}) => ({ cards: [], hand: [], discard: [], ...extra });
+        expect(isCompleteKeyframe({ players: { 1: seat({ resources: null, baseUpgrades: null, baseCaptured: null }), 2: seat() } })).toBe(true);
+        expect(isCompleteKeyframe({ players: { 1: seat({ resources: new Array(1001).fill('X') }), 2: seat() } })).toBe(false);
+    });
+});
+
+describe('leaders: flips, mirror copies and pilots (review cycle-2 cells)', () => {
+    const card = (id: string, extra = {}) => ({ id, zone: 'space', damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [], ...extra });
+    const seat = (n: number, extra = {}) => ({ seat: n, hand: [], discard: [], cards: [], ...extra });
+    const start = (p1: object, p2: object = seat(2)) => ({ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: { round: 1, phase: 'action', initiative: 1, players: { 1: p1, 2: p2 } } });
+
+    // Value: protects=a flip changes only onStartingSide on a keyframe-named leader, both ways, and a lone flip seeds the leader; fails_when=LEADER_FLIP replaces or resets the leader entry; why_new=no test flipped a leader the keyframe named; seam=none; no_claim=render()'s side tracking
+    it('flips a keyframe-named leader both ways, keeping its other state, and seeds an unnamed one', () => {
+        const leader = { id: 'TWI#017', deployed: false, exhausted: true, epicActionUsed: true };
+        const back = fold([start(seat(1, { leader })), { seq: 'R1.A.1', t: 'LEADER_FLIP', p: 1, card: 'TWI#017', onStartingSide: false }] as unknown as GameEvent[]);
+        expect(p1(back).leader).toEqual({ ...leader, onStartingSide: false });
+        const front = fold([start(seat(1, { leader })), { seq: 'R1.A.1', t: 'LEADER_FLIP', p: 1, card: 'TWI#017', onStartingSide: false }, { seq: 'R1.A.2', t: 'LEADER_FLIP', p: 1, card: 'TWI#017', onStartingSide: true }] as unknown as GameEvent[]);
+        expect(p1(front).leader).toEqual({ ...leader, onStartingSide: true });
+        const seeded = fold([{ seq: 'R1.A.1', t: 'LEADER_FLIP', p: 1, card: 'TWI#017', onStartingSide: true }] as unknown as GameEvent[]);
+        expect(p1(seeded).leader).toMatchObject({ id: 'TWI#017', onStartingSide: true });
+    });
+
+    // Value: protects=in a mirror match only the seat owning SET#NUM:2 flips; fails_when=the flip owner is found by base id; why_new=no flip test used a copy id; seam=none; no_claim=render()'s collapsed mirror story (upstream)
+    it('flips only the mirror copy that the record names', () => {
+        const l = (id: string) => ({ id, deployed: false, exhausted: false, epicActionUsed: false });
+        const s = fold([start(seat(1, { leader: l('TWI#017') }), seat(2, { leader: l('TWI#017:2') })), { seq: 'R1.A.1', t: 'LEADER_FLIP', p: 2, card: 'TWI#017:2', onStartingSide: false }] as unknown as GameEvent[]);
+        expect(s.players[2]!.leader?.onStartingSide).toBe(false);
+        expect(p1(s).leader?.onStartingSide).toBeUndefined();
+    });
+
+    // Value: protects=a pilot leader that comes home leaves its host and is undeployed; fails_when=the MOVE arena->base stops detaching or undeploying a leader; why_new=only unit leaders were sent home; seam=none; no_claim=the deploy record's own shape
+    it('a pilot leader coming home leaves its vehicle and is no longer deployed', () => {
+        const s = fold([
+            start(seat(1, { cards: [card('V')], leader: { id: 'JTL#001', deployed: false, exhausted: false, epicActionUsed: false } })),
+            { seq: 'R1.A.1', t: 'DEPLOY_LEADER', p: 1, card: 'JTL#001', zone: 'space', kind: 'upgrade', target: 'V' },
+            { seq: 'R1.A.2', t: 'MOVE', card: 'JTL#001', from: 'space', to: 'base', p: 1, kind: 'unit' },
+        ] as unknown as GameEvent[]);
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['V']);
+        expect(p1(s).cards[0].upgrades).toEqual([]);
+        expect(p1(s).leader?.deployed).toBe(false);
+    });
+
+    // Value: protects=a keyframe listing a pilot leader both on its host and as its own card keeps it only on the host, still deployed; fails_when=the snap's attached-card filter skips leaders; why_new=only a non-leader sibling was snapped; seam=none; no_claim=integrity's verdict on such a keyframe
+    it('a keyframe pilot leader listed twice stays only on its host', () => {
+        const s = fold([start(seat(1, { cards: [card('V', { upgrades: ['JTL#001'] }), card('JTL#001')], leader: { id: 'JTL#001', deployed: true, exhausted: false, epicActionUsed: false } }))] as unknown as GameEvent[]);
+        expect(p1(s).cards.map((c) => c.id)).toEqual(['V']);
+        expect(p1(s).leader?.deployed).toBe(true);
     });
 });

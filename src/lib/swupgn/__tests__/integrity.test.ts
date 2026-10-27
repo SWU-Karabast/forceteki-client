@@ -127,6 +127,30 @@ describe('checkKeyframes — the §11 fields added alongside resources/baseEpicA
         const res = checkKeyframes(events);
         expect(res.mismatches).toContainEqual({ seq: 'R1.E.0', path: 'players.1.leader.onStartingSide', expected: true, got: false });
     });
+
+    // Value: protects=§14 gate catching a fold that drops Fortify/Arrest/base-defeat state; fails_when=a base-field diff in diffSeat is removed or inverted; why_new=vectors only assert zero mismatches, never that one is reported; seam=none; no_claim=File Health wording of the mismatch
+    it('flags baseUpgrades/baseCaptured as sets when stated, and baseDefeated with absent read as false', () => {
+        const events: GameEvent[] = [
+            { seq: 'R1.S.0', t: 'ROUND_START', round: 1, keyframe: EMPTY_KF },
+            { seq: 'R1.A.1', t: 'PLAY_UPGRADE', p: 1, card: 'F1', target: 'base@1' },
+            { seq: 'R1.A.2', t: 'PLAY_UPGRADE', p: 1, card: 'F2', target: 'base@1' },
+            { seq: 'R1.A.3', t: 'CAPTURE', p: 1, card: 'C', by: 'base@1' },
+            { seq: 'R1.A.4', t: 'DEFEAT', card: 'base@2', reason: 'ability' },
+        ];
+        const end = (p1: Partial<PlayerState>, p2: Partial<PlayerState> = {}) =>
+            events.concat({ seq: 'R1.E.0', t: 'ROUND_END', round: 1, keyframe: kf(p1, p2) });
+        const baseRows = (evs: GameEvent[]) => checkKeyframes(evs).mismatches.filter((m) => /\.base(Upgrades|Captured|Defeated)$/.test(m.path));
+        // Same members in another order, and the defeat stated: clean.
+        expect(baseRows(end({ baseUpgrades: ['F2', 'F1'], baseCaptured: ['C'] }, { baseDefeated: true }))).toEqual([]);
+        // A writer that never states the two lists is not contradicted by them...
+        expect(baseRows(end({}, { baseDefeated: true }))).toEqual([]);
+        // ...but a keyframe silent on a defeat the fold saw says "not defeated".
+        const rows = baseRows(end({ baseUpgrades: ['F1', 'X'], baseCaptured: [] }));
+        expect(rows).toHaveLength(3);
+        expect(rows).toContainEqual({ seq: 'R1.E.0', path: 'players.1.baseUpgrades', expected: ['F1', 'X'], got: ['F1', 'F2'] });
+        expect(rows).toContainEqual({ seq: 'R1.E.0', path: 'players.1.baseCaptured', expected: [], got: ['C'] });
+        expect(rows).toContainEqual({ seq: 'R1.E.0', path: 'players.2.baseDefeated', expected: false, got: true });
+    });
 });
 
 describe('checkKeyframes on an untyped keyframe', () => {

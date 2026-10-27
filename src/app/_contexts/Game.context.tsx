@@ -25,9 +25,10 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
-import { ReplayContext } from '@/app/_contexts/Replay.context';
+import { ReplayContext } from '@/app/_contexts/ReplayContextCore';
 import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { emitLobby } from '@/app/_utils/gameLogRequest';
 
 interface IGameContextType {
     gameState: any;
@@ -40,7 +41,7 @@ interface IGameContextType {
     sendGameMessage: (args: any[]) => void;
     getOpponent: (player: string) => string;
     connectedPlayer: string;
-    sendLobbyMessage: (args: any[]) => void;
+    sendLobbyMessage: (args: any[], timeoutMs?: number) => void;
     resetStates: () => void;
     getConnectedPlayerPrompt: () => any;
     updateDistributionPrompt: (uuid: string, amount: number) => void;
@@ -486,9 +487,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         socket?.emit('game', ...args);
     };
 
-    const sendLobbyMessage = (args: any[]) => {
-        socket?.emit('lobby', ...args);
-    }
+    // With `timeoutMs`, the trailing ack always answers (see emitLobby).
+    const sendLobbyMessage = (args: any[], timeoutMs?: number) => emitLobby(socket, args, timeoutMs);
 
     const getOpponent = (player: string) => {
         if (gameState) {
@@ -576,8 +576,8 @@ const noopFn = () => {};
 const noopStringFn = () => '';
 const noopBoolFn = () => false;
 
-// Default fallback object for when no GameProvider or ReplayContext is present.
-// Hoisted to module scope so consumers get a stable reference and avoid
+// Inert defaults spread under the ReplayContext fields for the replay viewer's useGame value
+// (useGame throws when neither provider is present). Hoisted to module scope so consumers get a stable reference and avoid
 // unnecessary re-renders.
 const FALLBACK_GAME_CONTEXT: IGameContextType = {
     gameState: null,
@@ -590,7 +590,8 @@ const FALLBACK_GAME_CONTEXT: IGameContextType = {
     sendGameMessage: noopFn,
     connectedPlayer: '',
     getOpponent: noopStringFn,
-    sendLobbyMessage: noopFn,
+    // No socket here: a timed ack is answered with the not-connected error, like a dropped socket.
+    sendLobbyMessage: (args: any[], timeoutMs?: number) => emitLobby(null, args, timeoutMs),
     resetStates: noopFn,
     getConnectedPlayerPrompt: noopFn,
     updateDistributionPrompt: noopFn,
@@ -609,8 +610,8 @@ const FALLBACK_GAME_CONTEXT: IGameContextType = {
 export const useGame = () => {
     const context = useContext(GameContext);
     // Always call useContext for ReplayContext (Rules of Hooks — same order every render).
-    // Static import is safe: Replay.context does not import Game.context, so there is no
-    // module-level cycle.
+    // Imported from ReplayContextCore, not Replay.context, so a live-game page does not
+    // bundle the replay engine; neither module imports Game.context, so there is no cycle.
     const replayContext = useContext(ReplayContext);
 
     // When outside a GameProvider (e.g., /Replay page), pull board state from ReplayContext

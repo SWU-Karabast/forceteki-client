@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Box, Typography, IconButton, Tooltip, Snackbar, CircularProgress, Button, useTheme } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip, Snackbar, Alert, CircularProgress, Button } from '@mui/material';
 import {
     ChevronRight, ChevronLeft, FormatListBulleted, BarChartOutlined, CallSplitOutlined, MenuBookOutlined, StyleOutlined,
     ViewDayOutlined, ChatBubbleOutline, LinkOutlined, FileDownloadOutlined, DescriptionOutlined,
@@ -18,36 +18,42 @@ import DecisionReview from './DecisionReview';
 import TurnDigests from './TurnDigests';
 import DiscussionTab from './DiscussionTab';
 import { formatGameMeta } from '@/app/_utils/replayMoves';
+import type { ParseNotes } from '@/lib/swupgn';
+import { skippedSectionList } from '@/app/_utils/swupgnFileIssues';
 
 type TabKey = 'story' | 'moves' | 'deck' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
-const TABS: { key: TabKey; label: string; Icon: React.ElementType; Body: React.FC }[] = [
-    { key: 'story', label: 'Story', Icon: MenuBookOutlined, Body: StoryTab },
-    { key: 'moves', label: 'Moves', Icon: FormatListBulleted, Body: MovesTab },
-    { key: 'deck', label: 'Deck', Icon: StyleOutlined, Body: DeckTab },
-    { key: 'resourcing', label: 'Resourcing', Icon: BarChartOutlined, Body: ResourcingReport },
-    { key: 'decisions', label: 'Decisions', Icon: CallSplitOutlined, Body: DecisionReview },
-    { key: 'digest', label: 'Digest', Icon: ViewDayOutlined, Body: TurnDigests },
-    { key: 'discussion', label: 'Discussion', Icon: ChatBubbleOutline, Body: DiscussionTab },
+// `short` is the name printed under the icon in the open panel (7 columns of ~40px on a phone);
+// `label` is the full name for the tooltip and screen readers.
+const TABS: { key: TabKey; label: string; short: string; Icon: React.ElementType; Body: React.FC }[] = [
+    { key: 'story', label: 'Story', short: 'Story', Icon: MenuBookOutlined, Body: StoryTab },
+    { key: 'moves', label: 'Moves', short: 'Moves', Icon: FormatListBulleted, Body: MovesTab },
+    { key: 'deck', label: 'Deck', short: 'Deck', Icon: StyleOutlined, Body: DeckTab },
+    { key: 'resourcing', label: 'Resourcing', short: 'Res.', Icon: BarChartOutlined, Body: ResourcingReport },
+    { key: 'decisions', label: 'Decisions', short: 'Picks', Icon: CallSplitOutlined, Body: DecisionReview },
+    { key: 'digest', label: 'Digest', short: 'Digest', Icon: ViewDayOutlined, Body: TurnDigests },
+    { key: 'discussion', label: 'Discussion', short: 'Notes', Icon: ChatBubbleOutline, Body: DiscussionTab },
 ];
 
 const PANEL_BG = 'rgba(8,11,17,0.94)';
 const BORDER = '1px solid rgba(255,255,255,0.1)';
 
-const ReplayPanel: React.FC = () => {
+// The replay page owns `collapsed`, so the board can make room for the open panel.
+interface IReplayPanelProps {
+    collapsed: boolean;
+    setCollapsed: (collapsed: boolean) => void;
+}
+
+const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) => {
     const {
         header, totalFrames, replayId, currentIndex, events, downloadTextLog, fogOfWar, toggleFogOfWar,
-        clip, setClipStart, setClipEnd, clearClip, doc, moves, nameOf,
+        clip, setClipStart, setClipEnd, clearClip, doc, moves, nameAt, frameStates,
     } = useReplay();
     const { downloadWithAnnotations } = useReplayAnnotations();
     const gameMeta = formatGameMeta(header);
-    const theme = useTheme();
-    // Collapsed by default on a phone: the panel is fixed at 88vw, so open-by-default
-    // covers the board completely and leaves the game as a sliver down one edge. Same
-    // breakpoint as the `{ xs, sm }` sx values below, so the two rules cannot split.
-    const [collapsed, setCollapsed] = useState(() =>
-        typeof window !== 'undefined' && window.matchMedia(theme.breakpoints.down('sm').replace(/^@media\s*/, '')).matches);
     const [tab, setTab] = useState<TabKey>('moves');
     const [snack, setSnack] = useState<string | null>(null);
+    // A warning about content left out of a download: longer-lived than a confirmation.
+    const [warning, setWarning] = useState<string | null>(null);
     const [recording, setRecording] = useState(false);
 
     if (totalFrames === 0) return null;
@@ -65,16 +71,28 @@ const ReplayPanel: React.FC = () => {
     const copyClipLink = () => {
         if (!clip) return;
         const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
-        copy(`${base}&from=${clip.start}&to=${clip.end}`,
+        // Each end as its record's `seq`, like shareMoment: indices shift, seqs don't.
+        const ref = (i: number) => encodeURIComponent(String(events[i]?.seq ?? i));
+        copy(`${base}&from=${ref(clip.start)}&to=${ref(clip.end)}`,
             'Clip link copied — send the .swupgn with it, the replay lives in your browser');
+    };
+    // serialize() writes the sections this reader knows; one a newer writer added (and parse()
+    // skipped) is not in the copy with notes. The file the user opened keeps it.
+    const downloadNotes = () => {
+        downloadWithAnnotations();
+        const skipped = (doc as ParseNotes).skippedSections ?? [];
+        if (skipped.length > 0) {
+            const names = skippedSectionList(skipped, false);
+            setWarning(`Saved with your notes. This viewer can't read the ${names} section${skipped.length === 1 ? '' : 's'}, so ${skipped.length === 1 ? 'it was' : 'they were'} left out. The file you opened still has everything.`);
+        }
     };
     const exportWebm = async () => {
         if (recording) return;
         setRecording(true);
         try {
             await downloadClipWebm({
-                doc, events, start: clip?.start ?? 0, end: clip?.end ?? totalFrames - 1,
-                labelForSeq: (seq) => moves.find((m) => m.seq === seq)?.label, nameOf,
+                doc, events, frames: frameStates, start: clip?.start ?? 0, end: clip?.end ?? totalFrames - 1,
+                labelForSeq: (seq) => moves.find((m) => m.seq === seq)?.label, nameAt,
             });
         } catch (e) {
             setSnack(e instanceof Error ? e.message : 'Clip export failed');
@@ -98,7 +116,7 @@ const ReplayPanel: React.FC = () => {
                 alignItems: 'center', py: 1, gap: 0.5,
             }}>
                 <Tooltip title="Open panel" placement="left">
-                    <IconButton size="small" onClick={() => setCollapsed(false)} sx={{ color: 'white' }}><ChevronLeft /></IconButton>
+                    <IconButton size="small" aria-label="Expand panel" onClick={() => setCollapsed(false)} sx={{ color: 'white' }}><ChevronLeft /></IconButton>
                 </Tooltip>
                 {TABS.map(({ key, label, Icon }) => (
                     <Tooltip key={key} title={label} placement="left">
@@ -149,9 +167,9 @@ const ReplayPanel: React.FC = () => {
             {/* Action toolbar (share / download / fog / clip) */}
             <Box sx={{ display: 'flex', alignItems: 'center', px: 1, py: 0.5, borderBottom: BORDER, gap: 0.25, flexWrap: 'wrap' }}>
                 <Tooltip title="Copy link to this moment (send the .swupgn alongside it)"><IconButton size="small" onClick={shareMoment} sx={{ color: 'rgba(255,255,255,0.7)' }}><LinkOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-                <Tooltip title="Download .swupgn (with notes)"><IconButton size="small" onClick={downloadWithAnnotations} sx={{ color: 'rgba(255,255,255,0.7)' }}><FileDownloadOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
+                <Tooltip title="Download .swupgn (with notes)"><IconButton size="small" onClick={downloadNotes} sx={{ color: 'rgba(255,255,255,0.7)' }}><FileDownloadOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
                 <Tooltip title="Download text log"><IconButton size="small" onClick={downloadTextLog} sx={{ color: 'rgba(255,255,255,0.7)' }}><DescriptionOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-                <Tooltip title={fogOfWar ? 'Reveal hidden hands' : 'Hide non-perspective hand'}><IconButton size="small" onClick={toggleFogOfWar} sx={{ color: fogOfWar ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.7)' }}>{fogOfWar ? <VisibilityOffOutlined sx={{ fontSize: 18 }} /> : <VisibilityOutlined sx={{ fontSize: 18 }} />}</IconButton></Tooltip>
+                <Tooltip title={fogOfWar ? 'Reveal hidden hands' : 'Hide non-perspective hand'}><IconButton size="small" onClick={toggleFogOfWar} aria-pressed={fogOfWar} aria-label="Hide non-perspective hand" sx={{ color: fogOfWar ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.7)' }}>{fogOfWar ? <VisibilityOffOutlined sx={{ fontSize: 18 }} /> : <VisibilityOutlined sx={{ fontSize: 18 }} />}</IconButton></Tooltip>
                 <Box sx={{ width: '1px', height: 18, backgroundColor: 'rgba(255,255,255,0.15)', mx: 0.5 }} />
                 <Tooltip title="Set clip start"><IconButton size="small" onClick={setClipStart} sx={{ color: 'rgba(255,255,255,0.7)' }}><FirstPage sx={{ fontSize: 18 }} /></IconButton></Tooltip>
                 <Tooltip title="Set clip end"><IconButton size="small" onClick={setClipEnd} sx={{ color: 'rgba(255,255,255,0.7)' }}><LastPage sx={{ fontSize: 18 }} /></IconButton></Tooltip>
@@ -183,10 +201,13 @@ const ReplayPanel: React.FC = () => {
                 }}
                 sx={{ display: 'flex', px: 0.75, py: 0.5, gap: 0.25, borderBottom: BORDER }}
             >
-                {TABS.map(({ key, label, Icon }) => (
+                {TABS.map(({ key, label, short, Icon }) => (
                     <Tooltip key={key} title={label}>
-                        <IconButton size="small" role="tab" id={`replay-tab-${key}`} data-tab={key} aria-selected={tab === key} aria-controls="replay-tabpanel" tabIndex={tab === key ? 0 : -1} aria-label={`${label} tab`} onClick={() => setTab(key)} sx={{ ...tabBtn(tab === key), flex: 1, borderRadius: '6px' }}>
+                        <IconButton size="small" role="tab" id={`replay-tab-${key}`} data-tab={key} aria-selected={tab === key} aria-controls="replay-tabpanel" tabIndex={tab === key ? 0 : -1} aria-label={`${short === label ? label : `${short}: ${label}`} tab`} onClick={() => setTab(key)} sx={{ ...tabBtn(tab === key), flex: 1, minWidth: 0, borderRadius: '6px', flexDirection: 'column', gap: '1px', py: 0.5, px: 0.25 }}>
                             <Icon sx={{ fontSize: 18 }} />
+                            {/* A tooltip never shows on touch: the open panel prints each tab's name. */}
+                            {/* The accessible name starts with this text, so "click Notes" finds the tab by voice. */}
+                            <Typography component="span" variant="tabLabel" aria-hidden sx={{ color: 'inherit', maxWidth: '100%', overflow: 'hidden', textOverflow: 'clip' }}>{short}</Typography>
                         </IconButton>
                     </Tooltip>
                 ))}
@@ -198,6 +219,10 @@ const ReplayPanel: React.FC = () => {
             </Box>
 
             <Snackbar open={!!snack} autoHideDuration={2200} onClose={() => setSnack(null)} message={snack ?? ''} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
+            <Snackbar open={!!warning} autoHideDuration={6000} onClose={() => setWarning(null)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+                {/* Dark text on a light amber: white on MUI's filled warning orange is about 3:1. */}
+                <Alert severity="warning" variant="filled" onClose={() => setWarning(null)} sx={{ bgcolor: '#ffb74d', color: '#000', '& .MuiAlert-icon, & .MuiAlert-action': { color: '#000' } }}>{warning}</Alert>
+            </Snackbar>
         </Box>
     );
 };

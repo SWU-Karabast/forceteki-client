@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-// The shared loader behind loadCardNameMap/loadCardCostMap — fetched once and module-cached
+// The shared loader behind the card name/cost/stat maps — fetched once and module-cached
 // per URL, resolving to an empty (null-prototype) map on failure so a failed static asset
 // never crashes the viewer. A fresh module import is used per test so the module-level
 // `cache` Map starts empty each time.

@@ -18,11 +18,14 @@ export interface ClipExportOpts {
     /** The REPAIRED stream the viewer scrubs (Replay.context `events`): `start`/`end` index
      *  it, not `doc.events`, which is longer by every inert record the reader dropped. */
     events: GameEvent[];
+    // The viewer's frame table for `events`, when it has one: a second fold would hold a second copy.
+    frames?: ReducedState[];
     start: number;
     end: number;
     // seq -> human move label (from the move list), for the action caption.
     labelForSeq: (seq: string) => string | undefined;
-    nameOf: (id: string) => string;
+    // A card's name as it reads at a frame (a deployed Tarkin is The Death Star, §6.5).
+    nameAt: (id: string, frame: number) => string;
     // Floor for a beat that moves nothing (default 700ms); a beat with transitions holds
     // for its own authored duration instead, so the clip paces like autoplay at 1x.
     msPerFrame?: number;
@@ -58,7 +61,9 @@ function drawFrame(
     ctx.fillText(`${p1}  vs  ${p2}`, W / 2, 60);
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
     ctx.font = '20px sans-serif';
-    ctx.fillText(`${nameOf(header.p1Leader)}   ·   ${nameOf(header.p2Leader)}`, W / 2, 92);
+    // Each seat's own leader id (a mirror match's seat 2 is SET#NUM:2), named by its side up.
+    const leaderOf = (seat: Seat, headerId: string) => nameOf(state.players[seat]?.leader?.id ?? headerId);
+    ctx.fillText(`${leaderOf(1, header.p1Leader)}   ·   ${leaderOf(2, header.p2Leader)}`, W / 2, 92);
     ctx.fillStyle = '#00baff';
     ctx.font = 'bold 22px sans-serif';
     const roundLabel = state.round === 0 ? 'Setup' : `Round ${state.round}`;
@@ -131,7 +136,7 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
     if (typeof window === 'undefined' || typeof window.MediaRecorder === 'undefined') {
         throw new Error('Clip export needs a browser with MediaRecorder support.');
     }
-    const { doc, events, start, end, labelForSeq, nameOf, msPerFrame = 700 } = opts;
+    const { doc, events, start, end, labelForSeq, nameAt, msPerFrame = 700 } = opts;
     const lo = Math.max(0, Math.min(start, end));
     const hi = Math.min(events.length - 1, Math.max(start, end));
     // An empty range (no events, or start/end out of bounds) would record zero frames
@@ -154,7 +159,7 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
 
     // One pass over the whole stream (not just the clip): a beat straddling `hi` needs
     // its full span to classify correctly, even though we only ever draw up to `hi`.
-    const frames = foldFrames(events);
+    const frames = opts.frames ?? foldFrames(events);
     const beats = clipBeats(buildBeats(events), lo, hi);
     recorder.start();
     for (const beat of beats) {
@@ -163,7 +168,7 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
         const caption = labelForSeq(events[beat.anchor].seq) ?? '';
         const transitions = classifyBeat(beat, events, frames[beat.start - 1], frames[beat.end]);
         const holdMs = transitions.length ? beatDurationMs(transitions) : Math.max(beatDurationMs([]), msPerFrame);
-        drawFrame(ctx, state, doc.header, nameOf, caption, frameNo, events.length - 1);
+        drawFrame(ctx, state, doc.header, (id) => nameAt(id, frameNo), caption, frameNo, events.length - 1);
         await sleep(holdMs);
     }
     recorder.stop();

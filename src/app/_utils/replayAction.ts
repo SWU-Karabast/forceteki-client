@@ -47,11 +47,15 @@ export function storyName(id: string, n: NameResolver): string {
 const none: FrameAction = { label: '', highlight: [], kind: 'none' };
 const cost = (e: { cost?: unknown }): string => (typeof e.cost === 'number' ? ` (cost ${e.cost})` : '');
 
-export function frameAction(e: GameEvent | undefined, n: NameResolver): FrameAction {
+/** `n` may be a sided resolver (`sidedResolver`); its `frontNameOf` names a two-sided card's
+ *  printed front, which the deploy and flip captions need whichever side is up. */
+export function frameAction(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }): FrameAction {
     if (!e || typeof e !== 'object') return none;
     const nm = (id: string) => storyName(id, n);
     const list = (ids: unknown) => asIdList(ids).map(nm).join(', ');
     const unit = (id: string): string[] => (isBase(id) ? [] : [id]);
+    // The printed front, whichever side is up (a sided resolver knows; any other is its own name).
+    const front = (id: string) => storyName(id, { nameOf: n.frontNameOf ?? n.nameOf });
     switch (e.t) {
         case 'PLAY':
         case 'PLAY_SMUGGLE':
@@ -64,22 +68,30 @@ export function frameAction(e: GameEvent | undefined, n: NameResolver): FrameAct
             };
         case 'PLAY_EVENT':
             return { label: `${who(e.p)} plays ${nm(e.card)}${cost(e)}`, highlight: [], kind: 'play' };
-        case 'DEPLOY_LEADER':
+        case 'DEPLOY_LEADER': {
+            // A leader whose Leader Unit side is another card says which (§16): "deploys Grand
+            // Moff Tarkin, Tyrant of the Outer Rim as The Death Star, Icon of Tyranny".
+            const back = n.backNameOf?.(e.card);
             return {
-                label: `${who(e.p)} deploys ${nm(e.card)}${e.target ? ` as a pilot on ${nm(e.target)}` : ''}`,
+                label: `${who(e.p)} deploys ${front(e.card)}${back ? ` as ${storyName(e.card, { nameOf: () => back })}` : ''}${e.target ? ` as a pilot on ${nm(e.target)}` : ''}`,
                 highlight: e.target ? [e.card, e.target] : [e.card],
                 kind: 'deploy',
             };
-        case 'ABILITY_ACTIVATE':
+        }
+        case 'ABILITY_ACTIVATE': {
             // An action or Epic Action is the player's own action, and the story names them that
             // way ("Player 1 uses Director Krennic", "... 's Epic Action"). Every other kind is
             // something the game did, so the card is the subject: "Ant Droid uses an ability".
+            // A granted ability names its grantor: the base has no such text of its own.
+            const granted = typeof e.grantedBy === 'string' ? ` (granted by ${nm(e.grantedBy)})` : '';
             return isPlayerAction(e)
-                ? { label: `${who(e.p)} uses ${nm(e.card)}${e.kind === 'epic' || e.epic ? '\'s Epic Action' : ''}`, highlight: [e.card], kind: 'ability' }
-                : { label: `${nm(e.card)} uses an ability`, highlight: [e.card], kind: 'ability' };
+                ? { label: `${who(e.p)} uses ${nm(e.card)}${e.kind === 'epic' || e.epic ? '\'s Epic Action' : ''}${granted}`, highlight: unit(e.card), kind: 'ability' }
+                : { label: `${nm(e.card)} uses an ability${granted}`, highlight: unit(e.card), kind: 'ability' };
+        }
         case 'UNDO':
             // The retracted records are already gone from the stream: this marks WHERE.
-            return { label: `${who(e.by)} takes back a move`, highlight: [], kind: 'other' };
+            // `by` is optional: render() names no one as "A player", and so does the caption.
+            return { label: `${e.by ? who(e.by) : 'A player'} takes back a move`, highlight: [], kind: 'other' };
         case 'TRIGGER':
             return { label: `${nm(e.card)} triggers`, highlight: [e.card], kind: 'ability' };
         case 'ATTACK':
@@ -138,8 +150,16 @@ export function frameAction(e: GameEvent | undefined, n: NameResolver): FrameAct
         // A double-sided leader turning over is a visible beat, not mechanism: its title,
         // aspects and traits all change and no other record implies it (§16 words it exactly
         // this way, and render.ts prints the same line).
-        case 'LEADER_FLIP':
-            return { label: `${who(e.p)} flips ${nm(e.card)}`, highlight: [e.card], kind: 'other' };
+        case 'LEADER_FLIP': {
+            // Named by the face it left (with its copy suffix, as nm() prints it), then the face it
+            // landed on (bare), exactly as render() words it.
+            const back = n.backNameOf?.(e.card);
+            const frontName = (n.frontNameOf ?? n.nameOf)(e.card);
+            const sides = back
+                ? { left: e.onStartingSide ? storyName(e.card, { nameOf: () => back }) : front(e.card), landed: ` to ${e.onStartingSide ? frontName : back}` }
+                : { left: nm(e.card), landed: '' };
+            return { label: `${who(e.p)} flips ${sides.left}${sides.landed}`, highlight: [e.card], kind: 'other' };
+        }
         case 'PASS':
             return { label: `${who(e.p)} passes`, highlight: [], kind: 'other' };
         case 'GAME_END':

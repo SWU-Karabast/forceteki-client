@@ -1,4 +1,4 @@
-import { loadStaticJson, useStaticJson } from '@/app/_utils/staticJson';
+import { useStaticJson } from '@/app/_utils/staticJson';
 import { baseId, tokenArtId } from '@/lib/swupgn';
 
 // public/card-stats.json is a static SET#NUM -> {power,hp,arena,type,aspects,upgradePower,upgradeHp,grit} map generated from
@@ -19,8 +19,6 @@ export interface CardStat {
 
 const CARD_STATS_URL = '/card-stats.json';
 const WARN = 'Failed to load card stat map; board stat badges will be hidden.';
-
-export const loadCardStatMap = (): Promise<Record<string, CardStat>> => loadStaticJson<Record<string, CardStat>>(CARD_STATS_URL, WARN);
 
 /** Hook: SET#NUM -> stats map, empty until the static JSON loads. */
 export const useCardStatMap = (): Record<string, CardStat> => useStaticJson<Record<string, CardStat>>(CARD_STATS_URL, WARN);

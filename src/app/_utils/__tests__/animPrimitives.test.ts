@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { slide, lunge, playFlip, exitFade, shake, tracer, flash, type Stage, type Snap } from '../animPrimitives';
+import { slide, lunge, playFlip, exitFade, shake, tracer, flash, eventStage, isCardArtId, cssUrl, type Stage, type Snap } from '../animPrimitives';
 import { DURATION } from '../replayTiming';
 
 interface Call { el: string; keyframes: Keyframe[]; timing: KeyframeEffectOptions }
@@ -75,5 +75,28 @@ describe('animPrimitives', () => {
         expect(s.mounted).toEqual(['node']);
         expect(s.calls[0].keyframes.map((k) => k.opacity)).toEqual([0, 0.55, 0]);
         expect(s.calls[0].timing.delay).toBe(10 + DURATION.tracer - 70);
+    });
+});
+
+describe('face-down art from an untrusted card id', () => {
+    const probe = 'X),url(//example.invalid/a?#1';
+    it('accepts only real SET#NUM ids, with an optional :N copy suffix', () => {
+        for (const id of ['HMW#003', 'HMW#059:2', 'ASH#190:3', 'SOR#010']) expect(isCardArtId(id)).toBe(true);
+        for (const id of [probe, 'TOKEN:beast#6445363199', '', 'HMW#', '#003', 'hmw#003', 'HMW#003:2:3', 'HMW#003 ', 'HMW#003)', 'HMW#003\n']) {
+            expect(isCardArtId(id)).toBe(false);
+        }
+    });
+    it('quotes the url so a stray ) or quote cannot open a second url()', () => {
+        expect(cssUrl('https://cdn/cards/HMW/en/standard/large/003.webp?v=1')).toBe('url("https://cdn/cards/HMW/en/standard/large/003.webp?v=1")');
+        expect(cssUrl(`https://cdn/cards/${probe}/en`)).toBe('url("https://cdn/cards/X),url(//example.invalid/a?#1/en")');
+        expect(cssUrl('a"b\\c')).toBe('url("a\\"b\\\\c")');
+    });
+    it('eventStage paints the revealed art through the quoted url', () => {
+        const s = fakeStage({ E: true });
+        const nodes: HTMLElement[] = [];
+        const node = s.node;
+        s.node = () => { const n = node(); nodes.push(n); return n; };
+        eventStage(s, { uuid: 'E', from: snap(0, 0), to: null, stage: { x: 0, y: 0 }, faceDown: true, faceUp: 'https://cdn/a.webp' });
+        expect(nodes.map((n) => n.style.backgroundImage)).toContain('url("https://cdn/a.webp")');
     });
 });

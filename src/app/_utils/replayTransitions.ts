@@ -86,9 +86,9 @@ export function classifyBeat(beat: Beat, events: GameEvent[], prev: ReducedState
                     out.push({ kind: 'discard', seat: owner, cards: [e.card] });
                 } else if (isArena(e.from) && isArena(e.to) && e.from !== e.to) {
                     out.push({ kind: 'transfer', card: e.card, from: ARENA[e.from], to: ARENA[e.to] });
-                } else if (isArena(e.from) && e.to === 'capturedZone') {
+                } else if (isArena(e.from) && e.to === 'capture') {
                     out.push({ kind: 'capture', card: e.card, ...(e.attachedTo ? { by: e.attachedTo } : {}) });
-                } else if (e.from === 'capturedZone' && isArena(e.to)) {
+                } else if (e.from === 'capture' && isArena(e.to)) {
                     out.push({ kind: 'release', card: e.card });
                 }
                 // arena -> discard/outsideTheGame rides with its DEFEAT; a token upgrade leaving rides with its badge.
@@ -106,7 +106,7 @@ export function classifyBeat(beat: Beat, events: GameEvent[], prev: ReducedState
                 const base = /^base@(\d)$/.exec(e.tgt);
                 if (base) { out.push({ kind: 'baseHit', seat: Number(base[1]) as Seat, amt: e.amt, hp: e.hp }); break; }
                 // Combat damage is drawn by the lunge; anything else is a bolt from its source.
-                if (e.damageType === 'combat' && (attackers.has(e.src) || attackers.has(e.tgt))) break;
+                if (e.damageType === 'combat' && ((e.src != null && attackers.has(e.src)) || attackers.has(e.tgt))) break;
                 out.push({ kind: 'damage', ...(e.src ? { src: e.src } : {}), tgt: e.tgt, amt: e.amt, hp: e.hp, survived: !defeated.has(e.tgt) });
                 break;
             }

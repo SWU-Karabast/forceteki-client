@@ -63,9 +63,16 @@ export const ZONE_MAP: Record<string, string> = {
     space: 'spaceArena',
 };
 
-/** Parse "SET#NUM[:copy]" into a board setId. */
+/**
+ * Parse "SET#NUM[:copy]" (or a "TOKEN:name#NUM" token id) into a board setId.
+ *
+ * The id comes from an untrusted file, and `set` lands unencoded in S3 art paths that the
+ * board wraps in CSS `url(...)` (last-played cue, top discard, card previews): an id of any
+ * other shape gets an empty set, which no url can be built into.
+ */
 export function parseSetId(id: string): { set: string; number: number } {
     const base = baseId(id); // String()-coerces: a numeric `card` off JSON.parse reached .replace
+    if (!/^(?:[A-Z0-9]+|TOKEN:[a-z0-9-]+)#\d+$/.test(base)) return { set: '', number: NaN };
     const [set, num] = base.split('#');
     return { set, number: Number(num) };
 }
@@ -81,14 +88,19 @@ export function parseSetId(id: string): { set: string; number: number } {
 export function cardFromId(
     id: string, zone: string, controllerId: string, ownerId: string, stat?: CardStat, name?: string,
 ): AdaptedCard {
-    const artId = tokenArtId(id) ?? stat?.id;
+    const tokenArt = tokenArtId(id);
+    const artId = tokenArt ?? stat?.id;
     return {
         uuid: id,
         setId: parseSetId(id),
         zone,
         controllerId,
         ownerId,
-        type: stat?.type ?? 'unit',
+        // A token the card data does not know yet (a newer set than public/card-stats.json)
+        // is still a token: s3CardImageURL picks the `_tokens/` art path off the type. Only a
+        // token UNIT reaches here unknown (token upgrades are counters, see tokenCards), so
+        // it takes the live server's `tokenUnit`.
+        type: stat?.type ?? (tokenArt ? 'tokenUnit' : 'unit'),
         ...(name ? { name } : {}),
         ...(stat?.aspects?.length ? { aspects: stat.aspects } : {}),
         // Tokens have no set number: the S3 pipeline addresses them by numeric engine id
@@ -463,6 +475,17 @@ function adaptPlayer(
     // (spec §11). Same token, drawn on the base card.
     if (ps.baseEpicActionUsed === true) base.epicActionSpent = true;
     if (attack && attack.def === `base@${ps.seat}`) base.isDefender = true;
+    // On the base itself (spec §11): Fortify upgrades and the units it holds captured (Arrest).
+    // LeaderBaseCard draws both as strips beside the base, as the live board does.
+    // (A base's `upgrades` are cards, where a unit's are ids, so they join it at the return.)
+    const baseUpgrades = (ps.baseUpgrades ?? []).slice(0, MAX_PILE).map((id) => cardFromId(id, 'base', playerId, own(id), statOf(id, statMap), nameOf?.(id)));
+    // A base's captives ride the captured pile parented to the base, as the live server sends
+    // them: Board rebuilds every captor's `capturedCards` from that pile by `parentCardId`, so a
+    // list set on the base directly would be thrown away.
+    const baseCaptured = (ps.baseCaptured ?? []).slice(0, MAX_PILE).map((id) => ({
+        ...cardFromId(id, 'capturedZone', playerId, own(id), statOf(id, statMap), nameOf?.(id)),
+        parentCardId: base.uuid,
+    }));
     // Printed HP the card data does not carry comes from the keyframe's `baseMaxHp` (30 is
     // the placeholder until the first keyframe lands, so the damage reads 0 until then).
     if (typeof base.hp !== 'number' && typeof ps.baseMaxHp === 'number') {
@@ -485,7 +508,9 @@ function adaptPlayer(
         user: { username: playerId },
         // Matches the live gameState, where a player carries an array of leaders (forceteki#2390).
         leaders: [leader],
-        base,
+        // Defeated is the file's word, never `baseHp <= 0`: an ability can defeat a base that
+        // still has HP (Grand Moff Tarkin, §10.4).
+        base: { ...base, upgrades: baseUpgrades, ...(ps.baseDefeated === true ? { defeated: true } : {}) },
         hasInitiative: false, // set by adaptState from ReducedState.initiative
         isActionPhaseActivePlayer: active,
         // The live board reads `promptState.<field>` WITHOUT null-guarding promptState
@@ -507,7 +532,7 @@ function adaptPlayer(
             // can withhold it.
             resources: resourceCards(resourcedIds, resourcesTotal, playerId, statMap, nameOf),
             credits: facedownStack(ps.credits, 'credits', playerId),
-            capturedZone: captured,
+            capturedZone: [...captured, ...baseCaptured],
         },
     };
 }

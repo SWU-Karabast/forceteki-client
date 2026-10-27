@@ -27,7 +27,7 @@ const Row: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onC
 
 /** Decision points + key moments, rendered inline as a panel tab body. */
 const DecisionReview: React.FC = () => {
-    const { doc, nameOf, seekToSeq } = useReplay();
+    const { doc, nameAtSeq, seekToSeq } = useReplay();
     const decisions = useMemo(() => decisionPoints(doc), [doc]);
     const bookmarks = useMemo(() => autoBookmarks(doc), [doc]);
 
@@ -48,7 +48,7 @@ const DecisionReview: React.FC = () => {
                             </Typography>
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 {d.prompt && (
-                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block' }}>{nameOf(d.prompt)}</Typography>
+                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block' }}>{nameAtSeq(d.prompt, d.seq)}</Typography>
                                 )}
                                 <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>
                                     {d.offered.map((o, i) => (
@@ -60,7 +60,7 @@ const DecisionReview: React.FC = () => {
                                                 fontWeight: i === d.chose ? 700 : 400,
                                             }}
                                         >
-                                            {nameOf(o)}{i < d.offered.length - 1 ? ' · ' : ''}
+                                            {nameAtSeq(o, d.seq)}{i < d.offered.length - 1 ? ' · ' : ''}
                                         </Box>
                                     ))}
                                 </Typography>
@@ -78,7 +78,7 @@ const DecisionReview: React.FC = () => {
                     {bookmarks.map((b, i) => (
                         <Row key={`${b.seq}-${i}`} onClick={() => seekToSeq(b.seq)}>
                             <Box component="span" sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: BOOKMARK_COLOR[b.kind], mt: 0.6 }} />
-                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>{bookmarkLabel(b, nameOf)}</Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>{bookmarkLabel(b, (id) => nameAtSeq(id, b.seq))}</Typography>
                         </Row>
                     ))}
                 </Box>
