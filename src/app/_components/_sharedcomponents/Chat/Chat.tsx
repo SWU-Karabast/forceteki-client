@@ -33,6 +33,9 @@ const Chat: React.FC<IChatProps> = ({
     handleChatOnChange,
     handleChatSubmit,
     pauseAutoScroll = false,
+    isVisible = true,
+    unreadMessageIndices,
+    onMessagesRead,
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled } = useGame();
     const chatBoxRef = useRef<HTMLDivElement | null>(null);
@@ -238,7 +241,7 @@ const Chat: React.FC<IChatProps> = ({
         const playerColor = getPlayerColor(playerMessage.id, connectedPlayer);
 
         return (
-            <Box key={index} sx={{ ...styles.chatEntryBox, backgroundColor: `color-mix(in srgb, ${playerColor} 13%, transparent)` }}>
+            <Box key={index} data-chat-message-index={index} sx={{ ...styles.chatEntryBox, backgroundColor: `color-mix(in srgb, ${playerColor} 13%, transparent)` }}>
                 <Typography sx={styles.messageText}>
                     <span style={{ 
                         color: playerColor,
@@ -347,6 +350,45 @@ const Chat: React.FC<IChatProps> = ({
             setUnreadStartIndex(null);
         }
     }, [chatHistory.length, unreadStartIndex]);
+
+    useEffect(() => {
+        const chatBox = chatBoxRef.current;
+        if (!chatBox || !isVisible || !onMessagesRead || !unreadMessageIndices?.size) return;
+
+        let observer: IntersectionObserver | undefined;
+        let disposed = false;
+        const observeUnreadMessages = () => {
+            observer?.disconnect();
+            if (document.visibilityState !== 'visible') return;
+
+            const currentObserver = new IntersectionObserver(entries => {
+                if (disposed || observer !== currentObserver || document.visibilityState !== 'visible') return;
+
+                const visibleIndices = entries
+                    .filter(entry => entry.isIntersecting && entry.intersectionRatio >= 0.01
+                        && entry.intersectionRect.width > 0 && entry.intersectionRect.height > 0)
+                    .map(entry => Number((entry.target as HTMLElement).dataset.chatMessageIndex));
+                if (visibleIndices.length > 0) {
+                    onMessagesRead(visibleIndices);
+                }
+            }, { root: chatBox, threshold: 0.01 });
+            observer = currentObserver;
+
+            chatBox.querySelectorAll<HTMLElement>('[data-chat-message-index]').forEach(element => {
+                if (unreadMessageIndices.has(Number(element.dataset.chatMessageIndex))) {
+                    currentObserver.observe(element);
+                }
+            });
+        };
+
+        observeUnreadMessages();
+        document.addEventListener('visibilitychange', observeUnreadMessages);
+        return () => {
+            disposed = true;
+            observer?.disconnect();
+            document.removeEventListener('visibilitychange', observeUnreadMessages);
+        };
+    }, [chatHistory, isVisible, unreadMessageIndices, onMessagesRead]);
     // ------------------------STYLES------------------------//
 
     const styles = {
