@@ -11,7 +11,7 @@ const TokenStack: React.FC<{ cards: ICardData[] }> = ({ cards }) => {
     const top = cards[cards.length - 1];
 
     return (
-        <Box sx={{ position: 'relative', mt: '6%' }}>
+        <Box sx={{ position: 'relative', mt: '8%', mr: '8%' }}>
             {/* Offset card peeking out behind the top card */}
             <Box
                 sx={{
@@ -24,11 +24,11 @@ const TokenStack: React.FC<{ cards: ICardData[] }> = ({ cards }) => {
                     backgroundImage: `url(${s3CardImageURL(top, locale, CardStyle.InPlay)})`,
                     backgroundSize: 'cover',
                     filter: 'brightness(0.5)',
-                    transform: `translate(6%, -6%)${top.exhausted ? ' rotate(4deg)' : ''}`,
+                    transform: `translate(8%, -8%)${top.exhausted ? ' rotate(4deg)' : ''}`,
                 }}
             />
             <Box sx={{ position: 'relative' }}>
-                {/* Keyed by uuid so a new top card (e.g. after the old one peels off) gets a fresh GameCard */}
+                {/* Keyed by uuid so a new top card gets a fresh GameCard */}
                 <GameCard key={top.uuid} card={top} subcards={top.subcards} capturedCards={top.capturedCards} cardStyle={CardStyle.InPlay} />
             </Box>
             <Typography
