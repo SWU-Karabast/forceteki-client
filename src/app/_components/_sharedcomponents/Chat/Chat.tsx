@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
     Box,
     Button,
@@ -36,6 +36,7 @@ const Chat: React.FC<IChatProps> = ({
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled } = useGame();
     const chatBoxRef = useRef<HTMLDivElement | null>(null);
+    const hasScrolledInitiallyRef = useRef(false);
     const lastScrollTopRef = useRef(0);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const [isScrollPaused, setIsScrollPaused] = useState(false);
@@ -335,9 +336,11 @@ const Chat: React.FC<IChatProps> = ({
         ? 0
         : Math.max(0, chatHistory.length - unreadStartIndex);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!isScrollPaused) {
-            scrollToLatest();
+            // Position newly mounted chats before paint, including when the mobile drawer reopens.
+            scrollToLatest(hasScrolledInitiallyRef.current ? 'smooth' : 'instant');
+            hasScrolledInitiallyRef.current = true;
         }
     }, [chatHistory, isScrollPaused]);
 
