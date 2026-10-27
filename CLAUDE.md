@@ -16,13 +16,17 @@ this client talks to over a socket.io websocket plus a REST API. `NEXT_PUBLIC_RO
 npm run dev          # dev server on :3000
 npm run lint         # tsc --noemit && next lint   <- what CI runs; run this before finishing
 npm run lint:fix     # same, with --fix
+npm run test         # vitest (node env): the SWU-PGN reader and replay utils under src/**/__tests__
 npm run build        # next build (does NOT lint: eslint.ignoreDuringBuilds is true in next.config.mjs)
 npm run storybook    # component workbench on :6006
 docker compose up    # Adobe S3Mock on :9090, only needed for local cosmetics upload work
 ```
 
-Node 22.x. There is **no test framework** in this repo — verification is `npm run lint`, `npm run build`,
-and manual play against a local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build only.
+Node 22.x. Unit tests are vitest (`npm run test`, `vitest.config.ts`, node environment, no DOM): they
+cover the vendored SWU-PGN reader (`src/lib/swupgn/__tests__`, golden vectors under `fixtures/vectors`)
+and the replay viewer's pure utils (`src/app/_utils/__tests__`). UI components have no test harness, so
+verification there is `npm run lint`, `npm run build` and manual play against a local backend. CI
+(`.github/workflows/pullrequest.yml`) runs lint and build only, not the tests.
 
 ## Architecture
 
