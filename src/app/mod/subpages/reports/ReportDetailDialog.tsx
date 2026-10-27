@@ -7,6 +7,7 @@ import {
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerApiService } from '@/app/_services/ServerApiService';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate, formatUsernameTransition, getActionLabel } from '@/app/_utils/ModerationUtils';
 import { formatTimeAgo, getGameFormatLabel, getMatchTypeLabel, getOffenseLabel } from '@/app/_utils/playerReportUtils';
 import ReportActionPanel from './ReportActionPanel';
@@ -21,6 +22,7 @@ import { IReportDetailDialogProps } from './reportTypes';
  * Opening an unclaimed ticket claims it for the current moderator.
  */
 const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onClose, onReportChanged, onOpenPlayerProfile }) => {
+    const dateFormat = useDateFormat();
     const [detail, setDetail] = useState<IPlayerReportDetailResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -315,7 +317,7 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
                     </Typography>
                     {report && (
                         <Typography sx={styles.subtitle}>
-                            {formatDate(report.createdAt)} ({formatTimeAgo(report.createdAt)} ago)
+                            {formatDate(report.createdAt, dateFormat)} ({formatTimeAgo(report.createdAt)} ago)
                             {' · '}{getGameFormatLabel(report.gameFormat)}
                             {' · '}{getMatchTypeLabel(report.matchType)}
                             {report.claimedByUsername && report.status === PlayerReportStatus.Open ? ` · handled by ${report.claimedByUsername}` : ''}
@@ -387,7 +389,7 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
                                 <Typography sx={styles.sectionTitle}>Actions in this ticket</Typography>
                                 {detail.ticketActions.map((action) => (
                                     <Typography key={action.id} sx={styles.ticketActionText}>
-                                        • {usernameById(action.playerId)}: {getActionLabel(action)}
+                                        • {usernameById(action.playerId)}: {getActionLabel(action, dateFormat)}
                                         {renameByActionId.has(action.id) ? ` (${formatUsernameTransition(renameByActionId.get(action.id)!, { quote: true })})` : ''}
                                         {' '}by {action.moderatorUsername}
                                         {action.note ? ` – ${action.note}` : ''}

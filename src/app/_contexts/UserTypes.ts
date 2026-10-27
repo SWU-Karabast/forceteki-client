@@ -75,6 +75,7 @@ export interface IGameOptions {
     muteChat?: boolean;
     cardLanguage?: CardImageLocale;
     timerVisibility?: TimerVisibility;
+    dateFormat?: DateFormat;
 
     // Prompt-reduction settings grouped so future automations can live alongside singleTarget.
     autoResolve?: {
@@ -86,6 +87,11 @@ export enum TimerVisibility {
     Standard = 'standard',
     HideTurnTimer = 'hideTurnTimer',
     HideAll = 'hideAll',
+}
+
+export enum DateFormat {
+    MonthFirst = 'monthFirst', // MM/DD/YYYY
+    DayFirst = 'dayFirst', // DD/MM/YYYY
 }
 
 export enum PlayerTimeRemainingStatus {

@@ -7,6 +7,7 @@ import {
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerApiService } from '@/app/_services/ServerApiService';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate } from '@/app/_utils/ModerationUtils';
 import { getOutcomeOption, REPORT_OUTCOME_OPTIONS } from '@/app/_utils/playerReportUtils';
 import { IReportClosePanelProps } from './reportTypes';
@@ -15,6 +16,7 @@ import { IReportClosePanelProps } from './reportTypes';
  * Closing a ticket records how it was resolved. Closed tickets show that outcome and can be reopened.
  */
 const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, onReopened, onError }) => {
+    const dateFormat = useDateFormat();
     const [outcome, setOutcome] = useState<PlayerReportOutcome | ''>('');
     const [closingNote, setClosingNote] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -101,7 +103,7 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
                     {closedOutcome?.label ?? report.outcome}
                 </Typography>
                 <Typography sx={styles.summaryText}>
-                    by {report.closedByUsername}{report.closedAt ? ` on ${formatDate(report.closedAt)}` : ''}
+                    by {report.closedByUsername}{report.closedAt ? ` on ${formatDate(report.closedAt, dateFormat)}` : ''}
                 </Typography>
                 {report.closingNote && <Typography sx={styles.summaryText}>Note: {report.closingNote}</Typography>}
                 <Box sx={styles.footer}>

@@ -6,6 +6,7 @@ import {
     IPlayerReport,
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate } from '@/app/_utils/ModerationUtils';
 import {
     FREQUENT_FALSE_REPORTER_THRESHOLD,
@@ -23,6 +24,7 @@ enum SortOrder {
 const ALL_OFFENSES = 'all';
 
 const ReportList: React.FC<IReportListProps> = ({ status, reports, loading, error, hasMore, onOpenReport, onLoadMore }) => {
+    const dateFormat = useDateFormat();
     const isOpenList = status === PlayerReportStatus.Open;
     const [sortOrder, setSortOrder] = useState<SortOrder>(isOpenList ? SortOrder.OldestFirst : SortOrder.NewestFirst);
     const [offenseFilter, setOffenseFilter] = useState<string>(ALL_OFFENSES);
@@ -179,11 +181,11 @@ const ReportList: React.FC<IReportListProps> = ({ status, reports, loading, erro
                 return (
                     <Box key={report.id} sx={styles.row} onClick={() => onOpenReport(report)}>
                         {isOpenList ? (
-                            <Tooltip title={formatDate(report.createdAt)}>
+                            <Tooltip title={formatDate(report.createdAt, dateFormat)}>
                                 <Typography sx={styles.mutedCell}>{formatTimeAgo(report.createdAt)}</Typography>
                             </Tooltip>
                         ) : (
-                            <Typography sx={styles.mutedCell}>{report.closedAt ? formatDate(report.closedAt) : ''}</Typography>
+                            <Typography sx={styles.mutedCell}>{report.closedAt ? formatDate(report.closedAt, dateFormat) : ''}</Typography>
                         )}
                         <Typography sx={styles.cell}>{getOffenseLabel(report.offense)}</Typography>
                         {renderReporter(report)}

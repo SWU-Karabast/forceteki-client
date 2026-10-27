@@ -7,6 +7,7 @@ import {
     PlayerReportRole,
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import {
     buildUserHistory,
     formatDate,
@@ -16,6 +17,7 @@ import {
     getUsernameChangeLabel,
     getUsernameChangeSourceLabel,
 } from '@/app/_utils/ModerationUtils';
+import { DateFormat } from '@/app/_contexts/UserTypes';
 import { describeModAction, getOffenseLabel, getOutcomeOption } from '@/app/_utils/playerReportUtils';
 import { IReportPlayerHistoryProps } from './reportTypes';
 
@@ -32,8 +34,8 @@ interface IHistoryRow {
     isCurrentTicket: boolean;
 }
 
-const describeActionInDetail = (action: IModActionResponse, statusLabel: string, rename?: IUsernameChangeResponse): string => {
-    const parts = [`${describeModAction(action)}${statusLabel ? ` (${statusLabel})` : ''} by ${action.moderatorUsername} on ${formatDate(action.createdAt)}`];
+const describeActionInDetail = (action: IModActionResponse, statusLabel: string, dateFormat: DateFormat, rename?: IUsernameChangeResponse): string => {
+    const parts = [`${describeModAction(action)}${statusLabel ? ` (${statusLabel})` : ''} by ${action.moderatorUsername} on ${formatDate(action.createdAt, dateFormat)}`];
     if (rename) {
         parts.push(formatUsernameTransition(rename, { quote: true }));
     }
@@ -48,6 +50,7 @@ const describeActionInDetail = (action: IModActionResponse, statusLabel: string,
  * from a ticket are folded into that ticket's row. Hovering a row shows the details.
  */
 const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, currentReportId }) => {
+    const dateFormat = useDateFormat();
     const rows = useMemo<IHistoryRow[]>(() => {
         // getActionStatus only reads the active rename from the player
         const playerForStatus: IPlayerSearchResult = {
@@ -76,13 +79,13 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
                 details.push(`Note: ${action.note}`);
             }
             if (action.startedAt) {
-                details.push(`Started: ${formatDate(action.startedAt)}`);
+                details.push(`Started: ${formatDate(action.startedAt, dateFormat)}`);
             }
             if (action.expiresAt) {
-                details.push(`Expires: ${formatDate(action.expiresAt)}`);
+                details.push(`Expires: ${formatDate(action.expiresAt, dateFormat)}`);
             }
             if (action.cancelledAt) {
-                details.push(`Cancelled by ${action.cancelledByUsername} on ${formatDate(action.cancelledAt)}`);
+                details.push(`Cancelled by ${action.cancelledByUsername} on ${formatDate(action.cancelledAt, dateFormat)}`);
             }
             if (action.relatedReportId) {
                 details.push(action.relatedReportId === currentReportId ? 'Issued from this ticket' : 'Issued from another report ticket');
@@ -91,7 +94,7 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
             return {
                 key: `action-${action.id}`,
                 createdAt: action.createdAt,
-                label: getModActionEntryLabel(entry, playerForStatus),
+                label: getModActionEntryLabel(entry, playerForStatus, dateFormat),
                 status: getActionStatus(action, playerForStatus),
                 details,
                 isCurrentTicket: action.relatedReportId === currentReportId,
@@ -104,7 +107,7 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
             return {
                 key: `username-${change.id}`,
                 createdAt: change.createdAt,
-                label: getUsernameChangeLabel(change),
+                label: getUsernameChangeLabel(change, dateFormat),
                 status: { label: '', color: '#9E9E9E' },
                 details: [getUsernameChangeSourceLabel(change.source), formatUsernameTransition(change)],
                 isCurrentTicket: false,
@@ -129,14 +132,14 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
                 isReported ? `${context.username} was reported for ${getOffenseLabel(entry.offense)}` : `${context.username} reported someone for ${getOffenseLabel(entry.offense)}`,
                 entry.status === PlayerReportStatus.Open ? 'Ticket open' : `Ticket closed: ${outcome?.label ?? entry.outcome ?? 'unknown'}`,
                 ...(actionsFromTicket.length > 0
-                    ? actionsFromTicket.map((action) => describeActionInDetail(action, getActionStatus(action, playerForStatus).label, renameByActionId.get(action.id)))
+                    ? actionsFromTicket.map((action) => describeActionInDetail(action, getActionStatus(action, playerForStatus).label, dateFormat, renameByActionId.get(action.id)))
                     : [`No mod action against ${context.username} in this ticket`]),
             ];
 
             return {
                 key: `report-${entry.role}-${entry.reportId}`,
                 createdAt: entry.createdAt,
-                label: `${formatDate(entry.createdAt)} ${isReported ? 'Reported for' : 'Filed report:'} ${getOffenseLabel(entry.offense)}`,
+                label: `${formatDate(entry.createdAt, dateFormat)} ${isReported ? 'Reported for' : 'Filed report:'} ${getOffenseLabel(entry.offense)}`,
                 status,
                 details,
                 isCurrentTicket: entry.reportId === currentReportId,
@@ -144,7 +147,7 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
         });
 
         return [...actionRows, ...usernameRows, ...reportRows].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    }, [context, currentReportId]);
+    }, [context, currentReportId, dateFormat]);
 
     // ----------------Styles----------------//
     const styles = {

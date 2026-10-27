@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, FormControlLabel, Switch, Tab, Tabs, Typography } from '@mui/material';
 import { IPlayerReportLog } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate } from '@/app/_utils/ModerationUtils';
 import { formatLogTime, getGameFormatLabel, getMatchTypeLabel, LOG_RETENTION_DAYS } from '@/app/_utils/playerReportUtils';
 import { IReportLogViewProps } from './reportTypes';
@@ -16,6 +17,7 @@ enum LogTab {
  * are highlighted; the toggle hides everything else.
  */
 const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog, highlightPlayerId }) => {
+    const dateFormat = useDateFormat();
     const [activeTab, setActiveTab] = useState<LogTab>(LogTab.Chat);
     const [onlySelectedPlayer, setOnlySelectedPlayer] = useState(false);
 
@@ -108,7 +110,7 @@ const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog
             <Box sx={styles.logBox}>
                 {report.logsDeletedAt && (
                     <Typography sx={styles.notice}>
-                        The logs were deleted on {formatDate(report.logsDeletedAt)}, when the {LOG_RETENTION_DAYS}-day retention period after closing the ticket had passed.
+                        The logs were deleted on {formatDate(report.logsDeletedAt, dateFormat)}, when the {LOG_RETENTION_DAYS}-day retention period after closing the ticket had passed.
                     </Typography>
                 )}
                 {log?.truncated && <Typography sx={styles.notice}>Older lines were cut off because the log was too long.</Typography>}
