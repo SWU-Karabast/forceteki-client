@@ -241,7 +241,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundImage: 'url(/BlankIcon.png)',
-            display: card.isBlanked ? 'block' : 'none'
+            display: card.isBlanked ? 'block' : 'none',
+            // It overhangs the card edge: above the Defeated overlay, or it is half dimmed.
+            ...(card.defeated ? { zIndex: 3 } : {}),
         },
         damageCounterContainer: {
             position: 'absolute',
@@ -297,6 +299,37 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 backgroundColor: 'rgba(3, 12, 19, 0.9)',
             },
         },
+        // The dim covers the card; the label has its own band, the top third, so the damage
+        // counter (centered on the card) never sits on it: the final damage is what explains a
+        // base falling to damage.
+        defeatedOverlay: {
+            position: 'absolute',
+            inset: 0,
+            // The card's inner radius: inset 0 is inside its 2px border.
+            borderRadius: 'calc(0.5rem - 2px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            pointerEvents: 'none',
+            zIndex: 2,
+        },
+        defeatedBand: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '33%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+        },
+        defeatedText: {
+            color: 'white',
+            fontWeight: 800,
+            fontSize: 'clamp(10px, 1.2vw, 1.1rem)',
+            whiteSpace: 'nowrap',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+        },
         defendIcon: {
             position: 'absolute',
             backgroundImage:  'url(/defending.svg)',
@@ -325,14 +358,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                  1px  1px 0 #000
             `
         },
-        capturedCardsDivider:{
-            top: '-40%',
+        stripGroupHeading:{
             textAlign: 'center',
             color: 'white',
             width: '100%',
             backgroundColor:'black',
-            zIndex: 2,
-            fontSize: 'clamp(4px, .65vw, 12px)'
+            fontSize: 'clamp(8px, .65vw, 12px)'
         },
         capturedCardIcon:{
             width: '100%',
@@ -346,12 +377,29 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         },
         capturedCardName: {
             lineHeight: 'normal',
-            fontSize: 'clamp(4px, .65vw, 12px)',
+            // The same floor as the strip group heading beside it: 4px names were unreadable.
+            fontSize: 'clamp(8px, .65vw, 12px)',
             fontWeight: '600',
             whiteSpace: 'nowrap',
             color: 'black',
             textAlign: 'center',
         },
+    };
+
+    // A selectable strip card is a real button, so it takes Tab, Enter and Space like any control.
+    // One that is not selectable stays a plain box: a button would take focus on a click and then
+    // swallow Space, which the replay viewer uses for play/pause. Not `disabled` either way: a
+    // disabled button swallows the hover that opens the card preview. The focus ring is white over
+    // a dark gap, never a game-state color (the selectable and selected outlines are those), and
+    // the focused strip is raised so the strip after it cannot cover the ring.
+    const stripButtonProps = (strip: ICardData) => (strip.selectable ? {
+        component: 'button' as const,
+        type: 'button' as const,
+        'aria-label': `Select ${strip.name}`,
+    } : {});
+    const stripButtonSx = {
+        display: 'block', border: 0, p: 0, m: 0, background: 'none', font: 'inherit', color: 'inherit', textAlign: 'inherit',
+        '&:focus-visible': { outline: '2px solid #fff', outlineOffset: '2px', boxShadow: '0 0 0 2px #000', zIndex: 1 },
     };
 
     const capturedCardsDecoration = (
@@ -360,9 +408,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 <Box
                     key={`captured-${capturedCard.uuid}`}
                     sx={{
+                        ...stripButtonSx,
                         ...styles.capturedCardIcon,
                         cursor: capturedCard.selectable ? 'pointer' : 'default',
                     }}
+                    onClick={() => subcardClick(capturedCard)}
+                    {...stripButtonProps(capturedCard)}
                     {...getCardPreviewProps({
                         cardUrl: s3CardImageURL({ ...capturedCard, setId: capturedCard.setId }, locale),
                         cardType:capturedCard.printedType,
@@ -373,7 +424,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         aspect={getCardPrimaryAspect(capturedCard)}
                         reversed={isConnectedPlayer}
                         sx={{
-                            border: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
+                            // An inset outline takes no space: a strip turning selectable must not shift the card.
+                            outline: capturedCard.selectable ? `1.5px solid ${getBorderColor({ card: capturedCard, player: connectedPlayer })}` : 'none',
+                            outlineOffset: '-1.5px',
                         }}>
                         <Typography sx={styles.capturedCardName}>
                             {capturedCard.name}
@@ -392,10 +445,12 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 <Box
                     key={`base-upgrade-${upgrade.uuid}`}
                     sx={{
+                        ...stripButtonSx,
                         ...styles.capturedCardIcon,
                         cursor: upgrade.selectable ? 'pointer' : 'default',
                     }}
                     onClick={() => subcardClick(upgrade)}
+                    {...stripButtonProps(upgrade)}
                     {...getCardPreviewProps({
                         cardUrl: s3CardImageURL({ ...upgrade, setId: upgrade.setId }, locale),
                         cardType: upgrade.printedType,
@@ -406,7 +461,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         aspect={getCardPrimaryAspect(upgrade)}
                         reversed={isConnectedPlayer}
                         sx={{
-                            border: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
+                            outline: upgrade.selectable ? `1.5px solid ${getBorderColor({ card: upgrade, player: connectedPlayer })}` : 'none',
+                            outlineOffset: '-1.5px',
                         }}>
                         <Typography sx={styles.capturedCardName}>
                             {upgrade.name}
@@ -423,8 +479,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                 flex: 1,
                 // zIndex must be higher than prompt text, upgrades must remain interactive so they must be on top
                 zIndex: 2,
-                mb: '',
-                display: upgrades.length > 0 || capturedCards.length > 0 ? 'block' : 'hidden'
+                display: upgrades.length > 0 || capturedCards.length > 0 ? 'block' : 'none'
             }}>
                 <Box 
                     sx={{
@@ -438,15 +493,24 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         borderRadius: !isConnectedPlayer ? '0 0 4px 4px' : '4px 4px 0 0',
 
                     }}>
-                    {upgrades.length > 0 && upgradesDecoration}
-                    {capturedCards.length > 0 && (
-                        <Box sx={{ position: 'relative' }}>
-                            <Typography sx={styles.capturedCardsDivider}>
-                                Captured
+                    {/* A heading per group, kept with its own strips on the base's side of them for
+                        both players, so a base holding both reads which is which. */}
+                    {upgrades.length > 0 && (
+                        <Box sx={{ display: 'flex', flexDirection: !isConnectedPlayer ? 'column' : 'column-reverse' }}>
+                            <Typography sx={styles.stripGroupHeading}>
+                                Upgrades
                             </Typography>
+                            {upgradesDecoration}
                         </Box>
                     )}
-                    {capturedCards.length > 0 && capturedCardsDecoration}
+                    {capturedCards.length > 0 && (
+                        <Box sx={{ display: 'flex', flexDirection: !isConnectedPlayer ? 'column' : 'column-reverse' }}>
+                            <Typography sx={styles.stripGroupHeading}>
+                                Captured
+                            </Typography>
+                            {capturedCardsDecoration}
+                        </Box>
+                    )}
                 </Box>
             </Box>
 
@@ -484,7 +548,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
 
                 {cardStyle === LeaderBaseCardStyle.Base && (
                     <>
-                        <Box sx={styles.damageCounterContainer}>
+                        {/* Above the Defeated overlay, which would otherwise dim the final damage. */}
+                        <Box sx={card.defeated ? { ...styles.damageCounterContainer, zIndex: 3 } : styles.damageCounterContainer}>
                             { !!distributionAmount &&(
                                 <DamageCounterToken value={distributionAmount} variant={distributeHealing ? 'distributeHealing' : 'distributeDamage'} />
                             )}
@@ -493,11 +558,20 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         {
                             controllerHasForceToken &&
                             <Box
-                                sx={getForceTokenIconStyle(controller, forceTokenSelectable)}
+                                // Above the Defeated overlay, like the damage counter: one token, never half dimmed.
+                                sx={card.defeated ? { ...getForceTokenIconStyle(controller, forceTokenSelectable), zIndex: 3 } : getForceTokenIconStyle(controller, forceTokenSelectable)}
                                 onClick={handleForceTokenClick}
                             />
                         }
-                        {card.isDefender && <Box sx={styles.defendIcon}/>}
+                        {/* Above the Defeated overlay too: it explains a base that fell to an attack. */}
+                        {card.isDefender && <Box sx={card.defeated ? { ...styles.defendIcon, zIndex: 3 } : styles.defendIcon}/>}
+                        {card.defeated && (
+                            <Box sx={styles.defeatedOverlay}>
+                                <Box sx={styles.defeatedBand}>
+                                    <Typography sx={styles.defeatedText}>Defeated</Typography>
+                                </Box>
+                            </Box>
+                        )}
                         <Box sx={styles.baseBlankIcon}/>
                     </>
                 )}

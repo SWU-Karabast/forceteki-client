@@ -440,7 +440,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             flexWrap: 'wrap',
             justifyContent: 'center',
             gap: '0.15em',
-            fontSize: 'clamp(0.36rem, 0.85vw, 0.7rem)',
+            fontSize: 'clamp(8px, 0.85vw, 0.7rem)',
             pointerEvents: 'none',
             zIndex: 2,
         },
@@ -468,6 +468,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             zIndex: 3,
             cursor: 'help',
             pointerEvents: 'auto',
+            '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
         },
         upgradeBlankIcon:{
             position: 'absolute',
@@ -634,7 +635,7 @@ const GameCard: React.FC<IGameCardProps> = ({
                         <HealthBadge sx={[styles.statBadge, { right: '-4%' } ]} value={card.hp || 0} />
                         {card.statsReconstructed && (
                             <Tooltip title="Power and HP rebuilt from card data: this replay predates STATS records, so ability effects are not included" arrow>
-                                <Box sx={styles.reconstructedMark} aria-label="Stats reconstructed from card data">≈</Box>
+                                <Box sx={styles.reconstructedMark} tabIndex={0} role="img" aria-label="Stats reconstructed from card data">≈</Box>
                             </Tooltip>
                         )}
                         {!!card.keywords?.length && (
@@ -656,7 +657,6 @@ const GameCard: React.FC<IGameCardProps> = ({
             {nonShieldUpgradeCards.map((subcard) => (
                 <UpgradeStrip
                     key={subcard.uuid}
-                    data-upgrade-uuid={subcard.uuid}
                     aspect={getCardPrimaryAspect(subcard)}
                     sx={{ ...styles.upgradeIcon,
                         border: subcard.selectable ? `1.5px solid ${getBorderColor({ card: subcard, player: connectedPlayer })}` : 'none',

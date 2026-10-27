@@ -85,6 +85,9 @@ export interface ICardData {
     isBlanked?: boolean;
     isAttacker?: boolean;
     isDefender?: boolean;
+    // Replay-only: the base has been defeated (SWU-PGN `baseDefeated`). An ability can defeat a
+    // base outright (Grand Moff Tarkin), so its damage need not reach its HP.
+    defeated?: boolean;
     displayText?: string;
     clonedCardId?: ICardSetId;
     clonedCardName?: string;
