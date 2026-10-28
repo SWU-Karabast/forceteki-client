@@ -1,6 +1,6 @@
 import { useStaticJson } from '@/app/_utils/staticJson';
 import { storyName } from '@/app/_utils/replayAction';
-import { baseId, isTokenPseudoCard, tokenName, type NameResolver, type ReducedState, type Seat } from '@/lib/swupgn';
+import { baseId, isTokenPseudoCard, looseTokenName, type NameResolver, type ReducedState, type Seat } from '@/lib/swupgn';
 
 /**
  * Build a NameResolver for the move list / decklist / captions. The .swupgn carries
@@ -17,7 +17,7 @@ export function makeNameResolver(map: Record<string, string>): NameResolver {
     return {
         nameOf(id: string): string {
             if (isTokenPseudoCard(id)) {
-                const name = tokenName(id);
+                const name = looseTokenName(id);
                 return name.replace(/(^|[\s-])\w/g, (c) => c.toUpperCase());
             }
             return map[baseId(id)] ?? String(id);

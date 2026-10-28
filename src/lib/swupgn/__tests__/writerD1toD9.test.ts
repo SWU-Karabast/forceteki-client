@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { parse, normalizeEvents, checkKeyframes, indexResolver, type GameEvent } from '../index';
 import { buildBeats } from '@/app/_utils/replayBeats';
 import { buildMoveList, isNumberedAction } from '@/app/_utils/swupgnMoves';
+import { groupsByAdjacency } from '@/app/_utils/swupgnWriter';
 import { frameAction } from '@/app/_utils/replayAction';
 
 /**
@@ -110,7 +111,7 @@ describe('forceteki writer, post D-1..D-9 (fixture game-20260912)', () => {
     });
 
     it('an action ability owns its consequences: one beat, not three', () => {
-        const beats = buildBeats(events);
+        const beats = buildBeats(events, { adjacency: groupsByAdjacency(doc.header) });
         expect(beats).toHaveLength(113);
         const frameOf = (seq: string) => events.findIndex((e) => e.seq === seq);
         const b = beats.find((x) => events[x.anchor].seq === 'R1.A.7')!;

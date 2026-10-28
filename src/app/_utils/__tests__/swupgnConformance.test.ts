@@ -4,6 +4,8 @@ import path from 'path';
 import { parse, render, emptyState, foldFrames, normalizeEvents, displayText, SwuPgnError, type GameEvent, type SetupInitRecord } from '@/lib/swupgn';
 import { formatResult, resultOf } from '../replayMoves';
 import { sidedResolver } from '../swupgnCardNames';
+import { groupsByAdjacency, isPreRelease } from '../swupgnWriter';
+import { buildBeats } from '../replayBeats';
 import { initRecord, deckByFrame } from '../deckTracker';
 import { roundOfSeq, turnDigests } from '../turnDigests';
 import { fileIssues, replayErrorMessage, ReplayRefusedError } from '../swupgnFileIssues';
@@ -13,9 +15,8 @@ import { frameAction, storyName } from '../replayAction';
 import { indexResolver } from '@/lib/swupgn';
 
 const DIR = path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors');
-// The regenerated vectors were written by a `-dirty` build, which §3 [C-01] says to point out.
-// Every test here starts from a clean build's Engine so that notice is the one under test.
-const VECTOR = readFileSync(path.join(DIR, 'homeworlds.swupgn'), 'utf-8').replace(/(\[Engine "[^"]*)-dirty"/, '$1"');
+// A clean, current file (forceteki writer revision 4): each test adds the one thing under test.
+const VECTOR = readFileSync(path.join(DIR, 'homeworlds.swupgn'), 'utf-8');
 const RLO = String.fromCharCode(0x202e);
 
 describe('INIT at R0.S.0 (writer revision 3) and at R1.S.0 (revisions 1-2, pilot files)', () => {
@@ -206,5 +207,63 @@ describe('every well-formed negative vector reaches the viewer helpers without a
         expect(() => frames.forEach((s) => sidedResolver(indexResolver(doc.cards ?? []), s).nameOf(doc.header.p1Leader))).not.toThrow();
         expect(['Player 1', 'Player 2', 'Draw', 'Incomplete']).toContain(formatResult(doc.header.result));
         expect(Object.getOwnPropertyNames(Object.prototype).sort().join(',')).toBe(before);
+    });
+});
+
+describe('pre-release is a pilot writer\'s file with no WriterRevision ([V-04], §25)', () => {
+    const noRev = VECTOR.replace(/^\[WriterRevision "\d+"\]\n/m, '');
+    const withEngine = (text: string, engine: string) => text.replace(/\[Engine "[^"]*"\]/, `[Engine "${engine}"]`);
+    const notices = (text: string) => fileIssues(parse(text)).map((i) => i.message).join('\n');
+
+    it('another writer without the tag is an ordinary file; forceteki is pre-release; Forceteki is not', () => {
+        expect(notices(withEngine(noRev, 'examplewriter@1.0.0'))).not.toMatch(/Pre-release/);
+        expect(notices(withEngine(noRev, 'forceteki@abc'))).toMatch(/Pre-release file from a pilot writer/);
+        expect(notices(withEngine(noRev, 'Forceteki@abc'))).not.toMatch(/Pre-release/);
+        expect(notices(withEngine(noRev, 'forceteki'))).toMatch(/Pre-release/);
+        // With the tag, no writer's file is pre-release.
+        expect(notices(withEngine(VECTOR, 'forceteki@abc'))).not.toMatch(/Pre-release/);
+    });
+
+    it('the other-writer vector reads with no notice at all', () => {
+        const doc = parse(readFileSync(path.join(DIR, 'other-writer.swupgn'), 'utf-8'));
+        expect(doc.header.writerRevision).toBeUndefined();
+        expect(isPreRelease(doc.header)).toBe(false);
+        expect(fileIssues(doc)).toEqual([]);
+    });
+
+    it('a 1.1 file is older than 1.0 only when it is pre-release; another writer\'s 1.1 is a newer minor', () => {
+        const v11 = noRev.replace('SWU-PGN/1.0', 'SWU-PGN/1.1');
+        expect(notices(withEngine(v11, 'forceteki@abc'))).not.toMatch(/newer than this viewer/);
+        expect(notices(withEngine(v11, 'examplewriter@1.0.0'))).toMatch(/newer than this viewer/);
+    });
+});
+
+describe('grouping a beat: by `for` and seq, by position only in a file written before `for` was a MUST (§9.1, Appendix C)', () => {
+    it('groups by adjacency only for pre-release files and forceteki revisions 1-3', () => {
+        const h = (engine: string, writerRevision?: number) => ({ engine, writerRevision });
+        expect(groupsByAdjacency(h('forceteki@abc'))).toBe(true);
+        expect(groupsByAdjacency(h('forceteki@abc', 1))).toBe(true);
+        expect(groupsByAdjacency(h('forceteki@abc', 3))).toBe(true);
+        expect(groupsByAdjacency(h('forceteki@abc', 4))).toBe(false);
+        expect(groupsByAdjacency(h('examplewriter@1.0.0'))).toBe(false);
+        expect(groupsByAdjacency(h('examplewriter@1.0.0', 2))).toBe(false);
+        expect(groupsByAdjacency(h('Forceteki@abc'))).toBe(false);
+        expect(groupsByAdjacency(parse(VECTOR).header)).toBe(false);
+    });
+
+    // A resourcing MOVE with no `for`, right before its RESOURCE and carrying the other seat's
+    // number (Appendix C): a current file never files it under the record after it by position.
+    const events = [
+        { seq: 'R0.S.19', t: 'RESOURCE', p: 2, card: 'SOR#009' },
+        { seq: 'R0.S.20', t: 'MOVE', p: 1, card: 'SOR#002', from: 'hand', to: 'resource' },
+        { seq: 'R0.S.21', t: 'RESOURCE', p: 1, card: 'SOR#002' },
+    ] as unknown as GameEvent[];
+    it('a current file owns an unstamped record by its seq; an old file by the record after it', () => {
+        const owner = (adjacency: boolean) => buildBeats(events, { adjacency }).find((b) => b.start <= 1 && 1 <= b.end)!.anchor;
+        expect(owner(false)).toBe(0);
+        expect(owner(true)).toBe(2);
+        // A `for` stamp decides in either kind of file.
+        const stamped = events.map((e, i) => (i === 1 ? { ...e, for: 'R0.S.21' } : e)) as GameEvent[];
+        expect(buildBeats(stamped, { adjacency: false }).find((b) => b.start <= 1 && 1 <= b.end)!.anchor).toBe(2);
     });
 });

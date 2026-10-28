@@ -13,6 +13,7 @@ import { firstFrameByAction } from '@/app/_utils/replayMoves';
 import { makeNameResolver, sidedResolver, nameAtSeq as nameAtSeqOf } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
+import { groupsByAdjacency } from '@/app/_utils/swupgnWriter';
 import { buildBeats, beatAt, captionForBeat, chapterMarks as chapterMarksOf, playbackStep, type Beat } from '@/app/_utils/replayBeats';
 import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
 import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '@/app/_utils/replayLiveCues';
@@ -220,7 +221,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const nameAt = useCallback((id: string, frame: number) => storyName(id, resolverAt(frame)), [resolverAt]);
 
     // The beat timeline: stepping, scrubbing and autoplay all move by beat, not by frame.
-    const beats = useMemo(() => buildBeats(events), [events]);
+    const adjacency = groupsByAdjacency(doc.header);
+    const beats = useMemo(() => buildBeats(events, { adjacency }), [events, adjacency]);
     const currentBeat = useMemo(() => beatAt(beats, currentIndex), [beats, currentIndex]);
     // What moved in a beat (classifyBeat), keyed off the frames it spans.
     const transitionsOf = useCallback(

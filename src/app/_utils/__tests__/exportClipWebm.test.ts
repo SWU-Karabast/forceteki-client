@@ -3,13 +3,14 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse, normalizeEvents } from '@/lib/swupgn';
 import { buildBeats } from '../replayBeats';
+import { groupsByAdjacency } from '../swupgnWriter';
 import { clipBeats } from '../exportClipWebm';
 
 // clipBeats is the pure slice of exportClipWebm's frame loop (the rest is MediaRecorder,
 // browser-only); this is what keeps the loop's beat selection honest.
 const doc = parse(readFileSync(join(__dirname, '../../../lib/swupgn/__tests__/fixtures/game-463c3022.swupgn'), 'utf8'));
 const events = normalizeEvents(doc.events, new Set());
-const beats = buildBeats(events);
+const beats = buildBeats(events, { adjacency: groupsByAdjacency(doc.header) });
 
 describe('clipBeats', () => {
     it('a clip over whole beats 7..12 yields exactly beats 7..12', () => {

@@ -22,6 +22,8 @@ interface ManifestEntry {
     level: 'malformed' | 'well-formed' | 'valid' | 'verified' | 'complete';
     errors: string[];
     warnings: string[];
+    // The Engine product of a generated vector, or "hand". Read for its type only.
+    writer: string;
     about?: string;
 }
 
@@ -34,9 +36,12 @@ const protoKeys = () => [Object.prototype, Array.prototype, Function.prototype]
     .map((p) => Object.getOwnPropertyNames(p).sort().join(','));
 
 describe('manifest.json', () => {
-    it('lists 9 positive and 25 negative vectors', () => {
-        expect(MANIFEST.vectors.filter((v) => v.class === 'positive')).toHaveLength(9);
-        expect(MANIFEST.vectors.filter((v) => v.class === 'negative')).toHaveLength(25);
+    it('lists 10 positive and 28 negative vectors, each naming its writer', () => {
+        expect(MANIFEST.vectors.filter((v) => v.class === 'positive')).toHaveLength(10);
+        expect(MANIFEST.vectors.filter((v) => v.class === 'negative')).toHaveLength(28);
+        for (const v of MANIFEST.vectors) {
+            expect(typeof v.writer, v.file).toBe('string');
+        }
     });
 });
 

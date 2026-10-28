@@ -1209,3 +1209,61 @@ describe('fold — a reserved token name (§23)', () => {
         expect(() => String(c!.statusTokens)).not.toThrow();
     });
 });
+
+// Ported from forceteki test/server/swupgn/fold.spec.ts at a2c013963, plus the client's older spellings.
+describe('fold — Credit and Force tokens by the name part of their id (spec 6.1)', () => {
+    const credits = (card: string) => fold([{ seq: 'R1.A.1a', t: 'MOVE', card, from: 'outsideTheGame', to: 'base', p: 1 }] as GameEvent[]).players[1]!.credits;
+    const force = (card: string) => fold([{ seq: 'R1.A.1a', t: 'MOVE', card, from: 'outsideTheGame', to: 'base', p: 1 }] as GameEvent[]).players[1]!.hasForce;
+
+    // Value: protects=the fold recognises a Credit by the same name rule as the validator, so the degraded form and a later copy count; fails_when=the fold matches only `TOKEN:credit#`; why_new=fold and validate disagreed on `TOKEN:credit`; seam=none; no_claim=what the validator reports for the same ids
+    it('counts a Credit token written in the degraded form, and a later copy of one', () => {
+        const s = fold([
+            { seq: 'R1.A.1a', t: 'MOVE', card: 'TOKEN:credit', from: 'outsideTheGame', to: 'base', p: 1 },
+            { seq: 'R1.A.1b', t: 'MOVE', card: 'TOKEN:credit:2', from: 'outsideTheGame', to: 'base', p: 1 },
+        ] as GameEvent[]);
+        expect(s.players[1]?.credits).toBe(2);
+    });
+
+    // Value: protects=the client's Credit/Force test agrees with tokenNameOf on current ids (`:1` is not a copy suffix) while still reading the pre-2026-09 title spellings; fails_when=isCreditToken strips any `:N` again, or the older spellings are dropped; why_new=upstream moved to tokenNameOf at 87d477f39; seam=none; no_claim=what the validator reports
+    it('TOKEN:credit and TOKEN:credit:2 count, TOKEN:credit:1 does not; older title spellings still count', () => {
+        expect(credits('TOKEN:credit')).toBe(1);
+        expect(credits('TOKEN:credit:2')).toBe(1);
+        expect(credits('TOKEN:credit#8015500527:2')).toBe(1);
+        expect(credits('TOKEN:credit:1')).toBe(0);
+        expect(credits('TOKEN:Credit:2')).toBe(1);
+        expect(force('TOKEN:the-force#4571900905')).toBe(true);
+        expect(force('TOKEN:the-force:1')).toBe(false);
+        expect(force('TOKEN:The Force')).toBe(true);
+    });
+});
+
+describe('fold record order (spec §9.1 [W-18])', () => {
+    // Value: protects=`for`, not file position, is what ties a record to its action; fails_when=the fold depends on a writer emitting an action's records before announcing it; why_new=every vector comes from one writer, which always emits them first; seam=none; no_claim=records with no `for`
+    it('folds the same when a writer announces the action before its records', () => {
+        const dir = path.join(__dirname, 'fixtures/vectors');
+        const events = parse(readFileSync(path.join(dir, 'arrest.swupgn'), 'utf8')).events;
+        const announceFirst = (list: GameEvent[], action: string): GameEvent[] => {
+            const owned = list.filter((e) => e.for === action);
+            const rest = list.filter((e) => e.for !== action);
+            const at = rest.findIndex((e) => e.seq === action);
+            return [...rest.slice(0, at + 1), ...owned, ...rest.slice(at + 1)];
+        };
+        expect(events.filter((e) => e.for === 'R1.A.1').map((e) => e.t)).toEqual(['EXHAUST_RESOURCES', 'MOVE', 'STATS', 'EXHAUST']);
+        expect(events.filter((e) => e.for === 'R2.A.3').map((e) => e.t)).toEqual(['CHOICE', 'EXHAUST']);
+        const reordered = announceFirst(announceFirst(events, 'R1.A.1'), 'R2.A.3');
+        expect(reordered.map((e) => e.seq)).not.toEqual(events.map((e) => e.seq));
+        const plain = (x: unknown) => JSON.parse(JSON.stringify(x));
+        expect(plain(stateAt(reordered, 'R1.A.2'))).toEqual(plain(stateAt(events, 'R1.A.2')));
+        expect(plain(stateAt(reordered, 'R2.A.4'))).toEqual(plain(stateAt(events, 'R2.A.4')));
+        expect(plain(fold(reordered))).toEqual(JSON.parse(readFileSync(path.join(dir, 'arrest.fold.json'), 'utf8')));
+    });
+
+    // Value: protects=a MOVE out of an arena folds the same whether or not it carries kind (spec 6.5); fails_when=the fold starts reading kind on a move that leaves an arena; why_new=no vector holds an undeploy move; seam=none; no_claim=a kind that disagrees with the card
+    it('folds an undeploy move the same with or without kind', () => {
+        const plain = (x: unknown) => JSON.parse(JSON.stringify(x));
+        const arrive = { seq: 'R1.A.1', t: 'MOVE', p: 1, card: 'SOR#108', from: 'hand', to: 'ground', kind: 'unit' } as GameEvent;
+        const without = [arrive, { seq: 'R1.A.2', t: 'MOVE', p: 1, card: 'SOR#108', from: 'ground', to: 'base' }] as GameEvent[];
+        const withKind = [arrive, { seq: 'R1.A.2', t: 'MOVE', p: 1, card: 'SOR#108', from: 'ground', to: 'base', kind: 'unit' }] as GameEvent[];
+        expect(plain(fold(withKind))).toEqual(plain(fold(without)));
+    });
+});

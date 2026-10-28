@@ -20,7 +20,8 @@ const cardOf = (e: GameEvent) => ('card' in e && typeof e.card === 'string' ? e.
 // The seq a lettered consequence points at: `R2.A.6a` -> `R2.A.6`; a bare `R2.A.6` is its own base.
 const baseSeq = (seq: string) => { const m = /^(.*?)[a-z]+$/.exec(seq); return m ? m[1] : seq; };
 interface Owner { key: string; kind: BeatKind; seat?: Seat; anchor: number }
-export function buildBeats(events: GameEvent[]): Beat[] {
+
+export function buildBeats(events: GameEvent[], opts: { adjacency?: boolean } = {}): Beat[] {
     // Frame of every record a `for` or a lettered suffix can point at (spec §9.1): the numbered
     // actions, plus a RESOURCE that stands on its own (setup, regroup) -- a RESOURCE filed as a
     // consequence of an action (an ability that resources a card) rides with that action.
@@ -53,8 +54,9 @@ export function buildBeats(events: GameEvent[]): Beat[] {
         // an action ability's own consequences follow the ability, not the PASS it was filed under.
         else if (consequenceOf !== undefined) o = prev.kind === 'action' && baseSeq(events[prev.anchor].seq) === events[consequenceOf].seq ? prev : ownerOfAction(consequenceOf);
         // A resource MOVE precedes its RESOURCE with no `for` stamp (Part D-3): a record naming the
-        // same card as the action right after it is that action's precursor.
-        else if (i + 1 < events.length && actionFrames.has(events[i + 1].seq) && cardOf(e) !== undefined && cardOf(e) === cardOf(events[i + 1])) o = ownerOfAction(i + 1);
+        // same card as the action right after it is that action's precursor. Appendix C's guess,
+        // so only for a file written before `for` was a MUST (`groupsByAdjacency`).
+        else if (opts.adjacency && i + 1 < events.length && actionFrames.has(events[i + 1].seq) && cardOf(e) !== undefined && cardOf(e) === cardOf(events[i + 1])) o = ownerOfAction(i + 1);
         else if (isDraw(e)) o = { key: `draw:${i}`, kind: 'draw', seat: seatOf(e), anchor: i };
         else if (isReady(e)) o = { key: `ready:${i}`, kind: 'ready', anchor: i };
         else o = prev; // a SHUFFLE, a SEARCH, a PHASE_END, a ROUND_END rides with what came before, anchor untouched

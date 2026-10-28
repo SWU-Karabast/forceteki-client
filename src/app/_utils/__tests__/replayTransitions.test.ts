@@ -4,13 +4,14 @@ import { join } from 'node:path';
 import type { GameEvent } from '@/lib/swupgn';
 import { parse, normalizeEvents, foldFrames, emptyState } from '@/lib/swupgn';
 import { buildBeats, beatAt } from '../replayBeats';
+import { groupsByAdjacency } from '../swupgnWriter';
 import type { Beat } from '../replayBeats';
 import { classifyBeat } from '../replayTransitions';
 
 const doc = parse(readFileSync(join(__dirname, '../../../lib/swupgn/__tests__/fixtures/game-463c3022.swupgn'), 'utf8'));
 const events = normalizeEvents(doc.events, new Set());
 const frames = foldFrames(events);
-const beats = buildBeats(events);
+const beats = buildBeats(events, { adjacency: groupsByAdjacency(doc.header) });
 const at = (seq: string) => { const b = beatAt(beats, events.findIndex((e) => e.seq === seq)); return classifyBeat(b, events, frames[b.start - 1], frames[b.end]); };
 
 describe('classifyBeat', () => {

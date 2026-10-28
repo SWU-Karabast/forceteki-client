@@ -1,14 +1,14 @@
 # Vendored SWU-PGN reader
 
-Source: forceteki `swupgn/src/`. Re-vendored 2026-10-28 at upstream **`950a65a82`** (branch
-`swu-game-notation`, clean tree; "apply SWUForge's review to the SWU-PGN 1.0 spec"), which brings
-in the reader commits `0bbe90409`, `34df8b3c1` and `9e50bbec8` (merge `c8d9329db`) on top of the
-earlier same-day sync at `c233908d6`. Synced from that commit, not from a working tree. The spec
-is `docs/SWU-PGN-1.0-SPEC.md` at that commit, and it is **normative** (§2): the reference code,
-schemas and vectors are informative, and where they disagree the text governs. The conformance
-suite (`swupgn/test-vectors/`: 9 positive vectors, 25 in `negative/`, `manifest.json`) is copied
-verbatim into `__tests__/fixtures/vectors/`. Writer output is unchanged: `WriterRevision` is
-still 3, and the positive vectors' `.fold.json`/`.render.txt` are byte-identical.
+Source: forceteki `swupgn/src/`. Re-vendored 2026-10-28 at upstream **`a2c013963`** (branch
+`swu-game-notation`; "regenerate the real-game vectors from a clean commit"), on top of the
+earlier same-day syncs at `950a65a82` (client `2222127`) and `c233908d6`. Synced from that
+commit, not from a working tree. The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit, and it is
+**normative** (§2): the reference code, schemas and vectors are informative, and where they
+disagree the text governs. The conformance suite (`swupgn/test-vectors/`: 10 positive vectors,
+28 in `negative/`, `manifest.json`) is copied verbatim into `__tests__/fixtures/vectors/`. The
+forceteki writer is now `WriterRevision` 4; the nine older positive vectors were regenerated, and
+their `.fold.json`/`.render.txt` are byte-identical to the previous sync's.
 
 `types.ts` is **verbatim**. `render.ts` and `integrity.ts` are verbatim apart from one line each,
 the keyframe they read — see the divergence list. `fold.ts`, `parse.ts` and `cardNames.ts` are
@@ -16,8 +16,64 @@ upstream plus the client-owned blocks listed below. `actionLinks.ts` is a SUBSET
 `isTopLevelActionRecord`, which `render.ts` imports (see "Deliberately not ported"). The replay UI
 numbers with `swupgnMoves.isNumberedAction`, the same rule plus the kind-less fallback of
 `isPlayerAction` for files written before `kind`; `homeworldsReplay.test.ts` holds the two to
-the story's numbering on every vector. `validate.ts` stays omitted (Node-only: fs/path + ajv). `tokens.ts`,
+the story's numbering on every vector. `ids.ts` is **verbatim** (it holds literal combining marks
+in a regex, as upstream does). `validate.ts` stays omitted (Node-only: fs/path + ajv). `tokens.ts`,
 `serialize.ts`, `displayText.ts` and `foldFrames` are client-only.
+
+## What `950a65a82..a2c013963` changed (all handled here)
+
+Reader commits `8d6e18054`, `e0c8f0378`, `1919aed8b`, `b0392fb92`, `5ef04df29`, `87d477f39`,
+`06b55de32`; vector commits `318cecbbb`, `334ea3e19`, `ce0de7400`, `a2c013963`; the rest are spec
+text (§22 "Platform neutrality", §25 registries, Appendix C).
+
+- **`ids.ts`** (new, verbatim): `TOKEN_NAME`, `TOKEN_ID`, `tokenName(title)` and `tokenNameOf(id)`,
+  in the barrel. `tokenNameOf` is the §6.1 name part: `TOKEN:credit`, `TOKEN:credit:2` and
+  `TOKEN:credit#8015500527:2` name `credit`; `TOKEN:credit:1` does not (`:1` is not a copy
+  suffix). The client uses them for the Credit/Force test only, never to refuse a file:
+  `bad-token-name` is a validator error. The client's own id reader, `tokens.ts` `tokenName(id)`,
+  is renamed **`looseTokenName`** so the barrel's `tokenName` is upstream's (title -> name).
+- **Credit and Force** (`87d477f39`): upstream's fold matches `tokenNameOf(id) === 'credit'` /
+  `'the-force'`. The client's `tokens.ts` `isCreditToken`/`isForceToken` now do the same for a
+  current id, and keep reading the pre-2026-09 title spellings (see divergences).
+- **`engineProduct(engine)` and `PILOT_WRITER_PRODUCTS`** (`{ 'forceteki' }`, closed, exact,
+  case included; §25 "Pilot writer products") are in `parse.ts` and the barrel. Nothing else in
+  `parse.ts` changed.
+- **Pre-release** is now a file with no `WriterRevision` AND a pilot-writer `Engine` product
+  ([V-04]); `WriterRevision` is optional and diagnostic for every writer ([W-12]).
+  `src/app/_utils/swupgnWriter.ts` `isPreRelease` holds the rule. File Health's notice ("Pre-release
+  file from a pilot writer") and `writerGeneration`'s `pilot` gate use it, so a file from any other
+  writer without the tag is an ordinary file.
+- **The 1.1 rule** (`swupgnFileIssues.newerMinor`): a pre-release `SWU-PGN/1.1` is read as OLDER
+  than 1.0 (the pilot wrote 1.1 before the format was renumbered), and so gets no newer-minor
+  notice. The spec no longer mentions 1.1 files at all; the exemption is kept for the forceteki
+  pilot files that exist, and is now gated on `isPreRelease`, so another writer's `1.1` is a
+  newer minor (§18).
+- **Grouping (§9.1 [W-18], Appendix C "Grouping records in a file without `for`")**: a record
+  without `for` belongs to the action its `seq` carries, and a reader MUST NOT infer ownership
+  from position in a file that stamps `for`. `replayBeats.buildBeats` had one position rule (a
+  record naming the same card as the action right after it is that action's precursor); it now
+  runs only when `swupgnWriter.groupsByAdjacency(header)` is true — a pre-release file or
+  forceteki revisions 1–3 — never for revision 4 or another writer. Both callers (the Replay
+  context, the clip exporter) pass it. Everything else groups by `for`, then by the seq's own
+  number or letter suffix. `entryExhaust` looks ahead for a unit's entering `EXHAUST`, which is
+  drawing, not ownership, and is unchanged. Known gap: Appendix C's SHOULD that a revision 1–3
+  `for` the new rule would not have stamped (a previous action's choice filed under the next
+  action) be read as the seq's own number is not implemented; it needs `linkActionSteps`' new
+  walk-back rules to tell which stamps those are.
+- **`actionLinks.ts`**: upstream changed only `linkActionSteps` (`actionHost`, `seatOf`, the new
+  walk-back rules). `TOP_LEVEL_ACTIONS` and `isTopLevelActionRecord` are unchanged and identical
+  to the client's copy, so nothing is ported.
+- **New codes** `bad-token-name`, `deck-build-move`, `credit-zone` are validator errors on
+  well-formed files. The client has no validator and shows no validator report, so parse gains no
+  check and File Health no message; `replayErrorMessage` already falls back by code for any code
+  it does not know. The three new negatives parse, fold, render, gate and adapt without touching
+  a prototype (`manifest.test.ts`).
+- **Vectors**: the nine forceteki vectors carry `WriterRevision` 4, a clean
+  `forceteki@0064257c0` Engine (no more `-dirty`; `vectorsBoard.test.ts` now asserts no File
+  Health notice at all) and the revision-4 `for` stamps. New positive `other-writer` (Engine
+  `examplewriter@1.0.0`, no `WriterRevision`) folds and renders as `minimal` does and reads with
+  no notice. `manifest.json` rows carry `writer` (the Engine product, or `"hand"`).
+- **`types.ts`** did not change in this range.
 
 ## What `0bbe90409`, `34df8b3c1`, `9e50bbec8` and `950a65a82` changed (all handled here)
 
@@ -344,9 +400,9 @@ the §5.3/§6.2/§10.1/§13/§18 notes (`fileIssues`) and which earlier writer p
 
 ## Conformance gate
 
-`__tests__/vectors.test.ts` runs every positive vector `manifest.json` lists (all nine, copied
+`__tests__/vectors.test.ts` runs every positive vector `manifest.json` lists (all ten, copied
 verbatim from forceteki `swupgn/test-vectors/`: `minimal`, `organic`, `upgrades`, `pilot`,
-`capture`, `arrest`, `homeworlds`, `death-star`, `stolen-hauler`) through parse → fold → render
+`capture`, `arrest`, `homeworlds`, `death-star`, `stolen-hauler`, `other-writer`) through parse → fold → render
 and requires a byte-identical render (`render(doc) + '\n'`) and a fold equal to `.fold.json` as
 JSON values (the manifest's rule: key order not significant, array order significant, absent ≠
 null, so it compares with `toStrictEqual` after a JSON round trip), with no carve-out; every
@@ -357,7 +413,8 @@ negative must make `parse` throw `SwuPgnError` with its listed code, and every o
 parse and fold, render, gate and adapt without crashing, touching a prototype or growing a list
 past 1000. The validator-only codes (`schema`, `bad-zone`, `duplicate-seq`, `dangling-ref`,
 `over-cap`, `keyframe-mismatch`, `pre-release`, `unknown-type`/`-section`, `newer-minor`,
-`unknown-value`) are not the client's to report; `reserved-key` is a parser code now.
+`unknown-value`, `bad-token-name`, `deck-build-move`, `credit-zone`) are not the client's to
+report; `reserved-key` is a parser code now.
 `swupgnConformance.test.ts` also runs every well-formed negative through the viewer's own
 helpers (File Health, digests, decisions, captions, sided names, result formatting). The optional
 `reduced-state.schema.json` check is not run: `ajv` is only a transitive dependency here, not a
@@ -454,8 +511,15 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   (`resources: null`) is read as absent, as `normalizePlayer` reads it; upstream counts any
   non-`undefined` non-array as a damaged keyframe.
 - **`fold.ts` reserved-token predicates** — `countBaseToken` uses `tokens.ts`'s
-  `isCreditToken`/`isForceToken`, which accept the pre-1.0 `TOKEN:The Force` as well as the
-  §6.1 `TOKEN:the-force#…`. Upstream matches the prefix only.
+  `isCreditToken`/`isForceToken`. For a current id they are upstream's rule exactly,
+  `tokenNameOf(id) === 'credit'` / `'the-force'` (so `TOKEN:credit:2` counts and
+  `TOKEN:credit:1` does not). They also read a pre-2026-09 title spelling — a name part with a
+  capital or a space, lower-cased: `TOKEN:The Force`, `TOKEN:Credit:2`. Upstream does not.
+- **`tokens.ts` `looseTokenName`** — the client's id reader for display and the pre-1.0 fallbacks
+  (lower-cases, strips any `:N`), renamed from `tokenName` so it does not shadow upstream's
+  `ids.tokenName` in the barrel.
+- **`replayBeats` adjacency gate / `swupgnWriter.ts`** — client-only. See "What
+  `950a65a82..a2c013963` changed": position grouping only for files `groupsByAdjacency` names.
 - **`fold.ts` non-object event skip** — `reduce()` returns unchanged for a `null`/scalar
   record (defence in depth behind the parse guard; `foldFrames` keeps the frame slot).
 - **`cardNames.ts` untyped fields** — a `null` index entry is skipped (upstream drops any entry whose `id` or `name` is not a string; the client keeps the entry, so a bad `name` does not lose its `backSideName`); a non-string `name` or `backSideName` is

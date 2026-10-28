@@ -2,6 +2,7 @@ import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn
 import { foldFrames } from '@/lib/swupgn';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 import { buildBeats, type Beat } from '@/app/_utils/replayBeats';
+import { groupsByAdjacency } from '@/app/_utils/swupgnWriter';
 import { classifyBeat } from '@/app/_utils/replayTransitions';
 import { beatDurationMs } from '@/app/_utils/replayTiming';
 
@@ -160,7 +161,7 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
     // One pass over the whole stream (not just the clip): a beat straddling `hi` needs
     // its full span to classify correctly, even though we only ever draw up to `hi`.
     const frames = opts.frames ?? foldFrames(events);
-    const beats = clipBeats(buildBeats(events), lo, hi);
+    const beats = clipBeats(buildBeats(events, { adjacency: groupsByAdjacency(opts.doc.header) }), lo, hi);
     recorder.start();
     for (const beat of beats) {
         const frameNo = Math.min(beat.end, hi);

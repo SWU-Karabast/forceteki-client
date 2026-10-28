@@ -1,9 +1,10 @@
 import type { CardKind, GameEvent, ReducedState } from './types';
+import { tokenNameOf } from './ids';
 
 const TOKEN_PREFIX = 'TOKEN:';
 
-/** Spec §6.1 reserves `TOKEN:the-force#…`; files written before 2026-09 said `TOKEN:The Force`. */
-const FORCE_TOKEN_NAMES = new Set(['the-force', 'the force']);
+/** Files written before 2026-09 spelled the Force token by its title: `TOKEN:The Force`. */
+const LEGACY_FORCE_NAMES = new Set(['the-force', 'the force']);
 
 /**
  * Tokens ride the stream as pseudo-cards prefixed `TOKEN:`.
@@ -16,12 +17,15 @@ const FORCE_TOKEN_NAMES = new Set(['the-force', 'the force']);
 export const isTokenPseudoCard = (id: string): boolean => String(id).startsWith(TOKEN_PREFIX);
 
 /**
- * The token's name, normalized, from either id shape forceteki has written:
+ * The token's name, loosely normalized, from either id shape forceteki has written:
  *   `TOKEN:advantage#5844562972`  (current: internal name + numeric art id)
  *   `TOKEN:Advantage:2`           (pre-2026-09: display name + copy suffix)
- * Both reduce to `advantage`. Files of both shapes are in the wild, so both are read.
+ * Both reduce to `advantage`. Files of both shapes are in the wild, so both are read. For
+ * display and the pre-1.0 fallbacks only: the §6.1 name part is `ids.tokenNameOf`, which is
+ * case-sensitive and does not take `:1` as a copy suffix. (Upstream's `tokenName` is a different
+ * function, title -> name, in `ids.ts`.)
  */
-export const tokenName = (id: string): string =>
+export const looseTokenName = (id: string): string =>
     String(id).slice(TOKEN_PREFIX.length).split('#')[0].replace(/:\d+$/, '').toLowerCase();
 
 /**
@@ -59,7 +63,7 @@ export const isStatusTokenCard = (id: string, kind?: CardKind): boolean => {
     if (kind) {
         return kind === 'upgrade';
     }
-    return PRE_1_0_UPGRADE_NAMES.has(tokenName(id));
+    return PRE_1_0_UPGRADE_NAMES.has(looseTokenName(id));
 };
 
 /**
@@ -74,13 +78,27 @@ export const eventKind = (e: unknown): CardKind | undefined => {
     return typeof r.attachedTo === 'string' && r.attachedTo ? 'upgrade' : undefined;
 };
 
-/** The Force is a per-player token that sits on the base, not a unit status token. */
-export const isForceToken = (id: string): boolean =>
-    isTokenPseudoCard(id) && FORCE_TOKEN_NAMES.has(tokenName(id));
+/**
+ * CLIENT-OWNED. A token id spelled before 2026-09, by the card's title: its name part has a
+ * capital or a space (`TOKEN:The Force`, `TOKEN:Credit:2`). Undefined for a current id.
+ */
+const legacyTokenName = (id: string): string | undefined => {
+    const name = tokenNameOf(String(id));
+    return name !== undefined && /[A-Z ]/.test(name) ? name.toLowerCase() : undefined;
+};
 
-/** A Credit token likewise sits on the base; each one on it is one credit. */
+/**
+ * The Force is a per-player token that sits on the base, not a unit status token. A current id
+ * is matched by its §6.1 name part, as upstream does (`tokenNameOf(id) === 'the-force'`), so
+ * `TOKEN:the-force:2` counts and `TOKEN:the-force:1` does not; an older title spelling is
+ * still read.
+ */
+export const isForceToken = (id: string): boolean =>
+    tokenNameOf(String(id)) === 'the-force' || LEGACY_FORCE_NAMES.has(legacyTokenName(id) ?? '');
+
+/** A Credit token likewise sits on the base; each one on it is one credit. Matched as the Force is. */
 export const isCreditToken = (id: string): boolean =>
-    isTokenPseudoCard(id) && tokenName(id) === 'credit';
+    tokenNameOf(String(id)) === 'credit' || legacyTokenName(id) === 'credit';
 
 /**
  * Repair the token lifecycle in a forceteki event stream.

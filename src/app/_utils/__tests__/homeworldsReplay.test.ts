@@ -5,6 +5,7 @@ import { parse, foldFrames, normalizeEvents, indexResolver, type GameEvent } fro
 import { frameAction } from '../replayAction';
 import { buildBeats, beatAt } from '../replayBeats';
 import { buildMoveList, isNumberedAction } from '../swupgnMoves';
+import { groupsByAdjacency } from '@/app/_utils/swupgnWriter';
 import { sidedResolver } from '../swupgnCardNames';
 
 /**
@@ -20,11 +21,11 @@ const load = (name: string) => {
     const names = indexResolver(doc.cards);
     const at = (seq: string) => events.findIndex((e) => e.seq === seq);
     const label = (seq: string) => frameAction(events[at(seq)], sidedResolver(names, frames[at(seq)])).label;
-    return { events, frames, names, at, label };
+    return { doc, events, frames, names, at, label };
 };
 
 describe('death-star (§10.4)', () => {
-    const { events, frames, names, at, label } = load('death-star');
+    const { doc, events, frames, names, at, label } = load('death-star');
 
     it('the deploy names both sides, and the deployed leader is The Death Star from then on', () => {
         expect(label('R8.A.1')).toBe('Player 1 uses Grand Moff Tarkin, Tyrant of the Outer Rim\'s Epic Action');
@@ -40,7 +41,7 @@ describe('death-star (§10.4)', () => {
     });
 
     it('the Epic Action and the deploy it performs are one beat', () => {
-        const beats = buildBeats(events);
+        const beats = buildBeats(events, { adjacency: groupsByAdjacency(doc.header) });
         expect(beatAt(beats, at('R8.A.1c'))).toBe(beatAt(beats, at('R8.A.1')));
     });
 });

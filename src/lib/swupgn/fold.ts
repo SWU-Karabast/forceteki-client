@@ -2,7 +2,7 @@ import type { GameEvent, ReducedState, PlayerState, CardInstanceState, Seat } fr
 import { eventKind, isCreditToken, isForceToken, isStatusTokenCard } from './tokens';
 import { RESERVED_KEYS } from './parse';
 
-// Vendored from forceteki swupgn/src/fold.ts at 950a65a82. Every block marked CLIENT-OWNED is
+// Vendored from forceteki swupgn/src/fold.ts at a2c013963. Every block marked CLIENT-OWNED is
 // a documented divergence (see VERSION.md); everything else mirrors upstream and should be
 // re-diffed, not rewritten, on the next sync.
 

@@ -2,12 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse, normalizeEvents, indexResolver, type GameEvent } from '@/lib/swupgn';
+import { groupsByAdjacency } from '../swupgnWriter';
 import { buildBeats, beatAt, captionForBeat, chapterMarks, playbackStep, type Beat } from '../replayBeats';
 import { frameAction, storyName } from '../replayAction';
 
 const doc = parse(readFileSync(join(__dirname, '../../../lib/swupgn/__tests__/fixtures/game-463c3022.swupgn'), 'utf8'));
 const events = normalizeEvents(doc.events, new Set());
-const beats = buildBeats(events);
+const beats = buildBeats(events, { adjacency: groupsByAdjacency(doc.header) });
 const frameOf = (seq: string) => events.findIndex((e) => e.seq === seq);
 const span = (seq: string) => { const b = beatAt(beats, frameOf(seq)); return [events[b.start].seq, events[b.end].seq, events[b.anchor].seq, b.kind]; };
 

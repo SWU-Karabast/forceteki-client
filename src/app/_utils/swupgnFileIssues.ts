@@ -1,5 +1,6 @@
 import { baseId, displayText, SwuPgnError, type SwuPgnDocument, type GameEvent, type ParseNotes } from '@/lib/swupgn';
 import { isLetteredSeq, isNumberedAction } from './swupgnMoves';
+import { isPreRelease } from './swupgnWriter';
 
 /**
  * What the spec tells a reader to SURFACE about a file, short of refusing it.
@@ -95,11 +96,16 @@ export function replayErrorMessage(err: unknown, fallback = 'Failed to read the 
     }
 }
 
-/** A `1.x` this reader is older than (§18). `1.1` with no WriterRevision is a pre-release file, OLDER than 1.0 (§22.1). */
+/**
+ * A `1.x` this reader is older than (§18). The forceteki pilot wrote `SWU-PGN/1.1` before the
+ * format was renumbered 1.0 at publication, so a pre-release `1.1` (no WriterRevision, a pilot
+ * writer's Engine, [V-04]) is OLDER than 1.0, not newer. The spec no longer mentions 1.1; see
+ * VERSION.md. Any other writer's `1.1` is a newer minor.
+ */
 function newerMinor(doc: SwuPgnDocument & ParseNotes): string | null {
     const m = /^SWU-PGN\/1\.(\d+)$/.exec(String(doc.header.game));
     if (!m || Number(m[1]) === 0) return null;
-    return Number(m[1]) === 1 && doc.header.writerRevision == null ? null : doc.header.game;
+    return Number(m[1]) === 1 && isPreRelease(doc.header) ? null : doc.header.game;
 }
 
 export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
@@ -111,10 +117,12 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     const out: FileIssue[] = [];
     const h = doc.header;
 
-    // §3 [C-01]: say when a file is a pre-release file, without blocking it. A WriterRevision
-    // that is not a count never gets here: parse() refuses it (bad-count).
-    if (h.writerRevision == null) {
-        out.push({ severity: 'info', message: 'Pre-release file (no [WriterRevision]): written before SWU-PGN 1.0 was published, so some records follow an earlier shape. It replays, with the notes below on what that costs (Appendix C).' });
+    // §3 [C-01]: say when a file is a pre-release file, without blocking it. Pre-release is a
+    // pilot writer's file with no WriterRevision ([V-04], §25); another writer's file without the
+    // tag is an ordinary file ([W-12]). A WriterRevision that is not a count never gets here:
+    // parse() refuses it (bad-count).
+    if (isPreRelease(h)) {
+        out.push({ severity: 'info', message: 'Pre-release file from a pilot writer (no [WriterRevision]): written before SWU-PGN 1.0 was published, so some records follow an earlier shape. It replays, with the notes below on what that costs (Appendix C).' });
     }
     // §18: a reader SHOULD warn that a file is newer than it is. What it adds is skipped.
     const newer = newerMinor(doc);
@@ -311,8 +319,7 @@ export function writerGeneration(doc: SwuPgnDocument & ParseNotes): string[] {
     if (baseEpicByCardId > 0) {
         out.push(`${plural(baseEpicByCardId, 'Epic Action')} activated by a card the file names by id rather than base@N (early writer): a base's spent Epic Action is not shown (§22).`);
     }
-    // §22, "1.0 writer changes before first release": a 1.0 file with no WriterRevision is a
-    // pilot file. That alone is no line here (the hand-written `minimal` vector carries no tag
+    // Appendix C: a pilot writer's file with no WriterRevision is a pre-release file. That alone is no line here (the hand-written `minimal` vector carries no tag
     // either); each pilot behaviour that changes what the replay shows gets its own below.
     const baseIds = new Set([doc.header.p1Base, doc.header.p2Base].map(String));
     let passAfterOwnAction = 0;
@@ -337,9 +344,10 @@ export function writerGeneration(doc: SwuPgnDocument & ParseNotes): string[] {
         else if (e.t === 'PHASE_START' || e.t === 'ROUND_START') { lastAction = undefined; claimedThisPhase = false; }
         if (e.t === 'CLAIM_INITIATIVE') claimedThisPhase = true;
     }
-    // §22: a file that states a WriterRevision is not a pilot file, so none of these rows
-    // describe it; a match there is a coincidence of play, not the early writer.
-    const pilot = doc.header.writerRevision == null;
+    // Appendix C: a file that states a WriterRevision, or comes from a writer the pilot registry
+    // does not list (§25), is not a pilot file, so none of these rows describe it; a match there
+    // is a coincidence of play, not the early writer.
+    const pilot = isPreRelease(doc.header);
     if (pilot && passAfterOwnAction > 0) {
         out.push('PASS written after every action (pilot writer): each action is followed by a "passes" line, and action numbers differ from a current file of the same game (§22).');
     }

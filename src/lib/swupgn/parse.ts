@@ -1,6 +1,6 @@
 import type { SwuPgnDocument, Header, DeckRecord, GameEvent, Annotation, SetupInitRecord, CardIndexRecord } from './types';
 
-// Vendored from forceteki swupgn/src/parse.ts at 950a65a82. Every block marked CLIENT-OWNED is
+// Vendored from forceteki swupgn/src/parse.ts at a2c013963. Every block marked CLIENT-OWNED is
 // a documented divergence (see VERSION.md); everything else mirrors upstream.
 
 /**
@@ -234,6 +234,19 @@ export const JSON_SECTIONS = ['DECKS', 'CARDS', 'SETUP', 'EVENTS', 'ANNOTATIONS'
  * section the reader does happily parse, or stays silent on one it drops.
  */
 export const KNOWN_SECTIONS: readonly string[] = ['STORY', ...JSON_SECTIONS];
+
+/** The writer named by an `Engine` value: the text before the first `@`, or all of it. */
+export function engineProduct(engine: string): string {
+    const at = engine.indexOf('@');
+    return at < 0 ? engine : engine.slice(0, at);
+}
+
+/**
+ * The closed §25 "Pilot writer products" registry: the `Engine` products whose files with no
+ * `WriterRevision` are pre-release. Compared exactly, case included. `validate.spec.ts` checks
+ * this list against the spec's.
+ */
+export const PILOT_WRITER_PRODUCTS: ReadonlySet<string> = new Set(['forceteki']);
 
 /** Drop leading/trailing blank lines a section banner's spacing leaves around the prose. */
 function trimBlankEdges(lines: string[]): string[] {

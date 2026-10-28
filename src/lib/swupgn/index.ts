@@ -8,7 +8,7 @@
 // adapt validate.ts to `import` the JSON instead of reading from the filesystem, and
 // re-export `validate` below.
 export * from './types';
-export { DEFAULT_LIMITS, parse, READER_MAJOR, RESERVED_KEYS, SwuPgnError } from './parse';
+export { DEFAULT_LIMITS, engineProduct, parse, PILOT_WRITER_PRODUCTS, READER_MAJOR, RESERVED_KEYS, SwuPgnError } from './parse';
 export type { ParseNotes, ParsedDocument, ParseLimits } from './parse';
 export { fold, foldFrames, frameCost, reduce, stateAt, isSeat, asIdList, isCompleteKeyframe, emptyState, MAX_ZONE_LIST } from './fold';
 export { render } from './render';
@@ -17,6 +17,7 @@ export { serialize } from './serialize';
 export { displayText } from './displayText';
 export type { NameResolver } from './cardNames';
 export { baseId, indexResolver } from './cardNames';
-export { normalizeTokenEvents, dropInertRecords, dropFrameworkSources, normalizeEvents, repairUpgradePlays, isStatusTokenCard, isTokenPseudoCard, tokenName, tokenArtId } from './tokens';
+export { normalizeTokenEvents, dropInertRecords, dropFrameworkSources, normalizeEvents, repairUpgradePlays, isStatusTokenCard, isTokenPseudoCard, looseTokenName, tokenArtId } from './tokens';
+export { TOKEN_ID, TOKEN_NAME, tokenName, tokenNameOf } from './ids';
 export { checkKeyframes } from './integrity';
 export type { IntegrityResult, KeyframeMismatch } from './integrity';

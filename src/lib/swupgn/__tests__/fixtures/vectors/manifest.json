@@ -1,10 +1,11 @@
 {
   "format": "SWU-PGN/1.0",
-  "description": "Conformance suite (spec §20). For every entry a conforming validator reports exactly `level`, and exactly the error and warning codes listed (as sets). For a positive entry a conforming folder produces `fold` (equal as JSON values: key order not significant, array order significant, absent is not null) and a strict renderer produces `render` byte for byte.",
+  "description": "Conformance suite (spec §20). For every entry a conforming validator reports exactly `level`, and exactly the error and warning codes listed (as sets). For a positive entry a conforming folder produces `fold` (equal as JSON values: key order not significant, array order significant, absent is not null) and a strict renderer produces `render` byte for byte. `writer` is the `Engine` product that wrote a generated vector, or `hand` for one written by hand.",
   "vectors": [
     {
       "file": "arrest.swupgn",
       "class": "positive",
+      "writer": "forceteki",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -14,6 +15,7 @@
     {
       "file": "capture.swupgn",
       "class": "positive",
+      "writer": "forceteki",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -23,6 +25,7 @@
     {
       "file": "death-star.swupgn",
       "class": "positive",
+      "writer": "forceteki",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -32,6 +35,7 @@
     {
       "file": "homeworlds.swupgn",
       "class": "positive",
+      "writer": "forceteki",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -41,6 +45,7 @@
     {
       "file": "minimal.swupgn",
       "class": "positive",
+      "writer": "hand",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -50,6 +55,7 @@
     {
       "file": "organic.swupgn",
       "class": "positive",
+      "writer": "forceteki",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -57,8 +63,19 @@
       "render": "organic.render.txt"
     },
     {
+      "file": "other-writer.swupgn",
+      "class": "positive",
+      "writer": "hand",
+      "level": "complete",
+      "errors": [],
+      "warnings": [],
+      "fold": "other-writer.fold.json",
+      "render": "other-writer.render.txt"
+    },
+    {
       "file": "pilot.swupgn",
       "class": "positive",
+      "writer": "forceteki",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -68,6 +85,7 @@
     {
       "file": "stolen-hauler.swupgn",
       "class": "positive",
+      "writer": "forceteki",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -77,6 +95,7 @@
     {
       "file": "upgrades.swupgn",
       "class": "positive",
+      "writer": "forceteki",
       "level": "complete",
       "errors": [],
       "warnings": [],
@@ -86,6 +105,7 @@
     {
       "file": "negative/bad-escape.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "bad-escape"
@@ -96,6 +116,7 @@
     {
       "file": "negative/bad-move.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "well-formed",
       "errors": [
         "bad-zone"
@@ -104,8 +125,31 @@
       "about": "A MOVE to a zone outside the vocabulary (§6.2)."
     },
     {
+      "file": "negative/bad-token-name.swupgn",
+      "class": "negative",
+      "writer": "hand",
+      "level": "well-formed",
+      "errors": [
+        "bad-token-name"
+      ],
+      "warnings": [],
+      "about": "A CREATE_TOKEN whose token id breaks the token-name grammar (§6.1)."
+    },
+    {
+      "file": "negative/credit-zone.swupgn",
+      "class": "negative",
+      "writer": "hand",
+      "level": "well-formed",
+      "errors": [
+        "credit-zone"
+      ],
+      "warnings": [],
+      "about": "A MOVE of a Credit token into resource; the format records Credit tokens in base (§6.2, [W-42])."
+    },
+    {
       "file": "negative/damaged-keyframe.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "valid",
       "errors": [],
       "warnings": [
@@ -116,6 +160,7 @@
     {
       "file": "negative/dangling-ref.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "well-formed",
       "errors": [
         "dangling-ref"
@@ -126,6 +171,7 @@
     {
       "file": "negative/duplicate-section.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "duplicate-section"
@@ -136,6 +182,7 @@
     {
       "file": "negative/duplicate-seq.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "well-formed",
       "errors": [
         "duplicate-seq"
@@ -146,6 +193,7 @@
     {
       "file": "negative/higher-minor.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "verified",
       "errors": [],
       "warnings": [
@@ -158,6 +206,7 @@
     {
       "file": "negative/not-swupgn.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "not-swupgn"
@@ -168,6 +217,7 @@
     {
       "file": "negative/over-cap.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "well-formed",
       "errors": [
         "over-cap"
@@ -178,6 +228,7 @@
     {
       "file": "negative/pre-release.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "well-formed",
       "errors": [],
       "warnings": [
@@ -188,6 +239,7 @@
     {
       "file": "negative/proto-token.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "reserved-key"
@@ -198,6 +250,7 @@
     {
       "file": "negative/rounds-not-digits.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "bad-count"
@@ -208,6 +261,7 @@
     {
       "file": "negative/unknown-section.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "complete",
       "errors": [],
       "warnings": [
@@ -218,6 +272,7 @@
     {
       "file": "negative/unknown-type.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "complete",
       "errors": [],
       "warnings": [
@@ -228,6 +283,7 @@
     {
       "file": "negative/unsupported-major.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "unsupported-major"
@@ -238,6 +294,7 @@
     {
       "file": "negative/bad-recorder-errors.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "bad-count"
@@ -248,6 +305,7 @@
     {
       "file": "negative/duplicate-key.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "duplicate-key"
@@ -256,8 +314,20 @@
       "about": "A record that repeats a key in one object: not I-JSON (§4)."
     },
     {
+      "file": "negative/deck-build-move.swupgn",
+      "class": "negative",
+      "writer": "hand",
+      "level": "well-formed",
+      "errors": [
+        "deck-build-move"
+      ],
+      "warnings": [],
+      "about": "A MOVE from outsideTheGame into deck; the decks are built by DECKS and INIT (§10.1, [W-41])."
+    },
+    {
       "file": "negative/deck-reserved-key.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "reserved-key"
@@ -268,6 +338,7 @@
     {
       "file": "negative/newer-minor-bad-seat.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "well-formed",
       "errors": [
         "schema"
@@ -280,6 +351,7 @@
     {
       "file": "negative/to-string-key.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "reserved-key"
@@ -290,6 +362,7 @@
     {
       "file": "negative/reserved-token-name.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "reserved-key"
@@ -300,6 +373,7 @@
     {
       "file": "negative/nested-reserved-token.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "reserved-key"
@@ -310,6 +384,7 @@
     {
       "file": "negative/reserved-tag-name.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "malformed",
       "errors": [
         "reserved-key"
@@ -320,6 +395,7 @@
     {
       "file": "negative/newer-minor-result.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "complete",
       "errors": [],
       "warnings": [
@@ -331,6 +407,7 @@
     {
       "file": "negative/newer-minor-result-seat.swupgn",
       "class": "negative",
+      "writer": "hand",
       "level": "well-formed",
       "errors": [
         "schema"

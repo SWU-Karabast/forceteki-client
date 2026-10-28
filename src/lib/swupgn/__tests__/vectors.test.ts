@@ -25,7 +25,7 @@ const asJson = (v: unknown): unknown => JSON.parse(JSON.stringify(v));
 it('every positive vector on disk is in the manifest, and the other way round', () => {
     expect(readdirSync(DIR).filter((f) => f.endsWith('.swupgn')).map((f) => f.replace(/\.swupgn$/, '')).sort())
         .toEqual([...VECTORS].sort());
-    expect(VECTORS).toHaveLength(9);
+    expect(VECTORS).toHaveLength(10);
 });
 
 describe.each(VECTORS)('test vector: %s', (name) => {
