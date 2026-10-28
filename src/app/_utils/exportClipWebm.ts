@@ -1,5 +1,5 @@
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent } from '@/lib/swupgn';
-import { foldFrames } from '@/lib/swupgn';
+import { displayText, foldFrames } from '@/lib/swupgn';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 import { buildBeats, type Beat } from '@/app/_utils/replayBeats';
 import { groupsByAdjacency } from '@/app/_utils/swupgnWriter';
@@ -57,8 +57,9 @@ function drawFrame(
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 34px sans-serif';
-    const p1 = header.p1 || 'Player 1';
-    const p2 = header.p2 || 'Player 2';
+    // File text, drawn as is: neutralise bidi and control characters (§23).
+    const p1 = displayText(header.p1) || 'Player 1';
+    const p2 = displayText(header.p2) || 'Player 2';
     ctx.fillText(`${p1}  vs  ${p2}`, W / 2, 60);
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
     ctx.font = '20px sans-serif';

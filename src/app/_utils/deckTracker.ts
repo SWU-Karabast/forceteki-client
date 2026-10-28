@@ -1,4 +1,4 @@
-import type { GameEvent, Seat, SetupInitRecord, SwuPgnDocument } from '@/lib/swupgn';
+import { MAX_ZONE_LIST, type GameEvent, type Seat, type SetupInitRecord, type SwuPgnDocument } from '@/lib/swupgn';
 
 /**
  * What is still in a player's deck at a given frame, in order.
@@ -23,11 +23,14 @@ export function initRecord(doc: SwuPgnDocument): SetupInitRecord | undefined {
     return doc.setup.find((r): r is SetupInitRecord => !!r && (r as SetupInitRecord).t === 'INIT');
 }
 
+// The deck order comes from the file, and deckByFrame keeps one copy per deck MOVE, so an
+// uncapped list costs events x length. A real deck is about 50 cards; the fold caps its own
+// lists at the same MAX_ZONE_LIST.
 function initOrder(doc: SwuPgnDocument): Record<Seat, string[]> {
     const init = initRecord(doc);
     return {
-        1: Array.isArray(init?.p1DeckOrder) ? [...init.p1DeckOrder] : [],
-        2: Array.isArray(init?.p2DeckOrder) ? [...init.p2DeckOrder] : [],
+        1: Array.isArray(init?.p1DeckOrder) ? init.p1DeckOrder.slice(0, MAX_ZONE_LIST) : [],
+        2: Array.isArray(init?.p2DeckOrder) ? init.p2DeckOrder.slice(0, MAX_ZONE_LIST) : [],
     };
 }
 

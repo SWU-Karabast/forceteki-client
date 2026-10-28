@@ -19,7 +19,7 @@ const AnnotationBadge: React.FC<{ nag?: string; size?: number }> = ({ nag, size 
                     height: size,
                     px: 0.5,
                     borderRadius: '4px',
-                    fontSize: '0.7rem',
+                    fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' },
                     fontWeight: 800,
                     lineHeight: 1,
                     color: '#10131a',

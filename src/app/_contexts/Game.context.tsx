@@ -47,10 +47,6 @@ interface IGameContextType {
     updateDistributionPrompt: (uuid: string, amount: number) => void;
     distributionPromptData: IDistributionPromptData | null;
     isSpectator: boolean;
-
-    /** A finished game replayed from a file: spectator rules, but the board's own cues
-     *  (last played card) are shown, since there is no hidden information to protect. */
-    isReplay?: boolean;
     lastQueueHeartbeat: number;
     queueMatchmakingStatus: IQueueMatchmakingStatus | null;
     isAnonymousPlayer: (player: string) => boolean;
@@ -65,7 +61,7 @@ interface IGameContextType {
     };
 }
 
-export const GameContext = createContext<IGameContextType | undefined>(undefined);
+const GameContext = createContext<IGameContextType | undefined>(undefined);
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
@@ -625,7 +621,6 @@ export const useGame = () => {
         getOpponent: replayContext.getOpponent,
         gameMessages: [],
         isSpectator: true,
-        isReplay: true,
         gameIsEnded: () => true,
         lobbyState: null,
     } as IGameContextType : null), [replayContext]);

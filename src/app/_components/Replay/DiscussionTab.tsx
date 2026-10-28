@@ -46,23 +46,36 @@ const NagPicker: React.FC<{ value: string; onChange: (v: string) => void }> = ({
     </Box>
 );
 
-const Composer: React.FC<{ onSubmit: (text: string, nag: string) => void; withNag?: boolean; placeholder: string; compact?: boolean }> = ({
-    onSubmit, withNag = false, placeholder, compact = false,
+/**
+ * A note's draft. The move it is about is pinned when the draft starts (`seq` at the first
+ * keystroke or glyph), not read at Post: autoplay, a looping clip link or the scrubber can move
+ * the playhead while the user types, and the note must land on the move they were writing about.
+ */
+const Composer: React.FC<{ seq: string; onSubmit: (text: string, nag: string, ref: string) => void; withNag?: boolean; placeholder: string; compact?: boolean }> = ({
+    seq, onSubmit, withNag = false, placeholder, compact = false,
 }) => {
     const [text, setText] = useState('');
     const [nag, setNag] = useState('');
+    const [pinned, setPinned] = useState<string | null>(null);
+    // An empty draft follows the playhead; a started one keeps the move it began on.
+    const track = (nextText: string, nextNag: string) => setPinned(nextText || nextNag ? (pinned ?? seq) : null);
     const submit = () => {
         if (!text.trim() && !nag) return;
-        onSubmit(text.trim(), nag);
-        setText(''); setNag('');
+        onSubmit(text.trim(), nag, pinned ?? seq);
+        setText(''); setNag(''); setPinned(null);
     };
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mt: compact ? 0.75 : 1 }}>
-            {withNag && <NagPicker value={nag} onChange={setNag} />}
+            {withNag && <NagPicker value={nag} onChange={(v) => { setNag(v); track(text, v); }} />}
+            {pinned && pinned !== seq && (
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)' }}>
+                    Posting on move {displayText(pinned)}
+                </Typography>
+            )}
             <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'flex-start' }}>
                 <TextField
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    onChange={(e) => { setText(e.target.value); track(e.target.value, nag); }}
                     placeholder={placeholder}
                     inputProps={{ 'aria-label': placeholder }}
                     size="small"
@@ -86,7 +99,7 @@ const Composer: React.FC<{ onSubmit: (text: string, nag: string) => void; withNa
 
 const NoteCard: React.FC<{
     node: ThreadNode<Note>;
-    onReply: (parentId: string, text: string) => void;
+    onReply: (parentId: string, ref: string, text: string) => void;
     onDelete: (id: string) => void;
     depth?: number;
 }> = ({ node, onReply, onDelete, depth = 0 }) => {
@@ -123,7 +136,7 @@ const NoteCard: React.FC<{
                 </Typography>
             )}
             {replying && id && (
-                <Composer compact placeholder={`Reply to ${displayText(n.by) || 'Anonymous'}…`} onSubmit={(text) => { if (text) { onReply(id, text); setReplying(false); } }} />
+                <Composer compact seq={n.ref} placeholder={`Reply to ${displayText(n.by) || 'Anonymous'}…`} onSubmit={(text, _nag, ref) => { if (text) { onReply(id, ref, text); setReplying(false); } }} />
             )}
             {node.replies.map((child, i) => (
                 <NoteCard key={idOf(child.note) ?? i} node={child} onReply={onReply} onDelete={onDelete} depth={depth + 1} />
@@ -174,7 +187,8 @@ const DiscussionTab: React.FC = () => {
                         <NoteCard
                             key={noteKey}
                             node={node}
-                            onReply={(parentId, text) => seq && addAnnotation(seq, { text, parent: parentId })}
+                            // A reply goes on its parent's move, wherever the playhead is now.
+                            onReply={(parentId, ref, text) => addAnnotation(ref, { text, parent: parentId })}
                             onDelete={(id) => deleteAnnotation(id)}
                         />
                     );
@@ -182,7 +196,7 @@ const DiscussionTab: React.FC = () => {
             </Box>
             {seq && (
                 <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.1)', pt: 1, mt: 1 }}>
-                    <Composer withNag placeholder="Add a note on this move…" onSubmit={(text, nag) => addAnnotation(seq, { text, nag })} />
+                    <Composer withNag seq={seq} placeholder="Add a note on this move…" onSubmit={(text, nag, ref) => addAnnotation(ref, { text, nag })} />
                 </Box>
             )}
         </Box>

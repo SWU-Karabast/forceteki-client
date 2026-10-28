@@ -191,7 +191,7 @@ const TransportControls: React.FC = () => {
                         '& .MuiSlider-markActive': { backgroundColor: 'var(--selection-blue)' },
                         '& .MuiSlider-valueLabel': {
                             backgroundColor: 'rgba(0,0,0,0.85)',
-                            fontSize: '0.7rem',
+                            fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' },
                         },
                     }}
                 />

@@ -8,7 +8,7 @@ import { groupsByAdjacency, isPreRelease } from '../swupgnWriter';
 import { buildBeats } from '../replayBeats';
 import { initRecord, deckByFrame } from '../deckTracker';
 import { roundOfSeq, turnDigests } from '../turnDigests';
-import { fileIssues, replayErrorMessage, ReplayRefusedError } from '../swupgnFileIssues';
+import { fileIssues, replayErrorMessage, ReplayRefusedError, writerGeneration } from '../swupgnFileIssues';
 import { storeReplayContent } from '../replayHandoff';
 import { decisionPoints, bookmarkLabel } from '../replayDecisions';
 import { frameAction, storyName } from '../replayAction';
@@ -235,6 +235,14 @@ describe('pre-release is a pilot writer\'s file with no WriterRevision ([V-04], 
         const v11 = noRev.replace('SWU-PGN/1.0', 'SWU-PGN/1.1');
         expect(notices(withEngine(v11, 'forceteki@abc'))).not.toMatch(/newer than this viewer/);
         expect(notices(withEngine(v11, 'examplewriter@1.0.0'))).toMatch(/newer than this viewer/);
+    });
+
+    // Value: protects=writerGeneration does not call another writer's 1.1 file pre-release, so File Health never says both "pre-release" and "newer"; fails_when=the 1.1 line loses its isPreRelease gate; why_new=plan audit found the 1.1 line ungated after newerMinor moved to isPreRelease; seam=none; no_claim=wording of the line
+    it('names a 1.1 file a pre-release file only when a pilot writer wrote it', () => {
+        const v11 = noRev.replace('SWU-PGN/1.0', 'SWU-PGN/1.1');
+        const said = (engine: string) => writerGeneration(parse(withEngine(v11, engine))).join('\n');
+        expect(said('forceteki@abc')).toMatch(/Pre-release SWU-PGN\/1\.1/);
+        expect(said('examplewriter@1.0.0')).not.toMatch(/Pre-release/);
     });
 });
 

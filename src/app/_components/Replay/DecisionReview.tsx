@@ -43,7 +43,7 @@ const DecisionReview: React.FC = () => {
                     )}
                     {decisions.map((d) => (
                         <Row key={d.seq} onClick={() => seekToSeq(d.seq)}>
-                            <Typography component="span" sx={{ fontSize: '0.7rem', color: 'var(--initiative-blue)', fontWeight: 700, minWidth: 16 }}>
+                            <Typography component="span" sx={{ fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' }, color: 'var(--initiative-blue)', fontWeight: 700, minWidth: 16 }}>
                                 {d.p}
                             </Typography>
                             <Box sx={{ flex: 1, minWidth: 0 }}>

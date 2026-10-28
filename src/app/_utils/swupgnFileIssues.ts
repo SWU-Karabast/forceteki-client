@@ -230,8 +230,8 @@ export function writerGeneration(doc: SwuPgnDocument & ParseNotes): string[] {
     const keyframeCards = keyframeSeats.flatMap((p) => (Array.isArray(p.cards) ? p.cards : [])).filter((c) => c != null && typeof c === 'object');
     const enteredArena = events.some((e) => e.t === 'MOVE' && (e.to === 'ground' || e.to === 'space'));
 
-    // §22.1: a 1.1 file is OLDER than 1.0.
-    if (doc.header.game === 'SWU-PGN/1.1') {
+    // A pilot writer's 1.1 file is OLDER than 1.0 (see newerMinor); another writer's 1.1 is a newer minor.
+    if (doc.header.game === 'SWU-PGN/1.1' && isPreRelease(doc.header)) {
         out.push('Pre-release SWU-PGN/1.1 file (older than 1.0, §22.1): token ids carry no art id, token removals and hosts are inferred from adjacency, and keyframes may miss a seat.');
     }
     if (!doc.cards?.length) {

@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Box, Typography, IconButton, Tooltip, Snackbar, Alert, CircularProgress, Button } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip, Snackbar, CircularProgress, Button } from '@mui/material';
 import {
     ChevronRight, ChevronLeft, FormatListBulleted, BarChartOutlined, CallSplitOutlined, MenuBookOutlined, StyleOutlined,
     ViewDayOutlined, ChatBubbleOutline, LinkOutlined, FileDownloadOutlined, DescriptionOutlined,
@@ -51,8 +51,6 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
     const gameMeta = formatGameMeta(header);
     const [tab, setTab] = useState<TabKey>('moves');
     const [snack, setSnack] = useState<string | null>(null);
-    // A warning about content left out of a download: longer-lived than a confirmation.
-    const [warning, setWarning] = useState<string | null>(null);
     const [recording, setRecording] = useState(false);
 
     if (totalFrames === 0) return null;
@@ -142,7 +140,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
                         the 4.5:1 contrast floor against the panel ground. */}
                     {gameMeta && (
                         <Tooltip title={gameMeta}>
-                            <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.62)', fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.62)', fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {gameMeta}
                             </Typography>
                         </Tooltip>
@@ -165,7 +163,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
                 <Box sx={{ width: '1px', height: 18, backgroundColor: 'rgba(255,255,255,0.15)', mx: 0.5 }} />
                 <Tooltip title="Set clip start"><IconButton size="small" onClick={setClipStart} sx={{ color: 'rgba(255,255,255,0.7)' }}><FirstPage sx={{ fontSize: 18 }} /></IconButton></Tooltip>
                 <Tooltip title="Set clip end"><IconButton size="small" onClick={setClipEnd} sx={{ color: 'rgba(255,255,255,0.7)' }}><LastPage sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-                <Typography variant="caption" sx={{ color: clip ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.4)', minWidth: 44, textAlign: 'center', fontSize: '0.7rem' }}>
+                <Typography variant="caption" sx={{ color: clip ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.4)', minWidth: 44, textAlign: 'center', fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' } }}>
                     {clip ? `${clip.start}–${clip.end}` : 'clip'}
                 </Typography>
                 {/* The span keeps the tooltip alive while the button is disabled, but it also
@@ -173,7 +171,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
                 <Tooltip title="Copy clip link"><span><IconButton size="small" aria-label="Copy clip link" onClick={copyClipLink} disabled={!clip} sx={{ color: clip ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}><ContentCut sx={{ fontSize: 16 }} /></IconButton></span></Tooltip>
                 <Tooltip title="Export clip as .webm"><span><IconButton size="small" aria-label="Export clip as webm" onClick={exportWebm} disabled={recording} sx={{ color: 'rgba(255,255,255,0.7)' }}>{recording ? <CircularProgress size={15} sx={{ color: 'var(--initiative-blue)' }} /> : <MovieCreationOutlined sx={{ fontSize: 18 }} />}</IconButton></span></Tooltip>
                 {clip && (
-                    <Button size="small" onClick={clearClip} aria-label="Clear clip" sx={{ minWidth: 0, px: 0.75, py: 0, color: 'rgba(255,255,255,0.45)', fontSize: '0.68rem', textTransform: 'none', '&:hover': { color: 'white' } }}>
+                    <Button size="small" onClick={clearClip} aria-label="Clear clip" sx={{ minWidth: 0, px: 0.75, py: 0, color: 'rgba(255,255,255,0.45)', fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' }, textTransform: 'none', '&:hover': { color: 'white' } }}>
                         clear
                     </Button>
                 )}
@@ -211,10 +209,6 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
             </Box>
 
             <Snackbar open={!!snack} autoHideDuration={2200} onClose={() => setSnack(null)} message={snack ?? ''} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
-            <Snackbar open={!!warning} autoHideDuration={6000} onClose={() => setWarning(null)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-                {/* Dark text on a light amber: white on MUI's filled warning orange is about 3:1. */}
-                <Alert severity="warning" variant="filled" onClose={() => setWarning(null)} sx={{ bgcolor: '#ffb74d', color: '#000', '& .MuiAlert-icon, & .MuiAlert-action': { color: '#000' } }}>{warning}</Alert>
-            </Snackbar>
         </Box>
     );
 };

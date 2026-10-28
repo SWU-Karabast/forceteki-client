@@ -25,7 +25,7 @@ import { useReplay } from '@/app/_contexts/Replay.context';
  * file) is shown but does not turn the badge amber.
  */
 const MAX_LISTED = 40;
-const MONO = { color: 'rgba(255,255,255,0.65)', display: 'block', fontFamily: 'monospace', fontSize: '0.68rem' } as const;
+const MONO = { color: 'rgba(255,255,255,0.65)', display: 'block', fontFamily: 'monospace', fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' } } as const;
 const fmt = (v: unknown) => (v === undefined ? '—' : typeof v === 'string' ? v : JSON.stringify(v));
 
 const FileHealth: React.FC = () => {

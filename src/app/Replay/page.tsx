@@ -203,9 +203,8 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
     );
 }
 
-function ReplayBoard({ doc, rawContent, replayId, initialFrame, clipStart, clipEnd }: {
+function ReplayBoard({ doc, replayId, initialFrame, clipStart, clipEnd }: {
     doc: SwuPgnDocument;
-    rawContent: string | null;
     replayId: string | null;
     initialFrame: number | string;
     clipStart: string | null;
@@ -215,7 +214,7 @@ function ReplayBoard({ doc, rawContent, replayId, initialFrame, clipStart, clipE
     // it loads, then the move list / captions re-render with names; unknown ids fall back.
     const cardNameMap = useCardNameMap();
     return (
-        <ReplayProvider doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} nameMap={cardNameMap} clipStart={clipStart} clipEnd={clipEnd}>
+        <ReplayProvider doc={doc} replayId={replayId} initialFrame={initialFrame} nameMap={cardNameMap} clipStart={clipStart} clipEnd={clipEnd}>
             <ReplayAnnotationsProvider doc={doc} replayId={replayId}>
                 <ReplayBoardContent header={doc.header} />
             </ReplayAnnotationsProvider>
@@ -225,7 +224,6 @@ function ReplayBoard({ doc, rawContent, replayId, initialFrame, clipStart, clipE
 
 export default function ReplayPage() {
     const [doc, setDoc] = useState<SwuPgnDocument | null>(null);
-    const [rawContent, setRawContent] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
     const router = useRouter();
@@ -256,7 +254,6 @@ export default function ReplayPage() {
                         setLoadError(heavy);
                     } else if (parsed.events.length > 0) {
                         setDoc(parsed);
-                        setRawContent(content);
                     } else {
                         // It IS stored, so "isn't stored on this device" would be wrong.
                         setLoadError('This stored replay could not be read: it has no game records.');
@@ -276,7 +273,6 @@ export default function ReplayPage() {
     const handleReplayLoaded = async (loaded: SwuPgnDocument, content: string) => {
         setLoadError(null);
         setDoc(loaded);
-        setRawContent(content);
         try {
             // FileUpload has parsed and budget-checked `loaded` already.
             const { id } = await storeReplayContent(content, loaded);
@@ -289,7 +285,7 @@ export default function ReplayPage() {
     };
 
     if (doc) {
-        return <ReplayBoard doc={doc} rawContent={rawContent} replayId={replayId} initialFrame={initialFrame} clipStart={clipStart} clipEnd={clipEnd} />;
+        return <ReplayBoard doc={doc} replayId={replayId} initialFrame={initialFrame} clipStart={clipStart} clipEnd={clipEnd} />;
     }
 
     return (

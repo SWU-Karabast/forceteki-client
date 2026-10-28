@@ -4,7 +4,7 @@
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent, NameResolver } from '@/lib/swupgn';
-import { foldFrames, serialize, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe } from '@/lib/swupgn';
+import { foldFrames, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe } from '@/lib/swupgn';
 import { storyName } from '@/app/_utils/replayAction';
 import { adaptState, type AdaptOptions, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { deckByFrame, type DeckState } from '@/app/_utils/deckTracker';
@@ -20,7 +20,7 @@ import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '@/app/_util
 import { classifyBeat, type Transition } from '@/app/_utils/replayTransitions';
 import { SPEEDS, dwellMs } from '@/app/_utils/replayTiming';
 import { readPrefs, PREFS_KEY, DEFAULT_PREFS, type StepBy } from '@/app/_utils/replayPrefs';
-import { triggerBlobDownload, sanitizeFilename, downloadSwuPgn } from '@/app/_utils/downloadBlob';
+import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 import { resolveFrameRef } from '@/app/_utils/replayDeepLink';
 import { ReplayContext } from '@/app/_contexts/ReplayContextCore';
 
@@ -61,7 +61,6 @@ export interface IReplayContextType {
     moves: ReplayMove[];
     currentMoveIndex: number;
     replayId: string | null;
-    downloadReplay: () => void;
 
     /** Resolve a SET#NUM[:copy] card id to a display name (falls back to the raw id). Names a
      *  two-named leader by its printed front: for lists that are not tied to a moment. */
@@ -134,7 +133,6 @@ const SEAT_TO_ID: SeatToPlayerId = { 1: P1, 2: P2 };
 interface ReplayProviderProps {
     doc: SwuPgnDocument;
     children: ReactNode;
-    rawContent?: string | null;
     replayId?: string | null;
 
     /** Opening position: a `seq` (stable across stream repairs) or a legacy frame index. */
@@ -147,7 +145,7 @@ interface ReplayProviderProps {
 }
 
 export const ReplayProvider: React.FC<ReplayProviderProps> = ({
-    doc, children, rawContent = null, replayId = null, initialFrame = 0, nameMap = {},
+    doc, children, replayId = null, initialFrame = 0, nameMap = {},
     clipStart = null, clipEnd = null,
 }) => {
     // Read the repaired stream, not the file's literal events: forceteki never emits a
@@ -423,12 +421,12 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             nameOf: (id: string) => storyName(id, sidedNow),
             highlightIds: action.highlight,
             leaderExhausted: leaderExhaustByFrame[currentIndex],
-            // Fog-of-war hides the opponent's hand; their face-down resources go with it.
             baseHp: baseHpByFrame[currentIndex],
             deckRemaining: {
                 1: deckStates[currentIndex]?.[1].remaining.length,
                 2: deckStates[currentIndex]?.[2].remaining.length,
             },
+            // Fog-of-war hides the opponent's hand; their face-down resources go with it.
             resourcedIds: fogOfWar
                 ? { [perspective === P1 ? 1 : 2]: resourcedByFrame[currentIndex]?.[perspective === P1 ? 1 : 2] ?? [] } as Partial<Record<Seat, string[]>>
                 : resourcedByFrame[currentIndex],
@@ -458,10 +456,6 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const currentEvents = useMemo(() => (caption.label ? [caption.label] : []), [caption]);
 
     const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
-    const downloadReplay = useCallback(() => {
-        downloadSwuPgn(doc, rawContent ?? serialize(doc));
-    }, [rawContent, doc]);
-
     const downloadTextLog = useCallback(() => {
         const blob = new Blob([render(doc, resolver)], { type: 'text/plain' });
         triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.txt`));
@@ -537,14 +531,14 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent,
         doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
-        replayId, downloadReplay, nameOf: names.nameOf, nameAt, nameAtSeq, frameStates,
+        replayId, nameOf: names.nameOf, nameAt, nameAtSeq, frameStates,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate, setAnimate, stepBy, setStepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, seekToBeatOf, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
-        currentMoveIndex, replayId, downloadReplay, names, nameAt, nameAtSeq, frameStates, downloadTextLog, fogOfWar, toggleFogOfWar,
+        currentMoveIndex, replayId, names, nameAt, nameAtSeq, frameStates, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate, stepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
