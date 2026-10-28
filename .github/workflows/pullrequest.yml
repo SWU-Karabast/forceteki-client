@@ -5,31 +5,66 @@ on:
     branches:
       - main
   merge_group:
+  # runs on main save the caches that PR and merge queue runs restore; caches saved by a PR are only visible to that PR
+  push:
+    branches:
+      - main
 # this will cancel any PR runs that are superseded by a new commit so they don't waste time running tests that are no longer relevant
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
   lint:
-    if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
+        id: setup-node
         with:
           node-version: "22.x"
           cache: "npm"
-      - run: npm ci
+      - name: cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - if: ${{ steps.cache-node-modules.outputs.cache-hit != 'true' }}
+        run: npm ci
       - run: npm run lint
 
   build:
-    if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
+        id: setup-node
         with:
           node-version: "22.x"
           cache: "npm"
-      - run: npm ci
+      - name: cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - if: ${{ steps.cache-node-modules.outputs.cache-hit != 'true' }}
+        run: npm ci
+      # webpack only reuses cached modules whose source is unchanged, so restoring the newest cache for the same lockfile is safe.
+      # only runs on main save it: a cache saved by a PR is visible to that PR alone
+      - name: restore next build cache
+        uses: actions/cache/restore@v5
+        with:
+          path: .next/cache
+          key: next-build-${{ runner.os }}-node${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            next-build-${{ runner.os }}-node${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}-
       - run: npm run build
+      - if: ${{ github.event_name == 'push' }}
+        name: save next build cache
+        uses: actions/cache/save@v5
+        with:
+          path: .next/cache
+          key: next-build-${{ runner.os }}-node${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
