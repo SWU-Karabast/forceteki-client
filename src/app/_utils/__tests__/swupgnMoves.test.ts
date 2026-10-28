@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildMoveList } from '../swupgnMoves';
 import { frameAction } from '../replayAction';
-import { firstFrameByAction, formatGameMeta } from '../replayMoves';
+import { firstFrameByAction, formatGameMeta, formatRoundPhase } from '../replayMoves';
 import { makeNameResolver } from '../swupgnCardNames';
 import { parse, type GameEvent } from '@/lib/swupgn';
 import { readFileSync } from 'fs';
@@ -132,5 +132,38 @@ describe('a move span never runs backwards (Replay.context moveFrames)', () => {
     it('ignores a link at or after the move it claims to precede', () => {
         const events = Array.from({ length: 6 }, (_, i) => (i === 5 ? { for: 'R1.A.2' } : {}));
         expect(spanStarts(events, [{ seq: 'R1.A.1', own: 0 }, { seq: 'R1.A.2', own: 4 }])).toEqual([0, 4]);
+    });
+});
+
+// Value: protects=the transport's round/phase label decodes A/G/S and is empty for a seq with no round; fails_when=the phase letter map drifts or the malformed-seq fallback breaks; why_new=formatRoundPhase had no test while its siblings did; seam=none; no_claim=the TransportControls markup
+describe('formatRoundPhase', () => {
+    it('decodes the three phase letters', () => {
+        expect(formatRoundPhase('R1.A.3')).toBe('Round 1, Action Phase');
+        expect(formatRoundPhase('R2.G.1b')).toBe('Round 2, Regroup Phase');
+        expect(formatRoundPhase('R0.S.1')).toBe('Round 0, Setup Phase');
+    });
+
+    it('is empty for a seq with no round and phase', () => {
+        expect(formatRoundPhase('')).toBe('');
+        expect(formatRoundPhase('GAME_END')).toBe('');
+    });
+});
+
+describe('fog-of-war redaction (hiddenSeat)', () => {
+    const names = makeNameResolver({ 'SOR#108': 'Wampa', 'SOR#095': 'Battlefield Marine' });
+    const draw = { seq: 'R1.G.1', t: 'DRAW', p: 2, count: 2, cards: ['SOR#108', 'SOR#095'] } as unknown as GameEvent;
+    const resource = { seq: 'R1.G.2', t: 'RESOURCE', p: 2, card: 'SOR#108' } as unknown as GameEvent;
+    const oldResource = { seq: 'R1.G.3', t: 'MOVE', p: 2, card: 'SOR#108', from: 'hand', to: 'resource' } as unknown as GameEvent;
+
+    // Value: protects=with fog on, the hidden seat's draws and resource picks are captioned by count, never by card; fails_when=frameAction ignores hiddenSeat (captions and the move list name the hidden hand); why_new=red team found fog hid only the board; seam=none; no_claim=the ResourcingReport markup, which reads the same hiddenSeat
+    it('says the hidden seat draws and resources without naming the cards', () => {
+        expect(frameAction(draw, names, { hiddenSeat: 2 }).label).toBe('Player 2 draws 2');
+        expect(frameAction(resource, names, { hiddenSeat: 2 }).label).toBe('Player 2 resources a card');
+        expect(frameAction(oldResource, names, { hiddenSeat: 2 }).label).toBe('Player 2 resources a card');
+    });
+
+    it('still names the cards for the visible seat and with fog off', () => {
+        expect(frameAction(draw, names, { hiddenSeat: 1 }).label).toBe('Player 2 draws 2: Wampa, Battlefield Marine');
+        expect(frameAction(resource, names).label).toBe('Player 2 resources Wampa');
     });
 });

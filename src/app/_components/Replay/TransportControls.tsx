@@ -85,6 +85,8 @@ const TransportControls: React.FC = () => {
             // Space still backs off a focused button/link/tab so it activates that control
             // instead of double-firing play/pause.
             if (e.key === ' ' && target?.closest?.('button, [role="button"], a[href], [role="tab"]')) return;
+            // Alt/Cmd/Ctrl chords are the browser's (Back, line start); Shift is the per-record step.
+            if (e.altKey || e.metaKey || e.ctrlKey) return;
 
             switch (e.key) {
                 case ' ':

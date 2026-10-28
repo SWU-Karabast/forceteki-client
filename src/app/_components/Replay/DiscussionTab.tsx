@@ -140,10 +140,9 @@ const DiscussionTab: React.FC = () => {
     // The beat's own record, the one the Moves list names: the playhead rests on a beat's LAST
     // record, which for an attack is a consequence like `R2.A.6a`, not the move.
     const seq = events[currentBeat.anchor]?.seq;
-    const notes = (seq ? threadFor(seq) : []) as Note[];
     const threads = useMemo(
-        () => buildThreads<Note>(notes, idOf, (n) => n.parent, (n) => n.ts ?? 0),
-        [notes],
+        () => buildThreads<Note>((seq ? threadFor(seq) : []) as Note[], idOf, (n) => n.parent, (n) => n.ts ?? 0),
+        [seq, threadFor],
     );
 
     return (
@@ -198,7 +197,7 @@ const styles = {
     },
     nagOption: (active: boolean, toneColor: string) => ({
         cursor: 'pointer', px: 0.75, py: 0.1, borderRadius: '4px', fontWeight: 700,
-        fontSize: '0.8rem', userSelect: 'none', lineHeight: 1.6,
+        fontSize: { xs: 'max(12px, 0.8rem)', md: '0.8rem' }, userSelect: 'none', lineHeight: 1.6,
         color: active ? '#0c0f16' : toneColor,
         backgroundColor: active ? toneColor : 'rgba(255,255,255,0.06)',
         border: `1px solid ${toneColor}55`,
@@ -220,7 +219,7 @@ const styles = {
         alignItems: 'flex-start',
     },
     composerField: {
-        '& .MuiInputBase-root': { color: 'white', fontSize: '0.82rem', backgroundColor: 'rgba(255,255,255,0.04)' },
+        '& .MuiInputBase-root': { color: 'white', fontSize: { xs: '16px', md: '0.82rem' }, backgroundColor: 'rgba(255,255,255,0.04)' },
         '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
     },
     submitButton: {
@@ -259,7 +258,7 @@ const styles = {
     },
     noteText: {
         color: 'rgba(255,255,255,0.85)',
-        fontSize: '0.84rem',
+        fontSize: { xs: 'max(12px, 0.84rem)', md: '0.84rem' },
         whiteSpace: 'pre-wrap',
         wordBreak: 'break-word',
     },
@@ -285,7 +284,7 @@ const styles = {
     },
     emptyThreads: {
         color: 'rgba(255,255,255,0.35)',
-        fontSize: '0.82rem',
+        fontSize: { xs: 'max(12px, 0.82rem)', md: '0.82rem' },
         mt: 1,
     },
     composerDock: {

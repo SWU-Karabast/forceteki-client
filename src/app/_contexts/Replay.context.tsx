@@ -4,7 +4,7 @@
 // (IBoardState.gameState: any, same as Game.context.tsx which disables this rule).
 import React, { useContext, useState, useCallback, useEffect, useMemo, useRef, ReactNode } from 'react';
 import type { SwuPgnDocument, ReducedState, Seat, GameEvent, NameResolver } from '@/lib/swupgn';
-import { foldFrames, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe } from '@/lib/swupgn';
+import { foldFrames, render, baseId, normalizeEvents, indexResolver, isCompleteKeyframe, MAX_ZONE_LIST } from '@/lib/swupgn';
 import { storyName } from '@/app/_utils/replayAction';
 import { adaptState, type AdaptOptions, type SeatToPlayerId } from '@/app/_utils/swupgnBoardAdapter';
 import { deckByFrame, type DeckState } from '@/app/_utils/deckTracker';
@@ -79,6 +79,9 @@ export interface IReplayContextType {
     // Fog-of-war: when true, the non-perspective player's hand renders face-down.
     fogOfWar: boolean;
     toggleFogOfWar: () => void;
+
+    /** The seat fog-of-war hides (never named in the side views), or undefined when fog is off. */
+    hiddenSeat: Seat | undefined;
     // Clip range [start,end] (frame indices); playback loops within it. Null = whole game.
     clip: { start: number; end: number } | null;
     setClipStart: () => void;
@@ -215,6 +218,9 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // A leader with a `backSideName` (§6.5) is named by the side that is up at each frame: a
     // deployed Grand Moff Tarkin attacks as The Death Star.
     const resolverAt = useCallback((i: number) => sidedResolver(resolver, frameStates[i]), [resolver, frameStates]);
+    // Fog-of-war hides the non-perspective seat's hand on the board; the caption and the
+    // resourcing report must not name those cards either. (The move list has no draws or picks.)
+    const hiddenSeat: Seat | undefined = fogOfWar ? (perspective === P1 ? 2 : 1) : undefined;
     const moves = useMemo(() => buildMoveList(events, resolverAt), [events, resolverAt]);
     const nameAt = useCallback((id: string, frame: number) => storyName(id, resolverAt(frame)), [resolverAt]);
 
@@ -337,13 +343,21 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     const resourcedByFrame = useMemo<Array<Record<Seat, string[]>>>(() => {
         const cur: Record<Seat, string[]> = { 1: [], 2: [] };
         const out: Array<Record<Seat, string[]>> = new Array(events.length);
+        // The scan is only the fallback for a seat whose fold never states `resources` (a file
+        // older than that list); a current file's fold list wins every frame, so skip it there.
+        const scan: Record<Seat, boolean> = {
+            1: !frameStates.some((f) => Array.isArray(f?.players[1]?.resources)),
+            2: !frameStates.some((f) => Array.isArray(f?.players[2]?.resources)),
+        };
         for (let i = 0; i < events.length; i++) {
             const e = events[i];
             // `e.p` comes off the file; anything but a real seat has no bucket here.
-            if (e.t === 'MOVE' && (e.p === 1 || e.p === 2)) {
+            if (e.t === 'MOVE' && (e.p === 1 || e.p === 2) && scan[e.p]) {
+                // Deduped and capped like the fold's own list, so a file repeating one MOVE
+                // copies nothing; a copy is made only when the pile actually changes.
                 if (e.to === 'resource' && e.from !== 'resource') {
-                    cur[e.p] = [...cur[e.p], e.card];
-                } else if (e.from === 'resource' && e.to !== 'resource') {
+                    if (!cur[e.p].includes(e.card) && cur[e.p].length < MAX_ZONE_LIST) cur[e.p] = [...cur[e.p], e.card];
+                } else if (e.from === 'resource' && e.to !== 'resource' && cur[e.p].includes(e.card)) {
                     cur[e.p] = cur[e.p].filter((c) => c !== e.card);
                 }
             }
@@ -453,7 +467,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // Caption text for the current BEAT (richer than the move list: includes ability
     // activations, resourcing, draws, discards), plus how many records the beat's anchor
     // resolved (the caption bar's "+N records"). Empty label when nothing noteworthy.
-    const caption = useMemo(() => captionForBeat(currentBeat, events, resolverAt(currentBeat.anchor)), [currentBeat, events, resolverAt]);
+    const caption = useMemo(() => captionForBeat(currentBeat, events, resolverAt(currentBeat.anchor), { hiddenSeat }), [currentBeat, events, resolverAt, hiddenSeat]);
     const currentEvents = useMemo(() => (caption.label ? [caption.label] : []), [caption]);
 
     const getOpponent = useCallback((p: string) => (p === P1 ? P2 : P1), []);
@@ -529,13 +543,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         gameState, connectedPlayer: perspective, getOpponent,
         doc, events, chapterMarks, deckNow, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
         replayId, nameOf: names.nameOf, nameAt, nameAtSeq, frameStates,
-        downloadTextLog, fogOfWar, toggleFogOfWar,
+        downloadTextLog, fogOfWar, toggleFogOfWar, hiddenSeat,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate, setAnimate, stepBy, setStepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, seekToBeatOf, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
     }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckNow, resourcingDecisions, currentIndex, totalFrames, moves,
-        currentMoveIndex, replayId, names, nameAt, nameAtSeq, frameStates, downloadTextLog, fogOfWar, toggleFogOfWar,
+        currentMoveIndex, replayId, names, nameAt, nameAtSeq, frameStates, downloadTextLog, fogOfWar, toggleFogOfWar, hiddenSeat,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate, stepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,

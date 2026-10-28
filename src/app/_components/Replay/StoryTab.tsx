@@ -122,7 +122,7 @@ const styles = {
     },
     story: {
         m: 0, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-        fontSize: { xs: 'max(11px, 0.72rem)', md: '0.72rem' }, lineHeight: 1.5, whiteSpace: 'pre',
+        fontSize: { xs: 'max(11px, 0.72rem)', md: '0.72rem' }, lineHeight: 1.5, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
         overflowX: 'auto', color: 'rgba(255,255,255,0.8)',
     },
     rebuiltNotice: {

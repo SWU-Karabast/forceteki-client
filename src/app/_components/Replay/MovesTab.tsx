@@ -81,7 +81,7 @@ const styles = {
         '&:hover': { backgroundColor: isCurrent ? 'rgba(0,186,255,0.16)' : 'rgba(255,255,255,0.06)' },
     }),
     player: (player: string) => ({
-        fontSize: '0.7rem',
+        fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' },
         fontWeight: 700,
         minWidth: 12,
         color: PLAYER_COLORS[player] ?? 'rgba(255,255,255,0.4)',

@@ -3,6 +3,8 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { keyframes } from '@mui/system';
 import { useReplay } from '@/app/_contexts/Replay.context';
+import { REPLAY_PANEL_WIDTH, REPLAY_TRANSPORT_HEIGHT } from '@/app/_constants/replayLayout';
+import type { ILastActionCaptionProps } from './ReplayTypes';
 
 // Slide-and-fade the caption in each time the beat changes. The `key={currentBeat.index}`
 // below remounts the bar on every new beat, so this replays once per beat, not per record.
@@ -15,7 +17,7 @@ const captionIn = keyframes`
  * Caption bar that narrates the current beat, sitting just above the transport bar, so
  * each step reads as "what just happened".
  */
-const LastActionCaption: React.FC = () => {
+const LastActionCaption: React.FC<ILastActionCaptionProps> = ({ panelOpen }) => {
     const { currentEvents, captionExtra, currentBeat } = useReplay();
 
     if (currentEvents.length === 0) return null;
@@ -25,7 +27,7 @@ const LastActionCaption: React.FC = () => {
     return (
         <Box
             key={currentBeat.index}
-            sx={styles.bar}
+            sx={styles.bar(panelOpen)}
         >
             <Typography variant="body2" sx={styles.headline}>
                 {headline}
@@ -43,12 +45,14 @@ export default LastActionCaption;
 
 // ----------------Styles----------------//
 const styles = {
-    bar: {
+    // From md up an open panel sits beside the board (page.tsx narrows <main>), so the caption
+    // centres on the board column instead of the viewport, where it would slide under the panel.
+    bar: (panelOpen: boolean) => ({
         position: 'fixed',
-        bottom: 68, // just above the 60px transport bar
-        left: '50%',
+        bottom: REPLAY_TRANSPORT_HEIGHT + 8, // just above the transport bar
+        left: panelOpen ? { xs: '50%', md: `calc((100vw - ${REPLAY_PANEL_WIDTH}px) / 2)` } : '50%',
         transform: 'translateX(-50%)',
-        maxWidth: '70vw',
+        maxWidth: panelOpen ? { xs: '70vw', md: `calc((100vw - ${REPLAY_PANEL_WIDTH}px) * 0.9)` } : '70vw',
         px: 2,
         py: 0.75,
         borderRadius: '8px',
@@ -62,7 +66,7 @@ const styles = {
         pointerEvents: 'none',
         animation: `${captionIn} 0.22s ease-out`,
         '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-    },
+    }),
     headline: {
         color: 'white',
         fontWeight: 600,

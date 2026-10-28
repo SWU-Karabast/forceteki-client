@@ -21,6 +21,7 @@ const RecentReplays: React.FC = () => {
     const router = useRouter();
     const [replays, setReplays] = useState<StoredReplayMeta[]>([]);
     const [loaded, setLoaded] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     useEffect(() => {
         listReplays()
@@ -30,11 +31,14 @@ const RecentReplays: React.FC = () => {
     }, []);
 
     const handleDelete = async (id: string) => {
+        setDeleteError(null);
         try {
             await deleteReplay(id);
             setReplays((prev) => prev.filter((r) => r.id !== id));
-        } catch {
-            // ignore — list just won't update
+        } catch (err) {
+            // The row stays, so say why rather than leave a click that did nothing.
+            console.warn('Failed to delete stored replay', id, err);
+            setDeleteError('That replay could not be removed. Try again, or reload the page if another tab is open.');
         }
     };
 
@@ -45,6 +49,11 @@ const RecentReplays: React.FC = () => {
             <Typography variant="body2" sx={styles.heading}>
                 RECENT REPLAYS
             </Typography>
+            {deleteError && (
+                <Typography variant="caption" role="alert" sx={styles.deleteError}>
+                    {deleteError}
+                </Typography>
+            )}
             <Box sx={styles.list}>
                 {replays.map((r) => (
                     // Two sibling controls in one row: the open control covers the title and
@@ -99,6 +108,11 @@ const styles = {
         color: 'rgba(255,255,255,0.5)',
         fontWeight: 700,
         letterSpacing: '0.04em',
+        mb: 1,
+    },
+    deleteError: {
+        display: 'block',
+        color: 'error.main',
         mb: 1,
     },
     list: {

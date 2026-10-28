@@ -70,9 +70,12 @@ const RoundTable: React.FC<IRoundTableProps> = ({ rows, paid, onSeek }) => (
  * the decision — are invisible while scrubbing. Click a row to jump to that moment.
  */
 const DecisionList: React.FC<IDecisionListProps> = ({ seat }) => {
-    const { resourcingDecisions, nameOf, seekTo, currentIndex } = useReplay();
+    const { resourcingDecisions, nameOf, seekTo, currentIndex, hiddenSeat } = useReplay();
     const mine = resourcingDecisions.filter((d) => d.seat === seat);
     if (mine.length === 0) return null;
+    // Fog-of-war: this seat's hand is hidden, so its picks are said without the cards.
+    const hidden = seat === hiddenSeat;
+    const pickName = (id: string) => (hidden ? 'a card' : nameOf(id));
 
     return (
         <Box sx={styles.picks}>
@@ -86,16 +89,16 @@ const DecisionList: React.FC<IDecisionListProps> = ({ seat }) => {
                         key={d.seq}
                         role="button"
                         tabIndex={0}
-                        aria-label={`Jump to ${d.round > 0 ? `round ${d.round}` : 'setup'} resource pick: ${nameOf(d.card)}`}
+                        aria-label={`Jump to ${d.round > 0 ? `round ${d.round}` : 'setup'} resource pick: ${pickName(d.card)}`}
                         onClick={() => seekTo(d.frame)}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); seekTo(d.frame); } }}
                         sx={styles.pick(d.frame === currentIndex)}
                     >
                         <Typography variant="caption" sx={styles.pickCard}>
-                            {d.round > 0 ? `R${d.round}` : 'Setup'} · {nameOf(d.card)}
+                            {d.round > 0 ? `R${d.round}` : 'Setup'} · {pickName(d.card)}
                         </Typography>
                         <Typography variant="caption" sx={styles.pickPassed}>
-                            {passed.length > 0 ? `over ${passed.map((id) => nameOf(id)).join(', ')}` : 'only card in hand'}
+                            {hidden ? 'hand hidden' : passed.length > 0 ? `over ${passed.map((id) => nameOf(id)).join(', ')}` : 'only card in hand'}
                         </Typography>
                     </Box>
                 );
@@ -105,7 +108,7 @@ const DecisionList: React.FC<IDecisionListProps> = ({ seat }) => {
 };
 
 const PlayerColumn: React.FC<IPlayerColumnProps> = ({ seat, name, report }) => {
-    const { nameOf, chapterMarks, seekToBeat } = useReplay();
+    const { nameOf, chapterMarks, seekToBeat, hiddenSeat } = useReplay();
 
     const rows = report.byRound.filter((b) => b.seat === seat);
     const s = report.summary[seat];
@@ -130,7 +133,7 @@ const PlayerColumn: React.FC<IPlayerColumnProps> = ({ seat, name, report }) => {
                     Drawn, never played: {s.drawnNeverPlayed.length}
                     {s.resourcedFromHand > 0 && ` (${s.resourcedFromHand} resourced)`}
                 </Typography>
-                {s.drawnNeverPlayed.length > 0 && (
+                {s.drawnNeverPlayed.length > 0 && seat !== hiddenSeat && (
                     <Typography variant="caption" sx={styles.neverPlayedList}>
                         {[...new Set(s.drawnNeverPlayed.map((id) => nameOf(id)))].join(', ')}
                     </Typography>
@@ -191,7 +194,7 @@ const styles = {
     table: {
         width: '100%',
         borderCollapse: 'collapse',
-        fontSize: '0.78rem',
+        fontSize: { xs: 'max(11px, 0.78rem)', md: '0.78rem' },
     },
     headRow: {
         color: 'rgba(255,255,255,0.5)',

@@ -83,7 +83,7 @@ const styles = {
     },
     seatLine: {
         color: 'rgba(255,255,255,0.8)',
-        fontSize: '0.82rem',
+        fontSize: { xs: 'max(12px, 0.82rem)', md: '0.82rem' },
     },
     seatName: {
         color: 'var(--initiative-blue)',

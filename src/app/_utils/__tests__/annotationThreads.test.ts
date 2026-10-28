@@ -52,3 +52,15 @@ describe('buildThreads with duplicate ids', () => {
         expect(roots[0].replies.map((r) => r.note.text)).toEqual(['reply']);
     });
 });
+
+describe('buildThreads on a parent cycle', () => {
+    // Value: protects=notes in a file whose parents form a cycle still render instead of vanishing; fails_when=buildThreads only guards self-parenting again; why_new=red team found a two-note cycle dropped both notes; seam=none; no_claim=which note of the cycle becomes the root beyond file order
+    it('promotes the first note of a two-note cycle to a root and keeps the other as its reply', () => {
+        const tree = build([
+            { id: 'a', parent: 'b', ts: 1, text: 'A' },
+            { id: 'b', parent: 'a', ts: 2, text: 'B' },
+        ]);
+        expect(tree.map((n) => n.note.id)).toEqual(['a']);
+        expect(tree[0].replies.map((n) => n.note.id)).toEqual(['b']);
+    });
+});

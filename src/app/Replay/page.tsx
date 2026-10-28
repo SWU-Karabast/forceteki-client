@@ -18,7 +18,7 @@ import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCar
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 import { displayText, parse, SwuPgnDocument } from '@/lib/swupgn';
-import { loadReplay } from '@/app/_utils/replayStorage';
+import { generateReplayId, loadReplay } from '@/app/_utils/replayStorage';
 import { replayUrl, storeReplayContent, replayTooHeavy } from '@/app/_utils/replayHandoff';
 import { formatResult, resultOf } from '@/app/_utils/replayMoves';
 import { useCardNameMap } from '@/app/_utils/swupgnCardNames';
@@ -109,11 +109,11 @@ function ReplayBoardContent({ header }: IReplayBoardContentProps) {
     // hand -> arena flight measures in one frame of reference.
     const mainRef = useRef<HTMLElement>(null);
     const theme = useTheme();
-    // Collapsed by default on a phone: the panel is fixed at 88vw, so open-by-default
-    // covers the board completely and leaves the game as a sliver down one edge. Same
-    // breakpoint as the panel's `{ xs, sm }` sx values, so the two rules cannot split.
+    // Collapsed by default below md: there the panel overlays the board (88vw on a phone,
+    // 360px on a small tablet, 40-60% of the board), and only from md up does <main> narrow
+    // to sit beside it. Same breakpoint as styles.main's `md`, so the two rules cannot split.
     const [panelCollapsed, setPanelCollapsed] = useState(() =>
-        typeof window !== 'undefined' && window.matchMedia(theme.breakpoints.down('sm').replace(/^@media\s*/, '')).matches);
+        typeof window !== 'undefined' && window.matchMedia(theme.breakpoints.down('md').replace(/^@media\s*/, '')).matches);
 
     if (!gameState?.players) {
         return (
@@ -153,7 +153,7 @@ function ReplayBoardContent({ header }: IReplayBoardContentProps) {
                 <PopupShell sidebarOpen={false} />
             </Grid>
             <ReplayPanel collapsed={panelCollapsed} setCollapsed={setPanelCollapsed} />
-            <LastActionCaption />
+            <LastActionCaption panelOpen={!panelCollapsed} />
             <TransportControls />
         </>
     );
@@ -176,7 +176,8 @@ export default function ReplayPage() {
     // The replay on screen and the id it is stored under: null while an upload is not stored
     // (yet, or at all). A doc is only ever shown for its own id, so following a link or Back to
     // another replay loads that one instead of keeping the last.
-    const [loaded, setLoaded] = useState<{ id: string | null; doc: SwuPgnDocument } | null>(null);
+    // `linked`: the URL's t/from/to belong to this replay, so the board opens at them.
+    const [loaded, setLoaded] = useState<{ id: string | null; doc: SwuPgnDocument; linked: boolean } | null>(null);
     const loadedRef = useRef(loaded);
     const show = (next: typeof loaded) => {
         loadedRef.current = next;
@@ -218,7 +219,7 @@ export default function ReplayPage() {
                 if (heavy) {
                     setLoadError(heavy);
                 } else if (parsed.events.length > 0) {
-                    show({ id: replayId, doc: parsed });
+                    show({ id: replayId, doc: parsed, linked: true });
                 } else {
                     // It IS stored, so "isn't stored on this device" would be wrong.
                     setLoadError('This stored replay could not be read: it has no game records.');
@@ -242,14 +243,18 @@ export default function ReplayPage() {
         const seq = ++loadSeq.current;
         setLoading(false);
         setLoadError(null);
-        show({ id: null, doc });
+        // A link's moment (t/from/to) is for the replay it names: it applies to the dropped
+        // file only when that file is the one the link's id was hashed from (or there is no id).
+        const linked = !replayId || replayId === await generateReplayId(doc.header, content);
+        if (seq !== loadSeq.current) return;
+        show({ id: null, doc, linked });
         try {
             // FileUpload has parsed and budget-checked `doc` already. The id may differ from
             // the content hash when another file already holds it (storeReplay).
             const { id } = await storeReplayContent(content, doc);
             if (seq !== loadSeq.current) return;
-            show({ id, doc });
-            router.replace(replayUrl(id, searchParams), { scroll: false });
+            show({ id, doc, linked });
+            router.replace(replayUrl(id, linked ? searchParams : new URLSearchParams()), { scroll: false });
         } catch (err) {
             // Storage failed (e.g. QuotaExceededError); replay still works in-memory,
             // it just won't survive a refresh. Log so the failure isn't invisible.
@@ -260,7 +265,9 @@ export default function ReplayPage() {
     if (loaded) {
         // The stored id, never the URL's: until the upload is stored the URL may still name
         // another replay, and notes saved under it would land on that one.
-        return <ReplayBoard doc={loaded.doc} replayId={loaded.id} initialFrame={initialFrame} clipStart={clipStart} clipEnd={clipEnd} />;
+        return loaded.linked
+            ? <ReplayBoard doc={loaded.doc} replayId={loaded.id} initialFrame={initialFrame} clipStart={clipStart} clipEnd={clipEnd} />
+            : <ReplayBoard doc={loaded.doc} replayId={loaded.id} initialFrame={0} clipStart={null} clipEnd={null} />;
     }
 
     return (

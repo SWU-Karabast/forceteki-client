@@ -1,6 +1,6 @@
 import type { GameEvent, Seat, NameResolver } from '@/lib/swupgn';
 import { NUMBERED_ACTIONS, isLetteredSeq } from './swupgnMoves';
-import { frameAction, isPlayerAction } from './replayAction';
+import { frameAction, isPlayerAction, type IFrameActionOptions } from './replayAction';
 
 /**
  * A beat is one thing a player would say happened: an action with the records the engine
@@ -122,8 +122,8 @@ export function playbackStep(beats: Beat[], frame: number, totalFrames: number, 
 }
 
 /** What the caption bar says for a whole beat: the anchor's label, plus how many records resolved it. */
-export function captionForBeat(b: Beat, events: GameEvent[], names: NameResolver): { label: string; extra: number } {
-    return { label: frameAction(events[b.anchor], names).label, extra: b.end - b.start };
+export function captionForBeat(b: Beat, events: GameEvent[], names: NameResolver, opts: IFrameActionOptions = {}): { label: string; extra: number } {
+    return { label: frameAction(events[b.anchor], names, opts).label, extra: b.end - b.start };
 }
 
 /** Scrubber landmarks: a round mark per ROUND_START, a phase tick per PHASE_START -- both as

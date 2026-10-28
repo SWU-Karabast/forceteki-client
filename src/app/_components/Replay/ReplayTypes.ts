@@ -61,6 +61,12 @@ export interface IPlaybackOptionsProps {
     onClose: () => void;
 }
 
+export interface ILastActionCaptionProps {
+
+    /** The side panel is open; from md up it sits beside the board, so the caption centres on the board. */
+    panelOpen: boolean;
+}
+
 export interface IReplayAnimatorProps {
     containerRef: React.RefObject<HTMLElement | null>;
 }

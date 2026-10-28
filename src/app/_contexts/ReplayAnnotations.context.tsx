@@ -13,9 +13,9 @@ import { useReplay } from '@/app/_contexts/Replay.context';
 export interface IReplayAnnotationsContext {
     // Session-authored notes (the editable working copy).
     working: WorkingAnnotation[];
-    // All notes for an event seq: the file's own (read-only) then the working copy.
+    // All notes on the beat this seq belongs to: the file's own (read-only) then the working copy.
     threadFor: (seq: string) => Annotation[];
-    // Every event seq that carries at least one note (file or working).
+
     /** Whether any note is about the beat this seq belongs to. */
     hasNotes: (seq: string) => boolean;
     addAnnotation: (ref: string, fields: { nag?: string; text?: string; parent?: string }) => void;

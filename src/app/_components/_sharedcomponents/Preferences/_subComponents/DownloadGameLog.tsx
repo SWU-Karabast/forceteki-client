@@ -4,7 +4,6 @@ import Typography from '@mui/material/Typography';
 import PreferenceButton from './PreferenceButton';
 import { useGame } from '@/app/_contexts/Game.context';
 import { SWU_PGN_MIME, triggerBlobDownload } from '@/app/_utils/downloadBlob';
-import { storeReplayContent } from '@/app/_utils/replayHandoff';
 import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
 import { requestGameLog } from '@/app/_utils/gameLogRequest';
 import { openLoadingTab, showReplayInTab, type ReplayTab } from '@/app/_utils/replayTab';
@@ -40,7 +39,9 @@ function DownloadGameLog() {
             setError('Your browser blocked the new tab. Allow pop-ups for this site, or download the file instead.');
             return;
         }
-        withGameLog(() => showReplayInTab(tab, () => requestGameLog(sendLobbyMessage), storeReplayContent), setLoadingWatch);
+        // Loaded on demand: the reader and replay storage stay out of the live game page's bundle.
+        const store = async (raw: string) => (await import('@/app/_utils/replayHandoff')).storeReplayContent(raw);
+        withGameLog(() => showReplayInTab(tab, () => requestGameLog(sendLobbyMessage), store), setLoadingWatch);
     };
 
     const handleDownloadFile = () => {

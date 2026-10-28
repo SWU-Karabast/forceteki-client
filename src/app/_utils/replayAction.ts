@@ -50,13 +50,22 @@ const cost = (e: { cost?: unknown }): string => (typeof e.cost === 'number' ? ` 
 /** `n` may be a sided resolver (`sidedResolver`); its `frontNameOf` names a two-sided card's
  *  printed front, which the deploy and flip captions need whichever side is up. The label
  *  interpolates file text (a `Reason`, a raw id), so it is neutralised for display (§23). */
-export function frameAction(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }): FrameAction {
-    const a = frameActionOf(e, n);
+/**
+ * `hiddenSeat`: the seat whose hand is hidden (the viewer's fog-of-war). Its draws and
+ * resource picks are said by count, never by card, so a caption cannot spoil what the board hides.
+ */
+export interface IFrameActionOptions {
+    hiddenSeat?: Seat;
+}
+
+export function frameAction(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }, opts: IFrameActionOptions = {}): FrameAction {
+    const a = frameActionOf(e, n, opts.hiddenSeat);
     return a.label ? { ...a, label: displayText(a.label) } : a;
 }
 
-function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }): FrameAction {
+function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }, hiddenSeat?: Seat): FrameAction {
     if (!e || typeof e !== 'object') return none;
+    const hidden = hiddenSeat !== undefined && 'p' in e && e.p === hiddenSeat;
     const nm = (id: string) => storyName(id, n);
     const list = (ids: unknown) => asIdList(ids).map(nm).join(', ');
     const unit = (id: string): string[] => (isBase(id) ? [] : [id]);
@@ -123,16 +132,16 @@ function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf
         case 'EXPERIENCE_GAIN':
             return { label: `${nm(e.card)} ${e.count < 0 ? 'loses' : 'gains'} ${Math.abs(e.count)} experience`, highlight: [e.card], kind: 'other' };
         case 'DRAW':
-            return { label: `${who(e.p)} draws ${e.count}${asIdList(e.cards).length ? `: ${list(e.cards)}` : ''}`, highlight: [], kind: 'draw' };
+            return { label: `${who(e.p)} draws ${e.count}${!hidden && asIdList(e.cards).length ? `: ${list(e.cards)}` : ''}`, highlight: [], kind: 'draw' };
         case 'DISCARD':
             return { label: `${who(e.p)} discards ${list(e.cards)}`, highlight: [], kind: 'discard' };
         case 'RESOURCE':
-            return { label: `${who(e.p)} resources ${nm(e.card)}`, highlight: [], kind: 'resource' };
+            return { label: `${who(e.p)} resources ${hidden ? 'a card' : nm(e.card)}`, highlight: [], kind: 'resource' };
         case 'MOVE':
             // A file without RESOURCE records (an early writer's); the MOVE into the row is the
             // only place the commitment shows. Every other MOVE is mechanism.
             if (e.to === 'resource' && e.from === 'hand') {
-                return { label: `${who(e.p)} resources ${nm(e.card)}`, highlight: [], kind: 'resource' };
+                return { label: `${who(e.p)} resources ${hidden ? 'a card' : nm(e.card)}`, highlight: [], kind: 'resource' };
             }
             return none;
         case 'REVEAL':

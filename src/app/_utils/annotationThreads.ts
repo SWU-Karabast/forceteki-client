@@ -54,6 +54,30 @@ export function buildThreads<T>(
         }
     }
 
+    // A parent cycle in a file (A replies to B, B to A) attaches every member to another member,
+    // so none is a root and the whole cycle vanished while the move still showed a note badge.
+    // Promote the first unreachable note in file order, which brings the rest of its cycle back.
+    const reached = new Set<ThreadNode<T>>();
+    const mark = (list: ThreadNode<T>[]) => {
+        for (const n of list) {
+            if (!reached.has(n)) {
+                reached.add(n);
+                mark(n.replies);
+            }
+        }
+    };
+    mark(roots);
+    for (const key of order) {
+        const node = nodes.get(key)!;
+        if (reached.has(node)) continue;
+        for (const other of nodes.values()) {
+            const at = other.replies.indexOf(node);
+            if (at >= 0) other.replies.splice(at, 1);
+        }
+        roots.push(node);
+        mark([node]);
+    }
+
     const sortRec = (list: ThreadNode<T>[]) => {
         list.sort((a, b) => tsOf(a.note) - tsOf(b.note));
         for (const node of list) sortRec(node.replies);
