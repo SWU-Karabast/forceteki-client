@@ -163,17 +163,22 @@ export async function exportClipWebm(opts: ClipExportOpts): Promise<Blob> {
     // its full span to classify correctly, even though we only ever draw up to `hi`.
     const frames = opts.frames ?? foldFrames(events);
     const beats = clipBeats(buildBeats(events, { adjacency: groupsByAdjacency(opts.doc.header) }), lo, hi);
-    recorder.start();
-    for (const beat of beats) {
-        const frameNo = Math.min(beat.end, hi);
-        const state = frames[frameNo];
-        const caption = labelForSeq(events[beat.anchor].seq) ?? '';
-        const transitions = classifyBeat(beat, events, frames[beat.start - 1], frames[beat.end]);
-        const holdMs = transitions.length ? beatDurationMs(transitions) : Math.max(beatDurationMs([]), msPerFrame);
-        drawFrame(ctx, state, doc.header, (id) => nameAt(id, frameNo), caption, frameNo, events.length - 1);
-        await sleep(holdMs);
+    // A frame that throws mid-clip must not leave the recorder and the canvas stream running.
+    try {
+        recorder.start();
+        for (const beat of beats) {
+            const frameNo = Math.min(beat.end, hi);
+            const state = frames[frameNo];
+            const caption = labelForSeq(events[beat.anchor].seq) ?? '';
+            const transitions = classifyBeat(beat, events, frames[beat.start - 1], frames[beat.end]);
+            const holdMs = transitions.length ? beatDurationMs(transitions) : Math.max(beatDurationMs([]), msPerFrame);
+            drawFrame(ctx, state, doc.header, (id) => nameAt(id, frameNo), caption, frameNo, events.length - 1);
+            await sleep(holdMs);
+        }
+    } finally {
+        if (recorder.state !== 'inactive') recorder.stop();
+        stream.getTracks().forEach((t) => t.stop());
     }
-    recorder.stop();
     await stopped;
     if (chunks.length === 0) {
         throw new Error('Clip export produced no video data.');

@@ -77,3 +77,15 @@ describe('bookmarkLabel', () => {
         expect(label(undefined)).toBe('Wampa defeated');
     });
 });
+
+describe('decisionPoints on a hostile file', () => {
+    // Value: protects=a CHOICE whose seat is not 1 or 2 never reaches the Decisions list, which renders the seat as a React child; fails_when=decisionPoints passes e.p through again (an object crashes the tab); why_new=ship review found {d.p} rendered raw; seam=none; no_claim=DecisionReview markup
+    it('skips a CHOICE or MODAL_CHOICE that names no seat', () => {
+        const bad = [
+            { seq: 'R1.A.1', t: 'CHOICE', p: { x: 1 }, offered: ['a'], chose: 0 },
+            { seq: 'R1.A.2', t: 'MODAL_CHOICE', p: '1', offered: ['a'], chose: 0 },
+            { seq: 'R1.A.3', t: 'CHOICE', p: 2, offered: ['a'], chose: 0 },
+        ] as unknown as GameEvent[];
+        expect(decisionPoints(docWith(bad)).map((d) => d.seq)).toEqual(['R1.A.3']);
+    });
+});

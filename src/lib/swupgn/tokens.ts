@@ -43,8 +43,8 @@ export const tokenArtId = (id: string): string | undefined => {
  *
  * A current file states `kind: 'unit' | 'upgrade'` on `MOVE`, `CREATE_TOKEN` and every
  * `%%% CARDS` entry, derived from the card's type — so a token upgrade printed next year
- * classifies itself and this list is never consulted. It exists solely for 1.1 files, which
- * carry no `kind` and in which a token upgrade is otherwise indistinguishable from a token
+ * classifies itself and this list is never consulted. It exists solely for files without
+ * `kind`, in which a token upgrade is otherwise indistinguishable from a token
  * unit: both arrive as `TOKEN:<name>`. Getting it wrong folds an upgrade into an arena as a
  * card with no printed identity, or strands a defeated token unit there forever.
  *
@@ -67,8 +67,8 @@ export const isStatusTokenCard = (id: string, kind?: CardKind): boolean => {
 };
 
 /**
- * The role an event states for its card, with the spec §22.1 fallback for a file that states
- * no `kind`: a MOVE that names `attachedTo` enacts an attachment, so it is an upgrade move.
+ * The role an event states for its card, with the fallback for a file that states no `kind`:
+ * a MOVE that names `attachedTo` enacts an attachment, so it is an upgrade move.
  * Neither field is present on most event types; both reads are guarded.
  */
 export const eventKind = (e: unknown): CardKind | undefined => {

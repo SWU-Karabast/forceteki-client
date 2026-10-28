@@ -39,8 +39,7 @@ export async function storeReplayContent(rawContent: string, checked?: SwuPgnDoc
         const heavy = replayTooHeavy(doc);
         if (heavy) throw new ReplayRefusedError('too-heavy', heavy);
     }
-    const id = await generateReplayId(doc.header, rawContent);
-    await storeReplay(id, rawContent, {
+    const id = await storeReplay(await generateReplayId(doc.header, rawContent), rawContent, {
         // Shown in Recent Replays: neutralised for display like every other file string (§23).
         player1: displayText(doc.header.p1),
         player2: displayText(doc.header.p2),

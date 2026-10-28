@@ -43,11 +43,6 @@ text (§22 "Platform neutrality", §25 registries, Appendix C).
   `src/app/_utils/swupgnWriter.ts` `isPreRelease` holds the rule. File Health's notice ("Pre-release
   file from a pilot writer") and `writerGeneration`'s `pilot` gate use it, so a file from any other
   writer without the tag is an ordinary file.
-- **The 1.1 rule** (`swupgnFileIssues.newerMinor`): a pre-release `SWU-PGN/1.1` is read as OLDER
-  than 1.0 (the pilot wrote 1.1 before the format was renumbered), and so gets no newer-minor
-  notice. The spec no longer mentions 1.1 files at all; the exemption is kept for the forceteki
-  pilot files that exist, and is now gated on `isPreRelease`, so another writer's `1.1` is a
-  newer minor (§18).
 - **Grouping (§9.1 [W-18], Appendix C "Grouping records in a file without `for`")**: a record
   without `for` belongs to the action its `seq` carries, and a reader MUST NOT infer ownership
   from position in a file that stamps `for`. `replayBeats.buildBeats` had one position rule (a
@@ -176,8 +171,7 @@ Format (writer revision 3, spec §8, §5.1):
 Client conformance work done in this sync (spec §3, §18, §23):
 
 - **[C-01]** File Health now says when a file is pre-release (no `WriterRevision`), comes from a
-  `-dirty` build, has a `DEFEAT` with `reason: "unknown"`, or is a newer `1.x` (§18; a pre-release
-  `1.1` is older, §22.1, and is not called newer). `RecorderErrors` and `@unknown` already were.
+  `-dirty` build, has a `DEFEAT` with `reason: "unknown"`, or is a newer `1.x` (§18). `RecorderErrors` and `@unknown` already were.
 - **§18 extensions** — an `X_` event type and an `X_` section are skipped without a word.
 - **§23 display** — `displayText()` neutralises bidi formatting and control characters in every
   file string the UI shows: card names (in `indexResolver`, so every caption and story name),
@@ -396,7 +390,7 @@ per the §16 table (mechanism records print nothing) and named with the story's 
 `paid` (Σ `EXHAUST_RESOURCES`) beside the printed `cost`. `FileHealth` shows every
 `checkKeyframes` mismatch (`seq`/`path`/`expected`/`got`), damaged keyframes, `RecorderErrors`,
 the §5.3/§6.2/§10.1/§13/§18 notes (`fileIssues`) and which earlier writer produced the file
-(`writerGeneration`, one line per detectable row of §22/§22.1, with what it costs the replay).
+(`writerGeneration`, one line per detectable row of §22, with what it costs the replay).
 
 ## Conformance gate
 
@@ -421,15 +415,10 @@ helpers (File Health, digests, decisions, captions, sided names, result formatti
 declared devDependency.
 `src/app/_utils/__tests__/vectorsBoard.test.ts` takes each vector one level up, through
 `adaptState`, and asserts every §11 field against `.fold.json`, plus a clean `FileHealth`.
-`src/app/_utils/__tests__/swupgnCompat.test.ts` has one test per row of the §22 and §22.1
-tables. `src/app/_utils/__tests__/homeworldsReplay.test.ts` pins the §10.3/§10.4 prose and pacing,
+`src/app/_utils/__tests__/swupgnCompat.test.ts` has one test per row of the §22 table,
+plus the pre-publication shapes (no `kind`, no RESOURCE). `src/app/_utils/__tests__/homeworldsReplay.test.ts` pins the §10.3/§10.4 prose and pacing,
 and requires every vector's numbered captions to equal its own STORY's numbered lines. `__tests__/fixtures/sample-game.swupgn` is a pre-1.0 file and pins the compatibility
 shims.
-
-## Version numbers do not order this format
-
-A file saying `SWU-PGN/1.1` is **older** than `1.0` — the format was numbered 1.1 during
-development and corrected at publication. Match the `Game` tag exactly, never `>=`.
 
 ## Client-owned divergences — preserve these when re-vendoring
 
@@ -470,7 +459,8 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   fold dereferences (§13's `isCompleteKeyframe`, applied per seat) is snapped with every
   scalar coerced (`normalizePlayer`/`normalizeCard`) and every list capped at
   `MAX_KEYFRAME_LIST` (200) BEFORE the deep copy, so a hostile keyframe is never cloned whole
-  (`resources`, `baseUpgrades` and `baseCaptured` are capped with them, and `baseEpicActionUsed`,
+  (a card's `statusTokens` keeps at most 200 own, non-reserved names with positive finite
+  counts, `tokenCounts`; `resources`, `baseUpgrades` and `baseCaptured` are capped with them, and `baseEpicActionUsed`,
   `baseDefeated` (true only), `leader.onStartingSide` and the top-level `active` ride through
   only when well-typed, absent staying absent; a keyframe that does not state `baseUpgrades` /
   `baseCaptured` keeps what the records attached, since absent is "not recorded" and a pilot
@@ -494,10 +484,10 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   frame's serialized size, summed over every frame) from one fold that keeps no per-frame copy. The viewer refuses a file past its budget
   (`replayTooHeavy`) instead of building a frame table that can run to gigabytes.
 - **`fold.ts` `eventKind()` fallback** — `kind` when stated, else `attachedTo` ⇒ upgrade (the
-  §22.1 fallback for a file that states no kind).
+  fallback for a file that states no kind).
 - **`fold.ts` pre-1.0 token filter** — `isStatusTokenCard` short-circuits a token upgrade's
   own records before the switch. Equivalent to upstream for a 1.0 record (a token never joins
-  an arena, `attachTo` skips `TOKEN:` ids, its DEFEAT finds nothing); needed for a 1.1 file
+  an arena, `attachTo` skips `TOKEN:` ids, its DEFEAT finds nothing); needed for a file
   that states no `kind`, where the token would otherwise fold into an arena.
 - **`tokens.ts` same-arena re-attach** — `dropInertRecords` keeps a MOVE whose `from` and `to`
   are the same arena when it names a new `attachedTo` (an upgrade changing hosts, a pilot

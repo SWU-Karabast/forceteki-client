@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, Tooltip, Collapse } from '@mui/material';
 import { WarningAmberOutlined, CheckCircleOutlined, ExpandMore } from '@mui/icons-material';
-import { checkKeyframes } from '@/lib/swupgn';
+import { checkKeyframes, displayText } from '@/lib/swupgn';
 import SeekRow from './SeekRow';
 import { fileIssues, writerGeneration } from '@/app/_utils/swupgnFileIssues';
 import { useReplay } from '@/app/_contexts/Replay.context';
@@ -27,6 +27,8 @@ import { useReplay } from '@/app/_contexts/Replay.context';
 const MAX_LISTED = 40;
 const MONO = { color: 'rgba(255,255,255,0.65)', display: 'block', fontFamily: 'monospace', fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' } } as const;
 const fmt = (v: unknown) => (v === undefined ? '—' : typeof v === 'string' ? v : JSON.stringify(v));
+// A keyframe's seq comes off the file, so it may be any JSON value; it is shown as text (§23).
+const seqText = (v: unknown) => displayText(typeof v === 'string' ? v : String(JSON.stringify(v)));
 
 const FileHealth: React.FC = () => {
     const { doc } = useReplay();
@@ -106,7 +108,7 @@ const FileHealth: React.FC = () => {
                         <Box component="ul" aria-label="Keyframe mismatches" sx={{ m: 0, mt: 0.5, pl: 1.5, maxHeight: 160, overflowY: 'auto' }}>
                             {mismatches.slice(0, MAX_LISTED).map((m, i) => (
                                 <Typography key={`${m.seq}-${m.path}-${i}`} component="li" variant="caption" sx={MONO}>
-                                    {m.seq} {m.path}: expected {fmt(m.expected)}, got {fmt(m.got)}
+                                    {seqText(m.seq)} {m.path}: expected {fmt(m.expected)}, got {fmt(m.got)}
                                 </Typography>
                             ))}
                             {mismatches.length > MAX_LISTED && (
@@ -117,7 +119,7 @@ const FileHealth: React.FC = () => {
                 )}
                 {damaged.length > 0 && (
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', display: 'block', mt: 0.5 }}>
-                        {damaged.length === 1 ? 'A keyframe' : `${damaged.length} keyframes`} ({damaged.map((m) => m.seq).join(', ')}) missing a seat or malformed: ignored, the board keeps folding through it and that round boundary is not verified (§13).
+                        {damaged.length === 1 ? 'A keyframe' : `${damaged.length} keyframes`} ({damaged.map((m) => seqText(m.seq)).join(', ')}) missing a seat or malformed: ignored, the board keeps folding through it and that round boundary is not verified (§13).
                     </Typography>
                 )}
                 {issues.map((i) => (

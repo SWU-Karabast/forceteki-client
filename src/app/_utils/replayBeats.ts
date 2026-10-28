@@ -94,6 +94,25 @@ export function beatAt(beats: Beat[], frame: number): Beat {
  * of a single frame, which has nowhere to loop to (looping onto the frame it is on would leave
  * autoplay "playing" with nothing scheduled).
  */
+/**
+ * Every record's seq -> the seq of its beat's anchor. Notes and their badges are grouped by
+ * beat: a note may name any record (a file's note on `R2.A.6a`, or the frame the playhead sat
+ * on), and the Moves list and the Discussion tab must agree on which move it is about.
+ * First occurrence wins, as everywhere a seq is looked up.
+ */
+export function beatAnchorSeqs(events: GameEvent[], beats: Beat[]): Map<string, string> {
+    const m = new Map<string, string>();
+    for (const b of beats) {
+        const anchor = events[b.anchor]?.seq;
+        if (anchor == null) continue;
+        for (let i = b.start; i <= b.end; i++) {
+            const seq = events[i]?.seq;
+            if (seq != null && !m.has(seq)) m.set(seq, anchor);
+        }
+    }
+    return m;
+}
+
 export type PlaybackStep = { kind: 'advance'; to: number } | { kind: 'loop'; to: number } | { kind: 'stop' };
 export function playbackStep(beats: Beat[], frame: number, totalFrames: number, clip: { start: number; end: number } | null): PlaybackStep {
     const lastFrame = clip ? clip.end : totalFrames - 1;

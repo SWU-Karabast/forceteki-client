@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse, normalizeEvents, indexResolver, type GameEvent } from '@/lib/swupgn';
 import { groupsByAdjacency } from '../swupgnWriter';
-import { buildBeats, beatAt, captionForBeat, chapterMarks, playbackStep, type Beat } from '../replayBeats';
+import { buildBeats, beatAt, beatAnchorSeqs, captionForBeat, chapterMarks, playbackStep, type Beat } from '../replayBeats';
 import { frameAction, storyName } from '../replayAction';
 
 const doc = parse(readFileSync(join(__dirname, '../../../lib/swupgn/__tests__/fixtures/game-463c3022.swupgn'), 'utf8'));
@@ -118,3 +118,31 @@ describe('playbackStep', () => {
         expect(playbackStep(beats, 4, 10, { start: 4, end: 4 })).toEqual({ kind: 'stop' });
     });
 });
+
+describe('beatAnchorSeqs', () => {
+    // Value: protects=a note on any record of a beat is shown and badged on that beat's move; fails_when=the Discussion tab or the Moves badge keys by the raw record seq again (an attack note on R2.A.6a never badges move R2.A.6); why_new=Codex structured review (P2) found the tabs disagreeing; seam=none; no_claim=the tabs' markup
+    it('maps every record of a beat to the beat\'s anchor seq', () => {
+        const events = [
+            { seq: 'R2.A.6', t: 'ATTACK', p: 1, atk: 'SOR#1', def: 'SOR#2' },
+            { seq: 'R2.A.6a', t: 'DAMAGE', card: 'SOR#2', amt: 3 },
+            { seq: 'R2.A.7', t: 'PASS', p: 2 },
+        ] as unknown as GameEvent[];
+        const beats: Beat[] = [
+            { index: 0, kind: 'action', start: 0, end: 1, anchor: 0, seat: 1 },
+            { index: 1, kind: 'action', start: 2, end: 2, anchor: 2, seat: 2 },
+        ];
+        const m = beatAnchorSeqs(events, beats);
+        expect(m.get('R2.A.6a')).toBe('R2.A.6');
+        expect(m.get('R2.A.6')).toBe('R2.A.6');
+        expect(m.get('R2.A.7')).toBe('R2.A.7');
+    });
+
+    it('on a real game, every record maps to a seq that anchors a beat', () => {
+        const events = normalizeEvents(doc.events);
+        const beats = buildBeats(events, { adjacency: groupsByAdjacency(doc.header) });
+        const m = beatAnchorSeqs(events, beats);
+        const anchors = new Set(beats.map((b) => events[b.anchor].seq));
+        expect(events.every((e) => anchors.has(m.get(e.seq)!))).toBe(true);
+    });
+});
+

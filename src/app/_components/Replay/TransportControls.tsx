@@ -13,6 +13,7 @@ import { useReplay } from '@/app/_contexts/Replay.context';
 import { formatRoundPhase } from '@/app/_utils/replayMoves';
 import { SPEEDS } from '@/app/_utils/replayTiming';
 import PlaybackOptions from './PlaybackOptions';
+import { REPLAY_TRANSPORT_HEIGHT } from '@/app/_constants/replayLayout';
 
 const TransportControls: React.FC = () => {
     const {
@@ -122,7 +123,7 @@ const TransportControls: React.FC = () => {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: '60px',
+                height: `${REPLAY_TRANSPORT_HEIGHT}px`,
                 backgroundColor: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(8px)',
                 display: 'flex',

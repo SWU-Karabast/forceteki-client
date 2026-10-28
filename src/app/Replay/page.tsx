@@ -23,6 +23,7 @@ import { replayUrl, storeReplayContent, replayTooHeavy } from '@/app/_utils/repl
 import { formatResult, resultOf } from '@/app/_utils/replayMoves';
 import { useCardNameMap } from '@/app/_utils/swupgnCardNames';
 import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
+import { REPLAY_PANEL_WIDTH, REPLAY_TRANSPORT_HEIGHT } from '@/app/_constants/replayLayout';
 
 function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
     const router = useRouter();
@@ -168,9 +169,9 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                     component="main"
                     ref={mainRef}
                     sx={{
-                        // From md up the open panel (360px) sits beside the board, not over it;
+                        // From md up the open panel sits beside the board, not over it;
                         // a phone or small tablet keeps the overlay.
-                        width: panelCollapsed ? '100%' : { xs: '100%', md: 'calc(100% - 360px)' },
+                        width: panelCollapsed ? '100%' : { xs: '100%', md: `calc(100% - ${REPLAY_PANEL_WIDTH}px)` },
                         height: '100dvh',
                         position: 'relative',
                         display: 'flex',
@@ -180,7 +181,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                     <ReplayHeader header={header} />
                     {/* Trays mirror the live GameBoard ratios (opponent 15dvh /
                         player 18dvh); the board flexes to fill whatever remains
-                        after the header and the 60px transport bar, so the column
+                        after the header and the transport bar, so the column
                         can never overflow 100dvh and clip the player tray. */}
                     <Box sx={{ height: '15dvh' }}>
                         <OpponentCardTray trayPlayer={getOpponent(connectedPlayer)} />
@@ -188,7 +189,7 @@ function ReplayBoardContent({ header }: { header: SwuPgnDocument['header'] }) {
                     <Box sx={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 2 }}>
                         <Board sidebarOpen={false} />
                     </Box>
-                    <Box sx={{ height: '18dvh', mb: '60px' }}>
+                    <Box sx={{ height: '18dvh', mb: `${REPLAY_TRANSPORT_HEIGHT}px` }}>
                         <PlayerCardTray trayPlayer={connectedPlayer} />
                     </Box>
                     <BoardChevrons />
@@ -223,7 +224,18 @@ function ReplayBoard({ doc, replayId, initialFrame, clipStart, clipEnd }: {
 }
 
 export default function ReplayPage() {
-    const [doc, setDoc] = useState<SwuPgnDocument | null>(null);
+    // The replay on screen and the id it is stored under: null while an upload is not stored
+    // (yet, or at all). A doc is only ever shown for its own id, so following a link or Back to
+    // another replay loads that one instead of keeping the last.
+    const [loaded, setLoaded] = useState<{ id: string | null; doc: SwuPgnDocument } | null>(null);
+    const loadedRef = useRef(loaded);
+    const show = (next: typeof loaded) => {
+        loadedRef.current = next;
+        setLoaded(next);
+    };
+    // Bumped by every load and upload; a load or store that finishes after a newer one started
+    // is dropped instead of replacing what the newer one shows.
+    const loadSeq = useRef(0);
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
     const router = useRouter();
@@ -237,45 +249,57 @@ export default function ReplayPage() {
     const tParam = searchParams.get('t');
     const initialFrame = tParam || clipStart || 0;
 
-    // On mount, if URL has ?id=, try to load from IndexedDB
+    // Whenever the URL's id changes, show that replay from IndexedDB.
     useEffect(() => {
-        if (!replayId || doc) return;
-
+        // Already on screen: the upload that was just stored under this id.
+        if (replayId && loadedRef.current?.id === replayId) return;
+        const seq = ++loadSeq.current;
+        show(null);
         setLoadError(null);
-        setLoading(true);
+        setLoading(!!replayId);
+        if (!replayId) return;
+
         loadReplay(replayId)
             .then((content) => {
-                if (content) {
-                    const parsed = parse(content);
-                    // A replay stored before the frame budget existed is refused here, so
-                    // reopening it from Recent Replays cannot hang the tab.
-                    const heavy = parsed.events.length > 0 ? replayTooHeavy(parsed) : null;
-                    if (heavy) {
-                        setLoadError(heavy);
-                    } else if (parsed.events.length > 0) {
-                        setDoc(parsed);
-                    } else {
-                        // It IS stored, so "isn't stored on this device" would be wrong.
-                        setLoadError('This stored replay could not be read: it has no game records.');
-                    }
+                if (seq !== loadSeq.current || !content) return;
+                const parsed = parse(content);
+                // A replay stored before the frame budget existed is refused here, so
+                // reopening it from Recent Replays cannot hang the tab.
+                const heavy = parsed.events.length > 0 ? replayTooHeavy(parsed) : null;
+                if (heavy) {
+                    setLoadError(heavy);
+                } else if (parsed.events.length > 0) {
+                    show({ id: replayId, doc: parsed });
+                } else {
+                    // It IS stored, so "isn't stored on this device" would be wrong.
+                    setLoadError('This stored replay could not be read: it has no game records.');
                 }
             })
             .catch((err) => {
+                if (seq !== loadSeq.current) return;
                 // Load/parse of a stored replay failed; say so above the upload prompt
                 // rather than claiming the replay isn't stored.
                 console.warn('Failed to load stored replay', replayId, err);
                 setLoadError(`This stored replay could not be read. ${replayErrorMessage(err)}`);
             })
-            .finally(() => setLoading(false));
+            .finally(() => {
+                if (seq === loadSeq.current) setLoading(false);
+            });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [replayId]);
 
-    // When a file is uploaded, store it and update the URL
-    const handleReplayLoaded = async (loaded: SwuPgnDocument, content: string) => {
+    // When a file is uploaded, show it, store it, and put the id it was stored under in the URL
+    const handleReplayLoaded = async (doc: SwuPgnDocument, content: string) => {
+        const seq = ++loadSeq.current;
+        setLoading(false);
         setLoadError(null);
-        setDoc(loaded);
+        show({ id: null, doc });
         try {
-            // FileUpload has parsed and budget-checked `loaded` already.
-            const { id } = await storeReplayContent(content, loaded);
+            // FileUpload has parsed and budget-checked `doc` already. The id may differ from
+            // the content hash when another file already holds it (storeReplay).
+            const { id } = await storeReplayContent(content, doc);
+            if (seq !== loadSeq.current) return;
+            show({ id, doc });
             router.replace(replayUrl(id, searchParams), { scroll: false });
         } catch (err) {
             // Storage failed (e.g. QuotaExceededError); replay still works in-memory,
@@ -284,8 +308,10 @@ export default function ReplayPage() {
         }
     };
 
-    if (doc) {
-        return <ReplayBoard doc={doc} replayId={replayId} initialFrame={initialFrame} clipStart={clipStart} clipEnd={clipEnd} />;
+    if (loaded) {
+        // The stored id, never the URL's: until the upload is stored the URL may still name
+        // another replay, and notes saved under it would land on that one.
+        return <ReplayBoard doc={loaded.doc} replayId={loaded.id} initialFrame={initialFrame} clipStart={clipStart} clipEnd={clipEnd} />;
     }
 
     return (

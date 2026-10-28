@@ -9,6 +9,9 @@ import { buildThreads, type ThreadNode } from '@/app/_utils/annotationThreads';
 import { NAG_ORDER, nagInfo, NAG_TONE_COLOR } from '@/app/_utils/nagGlyphs';
 import AnnotationBadge from './AnnotationBadge';
 
+// A phone needs a 44px hit area; from md up the buttons keep their compact size.
+const TOUCH_TARGET = { minWidth: { xs: 44, md: 0 }, minHeight: { xs: 44, md: 0 } };
+
 // A note carries a client `_id` while in the working copy; file notes carry `id`.
 type Note = Annotation & { _id?: string };
 const idOf = (n: Note) => n._id ?? n.id;
@@ -117,14 +120,14 @@ const NoteCard: React.FC<{
                 <Box sx={{ flex: 1 }} />
                 {id && (
                     <Tooltip title="Reply">
-                        <IconButton size="small" onClick={() => setReplying((r) => !r)} sx={{ color: 'rgba(255,255,255,0.5)', p: 0.25 }}>
+                        <IconButton size="small" onClick={() => setReplying((r) => !r)} sx={{ color: 'rgba(255,255,255,0.5)', p: 0.25, ...TOUCH_TARGET }}>
                             <Reply sx={{ fontSize: 15 }} />
                         </IconButton>
                     </Tooltip>
                 )}
                 {editable && (
                     <Tooltip title="Delete">
-                        <IconButton size="small" onClick={() => onDelete(n._id!)} sx={{ color: 'rgba(255,255,255,0.4)', p: 0.25 }}>
+                        <IconButton size="small" onClick={() => onDelete(n._id!)} sx={{ color: 'rgba(255,255,255,0.4)', p: 0.25, ...TOUCH_TARGET }}>
                             <Close sx={{ fontSize: 15 }} />
                         </IconButton>
                     </Tooltip>
@@ -148,10 +151,12 @@ const NoteCard: React.FC<{
 /** Threaded discussion for the current frame's move. Notes + replies persist locally and
  *  serialize into the .swupgn, so a shared file carries the conversation. */
 const DiscussionTab: React.FC = () => {
-    const { events, currentIndex } = useReplay();
+    const { events, currentBeat } = useReplay();
     const { threadFor, addAnnotation, deleteAnnotation, author, setAuthor } = useReplayAnnotations();
 
-    const seq = events[currentIndex]?.seq;
+    // The beat's own record, the one the Moves list names: the playhead rests on a beat's LAST
+    // record, which for an attack is a consequence like `R2.A.6a`, not the move.
+    const seq = events[currentBeat.anchor]?.seq;
     const notes = (seq ? threadFor(seq) : []) as Note[];
     const threads = useMemo(
         () => buildThreads<Note>(notes, idOf, (n) => n.parent, (n) => n.ts ?? 0),

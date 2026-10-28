@@ -3,7 +3,8 @@ import { cardFromId, cardFromInstance, ZONE_MAP, adaptState, ownerSeatMap } from
 import { statOf } from '../swupgnCardStats';
 import { s3CardImageURL, CardImageLocale } from '../s3Utils';
 import type { ICardData } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
-import { parse, stateAt, foldFrames, normalizeEvents, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
+import { parse, stateAt, foldFrames, normalizeEvents, emptyState, type ReducedState, type Seat, type CardInstanceState } from '@/lib/swupgn';
+import { snapToKeyframe } from '@/lib/swupgn/fold';
 import { readFileSync } from 'fs';
 import path from 'path';
 
@@ -146,6 +147,16 @@ describe('adaptState — leader state (deploy / exhaust / action highlight)', ()
     });
 });
 
+// Value: protects=a keyframe zone named after an Object.prototype key stays a plain string; fails_when=the zone lookup indexes ZONE_MAP directly again (zone becomes the Object function); why_new=ship review found ZONE_MAP read inherited keys; seam=none; no_claim=where such a card renders
+describe('cardFromInstance zone lookup', () => {
+    it('reads only ZONE_MAP\'s own keys', () => {
+        const at = (zone: string) => cardFromInstance({ id: 'SOR#010', zone, damage: 0, exhausted: false, upgrades: [], shields: 0, experience: 0, statusTokens: {}, captured: [] }, 'p1').zone;
+        expect(at('ground')).toBe('groundArena');
+        expect(at('constructor')).toBe('constructor');
+        expect(at('toString')).toBe('toString');
+    });
+});
+
 describe('token badges', () => {
     // The board draws neutral tokens (Shield/Experience/Weakness/Advantage) as count
     // badges built from a unit's subcards, which UnitsBoard groups by parentCardId.
@@ -185,6 +196,30 @@ describe('token badges', () => {
     it('emits nothing for a unit with no tokens', () => {
         const gs = adaptState(stateWith(inst()), doc, seats);
         expect(gs.players['p1'].cardPiles['spaceArena']).toHaveLength(1);
+    });
+
+    // Value: protects=a keyframe with thousands of token names or huge counts draws a bounded board; fails_when=tokenCards caps each token alone again (keys x MAX_PILE cards) or the seat budget goes; why_new=ship review found keyframe statusTokens unbounded; seam=none; no_claim=render time
+    it('draws at most 200 badges on one host and 1000 on one seat, however many tokens the file names', () => {
+        const many = Object.fromEntries(Array.from({ length: 5000 }, (_, i) => [`t${i}`, 1e9]));
+        const host = adaptState(stateWith(inst({ shields: 1e9, statusTokens: many })), doc, seats);
+        expect(host.players['p1'].cardPiles['spaceArena'].filter((c: { parentCardId?: string }) => c.parentCardId)).toHaveLength(200);
+        const s = stateWith(inst());
+        s.players[1]!.cards = Array.from({ length: 50 }, (_, i) => inst({ id: `ASH#${i}`, shields: 1e9 }));
+        const seat = adaptState(s, doc, seats);
+        expect(seat.players['p1'].cardPiles['spaceArena'].filter((c: { parentCardId?: string }) => c.parentCardId)).toHaveLength(1000);
+    });
+
+    // Value: protects=a keyframe card's token map enters the state bounded and numeric; fails_when=normalizeCard passes the file's map through again; why_new=ship review found keyframe statusTokens unbounded; seam=none; no_claim=which 200 keys survive
+    it('a keyframe card keeps at most 200 token names, each a positive finite count', () => {
+        const kf = emptyState();
+        const many: Record<string, unknown> = Object.fromEntries(Array.from({ length: 5000 }, (_, i) => [`t${i}`, 1]));
+        Object.assign(many, { t0: 'x', t1: -2, t2: Infinity, t3: 0 });
+        kf.players[1]!.cards = [inst({ statusTokens: many as Record<string, number> })];
+        const tokens = snapToKeyframe(emptyState(), kf).players[1]!.cards[0].statusTokens;
+        expect(Object.keys(tokens)).toHaveLength(200);
+        expect(tokens.t0).toBeUndefined();
+        expect(tokens.t4).toBe(1);
+        expect(Object.values(tokens).every((n: number) => n > 0 && Number.isFinite(n))).toBe(true);
     });
 });
 

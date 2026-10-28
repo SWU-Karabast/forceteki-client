@@ -13,8 +13,9 @@ interface FileUploadProps {
 // A real replay is a few hundred KB, zipped or not.
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB (upload cap)
 // Ceiling on the DECOMPRESSED .swupgn, enforced while it inflates (extractReplayFromZip), so a
-// zip bomb stops here instead of expanding to gigabytes.
-const MAX_DECOMPRESSED_SIZE = 50 * 1024 * 1024; // 50 MB
+// zip bomb stops here instead of expanding to gigabytes. Near the plain upload cap: a zip should
+// not admit a file several times larger than the viewer accepts unzipped.
+const MAX_DECOMPRESSED_SIZE = 16 * 1024 * 1024; // 16 MB
 
 const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
     const [isDragging, setIsDragging] = useState(false);
@@ -31,15 +32,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
         }
 
         setLoading(true);
+        const name = file.name.toLowerCase();
 
         try {
             let rawContent: string;
             let doc: SwuPgnDocument & ParseNotes;
 
-            if (file.name.endsWith('.swupgn')) {
+            if (name.endsWith('.swupgn')) {
                 rawContent = await file.text();
                 doc = parse(rawContent);
-            } else if (file.name.endsWith('.zip')) {
+            } else if (name.endsWith('.zip')) {
                 const buffer = await file.arrayBuffer();
                 const [{ strFromU8 }, { extractReplayFromZip, ReplayTooLargeError }] = await Promise.all([
                     import('fflate'), import('@/app/_utils/unzipReplay'),
@@ -105,6 +107,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+        // Cleared so choosing the same file again (after an error, or a fix) fires onChange.
+        e.target.value = '';
         if (file) processFile(file);
     };
 

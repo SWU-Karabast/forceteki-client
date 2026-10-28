@@ -8,15 +8,17 @@ import type { Snapshot } from './frameAnimationPlan';
 
 export type { Snapshot };
 
-const rectOf = (el: HTMLElement, html: string): Snap | null => {
+// The copy is taken NOW, not when the clone is built: by then stage.hide may have set the live
+// node's opacity to 0, or React may have reused it for another card (a deployed leader's slot).
+const rectOf = (el: HTMLElement, copy: boolean): Snap | null => {
     const r = el.getBoundingClientRect();
-    return r.width === 0 || r.height === 0 ? null : { x: r.left, y: r.top, w: r.width, h: r.height, html };
+    return r.width === 0 || r.height === 0 ? null : { x: r.left, y: r.top, w: r.width, h: r.height, copy: copy ? el.cloneNode(true) as Element : null };
 };
 
 const esc = (s: string) => CSS.escape(s);
 
 /** The measured rect of an element that is only ever a reference point (no clone). */
-export const snapOf = (el: HTMLElement | null): Snap | null => (el ? rectOf(el, '') : null);
+export const snapOf = (el: HTMLElement | null): Snap | null => (el ? rectOf(el, false) : null);
 
 export function createBoardGeometry(container: HTMLElement) {
     return {
@@ -25,7 +27,7 @@ export function createBoardGeometry(container: HTMLElement) {
             container.querySelectorAll<HTMLElement>('[data-card-uuid]').forEach((el) => {
                 const u = el.getAttribute('data-card-uuid');
                 if (!u || m.has(u)) return;                     // first (outermost) wins; clones are cleared before measuring
-                const s = rectOf(el, el.outerHTML); if (s) m.set(u, s);
+                const s = rectOf(el, true); if (s) m.set(u, s);
             });
             return m;
         },
@@ -33,7 +35,7 @@ export function createBoardGeometry(container: HTMLElement) {
             return snapOf(container.querySelector<HTMLElement>(`[data-testid="${kind}-pile-${esc(playerId)}"]`));
         },
         hidden(playerId: string): Snap[] {
-            return [...container.querySelectorAll<HTMLElement>(`[data-card-uuid^="${esc(playerId)}:hand:"]`)].map((el) => rectOf(el, el.outerHTML)).filter((s): s is Snap => !!s);
+            return [...container.querySelectorAll<HTMLElement>(`[data-card-uuid^="${esc(playerId)}:hand:"]`)].map((el) => rectOf(el, true)).filter((s): s is Snap => !!s);
         },
         arenaBand() {
             const el = container.querySelector<HTMLElement>('[data-testid="gameboard-board-wrapper"]');

@@ -63,6 +63,10 @@ export const ZONE_MAP: Record<string, string> = {
     space: 'spaceArena',
 };
 
+/** The board pile for a fold zone. Own keys only: the zone comes off the file, and a plain
+ *  index would read `constructor` as the Object function. */
+const boardZone = (zone: string): string => (Object.hasOwn(ZONE_MAP, zone) ? ZONE_MAP[zone] : zone);
+
 /**
  * Parse "SET#NUM[:copy]" (or a "TOKEN:name#NUM" token id) into a board setId.
  *
@@ -136,9 +140,11 @@ const tokenTitle = (token: string): string =>
  * Materialize a unit's folded token counters the way the live server does: one arena card
  * per token carrying `parentCardId`, which UnitsBoard groups into the host's `subcards`.
  * One card per token, since GameCard's badge count is `subcards.filter(...).length`.
+ * At most `limit` cards, and never more than MAX_PILE for one host across all its tokens:
+ * the counts come off the file.
  */
 function tokenCards(
-    inst: CardInstanceState, host: AdaptedCard, ownerId: string, statMap: Record<string, CardStat>,
+    inst: CardInstanceState, host: AdaptedCard, ownerId: string, statMap: Record<string, CardStat>, limit: number,
 ): AdaptedCard[] {
     const counts: Record<string, number> = {
         shield: inst.shields,
@@ -146,11 +152,13 @@ function tokenCards(
         ...inst.statusTokens,
     };
     const out: AdaptedCard[] = [];
+    const cap = Math.min(limit, MAX_PILE);
     for (const [token, rawCount] of Object.entries(counts)) {
+        if (out.length >= cap) break;
         const name = tokenTitle(token);
         // Same bound as the piles: a STATUS_TOKEN count comes off the file and is otherwise
         // only clamped at zero, so a huge count would render that many badge elements.
-        const count = Number.isFinite(rawCount) ? Math.min(Math.trunc(rawCount), MAX_PILE) : 0;
+        const count = Number.isFinite(rawCount) ? Math.min(Math.trunc(rawCount), cap - out.length) : 0;
         if (!name || !(count > 0)) continue;
         const artId = statOf(`TOKEN:${name}`, statMap)?.id;
         for (let i = 0; i < count; i++) {
@@ -240,7 +248,7 @@ export function cardFromInstance(
     const reconstructed = !stated && (typeof stats.power === 'number' || typeof stats.hp === 'number');
     const keywords = Array.isArray(inst.keywords) ? inst.keywords.slice(0, MAX_KEYWORDS).map(String) : [];
     return {
-        ...cardFromId(inst.id, ZONE_MAP[inst.zone] ?? inst.zone, controllerId, ownerId, stat, name),
+        ...cardFromId(inst.id, boardZone(inst.zone), controllerId, ownerId, stat, name),
         ...stats,
         ...(reconstructed ? { statsReconstructed: true } : {}),
         ...(keywords.length ? { keywords, sentinel: keywords.includes('sentinel') } : {}),
@@ -344,6 +352,9 @@ export function ownerSeatMap(doc: SwuPgnDocument): Map<string, Seat> {
  */
 const MAX_PILE = 200;
 
+/** Token badges one seat's board may draw in all. A real board has a few dozen. */
+const MAX_SEAT_TOKENS = 1000;
+
 function facedownStack(count: number, zone: string, owner: string): AdaptedCard[] {
     // Resource/credit identities aren't in ReducedState; render N inert placeholders.
     const n = Number.isFinite(count) ? Math.min(Math.max(0, Math.trunc(count)), MAX_PILE) : 0;
@@ -400,7 +411,10 @@ function adaptPlayer(
     })));
     // Token badges ride along in the arena piles as parented cards, exactly as the live
     // server delivers upgrades; UnitsBoard groups them onto their host.
-    const tokens = ps.cards.flatMap((c, i) => tokenCards(c, inPlay[i], playerId, statMap));
+    const tokens: AdaptedCard[] = [];
+    ps.cards.forEach((c, i) => {
+        if (tokens.length < MAX_SEAT_TOKENS) tokens.push(...tokenCards(c, inPlay[i], playerId, statMap, MAX_SEAT_TOKENS - tokens.length));
+    });
     // Real (printed) upgrades attach the same way: one parented arena card per upgrade, so
     // UnitsBoard groups it under its host. Without this a pilot or an equipment card is
     // tracked in the fold but renders nowhere.

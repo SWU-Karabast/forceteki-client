@@ -1,4 +1,4 @@
-import { displayText, dropFrameworkSources, type SwuPgnDocument, type Seat } from '@/lib/swupgn';
+import { displayText, dropFrameworkSources, isSeat, type SwuPgnDocument, type Seat } from '@/lib/swupgn';
 
 // Decision review (P3): surface the explicit branch points the omniscient archive records
 // (CHOICE / MODAL_CHOICE — "offered A/B/C, chose B") and auto-bookmark the swingy moments
@@ -40,6 +40,8 @@ export function decisionPoints(doc: SwuPgnDocument): DecisionPoint[] {
         // `offered` is cast from unvalidated file JSON; coerce to an array so the UI's
         // offered.map() can't throw on a malformed (shared) replay.
         // `prompt` and `offered` are file text, shown as is: neutralise bidi/control characters (§23).
+        // The seat is rendered as text too, so a record naming no seat is not a decision point.
+        if ((e.t === 'CHOICE' || e.t === 'MODAL_CHOICE') && !isSeat(e.p)) continue;
         if (e.t === 'CHOICE') {
             out.push({ seq: e.seq, p: e.p, type: 'CHOICE', ...(e.prompt != null ? { prompt: displayText(e.prompt) } : {}), offered: offeredList(e.offered), chose: e.chose });
         } else if (e.t === 'MODAL_CHOICE') {

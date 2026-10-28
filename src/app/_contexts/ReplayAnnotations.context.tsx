@@ -7,6 +7,8 @@ import {
 } from '@/app/_utils/replayAnnotations';
 import { getAnnotationAuthor, setAnnotationAuthor } from '@/app/_utils/annotationAuthor';
 import { downloadSwuPgn } from '@/app/_utils/downloadBlob';
+import { beatAnchorSeqs } from '@/app/_utils/replayBeats';
+import { useReplay } from '@/app/_contexts/Replay.context';
 
 export interface IReplayAnnotationsContext {
     // Session-authored notes (the editable working copy).
@@ -14,7 +16,8 @@ export interface IReplayAnnotationsContext {
     // All notes for an event seq: the file's own (read-only) then the working copy.
     threadFor: (seq: string) => Annotation[];
     // Every event seq that carries at least one note (file or working).
-    annotatedRefs: Set<string>;
+    /** Whether any note is about the beat this seq belongs to. */
+    hasNotes: (seq: string) => boolean;
     addAnnotation: (ref: string, fields: { nag?: string; text?: string; parent?: string }) => void;
     updateAnnotation: (id: string, patch: { nag?: string; text?: string }) => void;
     deleteAnnotation: (id: string) => void;
@@ -130,17 +133,26 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
         setAnnotationAuthor(name);
     }, []);
 
-    const annotatedRefs = useMemo(() => {
-        const refs = new Set<string>();
-        for (const a of doc.annotations) refs.add(a.ref);
-        for (const w of working) refs.add(w.ref);
-        return refs;
-    }, [doc.annotations, working]);
+    // Notes are grouped by beat (beatAnchorSeqs), so a badge and its thread always agree.
+    const { events, beats } = useReplay();
+    const anchors = useMemo(() => beatAnchorSeqs(events, beats), [events, beats]);
+    const anchorOf = useCallback((seq: string) => anchors.get(seq) ?? seq, [anchors]);
 
-    const threadFor = useCallback((seq: string): Annotation[] => [
-        ...doc.annotations.filter((a) => a.ref === seq),
-        ...working.filter((w) => w.ref === seq),
-    ], [doc.annotations, working]);
+    const annotatedAnchors = useMemo(() => {
+        const refs = new Set<string>();
+        for (const a of doc.annotations) refs.add(anchorOf(a.ref));
+        for (const w of working) refs.add(anchorOf(w.ref));
+        return refs;
+    }, [doc.annotations, working, anchorOf]);
+    const hasNotes = useCallback((seq: string) => annotatedAnchors.has(anchorOf(seq)), [annotatedAnchors, anchorOf]);
+
+    const threadFor = useCallback((seq: string): Annotation[] => {
+        const anchor = anchorOf(seq);
+        return [
+            ...doc.annotations.filter((a) => anchorOf(a.ref) === anchor),
+            ...working.filter((w) => anchorOf(w.ref) === anchor),
+        ];
+    }, [doc.annotations, working, anchorOf]);
 
     const exportDoc = useCallback(() => mergeForExport(doc, working), [doc, working]);
 
@@ -149,10 +161,10 @@ export const ReplayAnnotationsProvider: React.FC<ProviderProps> = ({ doc, replay
     }, [doc, exportDoc]);
 
     const value = useMemo<IReplayAnnotationsContext>(() => ({
-        working, threadFor, annotatedRefs,
+        working, threadFor, hasNotes,
         addAnnotation, updateAnnotation, deleteAnnotation,
         author, setAuthor, exportDoc, downloadWithAnnotations,
-    }), [working, threadFor, annotatedRefs, addAnnotation, updateAnnotation, deleteAnnotation,
+    }), [working, threadFor, hasNotes, addAnnotation, updateAnnotation, deleteAnnotation,
         author, setAuthor, exportDoc, downloadWithAnnotations]);
 
     return <ReplayAnnotationsContext.Provider value={value}>{children}</ReplayAnnotationsContext.Provider>;

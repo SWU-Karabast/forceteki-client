@@ -76,7 +76,7 @@ describe('fileIssues — RecorderErrors (§5.2)', () => {
     });
 });
 
-describe('writerGeneration — which 1.0 writer wrote the file (§22, §22.1)', () => {
+describe('writerGeneration — which 1.0 writer wrote the file (§22)', () => {
     const current = () => parse(VECTOR);
     const ev = (over: object): GameEvent => ({ seq: 'R1.A.9', ...over } as GameEvent);
 
@@ -88,11 +88,10 @@ describe('writerGeneration — which 1.0 writer wrote the file (§22, §22.1)', 
         }
     });
 
-    it('detects a pre-release 1.1 file, a missing CARDS index and a missing STORY', () => {
+    it('detects a missing CARDS index and a missing STORY', () => {
         const doc = current();
-        const notes = writerGeneration({ ...doc, header: { ...doc.header, game: 'SWU-PGN/1.1' }, cards: [], story: [] });
+        const notes = writerGeneration({ ...doc, cards: [], story: [] });
         expect(notes).toEqual([
-            expect.stringContaining('Pre-release SWU-PGN/1.1'),
             expect.stringContaining('No CARDS index'),
             expect.stringContaining('No STORY section'),
         ]);
@@ -256,5 +255,19 @@ describe('skippedSectionList', () => {
         expect(skippedSectionList(['A', 'B'], false)).toBe('A, B');
         const many = skippedSectionList(['A', 'B', 'X'.repeat(100), ...Array.from({ length: 5000 }, (_, i) => `S${i}`)]);
         expect(many).toBe(`%%% A, %%% B, %%% ${'X'.repeat(39)}… and 5000 more`);
+    });
+});
+
+describe('writerGeneration on a hostile seq', () => {
+    // Value: protects=a CLAIM_INITIATIVE whose seq is not a string cannot throw out of File Health; fails_when=the stale ROUND_END check calls seq.startsWith again; why_new=ship review found c.seq.startsWith on file JSON; seam=none; no_claim=performance
+    it('reads a non-string seq as text, and still counts a stale ROUND_END', () => {
+        const doc = parse(VECTOR);
+        const events = [
+            { seq: { bad: 1 }, t: 'CLAIM_INITIATIVE', p: 1 },
+            { seq: 'R7.A.1', t: 'CLAIM_INITIATIVE', p: 1 },
+            { seq: 'R7.end', t: 'ROUND_END', round: 7, keyframe: { phase: 'setup', initiativeTaken: false } },
+        ] as unknown as GameEvent[];
+        const said = writerGeneration({ ...doc, events: [...doc.events, ...events] });
+        expect(said).toContainEqual(expect.stringContaining('1 ROUND_END keyframe'));
     });
 });

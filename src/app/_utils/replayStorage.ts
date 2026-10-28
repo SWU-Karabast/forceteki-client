@@ -1,5 +1,6 @@
 const DB_NAME = 'karabast-replays';
 const STORE_NAME = 'replays';        // full records (id, rawContent, meta)
+export const REPLAYS_STORE = STORE_NAME;
 const META_STORE = 'replayMeta';     // lightweight metadata only, for the list view
 export const ANNOTATIONS_STORE = 'replayAnnotations'; // working-copy notes, keyed by replayId
 const DB_VERSION = 3;
@@ -97,12 +98,8 @@ export async function generateReplayId(header: ReplayIdHeader, rawContent = ''):
     if (typeof crypto !== 'undefined' && crypto.subtle) {
         const encoded = new TextEncoder().encode(seed);
         const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
-        const hashArray = new Uint8Array(hashBuffer);
-        let id = '';
-        for (let i = 0; i < 8; i++) {
-            id += hashArray[i].toString(36);
-        }
-        return id;
+        // Fixed-width hex: unpadded per-byte base 36 was ambiguous (1,23 and 12,3 both read "123").
+        return [...new Uint8Array(hashBuffer).slice(0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('');
     }
 
     return fallbackHash(seed);
@@ -116,7 +113,7 @@ function fallbackHash(input: string): string {
         h ^= input.charCodeAt(i);
         h = Math.imul(h, 0x01000193);
     }
-    return (h >>> 0).toString(36);
+    return (h >>> 0).toString(16).padStart(8, '0');
 }
 
 /** Lightweight metadata shown in the "recent replays" list. */
@@ -134,11 +131,19 @@ interface StoredReplay {
     meta: Omit<StoredReplayMeta, 'id'>;
 }
 
+// How many `${id}-N` keys storeReplay tries before giving up on a colliding id.
+const MAX_ID_TRIES = 10;
+
+/**
+ * Store a replay under `id`, or under `${id}-2`, `${id}-3`… when a DIFFERENT file already has
+ * that id (a hash collision, likelier on the 32-bit fallback hash). The same file stored again
+ * keeps its id. Resolves with the id actually used, which is what the URL must carry.
+ */
 export async function storeReplay(
     id: string,
     rawContent: string,
     meta?: { player1?: string; player2?: string; result?: string; savedAt?: number },
-): Promise<void> {
+): Promise<string> {
     const db = await openDB();
     const record: StoredReplay = {
         id,
@@ -150,13 +155,29 @@ export async function storeReplay(
             savedAt: meta?.savedAt ?? 0,
         },
     };
-    const metaRecord: StoredReplayMeta = { id, ...record.meta };
     return new Promise((resolve, reject) => {
         const tx = db.transaction([STORE_NAME, META_STORE], 'readwrite');
         closeWhenSettled(db, tx);
-        tx.objectStore(STORE_NAME).put(record, id);
-        tx.objectStore(META_STORE).put(metaRecord, id);
-        tx.oncomplete = () => resolve();
+        const store = tx.objectStore(STORE_NAME);
+        let storedId = id;
+        // The lookup and the write share one transaction, so no other write lands in between.
+        const place = (n: number) => {
+            const key = n === 1 ? id : `${id}-${n}`;
+            const req = store.get(key);
+            req.onsuccess = () => {
+                const existing = req.result as StoredReplay | undefined;
+                if (existing && existing.rawContent !== rawContent) {
+                    if (n < MAX_ID_TRIES) place(n + 1);
+                    else tx.abort();
+                    return;
+                }
+                storedId = key;
+                store.put({ ...record, id: key }, key);
+                tx.objectStore(META_STORE).put({ id: key, ...record.meta } satisfies StoredReplayMeta, key);
+            };
+        };
+        place(1);
+        tx.oncomplete = () => resolve(storedId);
         tx.onerror = () => reject(tx.error);
         // A commit that fails (QuotaExceededError) aborts the transaction and fires no error.
         tx.onabort = () => reject(tx.error ?? new Error('Replay storage transaction aborted'));

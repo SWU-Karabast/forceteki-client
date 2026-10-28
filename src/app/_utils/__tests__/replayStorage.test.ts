@@ -51,3 +51,16 @@ describe('generateReplayId', () => {
         expect(await generateReplayId(header, 'different content')).not.toBe(a);
     });
 });
+
+describe('generateReplayId format', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    // Value: protects=ids are fixed-width so distinct hashes give distinct ids; fails_when=bytes are written unpadded again (1,23 and 12,3 both read "123"); why_new=ship review found per-byte base 36 ambiguous; seam=none; no_claim=collision rate
+    it('is 16 hex digits with WebCrypto and 8 without', async () => {
+        expect(await generateReplayId(header, 'x')).toMatch(/^[0-9a-f]{16}$/);
+        vi.stubGlobal('crypto', {});
+        expect(await generateReplayId(header, 'x')).toMatch(/^[0-9a-f]{8}$/);
+    });
+});

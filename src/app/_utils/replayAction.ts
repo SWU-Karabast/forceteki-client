@@ -129,7 +129,7 @@ function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf
         case 'RESOURCE':
             return { label: `${who(e.p)} resources ${nm(e.card)}`, highlight: [], kind: 'resource' };
         case 'MOVE':
-            // A 1.1 file has no RESOURCE record (spec §22.1); the MOVE into the row is the
+            // A file without RESOURCE records (an early writer's); the MOVE into the row is the
             // only place the commitment shows. Every other MOVE is mechanism.
             if (e.to === 'resource' && e.from === 'hand') {
                 return { label: `${who(e.p)} resources ${nm(e.card)}`, highlight: [], kind: 'resource' };

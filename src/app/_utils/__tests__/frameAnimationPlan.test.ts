@@ -3,7 +3,7 @@ import { planBeat, type PlanInput } from '../frameAnimationPlan';
 import type { Snap } from '../animPrimitives';
 import { DURATION } from '../replayTiming';
 
-const r = (x: number, y: number, html = 'x'): Snap => ({ x, y, w: 100, h: 140, html });
+const r = (x: number, y: number, html = 'x'): Snap => ({ x, y, w: 100, h: 140, copy: html as unknown as Element });
 const base = (): PlanInput => ({
     prev: new Map(), next: new Map(), transitions: [], bottomSeat: 1,
     piles: { resource: { 1: r(0, 800), 2: r(0, 0) }, discard: { 1: r(1300, 800), 2: r(1300, 0) } },

@@ -9,21 +9,22 @@ import { baseId, displayText, type Seat } from '@/lib/swupgn';
 import SeekRow from './SeekRow';
 
 /**
- * What is left in each deck at this moment, in draw order.
+ * What is left in each deck at this moment, in draw order until the deck is shuffled.
  *
- * The file publishes the starting deck order, so the remaining deck is exact — including
- * what comes next. Upcoming cards are hidden behind a toggle: knowing the next draw is the
+ * The file publishes the starting deck order, so the remaining deck is exact, including what
+ * comes next. A shuffle record names the seat but not the new order, so after one only the
+ * contents are known. Upcoming cards are hidden behind a toggle: knowing the next draw is the
  * point when you are studying a decision, and a spoiler when you are just watching.
  */
 const PEEK = 5;
 
 const SeatDeck: React.FC<{ seat: Seat; name: string; reveal: boolean }> = ({ seat, name, reveal }) => {
-    const { deckStates, currentIndex, nameOf } = useReplay();
+    const { deckNow, nameOf } = useReplay();
     const costs = useCardCostMap();
-    const state = deckStates[currentIndex]?.[seat];
+    const state = deckNow?.[seat];
     if (!state) return null;
 
-    const { remaining } = state;
+    const { remaining, ordered } = state;
     const counts = new Map<string, number>();
     for (const id of remaining) {
         const b = baseId(id);
@@ -38,12 +39,19 @@ const SeatDeck: React.FC<{ seat: Seat; name: string; reveal: boolean }> = ({ sea
                 {remaining.length} card{remaining.length === 1 ? '' : 's'} left
             </Typography>
 
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block', mt: 1, fontWeight: 600 }}>
-                Next {Math.min(PEEK, remaining.length)}
-            </Typography>
+            {ordered && remaining.length > 0 && (
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block', mt: 1, fontWeight: 600 }}>
+                    Next {Math.min(PEEK, remaining.length)}
+                </Typography>
+            )}
+            {!ordered && remaining.length > 0 && (
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block', mt: 1 }}>
+                    Shuffled: the file does not record the new order, so the next draws are unknown.
+                </Typography>
+            )}
             {/* Hidden draws leave the DOM entirely: a blurred name is still read aloud and
                 still found by find-in-page, which is no spoiler protection at all. */}
-            {remaining.slice(0, PEEK).map((id, i) => (
+            {ordered && remaining.slice(0, PEEK).map((id, i) => (
                 <Typography key={`${id}-${i}`} variant="caption" sx={{ display: 'block', color: reveal ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)' }}>
                     {i + 1}. {reveal ? nameOf(id) : '· · · · ·'}
                 </Typography>
@@ -88,7 +96,7 @@ const DeckTab: React.FC = () => {
 
     return (
         <Box sx={{ p: 1.5 }}>
-            <Tooltip title="The file publishes the full starting deck order, so upcoming draws are exact">
+            <Tooltip title="The file publishes the full starting deck order, so upcoming draws are exact until the deck is shuffled">
                 <SeekRow
                     onClick={() => setReveal((r) => !r)}
                     pressed={reveal}

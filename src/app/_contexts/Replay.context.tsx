@@ -18,7 +18,7 @@ import { buildBeats, beatAt, captionForBeat, chapterMarks as chapterMarksOf, pla
 import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
 import { activeSeatByFrame, attackByFrame, lastPlayedByFrame } from '@/app/_utils/replayLiveCues';
 import { classifyBeat, type Transition } from '@/app/_utils/replayTransitions';
-import { SPEEDS, dwellMs } from '@/app/_utils/replayTiming';
+import { SPEEDS, autoplayDwellMs } from '@/app/_utils/replayTiming';
 import { readPrefs, PREFS_KEY, DEFAULT_PREFS, type StepBy } from '@/app/_utils/replayPrefs';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 import { resolveFrameRef } from '@/app/_utils/replayDeepLink';
@@ -50,8 +50,8 @@ export interface IReplayContextType {
     /** Round + phase boundaries as scrubber marks: beat index + label + kind. */
     chapterMarks: { value: number; label: string; kind: 'round' | 'phase' }[];
 
-    /** Remaining deck per seat after each frame, from the published starting order. */
-    deckStates: Array<Record<Seat, DeckState>>;
+    /** Remaining deck per seat at the current frame, from the published starting order. */
+    deckNow: Record<Seat, DeckState> | undefined;
 
     /** Every resource commitment, with the hand it was chosen from. */
     resourcingDecisions: IResourcingDecision[];
@@ -298,6 +298,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
     // Remaining deck per frame, counted from the engine's own deck MOVEs against the
     // published starting order. One source of truth for the board and the Deck tab.
     const deckStates = useMemo(() => deckByFrame(doc, events), [doc, events]);
+    const deckNow = useMemo(() => deckStates.at(currentIndex), [deckStates, currentIndex]);
 
     // Round + phase boundaries, for landmarks on an otherwise featureless beat scrubber.
     const chapterMarks = useMemo(() => chapterMarksOf(beats, events), [beats, events]);
@@ -423,8 +424,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             leaderExhausted: leaderExhaustByFrame[currentIndex],
             baseHp: baseHpByFrame[currentIndex],
             deckRemaining: {
-                1: deckStates[currentIndex]?.[1].remaining.length,
-                2: deckStates[currentIndex]?.[2].remaining.length,
+                1: deckNow?.[1].remaining.length,
+                2: deckNow?.[2].remaining.length,
             },
             // Fog-of-war hides the opponent's hand; their face-down resources go with it.
             resourcedIds: fogOfWar
@@ -436,7 +437,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             lastPlayedCard: lastPlayed[currentIndex],
         };
         return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
-    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckStates, sidedNow, entryExhaust, activeSeats, attacks, lastPlayed]);
+    }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckNow, sidedNow, entryExhaust, activeSeats, attacks, lastPlayed]);
 
     const currentMoveIndex = useMemo(() => {
         // moveFrames is ascending (moves are in timeline order), so stop at the first
@@ -518,26 +519,22 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         if (step.kind === 'stop') { setIsPlaying(false); return; }
         // One timeout per BEAT, so an attack, a resource run or a draw burst holds on screen
         // as one step instead of dealing its records one at a time. The dwell is timed for
-        // the beat about to be SHOWN, not the one just left — its own animation length,
-        // plus a handoff pause when the acting seat changes.
-        const b = beatAt(beats, currentIndex);
+        // the beat on screen, whose animation is playing now (autoplayDwellMs).
         const next = step.to;
-        const nextBeat = beats[b.index + (currentIndex < b.end ? 0 : 1)] ?? b;
-        const handoff = nextBeat.seat !== undefined && b.seat !== undefined && nextBeat.seat !== b.seat;
-        const t = setTimeout(() => setCurrentIndex(next), dwellMs(transitionsOf(nextBeat), handoff, speed));
+        const t = setTimeout(() => setCurrentIndex(next), autoplayDwellMs(beats, beatAt(beats, currentIndex), currentIndex, transitionsOf, speed));
         return () => clearTimeout(t);
     }, [isPlaying, speed, currentIndex, totalFrames, clip, beats, transitionsOf]);
 
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent,
-        doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
+        doc, events, chapterMarks, deckNow, resourcingDecisions, currentIndex, totalFrames, header: doc.header, moves, currentMoveIndex,
         replayId, nameOf: names.nameOf, nameAt, nameAtSeq, frameStates,
         downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate, setAnimate, stepBy, setStepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, seekToBeatOf, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
-    }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckStates, resourcingDecisions, currentIndex, totalFrames, moves,
+    }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckNow, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, names, nameAt, nameAtSeq, frameStates, downloadTextLog, fogOfWar, toggleFogOfWar,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate, stepBy,

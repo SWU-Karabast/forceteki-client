@@ -17,8 +17,11 @@ export function triggerBlobDownload(blob: Blob, filename: string): void {
 }
 
 /** Download a .swupgn under its `<p1>-vs-<p2>.swupgn` name with the format's own MIME type. */
+/** The .swupgn media type, used for every replay file this client saves. */
+export const SWU_PGN_MIME = 'application/vnd.swu-pgn';
+
 export function downloadSwuPgn(doc: { header: { p1: string; p2: string } }, text: string): void {
-    const blob = new Blob([text], { type: 'application/vnd.swu-pgn' });
+    const blob = new Blob([text], { type: SWU_PGN_MIME });
     triggerBlobDownload(blob, sanitizeFilename(`${doc.header.p1}-vs-${doc.header.p2}.swupgn`));
 }
 

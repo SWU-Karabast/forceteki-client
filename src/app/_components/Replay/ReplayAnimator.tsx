@@ -78,9 +78,9 @@ const ReplayAnimator: React.FC<{ containerRef: React.RefObject<HTMLElement | nul
                 if (base) return baseEls[Number(base[1]) as Seat];
                 return container.querySelector<HTMLElement>(`[data-card-uuid="${CSS.escape(u)}"]`);
             },
-            clone: (snap, z) => { const el = fromHtml(snap.html); Object.assign(el.style, { position: 'absolute', left: `${snap.x - cRect.left}px`, top: `${snap.y - cRect.top}px`, width: `${snap.w}px`, height: `${snap.h}px`, margin: '0', pointerEvents: 'none', transformOrigin: '0 0', zIndex: z != null ? String(z) : '' }); overlay.appendChild(el); return el; },
+            clone: (snap, z) => { const el = fromCopy(snap.copy); Object.assign(el.style, { position: 'absolute', left: `${snap.x - cRect.left}px`, top: `${snap.y - cRect.top}px`, width: `${snap.w}px`, height: `${snap.h}px`, margin: '0', pointerEvents: 'none', transformOrigin: '0 0', zIndex: z != null ? String(z) : '' }); overlay.appendChild(el); return el; },
             layer: (snap, z, opts) => { const outer = document.createElement('div'); Object.assign(outer.style, { position: 'absolute', left: `${snap.x - cRect.left}px`, top: `${snap.y - cRect.top}px`, width: `${snap.w}px`, height: `${snap.h}px`, transformOrigin: opts?.origin ?? 'center', pointerEvents: 'none', zIndex: String(z), filter: opts?.shadow ?? '' }); const inner = document.createElement('div'); Object.assign(inner.style, { width: '100%', height: '100%', position: 'relative', transformOrigin: 'center' }); outer.appendChild(inner); overlay.appendChild(outer); return { outer, inner }; },
-            face: (html) => { const el = fromHtml(html); Object.assign(el.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', margin: '0' }); return el; },
+            face: (copy) => { const el = fromCopy(copy); Object.assign(el.style, { position: 'absolute', left: '0', top: '0', width: '100%', height: '100%', margin: '0' }); return el; },
             node: () => document.createElement('div'),
             mount: (el) => overlay.appendChild(el),
             rel: (p) => ({ left: p.x - cRect.left, top: p.y - cRect.top }),
@@ -98,9 +98,9 @@ const ReplayAnimator: React.FC<{ containerRef: React.RefObject<HTMLElement | nul
     return <div ref={overlayRef} aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 5 }} />;
 };
 
-function fromHtml(html: string): HTMLElement {
-    const box = document.createElement('div'); box.innerHTML = html;
-    const el = (box.firstElementChild as HTMLElement) ?? box;
+// A fresh clone of the copy measured with the frame: never a re-parse of serialized HTML.
+function fromCopy(copy: Element | null): HTMLElement {
+    const el = (copy?.cloneNode(true) as HTMLElement | undefined) ?? document.createElement('div');
     // A clone must never answer a `[data-card-uuid]` query: it would be measured as
     // the card's rect next beat, or hidden in place of the live node.
     el.removeAttribute('data-card-uuid');

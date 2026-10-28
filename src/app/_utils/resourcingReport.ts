@@ -120,7 +120,8 @@ export function resourcingReport(doc: SwuPgnDocument, costMap: Record<string, nu
 
     for (const e of events) {
         if (e.t === 'ROUND_START') {
-            round = e.round;
+            // The round labels a row and keys it; a file's non-number keeps the previous one.
+            if (typeof e.round === 'number' && Number.isFinite(e.round)) round = e.round;
             roundSet.add(round);
             if (e.keyframe && typeof e.keyframe === 'object') {
                 for (const seat of [1, 2] as Seat[]) {

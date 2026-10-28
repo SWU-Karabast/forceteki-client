@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import PreferenceButton from './PreferenceButton';
 import { useGame } from '@/app/_contexts/Game.context';
-import { triggerBlobDownload } from '@/app/_utils/downloadBlob';
+import { SWU_PGN_MIME, triggerBlobDownload } from '@/app/_utils/downloadBlob';
 import { storeReplayContent } from '@/app/_utils/replayHandoff';
 import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
 import { requestGameLog } from '@/app/_utils/gameLogRequest';
@@ -11,7 +11,7 @@ import { openLoadingTab, showReplayInTab, type ReplayTab } from '@/app/_utils/re
 
 function DownloadGameLog() {
     const { sendLobbyMessage } = useGame();
-    const [loadingZip, setLoadingZip] = useState(false);
+    const [loadingFile, setLoadingFile] = useState(false);
     const [loadingWatch, setLoadingWatch] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -43,12 +43,12 @@ function DownloadGameLog() {
         withGameLog(() => showReplayInTab(tab, () => requestGameLog(sendLobbyMessage), storeReplayContent), setLoadingWatch);
     };
 
-    const handleDownloadZip = () => {
+    const handleDownloadFile = () => {
         withGameLog(async () => {
             const swuPgn = await requestGameLog(sendLobbyMessage);
             const date = new Date().toISOString().slice(0, 10);
-            triggerBlobDownload(new Blob([swuPgn], { type: 'text/plain' }), `game-${date}.swupgn`);
-        }, setLoadingZip);
+            triggerBlobDownload(new Blob([swuPgn], { type: SWU_PGN_MIME }), `game-${date}.swupgn`);
+        }, setLoadingFile);
     };
 
     const styles = {
@@ -73,13 +73,13 @@ function DownloadGameLog() {
                 variant={'standard'}
                 text={loadingWatch ? 'Loading...' : 'Watch Replay'}
                 buttonFnc={handleWatchReplay}
-                disabled={loadingWatch || loadingZip}
+                disabled={loadingWatch || loadingFile}
             />
             <PreferenceButton
                 variant={'standard'}
-                text={loadingZip ? 'Loading...' : 'Download Game Files'}
-                buttonFnc={handleDownloadZip}
-                disabled={loadingWatch || loadingZip}
+                text={loadingFile ? 'Loading...' : 'Download Game File'}
+                buttonFnc={handleDownloadFile}
+                disabled={loadingWatch || loadingFile}
             />
             {/* An error is announced and reads as one, not as more helper text. */}
             <Typography sx={error ? { ...styles.typeographyStyle, color: 'error.main' } : styles.typeographyStyle} role={error ? 'alert' : undefined}>

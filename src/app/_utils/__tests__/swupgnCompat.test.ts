@@ -22,8 +22,8 @@ import { makeNameResolver } from '../swupgnCardNames';
 import { statOf } from '../swupgnCardStats';
 
 /**
- * Spec §22 "Earlier 1.0 files" and §22.1 "Files that say SWU-PGN/1.1": one test per row of
- * each table, on a minimal synthetic file. For every row the client either handles the old
+ * Spec §22 "Earlier 1.0 files", plus the pre-publication shapes the reader still handles (no
+ * `kind`, no RESOURCE, no CARDS/STORY): one test per row, on a minimal synthetic file. For every row the client either handles the old
  * shape (the board is right) or degrades VISIBLY (a writerGeneration / fileIssues line says
  * what the replay cannot show). Rows the spec marks "not detectable" or "not a file change"
  * are listed at the end with the reason there is nothing to test.
@@ -57,7 +57,7 @@ describe('§22 earlier 1.0 files', () => {
         const build = doc.setup.length ? ['SOR#108', 'SOR#108:2', 'SOR#108:3'].map((card, i) => ev({ t: 'MOVE', card, from: 'outsideTheGame', to: 'deck', p: 1 }, `R0.S.b${i}`)) : [];
         const events = [...build, ...doc.events];
         expect(fold(events)).toEqual(fold(doc.events));
-        expect(deckByFrame(doc, events)[build.length - 1][1].remaining).toHaveLength(5);
+        expect(deckByFrame(doc, events).at(build.length - 1)![1].remaining).toHaveLength(5);
         expect(writerGeneration(withEvents(events))).toEqual([expect.stringContaining('Deck construction recorded as 3 MOVEs')]);
     });
 
@@ -340,16 +340,11 @@ describe('§22 earlier 1.0 files', () => {
     });
 });
 
-describe('§22.1 files that say SWU-PGN/1.1', () => {
-    const asOneOne = (events: GameEvent[]): SwuPgnDocument => {
-        const doc = base();
-        return { ...doc, header: { ...doc.header, game: 'SWU-PGN/1.1' }, cards: [], story: [], events };
-    };
+describe('pre-publication files, read by shape', () => {
+    const shapeOnly = (events: GameEvent[]): SwuPgnDocument => ({ ...base(), cards: [], story: [], events });
 
-    it('is accepted and parsed as 1.0, with the pre-release note; another major is refused', () => {
-        const text = VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/1.1');
-        expect(parse(text).header.game).toBe('SWU-PGN/1.1');
-        expect(writerGeneration(parse(text))).toEqual([expect.stringContaining('Pre-release SWU-PGN/1.1')]);
+    it('any 1.x is accepted and parsed as 1.0; another major is refused', () => {
+        expect(parse(VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/1.1')).header.game).toBe('SWU-PGN/1.1');
         expect(() => parse(VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/2.0'))).toThrow(expect.objectContaining({ code: 'unsupported-major' }));
         expect(parse(VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/1.7')).header.game).toBe('SWU-PGN/1.7');
     });
@@ -360,7 +355,7 @@ describe('§22.1 files that say SWU-PGN/1.1', () => {
     });
 
     it('no CARDS: the client\'s own name map names the cards; no STORY: the export renders one', () => {
-        const doc = asOneOne(base().events);
+        const doc = shapeOnly(base().events);
         expect(makeNameResolver({ 'SOR#108': 'Wampa' }).nameOf('SOR#108:2')).toBe('Wampa');
         expect(parse(serialize(doc)).story!.join('\n')).toBe(render(doc).replace(/^\n+|\n+$/g, ''));
     });
@@ -395,7 +390,7 @@ describe('§22.1 files that say SWU-PGN/1.1', () => {
         expect(normalizeEvents(events)).toHaveLength(R1().length);
         // The viewer folds the repaired stream, so the inert record never reaches a count.
         expect(fold(normalizeEvents(events)).players[1]!.handSize).toBe(1);
-        expect(fileIssues(asOneOne(events)).map((i) => i.message)).toEqual([expect.stringContaining('2 MOVEs with an empty or identical from/to')]);
+        expect(fileIssues(shapeOnly(events)).map((i) => i.message)).toEqual([expect.stringContaining('2 MOVEs with an empty or identical from/to')]);
     });
 
     it('a keyframe missing a seat or with "players": {} is ignored and the running state kept', () => {

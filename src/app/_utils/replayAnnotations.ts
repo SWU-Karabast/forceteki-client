@@ -1,5 +1,5 @@
 import type { Annotation, SwuPgnDocument } from '@/lib/swupgn';
-import { openDB, closeWhenSettled, ANNOTATIONS_STORE } from './replayStorage';
+import { openDB, closeWhenSettled, ANNOTATIONS_STORE, REPLAYS_STORE } from './replayStorage';
 
 /**
  * A working-copy annotation: a reader Annotation plus a client-only `_id` for stable
@@ -56,7 +56,9 @@ export async function loadAnnotations(replayId: string | null): Promise<WorkingA
  * Persist the working-copy notes for a replay. No-op without a replayId (in-memory only).
  * Another tab may have saved notes since this one loaded, so the write reads the stored
  * record and merges into it by `_id` rather than overwriting it. `deletedIds` are the notes
- * this tab removed; they join the record's tombstones so no tab resurrects them.
+ * this tab removed; they join the record's tombstones so no tab resurrects them. Nothing is
+ * written once the replay itself is gone: deleting it (in any tab) dropped its notes and
+ * tombstones, and a stale tab's save would put them back for a re-upload to find.
  */
 export async function saveAnnotations(
     replayId: string | null,
@@ -67,11 +69,13 @@ export async function saveAnnotations(
     if (!replayId) return;
     const db = await openDB();
     return new Promise((resolve, reject) => {
-        const tx = db.transaction(ANNOTATIONS_STORE, 'readwrite');
+        const tx = db.transaction([ANNOTATIONS_STORE, REPLAYS_STORE], 'readwrite');
         closeWhenSettled(db, tx);
         const store = tx.objectStore(ANNOTATIONS_STORE);
+        const replay = tx.objectStore(REPLAYS_STORE).get(replayId);
         const request = store.get(replayId);
         request.onsuccess = () => {
+            if (replay.result === undefined) return;
             const stored = request.result as AnnotationRecord | undefined;
             const deleted = [...new Set([...(stored?.deleted ?? []), ...deletedIds])];
             const record: AnnotationRecord = {

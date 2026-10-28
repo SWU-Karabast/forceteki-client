@@ -411,8 +411,8 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         detach(s, e.card);
     }
 
-    // CLIENT-OWNED. The role this move enacts: `kind` when stated; otherwise, per spec
-    // §22.1, a move that names a host is an attachment (files written before `kind`).
+    // CLIENT-OWNED. The role this move enacts: `kind` when stated; otherwise a move that
+    // names a host is an attachment (files written before `kind`).
     const kind = eventKind(e);
     // A base's own attachments (Fortify), by the same two rules: leaving `base` ends the
     // attachment whatever the record says, and arriving as an upgrade attaches it to the base
@@ -559,7 +559,7 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         return s;
     }
     // CLIENT-OWNED, pre-1.0 compatibility. A 1.0 stream states `kind`, which applyMoveCounts
-    // acts on; a 1.1 file states nothing, so a token upgrade would fold into an arena as a
+    // acts on; a file without `kind` states nothing, so a token upgrade would fold into an arena as a
     // card with no printed identity. isStatusTokenCard falls back to a name list for exactly
     // those files. Equivalent to upstream for a 1.0 record: a token upgrade never joins an
     // arena, never attaches by id, and its DEFEAT finds nothing to detach.
@@ -930,19 +930,34 @@ const finiteOr = (v: unknown, d: number): number => (typeof v === 'number' && Nu
 const MAX_KEYFRAME_LIST = 200;
 const stringList = (v: unknown): string[] => (Array.isArray(v) ? v.slice(0, MAX_KEYFRAME_LIST).map(String) : []);
 
+/** CLIENT-OWNED. A keyframe card's status tokens: own keys only, at most MAX_KEYFRAME_LIST of
+ *  them, each a positive finite count. The map comes off the file, and the board draws one
+ *  badge per token, so an unbounded one renders millions of cards. */
+function tokenCounts(v: unknown): Record<string, number> {
+    const out: Record<string, number> = {};
+    if (v == null || typeof v !== 'object' || Array.isArray(v)) return out;
+    let kept = 0;
+    for (const [k, n] of Object.entries(v)) {
+        if (kept >= MAX_KEYFRAME_LIST) break;
+        if (RESERVED_KEYS.has(k) || typeof n !== 'number' || !Number.isFinite(n) || n <= 0) continue;
+        Object.defineProperty(out, k, { value: n, enumerable: true, writable: true, configurable: true });
+        kept++;
+    }
+    return out;
+}
+
 /** CLIENT-OWNED. A keyframe card with the CardInstanceState shape guaranteed; extra fields
  *  a newer writer adds ride through untouched, and the snapshot stats are kept only when
  *  they are numbers. */
 function normalizeCard(c: CardInstanceState): CardInstanceState {
     const r = c as Partial<CardInstanceState>;
-    const tokens = r.statusTokens;
     return {
         ...r,
         id: String(r.id), zone: String(r.zone ?? ''),
         damage: finiteOr(r.damage, 0), exhausted: r.exhausted === true,
         upgrades: stringList(r.upgrades),
         shields: finiteOr(r.shields, 0), experience: finiteOr(r.experience, 0),
-        statusTokens: tokens != null && typeof tokens === 'object' && !Array.isArray(tokens) ? tokens : {},
+        statusTokens: tokenCounts(r.statusTokens),
         captured: stringList(r.captured),
         power: typeof r.power === 'number' && Number.isFinite(r.power) ? r.power : undefined,
         hp: typeof r.hp === 'number' && Number.isFinite(r.hp) ? r.hp : undefined,

@@ -195,3 +195,14 @@ describe('resourcingReport — paid (EXHAUST_RESOURCES) versus printed cost (spe
         expect(r.byRound.find((b) => b.seat === 1)!.paid).toBe(0);
     });
 });
+
+describe('resourcingReport on a hostile round', () => {
+    // Value: protects=a ROUND_START whose round is not a number never becomes a report row, whose round is rendered as a React child; fails_when=round = e.round is taken unchecked again; why_new=ship review found {r.round} rendered raw; seam=none; no_claim=ResourcingReport markup
+    it('keeps the previous round when a ROUND_START names a non-number', () => {
+        const events = [
+            { seq: 'R1.S.0', t: 'ROUND_START', round: 1, keyframe: keyframe(2, 2) },
+            { seq: 'R2.S.0', t: 'ROUND_START', round: { x: 2 } },
+        ] as unknown as GameEvent[];
+        expect(resourcingReport(docWith(events)).rounds).toEqual([1]);
+    });
+});

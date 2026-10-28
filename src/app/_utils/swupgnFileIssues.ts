@@ -96,16 +96,10 @@ export function replayErrorMessage(err: unknown, fallback = 'Failed to read the 
     }
 }
 
-/**
- * A `1.x` this reader is older than (§18). The forceteki pilot wrote `SWU-PGN/1.1` before the
- * format was renumbered 1.0 at publication, so a pre-release `1.1` (no WriterRevision, a pilot
- * writer's Engine, [V-04]) is OLDER than 1.0, not newer. The spec no longer mentions 1.1; see
- * VERSION.md. Any other writer's `1.1` is a newer minor.
- */
+/** A `1.x` this reader is older than (§18). */
 function newerMinor(doc: SwuPgnDocument & ParseNotes): string | null {
     const m = /^SWU-PGN\/1\.(\d+)$/.exec(String(doc.header.game));
-    if (!m || Number(m[1]) === 0) return null;
-    return Number(m[1]) === 1 && isPreRelease(doc.header) ? null : doc.header.game;
+    return m && Number(m[1]) > 0 ? doc.header.game : null;
 }
 
 export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
@@ -215,7 +209,7 @@ export function skippedSectionList(names: readonly string[], banner = true): str
 }
 
 /**
- * Which writer generation produced this file, and what that costs the replay (spec §22, §22.1).
+ * Which writer generation produced this file, and what that costs the replay (spec §22).
  *
  * The format never bumped its version for these, so the header cannot say; each row of §22's
  * table names the record that gives the generation away. One line per detected generation,
@@ -230,10 +224,6 @@ export function writerGeneration(doc: SwuPgnDocument & ParseNotes): string[] {
     const keyframeCards = keyframeSeats.flatMap((p) => (Array.isArray(p.cards) ? p.cards : [])).filter((c) => c != null && typeof c === 'object');
     const enteredArena = events.some((e) => e.t === 'MOVE' && (e.to === 'ground' || e.to === 'space'));
 
-    // A pilot writer's 1.1 file is OLDER than 1.0 (see newerMinor); another writer's 1.1 is a newer minor.
-    if (doc.header.game === 'SWU-PGN/1.1' && isPreRelease(doc.header)) {
-        out.push('Pre-release SWU-PGN/1.1 file (older than 1.0, §22.1): token ids carry no art id, token removals and hosts are inferred from adjacency, and keyframes may miss a seat.');
-    }
     if (!doc.cards?.length) {
         out.push('No CARDS index: card names come from this client\'s own card database, so a card newer than it shows as an id.');
     }
@@ -292,9 +282,12 @@ export function writerGeneration(doc: SwuPgnDocument & ParseNotes): string[] {
     // WAS claimed -- one keyframe mismatch per such round, on every game that writer produced.
     // Only say so when it actually costs a mismatch (a round nobody claimed in reads the same
     // either way), because this line exists to explain the FileHealth badge, not to add to it.
+    // One pass for the claimed rounds: scanning every event per ROUND_END was quadratic. `seq`
+    // comes off the file and may be any JSON value.
+    const claimedRounds = new Set(events.flatMap((c) => (c.t === 'CLAIM_INITIATIVE' ? [/^R(\d+)\./.exec(String(c.seq))?.[1]] : [])));
     const staleRoundEnd = events.filter((e) => e.t === 'ROUND_END'
         && e.keyframe?.phase === 'setup' && e.keyframe?.initiativeTaken === false
-        && events.some((c) => c.t === 'CLAIM_INITIATIVE' && c.seq.startsWith(`R${e.round}.`))).length;
+        && claimedRounds.has(String(e.round))).length;
     if (staleRoundEnd > 0) {
         out.push(`Pre-D-1 writer: ${plural(staleRoundEnd, 'ROUND_END keyframe')} snapshotted after the round rolled over, so the initiative counter in ${staleRoundEnd === 1 ? 'it disagrees' : 'them disagrees'} with the events (§22). That is the whole of the mismatch count; the events themselves are intact.`);
     }

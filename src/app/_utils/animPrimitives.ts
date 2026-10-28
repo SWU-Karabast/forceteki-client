@@ -7,7 +7,9 @@
 // `window.setTimeout` became `s.later`, so the stage owns every side effect.
 import { DURATION } from './replayTiming';
 
-export interface Snap { x: number; y: number; w: number; h: number; html: string }
+/** A measured card: its rect, and `copy`, a detached deep copy of its node taken at measure
+ *  time (null for a reference point that is never cloned). */
+export interface Snap { x: number; y: number; w: number; h: number; copy: Element | null }
 export interface Point { x: number; y: number }
 
 /** True for a real `SET#NUM` card id, with an optional `:N` copy suffix. Card ids come
@@ -23,7 +25,7 @@ export interface Stage {
     findCard(uuid: string): HTMLElement | null; // the LIVE node
     clone(snap: Snap, zIndex?: number): HTMLElement; // overlay clone at snap's rect, transform-origin 0 0
     layer(snap: Snap, zIndex: number, opts?: { origin?: string; shadow?: string }): { outer: HTMLElement; inner: HTMLElement }; // outer moves, inner flips
-    face(html: string): HTMLElement; // a fill-parent face built from outerHTML
+    face(copy: Element | null): HTMLElement; // a fill-parent face cloned from a measured copy
     node(): HTMLElement; // a bare element the caller styles and mounts; the stage creates it so primitives never touch `document`
     mount(el: HTMLElement): void; // append a raw FX node to the overlay
     rel(p: Point): { left: number; top: number }; // screen point → overlay-relative
@@ -91,12 +93,12 @@ export function playFlip(s: Stage, p: { uuid: string; from: Snap; to: Snap; face
     const live = s.findCard(p.uuid);
     s.hide(live);
     const { outer, inner } = s.layer(to, 8);
-    inner.appendChild(s.face(from.html));
+    inner.appendChild(s.face(from.copy));
     const sx = from.w / to.w, sy = from.h / to.h, tx = from.x - to.x, ty = from.y - to.y;
     s.animate(outer, [{ transform: `translate(${tx}px, ${ty}px) scale(${sx}, ${sy})` }, { transform: 'translate(0,0) scale(1,1)' }],
         { duration: DURATION.playMove, fill: 'backwards', easing: EASING });
     if (p.faceDown) {
-        flip(s, inner, { build: () => s.face(to.html), at: DURATION.playMove, duration: DURATION.playFlip, onDone: () => { outer.remove(); s.show(live); } });
+        flip(s, inner, { build: () => s.face(to.copy), at: DURATION.playMove, duration: DURATION.playFlip, onDone: () => { outer.remove(); s.show(live); } });
     } else {
         s.later(DURATION.playMove, () => { outer.remove(); s.show(live); });
     }
@@ -207,7 +209,7 @@ export function stagePresent(s: Stage, p: {
     onDone?: () => void;
 }): { inner: HTMLElement } {
     const { outer, inner } = s.layer(p.from, p.zIndex, { shadow: p.shadow });
-    inner.appendChild(p.initial ? p.initial() : s.face(p.from.html));
+    inner.appendChild(p.initial ? p.initial() : s.face(p.from.copy));
     const cx = p.from.x + p.from.w / 2, cy = p.from.y + p.from.h / 2;
     const tStage = `translate(${p.stage.x - cx}px, ${p.stage.y - cy}px) scale(${p.scale})`;
     const tEnd = `translate(${p.land.at.x - cx}px, ${p.land.at.y - cy}px) scale(${p.land.scale})`;
@@ -276,7 +278,7 @@ export function eventStage(s: Stage, p: { uuid: string; from: Snap; to: Snap | n
     });
     // A hidden-hand play flips face-up mid-flight: the cardback becomes the card's
     // art (the discard pile is one stacked box, so it renders no face to clone).
-    const build = p.faceUp ? () => artNode(s, p.faceUp!) : p.to?.html ? () => s.face(p.to!.html) : null;
+    const build = p.faceUp ? () => artNode(s, p.faceUp!) : p.to?.copy ? () => s.face(p.to!.copy) : null;
     if (p.faceDown && build) flip(s, inner, { build, at: EVENT_FLIP_AT, duration: EVENT_FLIP_MS });
 }
 
@@ -339,12 +341,12 @@ export function leaderDeploy(s: Stage, p: { uuid: string; from: Snap; to: Snap; 
         arrive: LEADER_RISE_MS / total, depart, total,
         // Only the CARD rises: the player-name plate renders inside the leader's
         // element and stays on the board, so a clone carrying it reads as a duplicate.
-        initial: () => { const f = s.face(p.from.html); f.querySelectorAll('[data-leader-nameplate]').forEach((el) => el.remove()); return f; },
+        initial: () => { const f = s.face(p.from.copy); f.querySelectorAll('[data-leader-nameplate]').forEach((el) => el.remove()); return f; },
         fadeOut: false, zIndex: 14, shadow: 'drop-shadow(0 22px 34px rgba(0, 0, 0, 0.6))',
         riseEasing: 'cubic-bezier(0.2, 0, 0.2, 1)', landEasing: 'cubic-bezier(0.55, 0, 0.85, 0.5)',
         onDone: () => s.show(live),
     });
-    flip(s, inner, { build: () => s.face(p.to.html), at: LEADER_RISE_MS + LEADER_HOLD_MS, duration: LEADER_FLIP_MS });
+    flip(s, inner, { build: () => s.face(p.to.copy), at: LEADER_RISE_MS + LEADER_HOLD_MS, duration: LEADER_FLIP_MS });
     // The board shake rides a `later` rather than the animation's onDone: onDone
     // also fires on a cancel, and a stepped-past deploy must not jolt the board.
     s.later(total, () => {

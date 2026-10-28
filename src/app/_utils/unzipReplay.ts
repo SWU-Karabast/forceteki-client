@@ -29,7 +29,7 @@ export function extractReplayFromZip(bytes: Uint8Array, maxBytes: number): Promi
         let settled = false;
         const settle = (fn: () => void) => { if (!settled) { settled = true; fn(); } };
         const unzipper = new Unzip((file) => {
-            if (picked || !file.name.endsWith('.swupgn')) return; // never started: never inflated
+            if (picked || !file.name.toLowerCase().endsWith('.swupgn')) return; // never started: never inflated
             picked = true;
             if (typeof file.originalSize === 'number' && file.originalSize > maxBytes) {
                 settle(() => reject(new ReplayTooLargeError(maxBytes)));

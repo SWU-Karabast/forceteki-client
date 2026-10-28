@@ -57,7 +57,7 @@ const MoveRow = React.memo(function MoveRow({ move, index, isCurrent, annotated,
  *  document, and snaps rather than animates while autoplay is running. */
 const MovesTab: React.FC = () => {
     const { moves, currentMoveIndex, seekToBeatOf, isPlaying } = useReplay();
-    const { annotatedRefs } = useReplayAnnotations();
+    const { hasNotes } = useReplayAnnotations();
 
     useEffect(() => {
         const panel = document.getElementById('replay-tabpanel');
@@ -75,7 +75,7 @@ const MovesTab: React.FC = () => {
                     move={move}
                     index={i}
                     isCurrent={i === currentMoveIndex}
-                    annotated={annotatedRefs.has(move.seq)}
+                    annotated={hasNotes(move.seq)}
                     onSeek={seekToBeatOf}
                 />
             ))}

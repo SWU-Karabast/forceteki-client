@@ -22,10 +22,8 @@ describe('parse(sample-game.swupgn)', () => {
     const doc = parse(SAMPLE);
 
     it('reads the header', () => {
-        // DELIBERATE: the fixture is a pre-publication 1.1 file, kept as compatibility
-        // coverage. Version numbers do NOT order this format — a file saying 1.1 is OLDER
-        // than one saying 1.0, because the format was renumbered at publication. Match the
-        // Game tag exactly; never >=.
+        // DELIBERATE: the fixture is a pre-publication file, kept as compatibility coverage
+        // for files read by shape (no `kind`, no RESOURCE, no STORY/CARDS).
         expect(doc.header.game).toBe('SWU-PGN/1.1');
         expect(doc.header.result).toBe('Incomplete');
         expect(doc.header.rounds).toBe(3);
@@ -98,10 +96,10 @@ describe('parse — malformed input', () => {
     });
 });
 
-describe('parse — 1.0 sections (STORY/CARDS), and 1.1 files still read', () => {
+describe('parse — 1.0 sections (STORY/CARDS), and earlier files still read', () => {
     // forceteki added `%%% STORY` (rendered narrative) and `%%% CARDS` (id -> name index)
-    // and renumbered the format 1.1 -> 1.0. A reader that treats an unknown section as an
-    // error rejects the whole file, which is what this client did before re-vendoring.
+    // in 1.0. A reader that treats an unknown section as an error rejects the whole file,
+    // which is what this client did before re-vendoring.
     const withNewSections = [
         '[Game "SWU-PGN/1.0"]', '[GameId "g"] [Date "d"] [CardPool "SOR"] [Engine "e"] [Seed "0"]',
         '[P1Id "a"] [P2Id "b"] [P1 "One"] [P2 "Two"]',
@@ -145,7 +143,6 @@ describe('parse — the Game tag gate (spec §18, §22.1)', () => {
     const withGame = (tag: string) => SAMPLE.replace(/\[Game "[^"]*"\]/, tag === null ? '' : `[Game "${tag}"]`);
 
     it('accepts every 1.x by shape, never by numeric order', () => {
-        // 1.1 files are OLDER than 1.0 (renumbered at publication) and must still read.
         for (const v of ['SWU-PGN/1.0', 'SWU-PGN/1.1', 'SWU-PGN/1.7', 'SWU-PGN/1.42']) {
             expect(parse(withGame(v)).header.game).toBe(v);
         }

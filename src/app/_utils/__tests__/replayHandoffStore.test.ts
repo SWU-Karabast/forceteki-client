@@ -5,7 +5,7 @@ import { parse } from '@/lib/swupgn';
 
 vi.mock('../replayStorage', () => ({
     generateReplayId: vi.fn(async () => 'replay-id'),
-    storeReplay: vi.fn(async () => {}),
+    storeReplay: vi.fn(async (id: string) => id),
 }));
 
 import { storeReplayContent } from '../replayHandoff';

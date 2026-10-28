@@ -8,9 +8,9 @@ function fakeStage(cards: Record<string, boolean> = {}): Stage & { calls: Call[]
     const st = {
         rate: 1, calls: [] as Call[], hidden: [] as string[], shown: [] as string[], timers: [] as number[], mounted: [] as string[],
         findCard: (u: string) => (cards[u] ? Object.assign(mk('live'), { uuid: u }) : null),
-        clone: (snap: Snap) => mk(`clone:${snap.html}`),
-        layer: (snap: Snap) => ({ outer: mk(`outer:${snap.html}`), inner: mk(`inner:${snap.html}`) }),
-        face: (html: string) => mk(`face:${html}`),
+        clone: (snap: Snap) => mk(`clone:${snap.copy}`),
+        layer: (snap: Snap) => ({ outer: mk(`outer:${snap.copy}`), inner: mk(`inner:${snap.copy}`) }),
+        face: (copy: Element | null) => mk(`face:${copy}`),
         node: () => mk('node'),
         mount: (el: HTMLElement) => { st.mounted.push((el as unknown as { tag: string }).tag); },
         rel: (p: { x: number; y: number }) => ({ left: p.x, top: p.y }),
@@ -21,7 +21,8 @@ function fakeStage(cards: Record<string, boolean> = {}): Stage & { calls: Call[]
     };
     return st;
 }
-const snap = (x: number, y: number, w = 100, h = 140, html = 'A'): Snap => ({ x, y, w, h, html });
+// A string stands in for the measured copy: the tests read it back through the stage's labels.
+const snap = (x: number, y: number, w = 100, h = 140, html = 'A'): Snap => ({ x, y, w, h, copy: html as unknown as Element });
 
 describe('animPrimitives', () => {
     it('slide clones the destination and translates from the old rect, hiding the live card until it lands', () => {

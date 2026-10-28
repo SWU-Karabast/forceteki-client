@@ -1,4 +1,5 @@
 import type { Transition } from './replayTransitions';
+import type { Beat } from './replayBeats';
 
 /** One source of truth for how long each motion runs and how long a beat holds. The
  *  animator plays these; the autoplay dwell is derived from the same numbers, so a beat
@@ -44,4 +45,18 @@ export function beatDurationMs(ts: Transition[]): number {
 
 export function dwellMs(ts: Transition[], handoff: boolean, speed: number): number {
     return Math.round((beatDurationMs(ts) + (handoff ? HANDOFF_PAUSE_MS : 0)) / (speed > 0 ? speed : 1));
+}
+
+/**
+ * How long autoplay holds frame `frame` before stepping on. The wait runs while the beat ON
+ * SCREEN plays, so it is that beat's animation length; timing it for the next beat cut a long
+ * animation short whenever a short one followed. A frame part-way into a beat (after a seek)
+ * played no animation, so it holds for the base dwell. A change of acting seat adds the
+ * handoff pause.
+ */
+export function autoplayDwellMs(beats: Beat[], b: Beat, frame: number, transitionsOf: (beat: Beat) => Transition[], speed: number): number {
+    const shown = frame === b.end;
+    const next = beats[b.index + (shown ? 1 : 0)] ?? b;
+    const handoff = next.seat !== undefined && b.seat !== undefined && next.seat !== b.seat;
+    return dwellMs(shown ? transitionsOf(b) : [], handoff, speed);
 }

@@ -9,6 +9,12 @@ describe('extractReplayFromZip', () => {
         expect(strFromU8((await extractReplayFromZip(zip, 1024))!)).toBe('%%% HEADER\n');
     });
 
+    // Value: protects=a zip whose replay is named GAME.SWUPGN still opens; fails_when=the entry match is case-sensitive again; why_new=ship review found .SWUPGN refused; seam=none; no_claim=the upload control's own extension check
+    it('matches the .swupgn entry whatever its case', async () => {
+        const zip = zipSync({ 'GAME.SWUPGN': strToU8('%%% HEADER\n') });
+        expect(strFromU8((await extractReplayFromZip(zip, 1024))!)).toBe('%%% HEADER\n');
+    });
+
     it('stops at the ceiling instead of inflating a bomb', async () => {
         const zip = zipSync({ 'game.swupgn': new Uint8Array(4 * 1024 * 1024) }, { level: 9 });
         expect(zip.length).toBeLessThan(64 * 1024);

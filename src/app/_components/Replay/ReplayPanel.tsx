@@ -19,6 +19,7 @@ import TurnDigests from './TurnDigests';
 import DiscussionTab from './DiscussionTab';
 import { formatGameMeta } from '@/app/_utils/replayMoves';
 import { displayText } from '@/lib/swupgn';
+import { REPLAY_HEADER_HEIGHT, REPLAY_PANEL_WIDTH, REPLAY_TRANSPORT_HEIGHT } from '@/app/_constants/replayLayout';
 
 type TabKey = 'story' | 'moves' | 'deck' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
 // `short` is the name printed under the icon in the open panel (7 columns of ~40px on a phone);
@@ -101,7 +102,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
     if (collapsed) {
         return (
             <Box sx={{
-                position: 'fixed', top: 68, right: 0, bottom: 60, width: 48, zIndex: 1305,
+                position: 'fixed', top: REPLAY_HEADER_HEIGHT, right: 0, bottom: REPLAY_TRANSPORT_HEIGHT, width: 48, zIndex: 1305,
                 backgroundColor: PANEL_BG, borderLeft: BORDER, display: 'flex', flexDirection: 'column',
                 alignItems: 'center', py: 1, gap: 0.5,
             }}>
@@ -123,7 +124,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
 
     return (
         <Box sx={{
-            position: 'fixed', top: 68, right: 0, bottom: 60, width: { xs: '88vw', sm: 360 }, zIndex: 1305,
+            position: 'fixed', top: REPLAY_HEADER_HEIGHT, right: 0, bottom: REPLAY_TRANSPORT_HEIGHT, width: { xs: '88vw', sm: REPLAY_PANEL_WIDTH }, zIndex: 1305,
             backgroundColor: PANEL_BG, borderLeft: BORDER, backdropFilter: 'blur(10px)',
             display: 'flex', flexDirection: 'column',
         }}>
@@ -171,7 +172,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
                 <Tooltip title="Copy clip link"><span><IconButton size="small" aria-label="Copy clip link" onClick={copyClipLink} disabled={!clip} sx={{ color: clip ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}><ContentCut sx={{ fontSize: 16 }} /></IconButton></span></Tooltip>
                 <Tooltip title="Export clip as .webm"><span><IconButton size="small" aria-label="Export clip as webm" onClick={exportWebm} disabled={recording} sx={{ color: 'rgba(255,255,255,0.7)' }}>{recording ? <CircularProgress size={15} sx={{ color: 'var(--initiative-blue)' }} /> : <MovieCreationOutlined sx={{ fontSize: 18 }} />}</IconButton></span></Tooltip>
                 {clip && (
-                    <Button size="small" onClick={clearClip} aria-label="Clear clip" sx={{ minWidth: 0, px: 0.75, py: 0, color: 'rgba(255,255,255,0.45)', fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' }, textTransform: 'none', '&:hover': { color: 'white' } }}>
+                    <Button size="small" onClick={clearClip} aria-label="Clear clip" sx={{ minWidth: { xs: 44, md: 0 }, minHeight: { xs: 44, md: 0 }, px: 0.75, py: 0, color: 'rgba(255,255,255,0.45)', fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' }, textTransform: 'none', '&:hover': { color: 'white' } }}>
                         clear
                     </Button>
                 )}

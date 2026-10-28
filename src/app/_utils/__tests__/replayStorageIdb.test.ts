@@ -166,6 +166,7 @@ describe('saveAnnotations merges with the stored notes', () => {
 
     it('keeps notes another tab saved since this one loaded', async () => {
         stubIndexedDB({ auto: true });
+        await storeReplay('r', 'raw');
         await saveAnnotations('r', [note('a')]);   // tab A
         await saveAnnotations('r', [note('b')]);   // tab B, loaded before A's note existed
         expect((await loadAnnotations('r')).map((n) => n._id)).toEqual(['a', 'b']);
@@ -173,6 +174,7 @@ describe('saveAnnotations merges with the stored notes', () => {
 
     it('takes this tab\'s copy of a note both tabs hold', async () => {
         stubIndexedDB({ auto: true });
+        await storeReplay('r', 'raw');
         await saveAnnotations('r', [note('a')]);
         await saveAnnotations('r', [{ ...note('a'), text: 'edited' }]);
         expect(await loadAnnotations('r')).toEqual([{ ...note('a'), text: 'edited' }]);
@@ -180,9 +182,33 @@ describe('saveAnnotations merges with the stored notes', () => {
 
     it('does not resurrect a note deleted in another tab', async () => {
         stubIndexedDB({ auto: true });
+        await storeReplay('r', 'raw');
         await saveAnnotations('r', [note('a'), note('b')]);
         await saveAnnotations('r', [note('a')], 0, ['b']);              // tab A deletes b
         await saveAnnotations('r', [note('a'), note('b'), note('c')]);   // stale tab B still holds b
         expect((await loadAnnotations('r')).map((n) => n._id)).toEqual(['a', 'c']);
+    });
+
+    // Value: protects=a stale tab cannot write notes back for a replay another tab deleted, so re-uploading that file shows none; fails_when=saveAnnotations writes without checking the replay still exists; why_new=ship review found deleteReplay's notes resurrected by a second tab; seam=none (stubbed indexedDB global); no_claim=true cross-tab concurrency in a browser
+    it('writes nothing once the replay itself is deleted', async () => {
+        const idb = stubIndexedDB({ auto: true });
+        await storeReplay('r', 'raw');
+        await saveAnnotations('r', [note('a')]);
+        await deleteReplay('r');                       // tab A
+        await saveAnnotations('r', [note('a'), note('b')]);   // stale tab B
+        expect(idb.data('replayAnnotations').has('r')).toBe(false);
+    });
+});
+
+// Value: protects=two different files whose ids collide are both kept, and the same file stored twice keeps its id; fails_when=storeReplay puts without checking the key, or never reuses it; why_new=ship review found a colliding id silently replaced another replay; seam=none (stubbed indexedDB global); no_claim=hash collision rates
+describe('storeReplay on a colliding id', () => {
+    it('stores a different file under id-2 and returns that id; the same file keeps its id', async () => {
+        const idb = stubIndexedDB({ auto: true });
+        expect(await storeReplay('abc', 'first file')).toBe('abc');
+        expect(await storeReplay('abc', 'second file')).toBe('abc-2');
+        expect(await storeReplay('abc', 'first file')).toBe('abc');
+        expect(await loadReplay('abc')).toBe('first file');
+        expect(await loadReplay('abc-2')).toBe('second file');
+        expect(idb.data('replays').size).toBe(2);
     });
 });
