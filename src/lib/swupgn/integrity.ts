@@ -176,12 +176,10 @@ function diff(seq: string, expected: ReducedState, got: ReducedState, checkBaseH
     if (typeof expected.initiativeTaken === 'boolean' && expected.initiativeTaken !== (got.initiativeTaken ?? false)) {
         out.push({ seq, path: 'initiativeTaken', expected: expected.initiativeTaken, got: got.initiativeTaken ?? false });
     }
-    // `active` is deliberately NOT compared. It is supplied by keyframes, not reconstructed:
-    // the engine has not yet chosen an action-phase active player when PHASE_START fires, so the
-    // event stream cannot state it, and deriving it from the actions would mean modelling passing
-    // and priority -- the rules knowledge this format exists to spare a reader. A keyframe is
-    // therefore the only authority, and comparing the fold against it would only ever restate
-    // that. See spec §11 and §14.
+    // `active` is deliberately NOT compared. It is stated, not reconstructed: ROUND_START,
+    // PHASE_START and keyframes carry it, and deriving it from the actions in between would mean
+    // modelling passing and priority -- the rules knowledge this format exists to spare a reader.
+    // Comparing the fold against the keyframe would only restate that. See spec §11 and §14.
     for (const seat of [1, 2] as const) {
         const e = expected.players[seat];
         const g = got.players[seat];
@@ -224,9 +222,10 @@ export function checkKeyframes(events: GameEvent[]): IntegrityResult {
             }
             mismatches.push(...diff(e.seq, e.keyframe, s, seenKeyframe));
             seenKeyframe = true;
-            // CLIENT-OWNED. Upstream deep-clones the RAW keyframe here. `isCompleteKeyframe`
-            // only proves cards/hand/discard are arrays and each card is some object -- it
-            // validates no per-card field -- so a card with no `statusTokens` or no `upgrades`
+            // CLIENT-OWNED. Upstream snaps with `snapTo`, a deep clone of the RAW keyframe that
+            // only fills a missing `captured`. The client's `isCompleteKeyframe` only proves
+            // cards/hand/discard are arrays and each card is some object -- it validates no
+            // per-card field -- so a card with no `statusTokens` or no `upgrades`
             // rode straight into `reduce()`, and the next STATUS_TOKEN threw on
             // `c.statusTokens[token]` or the next arena exit threw on `c.upgrades.indexOf`.
             // Harmless upstream, where checkKeyframes runs on the writer's own state; fatal

@@ -5,14 +5,15 @@ import { useReplay } from '@/app/_contexts/Replay.context';
 import { turnDigests } from '@/app/_utils/turnDigests';
 import { bookmarkLabel } from '@/app/_utils/replayDecisions';
 import SeekRow from './SeekRow';
+import { displayText } from '@/lib/swupgn';
 
 /** Turn-by-turn digest, rendered inline as a panel tab body. */
 const TurnDigests: React.FC = () => {
     const { doc, nameAtSeq, seekToSeq, header } = useReplay();
     const digests = useMemo(() => turnDigests(doc), [doc]);
 
-    const p1 = header.p1 || 'Player 1';
-    const p2 = header.p2 || 'Player 2';
+    const p1 = displayText(header.p1) || 'Player 1';
+    const p2 = displayText(header.p2) || 'Player 2';
 
     return (
         <Box sx={{ p: 1.5 }}>

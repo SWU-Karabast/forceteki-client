@@ -185,3 +185,50 @@ describe('render: the audit gaps around sides, undo marks and base holdings', ()
         expect(text.split('\n')).toContain('      base: Beast Lair  ·  holds Captive Unit');
     });
 });
+
+describe('serialize as an Annotator and a writer (§3 [A-01], [W-02], §4, §18)', () => {
+    const VECTOR = readFileSync(path.join(__dirname, 'fixtures/vectors/homeworlds.swupgn'), 'utf-8');
+
+    // Value: protects=an export with notes drops nothing the file carried; fails_when=serialize writes only known tags/sections again; why_new=the client used to drop them and warn; seam=none; no_claim=byte equality of known sections
+    it('keeps unknown header tags and unknown sections verbatim, and only adds the note', () => {
+        const withExtras = VECTOR
+            .replace('[Rounds', '[XSwuforgeDeckId "deck \\"7\\""] [Event "Store Champs"] [Rounds')
+            .replace('%%% DECKS', '%%% X_SWUFORGE\n{"hint":1}\n\nfree text, kept\n\n%%% COMMENTARY\nPlayer 1 opens strong.\n\n%%% DECKS');
+        const doc = parse(withExtras);
+        const note: Annotation = { ref: doc.events[3].seq, text: 'nice' };
+        const out = serialize({ ...doc, annotations: [...doc.annotations, note] });
+        const again = parse(out);
+        expect(again.extraTags).toEqual([['XSwuforgeDeckId', 'deck "7"'], ['Event', 'Store Champs']]);
+        expect(again.extraSections).toEqual(doc.extraSections);
+        expect(again.extraSections?.map((s) => s.banner)).toEqual(['%%% X_SWUFORGE', '%%% COMMENTARY']);
+        expect(again.extraSections?.[0].lines).toEqual(['{"hint":1}', '', 'free text, kept']);
+        expect(out).toContain('[XSwuforgeDeckId "deck \\"7\\""]');
+        expect(again.annotations).toEqual([...doc.annotations, note]);
+        expect(again.events).toEqual(doc.events);
+        expect(again.header).toEqual(doc.header);
+        // A second round trip is a fixed point.
+        expect(serialize(again)).toBe(out);
+    });
+
+    it('starts with [Game …], writes no byte order mark, and ends with exactly one line feed', () => {
+        const out = serialize(parse('\uFEFF' + VECTOR));
+        expect(out.split('\n')[0]).toBe('[Game "SWU-PGN/1.0"]');
+        expect(out.charCodeAt(0)).not.toBe(0xFEFF);
+        expect(out.endsWith('\n')).toBe(true);
+        expect(out.endsWith('\n\n')).toBe(false);
+    });
+
+    it('turns a line break in a header value into a space, as the forceteki writer does', () => {
+        const doc = parse(VECTOR);
+        const out = serialize({ ...doc, header: { ...doc.header, reason: 'Base\r\ndestroyed\n\nfast', p1: 'a\tb' } });
+        expect(out).toContain('[Reason "Base destroyed fast"]');
+        expect(out).toContain('[P1 "a b"]');
+        expect(parse(out).header.reason).toBe('Base destroyed fast');
+    });
+
+    it('renders a missing STORY with card lists joined by " · " (§16)', () => {
+        const doc = parse(VECTOR);
+        const out = serialize({ ...doc, story: [] });
+        expect(parse(out).story?.some((l) => / draws \d+: .+ · /.test(l))).toBe(true);
+    });
+});

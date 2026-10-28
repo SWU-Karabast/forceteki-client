@@ -2,10 +2,20 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { parse, serialize, type SwuPgnDocument, type GameEvent } from '@/lib/swupgn';
-import { fileIssues, writerGeneration, skippedSectionList } from '../swupgnFileIssues';
+import { fileIssues as allFileIssues, writerGeneration, skippedSectionList } from '../swupgnFileIssues';
+import type { FileIssue } from '../swupgnFileIssues';
+
+// The fixture here is a pilot file on purpose (its WriterRevision is stripped), so every list
+// would open with the §3 [C-01] pre-release notice. That notice has its own test
+// (swupgnConformance.test.ts); here it is set aside so each case sees only what it is about.
+const fileIssues = (...args: Parameters<typeof allFileIssues>): FileIssue[] =>
+    allFileIssues(...args).filter((i) => !i.message.startsWith('Pre-release file'));
 import { noEventsMessage } from '../replayHandoff';
 
-const VECTOR = readFileSync(path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors/minimal.swupgn'), 'utf-8');
+// The pilot-file rows below need a file with no WriterRevision (§22). The vector gained one at
+// writer revision 3, so it is stripped here: everything else about the file is unchanged.
+const VECTOR = readFileSync(path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors/minimal.swupgn'), 'utf-8')
+    .replace(/^\[WriterRevision "\d+"\]\n/m, '');
 
 const withHeader = (over: Partial<SwuPgnDocument['header']>, events?: GameEvent[]): SwuPgnDocument => {
     const doc = parse(VECTOR);

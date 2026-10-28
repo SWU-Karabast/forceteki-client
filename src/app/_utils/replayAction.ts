@@ -1,4 +1,4 @@
-import { type GameEvent, type NameResolver, type Seat, asIdList } from '@/lib/swupgn';
+import { type GameEvent, type NameResolver, type Seat, asIdList, displayText } from '@/lib/swupgn';
 
 // What happened on the current frame, for the animated caption + board highlight. Unlike
 // the move list (buildMoveList), this covers EVERY frame's event, worded as the story's
@@ -48,8 +48,14 @@ const none: FrameAction = { label: '', highlight: [], kind: 'none' };
 const cost = (e: { cost?: unknown }): string => (typeof e.cost === 'number' ? ` (cost ${e.cost})` : '');
 
 /** `n` may be a sided resolver (`sidedResolver`); its `frontNameOf` names a two-sided card's
- *  printed front, which the deploy and flip captions need whichever side is up. */
+ *  printed front, which the deploy and flip captions need whichever side is up. The label
+ *  interpolates file text (a `Reason`, a raw id), so it is neutralised for display (§23). */
 export function frameAction(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }): FrameAction {
+    const a = frameActionOf(e, n);
+    return a.label ? { ...a, label: displayText(a.label) } : a;
+}
+
+function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }): FrameAction {
     if (!e || typeof e !== 'object') return none;
     const nm = (id: string) => storyName(id, n);
     const list = (ids: unknown) => asIdList(ids).map(nm).join(', ');

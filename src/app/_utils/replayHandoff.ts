@@ -1,6 +1,6 @@
-import { parse, normalizeEvents, frameCost, type SwuPgnDocument, type ParseNotes } from '@/lib/swupgn';
+import { displayText, parse, normalizeEvents, frameCost, type SwuPgnDocument, type ParseNotes } from '@/lib/swupgn';
 import { generateReplayId, storeReplay } from '@/app/_utils/replayStorage';
-import { skippedSectionList } from '@/app/_utils/swupgnFileIssues';
+import { ReplayRefusedError, skippedSectionList } from '@/app/_utils/swupgnFileIssues';
 
 /**
  * The viewer URL for a stored replay, keeping the moment a shared link pointed at.
@@ -32,17 +32,18 @@ export async function storeReplayContent(rawContent: string, checked?: SwuPgnDoc
     const doc: SwuPgnDocument & ParseNotes = checked ?? parse(rawContent);
     if (!checked) {
         if (doc.events.length === 0) {
-            throw new Error(noEventsMessage(doc));
+            throw new ReplayRefusedError('no-events', noEventsMessage(doc));
         }
         // Refused before it is stored: a stored file that hangs the viewer would hang it again
         // every time it is reopened from Recent Replays.
         const heavy = replayTooHeavy(doc);
-        if (heavy) throw new Error(heavy);
+        if (heavy) throw new ReplayRefusedError('too-heavy', heavy);
     }
     const id = await generateReplayId(doc.header, rawContent);
     await storeReplay(id, rawContent, {
-        player1: doc.header.p1,
-        player2: doc.header.p2,
+        // Shown in Recent Replays: neutralised for display like every other file string (§23).
+        player1: displayText(doc.header.p1),
+        player2: displayText(doc.header.p2),
         result: doc.header.result,
         savedAt: Date.now(),
     });

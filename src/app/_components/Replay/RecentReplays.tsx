@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { listReplays, deleteReplay, StoredReplayMeta } from '@/app/_utils/replayStorage';
 import { formatResult } from '@/app/_utils/replayMoves';
 import SeekRow from './SeekRow';
+import { displayText } from '@/lib/swupgn';
 
 function formatSavedAt(ts: number): string {
     if (!ts) return '';
@@ -64,7 +65,7 @@ const RecentReplays: React.FC = () => {
                     >
                         <SeekRow
                             onClick={() => router.push(`/Replay?id=${encodeURIComponent(r.id)}`)}
-                            label={`Open replay ${r.player1} vs ${r.player2}`}
+                            label={`Open replay ${displayText(r.player1)} vs ${displayText(r.player2)}`}
                             sx={{
                                 flex: 1,
                                 minWidth: 0,
@@ -80,7 +81,7 @@ const RecentReplays: React.FC = () => {
                             <PlayArrow sx={{ color: 'var(--initiative-blue)', fontSize: '1.1rem' }} />
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <Typography variant="body2" sx={{ color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {r.player1} vs {r.player2}
+                                    {displayText(r.player1)} vs {displayText(r.player2)}
                                 </Typography>
                                 {r.result && (
                                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)' }}>
@@ -95,7 +96,7 @@ const RecentReplays: React.FC = () => {
                             )}
                         </SeekRow>
                         <Tooltip title="Remove">
-                            <IconButton size="small" aria-label={`Remove replay ${r.player1} vs ${r.player2}`} onClick={() => handleDelete(r.id)} sx={{ color: 'rgba(255,255,255,0.35)', '&:hover': { color: '#f44336' } }}>
+                            <IconButton size="small" aria-label={`Remove replay ${displayText(r.player1)} vs ${displayText(r.player2)}`} onClick={() => handleDelete(r.id)} sx={{ color: 'rgba(255,255,255,0.35)', '&:hover': { color: '#f44336' } }}>
                                 <DeleteOutline fontSize="small" />
                             </IconButton>
                         </Tooltip>

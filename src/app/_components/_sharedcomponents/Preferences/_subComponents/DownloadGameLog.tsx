@@ -5,6 +5,7 @@ import PreferenceButton from './PreferenceButton';
 import { useGame } from '@/app/_contexts/Game.context';
 import { triggerBlobDownload } from '@/app/_utils/downloadBlob';
 import { storeReplayContent } from '@/app/_utils/replayHandoff';
+import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
 import { requestGameLog } from '@/app/_utils/gameLogRequest';
 import { openLoadingTab, showReplayInTab, type ReplayTab } from '@/app/_utils/replayTab';
 
@@ -22,7 +23,7 @@ function DownloadGameLog() {
             await action();
         } catch (err) {
             console.error('Failed to handle game file', err);
-            setError(err instanceof Error ? err.message : 'Failed to handle game file');
+            setError(replayErrorMessage(err, 'Failed to handle game file'));
         } finally {
             done(false);
         }

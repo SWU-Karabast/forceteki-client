@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { parse, SwuPgnDocument, type ParseNotes } from '@/lib/swupgn';
 import { noEventsMessage, replayTooHeavy } from '@/app/_utils/replayHandoff';
+import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
 
 interface FileUploadProps {
     onReplayLoaded: (doc: SwuPgnDocument, content: string) => void;
@@ -75,7 +76,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
             }
             onReplayLoaded(doc, rawContent);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to parse file.');
+            // By the §24 code, never the message: a parse message is free text and may quote the file.
+            setError(replayErrorMessage(err, 'Failed to parse file.'));
         } finally {
             setLoading(false);
         }

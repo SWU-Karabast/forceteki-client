@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Tooltip } from '@mui/material';
 import { Close, Reply } from '@mui/icons-material';
-import type { Annotation } from '@/lib/swupgn';
+import { displayText, type Annotation } from '@/lib/swupgn';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
 import { buildThreads, type ThreadNode } from '@/app/_utils/annotationThreads';
@@ -99,7 +99,7 @@ const NoteCard: React.FC<{
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
                 {n.nag && <AnnotationBadge nag={n.nag} size={16} />}
                 <Typography variant="caption" sx={{ color: 'var(--initiative-blue)', fontWeight: 700 }}>
-                    {n.by || 'Anonymous'}
+                    {displayText(n.by) || 'Anonymous'}
                 </Typography>
                 <Box sx={{ flex: 1 }} />
                 {id && (
@@ -119,11 +119,11 @@ const NoteCard: React.FC<{
             </Box>
             {n.text && (
                 <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.84rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    {n.text}
+                    {displayText(n.text)}
                 </Typography>
             )}
             {replying && id && (
-                <Composer compact placeholder={`Reply to ${n.by || 'Anonymous'}…`} onSubmit={(text) => { if (text) { onReply(id, text); setReplying(false); } }} />
+                <Composer compact placeholder={`Reply to ${displayText(n.by) || 'Anonymous'}…`} onSubmit={(text) => { if (text) { onReply(id, text); setReplying(false); } }} />
             )}
             {node.replies.map((child, i) => (
                 <NoteCard key={idOf(child.note) ?? i} node={child} onReply={onReply} onDelete={onDelete} depth={depth + 1} />

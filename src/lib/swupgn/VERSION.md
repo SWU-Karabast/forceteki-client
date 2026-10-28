@@ -1,9 +1,12 @@
 # Vendored SWU-PGN reader
 
-Source: forceteki `swupgn/src/`. Re-vendored 2026-10-26 at upstream **`4644a7bb4`** ("hold base
-captives in baseCaptured and stamp WriterRevision"), which brings in `7dd39a098`, `82dc657b0`,
-`247b81fa0` (Homeworlds and Death Star vectors) and `70e8e3712` on top of the 2026-09-11 sync at
-`463c3022`. The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit.
+Source: forceteki `swupgn/src/`. Re-vendored 2026-10-28 at upstream **`c233908d6`** ("apply the
+1.0 spec review; writer revision 3"), which brings in `56b0349c7` ("reader fixes R1-R5 and spec
+accuracy pass") on top of the 2026-10-26 sync at `4644a7bb4`. Synced from that commit, not from a
+working tree: forceteki's tree was clean. The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit,
+and it is now **normative** (§2): the reference code is informative, and where they disagree the
+text governs. The conformance suite (`swupgn/test-vectors/`: 9 positive vectors, `negative/`,
+`manifest.json`) is copied verbatim into `__tests__/fixtures/vectors/`.
 
 `types.ts` is **verbatim**. `render.ts` and `integrity.ts` are verbatim apart from one line each,
 the keyframe they read — see the divergence list. `fold.ts`, `parse.ts` and `cardNames.ts` are
@@ -12,7 +15,79 @@ upstream plus the client-owned blocks listed below. `actionLinks.ts` is a SUBSET
 numbers with `swupgnMoves.isNumberedAction`, the same rule plus the kind-less fallback of
 `isPlayerAction` for files written before `kind`; `homeworldsReplay.test.ts` holds the two to
 the story's numbering on every vector. `validate.ts` stays omitted (Node-only: fs/path + ajv). `tokens.ts`,
-`serialize.ts` and `foldFrames` are client-only.
+`serialize.ts`, `displayText.ts` and `foldFrames` are client-only.
+
+## What `c233908d6` and `56b0349c7` changed (all handled here)
+
+Reader (`56b0349c7`, fold/integrity/render):
+
+- **`holder()`** — a card leaving `hand`, `discard` or `resource` comes off whichever seat's list
+  holds it, not necessarily `p`'s: Stolen AT-Hauler is played by the opponent out of its owner's
+  discard. New vector `stolen-hauler`.
+- **`DEPLOY_LEADER` / `LEADER_FLIP` with no `card`** are dropped; `leaderOwner` no longer matches
+  `undefined` against a seat with no leader yet.
+- **`MAX_ZONE_LIST` (1000) is exported** and now also caps a host's `upgrades`, a captor's
+  `captured` and a `TAKE_CONTROL` re-seat.
+- **`snapTo` is exported** and fills a missing `captured` with `[]`; upstream `integrity.ts` snaps
+  with it and `isCompleteKeyframeCard` rejects a non-array or over-cap `captured`. The client
+  keeps its own `snapToKeyframe` for both (see divergences): `normalizeCard` already makes
+  `captured` a capped list, so the client gets the same guarantee by a different road.
+- **`render.ts` joins a line's card list with ` · `** (U+00B7, spaces either side), not `, `: a
+  card name has its own comma. Taken verbatim; a STORY `serialize` renders for a document with
+  none uses it.
+
+Parser (`c233908d6`, `parse.ts`, spec §4, Appendix B, §23, §24):
+
+- **`SwuPgnError { code, line }`**: every rejection carries a §24 code. The UI branches on it
+  (`swupgnFileIssues.replayErrorMessage`), never on the message, which is free text.
+- **Limits** — `parse(text, limits?)`, `DEFAULT_LIMITS` 16 MiB / 1 MiB per line / 1,000,000
+  records / depth 64. Over one is `too-large`, `line-too-long`, `too-many-records`, `too-deep`:
+  rejected, never truncated.
+- **Magic number** — a leading BOM is stripped; the first non-blank line must be
+  `[Game "SWU-PGN/…"]`, else `not-swupgn` (an empty file too). A file missing `[Game]` used to
+  say `missing-tag`; it now says `not-swupgn`.
+- **Header grammar** — only `[Tag "value"]` pairs on a header line (`bad-header-line`); only
+  `\"` and `\\` escapes (`bad-escape`); a repeated tag is `duplicate-tag` (it was last-wins);
+  `missing-tag`, `record-outside-section`, `bad-json`.
+- **`Rounds`** must be base-10 digits (`bad-count`): `"seven"` used to read as 0. Every count is
+  `^\d+$` now, with no surrounding whitespace (`" 2 "` used to read as 2).
+- **Sections** — a repeated banner is `duplicate-section` (case-insensitive). An unknown section is
+  skipped unread (the client did this already; upstream does now too).
+
+Format (writer revision 3, spec §8, §5.1):
+
+- **`INIT` is `R0.S.0`** ([W-35]); revisions 1–2 and pilot files wrote `R1.S.0`. Setup has always
+  been round 0. The client reads INIT only in `deckTracker.initRecord`, by `t`, and no seq reader
+  (`turnDigests.roundOfSeq`, `replayMoves`, `storySeek`) walks `%%% SETUP`, so both positions read
+  the same; `swupgnConformance.test.ts` pins it.
+- **`GameId` is `sha256:<64 hex>`**. Nothing in the client parses it (`generateReplayId` hashes
+  the players, date, result, leaders and the whole file).
+- The regenerated vectors carry `[Engine "forceteki@56b0349c7-dirty"]`. The viewer now says so
+  (below), so `vectorsBoard.test.ts` expects that one notice on them. `minimal` now carries
+  `WriterRevision`, so the tests that used it as a pilot file strip the tag.
+
+Client conformance work done in this sync (spec §3, §18, §23):
+
+- **[C-01]** File Health now says when a file is pre-release (no `WriterRevision`), comes from a
+  `-dirty` build, has a `DEFEAT` with `reason: "unknown"`, or is a newer `1.x` (§18; a pre-release
+  `1.1` is older, §22.1, and is not called newer). `RecorderErrors` and `@unknown` already were.
+- **§18 extensions** — an `X_` event type and an `X_` section are skipped without a word.
+- **§23 display** — `displayText()` neutralises bidi formatting and control characters in every
+  file string the UI shows: card names (in `indexResolver`, so every caption and story name),
+  `%%% STORY` lines, P1/P2, CHOICE `prompt`/`offered`, annotation `text`/`by`, captions
+  (`frameAction`), bookmark labels, File Health messages and Recent Replays. React escapes HTML.
+  `ABILITY_ACTIVATE.title` is not shown anywhere in the client, so its icon markup is never
+  interpreted, as HTML or otherwise; a future caption that shows it must expand the three §10.1
+  tokens to text, never inject them.
+- **§23 keys** — every `obj[key] =` with a file key was audited: the fold writes status tokens
+  with `hasOwnProperty` + `defineProperty`, seats go through `isSeat`, keyframe maps are
+  normalised field by field, and `parse` holds header tags in a prototype-less map.
+  `manifest.test.ts` folds, renders, checks and adapts `proto-token` and every other negative,
+  and asserts no shared prototype gained a key.
+- **[A-01] / §18 on export** — `serialize` writes back unknown header tags and unknown sections
+  verbatim; the old "left out" warning on Download with notes is gone.
+- **`esc()`** turns a run of `\r`/`\n` in a header value into one space (as the forceteki writer
+  does) and any other control character into a space (Appendix B `tag-char`).
 
 ## What `4644a7bb4` changed in the format (all handled here)
 
@@ -218,12 +293,22 @@ the §5.3/§6.2/§10.1/§13/§18 notes (`fileIssues`) and which earlier writer p
 
 ## Conformance gate
 
-`__tests__/vectors.test.ts` runs every vector under `__tests__/fixtures/vectors/` (all eight,
-copied verbatim from forceteki `swupgn/test-vectors/`: `minimal`, `organic`, `upgrades`,
-`pilot`, `capture`, `arrest`, `homeworlds`, `death-star`) through parse → fold → render and requires a byte-identical render and a
-byte-identical fold, with no carve-out; every vector must also pass
-`checkKeyframes` with no mismatch (spec §20 step 5), and survive serialize → parse with an
-identical fold and render. Step 2 (`validate()`) is asserted upstream on the same bytes.
+`__tests__/vectors.test.ts` runs every positive vector `manifest.json` lists (all nine, copied
+verbatim from forceteki `swupgn/test-vectors/`: `minimal`, `organic`, `upgrades`, `pilot`,
+`capture`, `arrest`, `homeworlds`, `death-star`, `stolen-hauler`) through parse → fold → render
+and requires a byte-identical render (`render(doc) + '\n'`) and a fold equal to `.fold.json` as
+JSON values (the manifest's rule: key order not significant, array order significant, absent ≠
+null, so it compares with `toStrictEqual` after a JSON round trip), with no carve-out; every
+vector must also pass `checkKeyframes` with no mismatch (spec §20 step 5), and survive
+serialize → parse with an identical fold and render. Step 2 (`validate()`) is asserted upstream
+on the same bytes. `__tests__/manifest.test.ts` runs the rest of the manifest: every `malformed`
+negative must make `parse` throw `SwuPgnError` with its listed code, and every other entry must
+parse and fold, render, gate and adapt without crashing, touching a prototype or growing a list
+past 1000. The validator-only codes (`schema`, `bad-zone`, `duplicate-seq`, `dangling-ref`,
+`reserved-key`, `over-cap`, `keyframe-mismatch`, `pre-release`, `unknown-type`/`-section`,
+`newer-minor`, `unknown-value`) are not the client's to report. The optional
+`reduced-state.schema.json` check is not run: `ajv` is only a transitive dependency here, not a
+declared devDependency.
 `src/app/_utils/__tests__/vectorsBoard.test.ts` takes each vector one level up, through
 `adaptState`, and asserts every §11 field against `.fold.json`, plus a clean `FileHealth`.
 `src/app/_utils/__tests__/swupgnCompat.test.ts` has one test per row of the §22 and §22.1
@@ -240,29 +325,36 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
 
 - **`parse.ts` Game-tag gate** — spec §18/§22.1: refuse any major other than 1, accept every
   `SWU-PGN/1.x` by shape. Upstream leaves this to `validate()`, which the client does not ship.
-- **`parse.ts` `MAX_EVENTS`** — 200k-event ceiling. Upstream has none because it never builds
-  per-frame snapshots; the viewer does, so an unbounded event count is an OOM on a shared file.
+  §24 has no code for it, so it throws `SwuPgnError('unsupported-version')`, a client code.
+  (`[Game "PGN/1.0"]` and friends fail upstream's magic-number check first: `not-swupgn`.)
+- **`parse.ts` `MAX_EVENTS`** — 200k-event ceiling, stricter than upstream's 1,000,000-record
+  `maxRecords`, which both apply. Reported with the same code, `too-many-records`. Upstream's cap
+  is sized for a reader that never builds per-frame snapshots; the viewer does.
 - **`render.ts` keyframe layout** — the ROUND_START board summary lays out
   `snapToKeyframe(emptyState(), keyframe)`, not the raw keyframe. Upstream's
   `isCompleteKeyframe` rejects a half-shaped keyframe card (`isCompleteKeyframeCard`); the
   client's accepts it and repairs it in the snap, so `boardSummary` iterating a crafted
   `upgrades: 5` threw inside StoryTab. Same reason as the `integrity.ts` snap.
-- **`parse.ts` unknown sections** — a section this version does not know is skipped BEFORE
-  `JSON.parse`, so a later version's prose section is ignored too (§18). Upstream skips only
-  after a line parses as a JSON object.
 - **`parse.ts` `ParseNotes`** — `parse()` returns `SwuPgnDocument & ParseNotes`:
-  `unreadableTags` (a §5.2 count tag present but not a count, kept raw) and `skippedSections`
-  (banners this version does not know). File Health reports both, `serialize` writes the raw
-  tags back, and an unreadable `WriterRevision` still marks the file as not a pilot file.
-  `types.ts` stays verbatim, so these live on the client's own type.
+  `unreadableTags` (a §5.2 count tag present but not a count, kept raw), `skippedSections`
+  (banners this version does not know, minus `X_` extensions, §18), and `extraTags` /
+  `extraSections` (every header tag §5 does not define, and every unknown section's banner and
+  lines, verbatim and unparsed, so `serialize` can write them back, §3 [A-01]). File Health
+  reports the first two, and an unreadable `WriterRevision` still marks the file as not a pilot
+  file. `types.ts` stays verbatim, so these live on the client's own type. Header tags are held
+  in a prototype-less map (`Object.create(null)`); upstream uses `{}` with own-property checks.
 - **`parse.ts` `strictCount`** — also requires `Number.isSafeInteger`: a 400-digit count is
-  absent, not `Infinity`.
+  absent, not `Infinity`. The `^\d+$` shape itself is upstream's now.
 - **`parse.ts` record shape** — a record that parses to `null`, a number, a string or an
-  array is refused with its line number (§4 says every record is an object). It used to reach
+  array is refused with its line number and code `not-object`. It used to reach
   `events[i].seq` in the viewer and be persisted to IndexedDB before first render, so the
-  `?id=` link crash-looped. Upstream leaves this to `validate()`.
-- **`integrity.ts` keyframe snap** — upstream ends each comparison with
-  `s = JSON.parse(JSON.stringify(e.keyframe))`, deep-cloning the RAW keyframe.
+  `?id=` link crash-looped. Upstream leaves this to `validate()`, where §24 makes `not-object` an
+  ERROR (well-formed, not malformed), so strictly this rejects a well-formed file that §3 [P-01]
+  says a parser must accept. Kept deliberately: §24 lets a reader decline an invalid file, and
+  folding a scalar record is the crash this guard exists for.
+- **`integrity.ts` keyframe snap** — upstream ends each comparison with `s = snapTo(e.keyframe)`,
+  a deep clone of the RAW keyframe that only fills a missing `captured` (upstream relies on its
+  stricter `isCompleteKeyframeCard` gate for the rest).
   `isCompleteKeyframe` only proves `cards`/`hand`/`discard` are arrays and each card is *some*
   object; it validates no per-card field. So a keyframe card with no `statusTokens` rode into
   `reduce()` and the next `STATUS_TOKEN` threw on `c.statusTokens[token]`, and one with no
@@ -287,7 +379,8 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   upgrade or an attached card that an early writer listed as its own arena card. `power`/`hp`,
   `keywords`, `deckSize`, `leader` and `initiativeTaken` ride through when well-typed.
   `isCompleteKeyframe`/`hasSnapKeyframe`/`emptyState` are exported for the verbatim
-  `integrity.ts` and `render.ts`.
+  `integrity.ts` and `render.ts`. Upstream's `snapTo` is not ported: `snapToKeyframe` is the
+  client's only snap, and it already gives every card a capped `captured` list.
 - **`fold.ts` `stateAt()`** — restarts only from a keyframe that states `baseUpgrades` and
   `baseCaptured` for both seats and restates (`baseDefeated: true`) any base defeated before it (by a DEFEAT record or an
   earlier keyframe), since the snap above carries all three across one that does not; otherwise it folds from
@@ -322,7 +415,7 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
   record (defence in depth behind the parse guard; `foldFrames` keeps the frame slot).
 - **`cardNames.ts` untyped fields** — a `null` index entry is skipped (upstream drops any entry whose `id` or `name` is not a string; the client keeps the entry, so a bad `name` does not lose its `backSideName`); a non-string `name` or `backSideName` is
   ignored and newlines in a name are flattened (a rendered story line beginning `%%%` would
-  end the STORY section of an export).
+  end the STORY section of an export). Names also pass through `displayText` (§23).
 - **`tokens.ts`** — client-only. Repairs the token lifecycle in pre-1.0 files (which emit no
   removal decrement), drops inert records, classifies token upgrades when no `kind` is stated,
   recovers a pilot's host from the keyframes when the writer named none, reads a pilot
@@ -331,13 +424,19 @@ development and corrected at publication. Match the `Game` tag exactly, never `>
 - **`serialize.ts`** — client-only. No exported STORY line may start with `%%%` once trimmed
   (a smuggled newline in an UNDO's `at` or a raw id would open a section); such a line gets a
   leading `·`. Whitespace is no escape: `parse()` trims before it looks for a banner.
-  `serialize()` writes only the sections this reader knows: an unknown `%%%` section `parse()`
-  skipped (`skippedSections`) is not in an export with notes, and the viewer says so when it
-  saves one. The file as it came in keeps it.
+  The client is an Annotator, so an export changes nothing but the notes (§3 [A-01], §18):
+  unknown header tags go out after the known ones and unknown sections after ANNOTATIONS, both
+  verbatim (`extraTags`/`extraSections`); a second round trip is a fixed point. The first line
+  is always `[Game …]`, no BOM is written, and the file ends with one `\n` ([W-02]). `esc()`
+  flattens line breaks and control characters in a header value to spaces (§4, Appendix B).
   Also: emits `%%% STORY` (the document's own, or a fresh render)
   and `%%% CARDS` in the spec's canonical section order, and every optional §5.2 header tag the
   document carries (`WriterRevision`, `EndDate`, `Match`, `GameNumber`, `RecorderErrors`, `Undos`) — dropping one would
   quietly relabel a partial file as complete, or orphan a game from its match.
+- **`displayText.ts`** — client-only. §23 display neutralisation (bidi formatting dropped,
+  controls to a space, tab and line feed kept), applied at the UI's display points and in
+  `cardNames.indexResolver`. Display only: no document is rewritten, so exports keep the file's
+  text.
 - **`types.ts` Annotation threading** — `id`/`parent`/`ts` are upstream now (spec §15).
   Nothing client-owned remains in types.ts.
 
@@ -358,7 +457,9 @@ re-vendor, not just the test results.
   attack steals them. Keep the rule that a run is filed only if something in it names the
   action's card; a wrong link is worse than none.
 
-Resolved upstream, do NOT re-apply: the `[Rounds]` NaN fallback; keeping token upgrades out of
+Resolved upstream, do NOT re-apply: skipping an unknown section before `JSON.parse` (upstream
+does it now; only keeping the lines for export is client-owned); the strict `^\d+$` count shape
+and `bad-count` on `Rounds`; the `[Rounds]` NaN fallback; keeping token upgrades out of
 the arenas (driven by `kind`); the seat/`__proto__` guard, `arr()` for scalar-where-array
 fields and the primitive-keyframe guard (upstream has all three); attach-from-`attachedTo`,
 detach-on-exit and `hasForce` (upstream folds them now); the `(cost N)` render wording; the hand/discard

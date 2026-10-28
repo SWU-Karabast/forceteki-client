@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo, useRef, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
-import { render } from '@/lib/swupgn';
+import { displayText, render } from '@/lib/swupgn';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { storySeekIndex, storyLineTargets, storyNumbersAbilities, roundOf } from '@/app/_utils/storySeek';
 
@@ -62,7 +62,8 @@ const StoryTab: React.FC = () => {
 
     // A pre-1.0 file has no STORY section; render our own so the tab is never empty.
     const lines = useMemo(
-        () => (doc.story?.length ? doc.story : render(doc).split('\n')),
+        // The file's own STORY is file text: neutralise bidi/control characters for display (§23).
+        () => (doc.story?.length ? doc.story : render(doc).split('\n')).map(displayText),
         [doc],
     );
 

@@ -1,4 +1,4 @@
-import { dropFrameworkSources, type SwuPgnDocument, type Seat } from '@/lib/swupgn';
+import { displayText, dropFrameworkSources, type SwuPgnDocument, type Seat } from '@/lib/swupgn';
 
 // Decision review (P3): surface the explicit branch points the omniscient archive records
 // (CHOICE / MODAL_CHOICE — "offered A/B/C, chose B") and auto-bookmark the swingy moments
@@ -31,16 +31,19 @@ export interface Bookmark {
     reason?: string;
 }
 
+const offeredList = (v: unknown): string[] => (Array.isArray(v) ? v.map((o) => (o == null ? '' : displayText(String(o)))) : []);
+
 /** Explicit decision points in timeline order. */
 export function decisionPoints(doc: SwuPgnDocument): DecisionPoint[] {
     const out: DecisionPoint[] = [];
     for (const e of doc.events) {
         // `offered` is cast from unvalidated file JSON; coerce to an array so the UI's
         // offered.map() can't throw on a malformed (shared) replay.
+        // `prompt` and `offered` are file text, shown as is: neutralise bidi/control characters (§23).
         if (e.t === 'CHOICE') {
-            out.push({ seq: e.seq, p: e.p, type: 'CHOICE', prompt: e.prompt, offered: Array.isArray(e.offered) ? e.offered : [], chose: e.chose });
+            out.push({ seq: e.seq, p: e.p, type: 'CHOICE', ...(e.prompt != null ? { prompt: displayText(e.prompt) } : {}), offered: offeredList(e.offered), chose: e.chose });
         } else if (e.t === 'MODAL_CHOICE') {
-            out.push({ seq: e.seq, p: e.p, type: 'MODAL_CHOICE', offered: Array.isArray(e.offered) ? e.offered : [], chose: e.chose });
+            out.push({ seq: e.seq, p: e.p, type: 'MODAL_CHOICE', offered: offeredList(e.offered), chose: e.chose });
         }
     }
     return out;
@@ -93,8 +96,13 @@ const DEFEAT_REASON_WORDS: Record<string, string> = {
 };
 const defeatReason = (reason?: string) => (reason && Object.hasOwn(DEFEAT_REASON_WORDS, reason) ? DEFEAT_REASON_WORDS[reason] : reason);
 
-/** One-line caption for a key moment, shared by the Decisions and Digest tabs. */
+/** One-line caption for a key moment, shared by the Decisions and Digest tabs. File text in it
+ *  (a DEFEAT or GAME_END reason) is neutralised for display (§23). */
 export function bookmarkLabel(b: Bookmark, nameOf: (id: string) => string): string {
+    return displayText(bookmarkText(b, nameOf));
+}
+
+function bookmarkText(b: Bookmark, nameOf: (id: string) => string): string {
     switch (b.kind) {
         case 'BIG_DAMAGE': return `${b.src ? nameOf(b.src) : 'Drawing from an empty deck'} hits ${fmtTarget(b.tgt)} for ${b.amt}`;
         case 'DEFEAT': {

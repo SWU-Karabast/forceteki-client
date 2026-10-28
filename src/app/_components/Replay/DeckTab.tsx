@@ -5,7 +5,7 @@ import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { initRecord } from '@/app/_utils/deckTracker';
 import { costOf, useCardCostMap } from '@/app/_utils/swupgnCardCosts';
-import { baseId, type Seat } from '@/lib/swupgn';
+import { baseId, displayText, type Seat } from '@/lib/swupgn';
 import SeekRow from './SeekRow';
 
 /**
@@ -105,8 +105,8 @@ const DeckTab: React.FC = () => {
                 </SeekRow>
             </Tooltip>
             <Box sx={{ display: 'flex', gap: 3 }}>
-                <SeatDeck seat={1} name={header.p1 || 'Player 1'} reveal={reveal} />
-                <SeatDeck seat={2} name={header.p2 || 'Player 2'} reveal={reveal} />
+                <SeatDeck seat={1} name={displayText(header.p1) || 'Player 1'} reveal={reveal} />
+                <SeatDeck seat={2} name={displayText(header.p2) || 'Player 2'} reveal={reveal} />
             </Box>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', display: 'block', mt: 2 }}>
                 Deck counts are the file&apos;s own. The cards shown in each hand and discard pile are best-effort:

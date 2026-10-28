@@ -12,7 +12,21 @@ import { parse, fold, render, checkKeyframes, normalizeEvents, type ReducedState
  * folds. A conformant file needs no repair, so the two must agree on every vector.
  */
 const DIR = path.join(__dirname, 'fixtures/vectors');
-const VECTORS = readdirSync(DIR).filter((f) => f.endsWith('.swupgn')).map((f) => f.replace(/\.swupgn$/, ''));
+const MANIFEST = JSON.parse(readFileSync(path.join(DIR, 'manifest.json'), 'utf-8')) as { vectors: { file: string; class: string }[] };
+const VECTORS = MANIFEST.vectors.filter((v) => v.class === 'positive').map((v) => v.file.replace(/\.swupgn$/, ''));
+
+/**
+ * The manifest's equality (§20): equal as JSON VALUES. Key order is not significant, array order
+ * is, and absent is not null. The JSON round trip drops `undefined` exactly as a file would, and
+ * `toStrictEqual` then tells `null` from absent, which `toEqual` alone does not do for `undefined`.
+ */
+const asJson = (v: unknown): unknown => JSON.parse(JSON.stringify(v));
+
+it('every positive vector on disk is in the manifest, and the other way round', () => {
+    expect(readdirSync(DIR).filter((f) => f.endsWith('.swupgn')).map((f) => f.replace(/\.swupgn$/, '')).sort())
+        .toEqual([...VECTORS].sort());
+    expect(VECTORS).toHaveLength(9);
+});
 
 describe.each(VECTORS)('test vector: %s', (name) => {
     const text = readFileSync(path.join(DIR, `${name}.swupgn`), 'utf-8');
@@ -24,8 +38,8 @@ describe.each(VECTORS)('test vector: %s', (name) => {
         // and so had to remove a card that left. Upstream folds both from MOVE now (spec §12.1)
         // and gates them (§14), so the client's fold and the vector agree outright.
         const expected = JSON.parse(readFileSync(path.join(DIR, `${name}.fold.json`), 'utf-8')) as ReducedState;
-        expect(fold(doc.events)).toEqual(expected);
-        expect(fold(normalizeEvents(doc.events))).toEqual(expected);
+        expect(asJson(fold(doc.events))).toStrictEqual(expected);
+        expect(asJson(fold(normalizeEvents(doc.events)))).toStrictEqual(expected);
     });
 
     it('renders to exactly .render.txt', () => {

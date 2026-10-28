@@ -1,4 +1,4 @@
-import { baseId, type SwuPgnDocument, type GameEvent, type ParseNotes } from '@/lib/swupgn';
+import { baseId, displayText, SwuPgnError, type SwuPgnDocument, type GameEvent, type ParseNotes } from '@/lib/swupgn';
 import { isLetteredSeq, isNumberedAction } from './swupgnMoves';
 
 /**
@@ -29,9 +29,95 @@ const ZONES = new Set(['deck', 'hand', 'resource', 'ground', 'space', 'discard',
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
+/**
+ * The viewer refusing a file that parsed: nothing to replay, or more than the frame budget.
+ * Typed like SwuPgnError so a caller branches on `code`, never on the message.
+ */
+export class ReplayRefusedError extends Error {
+    public readonly code: 'no-events' | 'too-heavy';
+
+    public constructor(code: 'no-events' | 'too-heavy', message: string) {
+        super(message);
+        this.name = 'ReplayRefusedError';
+        this.code = code;
+    }
+}
+
+const onLine = (e: SwuPgnError) => (e.line != null ? ` on line ${e.line}` : '');
+const TOO_BIG = 'This replay is larger than any real game, so it was not opened.';
+
+/**
+ * What to tell the user when a replay cannot be opened. A parse error is told by its §24 code,
+ * never by its message (which is free text, and may quote the file); a refusal by its own
+ * code; anything else (storage, the network) by its message.
+ */
+export function replayErrorMessage(err: unknown, fallback = 'Failed to read the replay file.'): string {
+    if (err instanceof ReplayRefusedError) {
+        return err.message;
+    }
+    if (!(err instanceof SwuPgnError)) {
+        return err instanceof Error && err.message ? err.message : fallback;
+    }
+    switch (err.code) {
+        case 'not-swupgn':
+            return 'This is not a SWU-PGN replay: a .swupgn file starts with a [Game "SWU-PGN/1.0"] line.';
+        case 'unsupported-version':
+            return 'This replay uses a version of SWU-PGN this viewer cannot read (it reads 1.x). A newer Karabast may open it.';
+        case 'too-large':
+        case 'line-too-long':
+        case 'too-many-records':
+        case 'too-deep':
+            return TOO_BIG;
+        case 'bad-header-line':
+            return `The replay's header is damaged${onLine(err)}: a header line holds something other than [Tag "value"] pairs.`;
+        case 'bad-escape':
+            return `The replay's header is damaged${onLine(err)}: a value uses a backslash escape other than \\\\ or \\".`;
+        case 'duplicate-tag':
+            return `The replay's header names the same tag twice${onLine(err)}, so there is no telling which value is right.`;
+        case 'missing-tag':
+            return 'The replay\'s header is missing a required tag, so it cannot be opened.';
+        case 'bad-count':
+            return 'The replay\'s header gives a round count that is not a whole number.';
+        case 'duplicate-section':
+            return `The replay has the same %%% section twice${onLine(err)}, so there is no telling which one to play.`;
+        case 'record-outside-section':
+            return `The replay is damaged${onLine(err)}: a record comes before the first %%% section.`;
+        case 'bad-json':
+            return `The replay is damaged${onLine(err)}: that line is not valid JSON. The file may be cut short or edited by hand.`;
+        case 'not-object':
+            return `The replay is damaged${onLine(err)}: a record is JSON but not an object.`;
+        default:
+            return `The replay could not be read (${err.code}${onLine(err)}).`;
+    }
+}
+
+/** A `1.x` this reader is older than (§18). `1.1` with no WriterRevision is a pre-release file, OLDER than 1.0 (§22.1). */
+function newerMinor(doc: SwuPgnDocument & ParseNotes): string | null {
+    const m = /^SWU-PGN\/1\.(\d+)$/.exec(String(doc.header.game));
+    if (!m || Number(m[1]) === 0) return null;
+    const preRelease = doc.header.writerRevision == null && doc.unreadableTags?.WriterRevision == null;
+    return Number(m[1]) === 1 && preRelease ? null : doc.header.game;
+}
+
 export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
+    // Every message may quote the file (an Engine, a tag value, a section name): neutralised for display (§23).
+    return fileIssuesOf(doc).map((i) => ({ ...i, message: displayText(i.message) }));
+}
+
+function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     const out: FileIssue[] = [];
     const h = doc.header;
+
+    // §3 [C-01]: say when a file is a pre-release file, without blocking it. A WriterRevision
+    // that is present but unreadable still says a released writer made the file.
+    if (h.writerRevision == null && doc.unreadableTags?.WriterRevision == null) {
+        out.push({ severity: 'info', message: 'Pre-release file (no [WriterRevision]): written before SWU-PGN 1.0 was published, so some records follow an earlier shape. It replays, with the notes below on what that costs (Appendix C).' });
+    }
+    // §18: a reader SHOULD warn that a file is newer than it is. What it adds is skipped.
+    const newer = newerMinor(doc);
+    if (newer) {
+        out.push({ severity: 'info', message: `Written as ${newer}, newer than this viewer's SWU-PGN/1.0: anything the newer version added is skipped (§18).` });
+    }
 
     // A count tag that is present but unreadable is not "none": a garbled RecorderErrors may
     // be hiding dropped events, so say so rather than presenting the file as complete.
@@ -45,6 +131,10 @@ export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     }
 
     // §5.3 provenance sentinels: accept the file, but do not present it as traceable.
+    // §5.3: a build with uncommitted changes. The file is real, but the source it ran is not on record.
+    if (/-dirty$/.test(h.engine)) {
+        out.push({ severity: 'warning', message: `Uncommitted build: the writer recorded [Engine "${h.engine}"], so the code that wrote this file is not exactly any published commit (§5.3).` });
+    }
     if (/@unknown$/.test(h.engine)) {
         out.push({ severity: 'warning', message: `Untraceable build: the writer recorded [Engine "${h.engine}"], so this file cannot be attributed to any known build.` });
     }
@@ -61,6 +151,7 @@ export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     }
 
     const unknownTypes = new Map<string, number>();
+    let unknownDefeats = 0;
     let inertMoves = 0;
     let badZones = 0;
     let partialKeyframes = 0;
@@ -68,12 +159,15 @@ export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
         if (e == null || typeof e !== 'object') continue;
         const t = String(e.t);
         if (!KNOWN_EVENT_TYPES.has(t)) {
-            unknownTypes.set(t, (unknownTypes.get(t) ?? 0) + 1);
+            // §18: an `X_` extension is ignored without a warning.
+            if (!t.startsWith('X_')) unknownTypes.set(t, (unknownTypes.get(t) ?? 0) + 1);
             continue;
         }
+        if (t === 'DEFEAT' && (e as { reason?: unknown }).reason === 'unknown') unknownDefeats++;
         if (t === 'MOVE') {
-            // §10.1: from/to required, non-empty, distinct, and from the vocabulary.
-            if (!e.from || !e.to || e.from === e.to) inertMoves++;
+            // §10.1: from/to required, non-empty, distinct, and from the vocabulary. A MOVE from an
+            // arena to itself is an attachment changing hosts (§2.1 rule 4), not inert.
+            if (!e.from || !e.to || (e.from === e.to && e.from !== 'ground' && e.from !== 'space')) inertMoves++;
             else if (!ZONES.has(String(e.from)) || !ZONES.has(String(e.to))) badZones++;
         } else if ('zone' in e && typeof e.zone === 'string' && e.zone && !ZONES.has(e.zone)) {
             badZones++;
@@ -88,6 +182,10 @@ export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     if (unknownTypes.size > 0) {
         const list = [...unknownTypes].map(([t, n]) => `${t} ×${n}`).join(', ');
         out.push({ severity: 'warning', message: `${plural(unknownTypes.size, 'unknown event type')} folded as "do nothing" (§18): ${list}` });
+    }
+    // §2.1: a DEFEAT whose reason the writer could not tell means the file is not complete.
+    if (unknownDefeats > 0) {
+        out.push({ severity: 'info', message: `${plural(unknownDefeats, 'defeat')} recorded with reason "unknown": the writer could not tell why ${unknownDefeats === 1 ? 'that card' : 'those cards'} left play, so this file is not complete (§2.1).` });
     }
     if (inertMoves > 0) {
         out.push({ severity: 'warning', message: `${plural(inertMoves, 'MOVE')} with an empty or identical from/to, ignored (§10.1).` });

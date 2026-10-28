@@ -6,7 +6,14 @@ import {
     type GameEvent, type SwuPgnDocument, type ReducedState, type Seat,
 } from '@/lib/swupgn';
 import { adaptState } from '../swupgnBoardAdapter';
-import { fileIssues, writerGeneration } from '../swupgnFileIssues';
+import { fileIssues as allFileIssues, writerGeneration } from '../swupgnFileIssues';
+import type { FileIssue } from '../swupgnFileIssues';
+
+// The fixture here is a pilot file on purpose (its WriterRevision is stripped), so every list
+// would open with the §3 [C-01] pre-release notice. That notice has its own test
+// (swupgnConformance.test.ts); here it is set aside so each case sees only what it is about.
+const fileIssues = (...args: Parameters<typeof allFileIssues>): FileIssue[] =>
+    allFileIssues(...args).filter((i) => !i.message.startsWith('Pre-release file'));
 import { deckByFrame } from '../deckTracker';
 import { frameAction, storyName } from '../replayAction';
 import { buildMoveList } from '../swupgnMoves';
@@ -21,7 +28,10 @@ import { statOf } from '../swupgnCardStats';
  * what the replay cannot show). Rows the spec marks "not detectable" or "not a file change"
  * are listed at the end with the reason there is nothing to test.
  */
-const VECTOR = readFileSync(path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors/minimal.swupgn'), 'utf-8');
+// The pilot-file rows below need a file with no WriterRevision (§22). The vector gained one at
+// writer revision 3, so it is stripped here: everything else about the file is unchanged.
+const VECTOR = readFileSync(path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors/minimal.swupgn'), 'utf-8')
+    .replace(/^\[WriterRevision "\d+"\]\n/m, '');
 const SEATS: Record<Seat, string> = { 1: 'P1', 2: 'P2' };
 const base = (): SwuPgnDocument => parse(VECTOR);
 const ev = (over: object, seq = 'R1.A.9'): GameEvent => ({ seq, ...over } as GameEvent);

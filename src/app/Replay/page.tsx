@@ -17,17 +17,18 @@ import Board from '@/app/_components/Gameboard/Board/Board';
 import PlayerCardTray from '@/app/_components/Gameboard/PlayerCardTray/PlayerCardTray';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
-import { parse, SwuPgnDocument } from '@/lib/swupgn';
+import { displayText, parse, SwuPgnDocument } from '@/lib/swupgn';
 import { loadReplay } from '@/app/_utils/replayStorage';
 import { replayUrl, storeReplayContent, replayTooHeavy } from '@/app/_utils/replayHandoff';
 import { formatResult } from '@/app/_utils/replayMoves';
 import { useCardNameMap } from '@/app/_utils/swupgnCardNames';
+import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
 
 function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
     const router = useRouter();
     const { nameOf } = useReplay();
-    const player1 = header.p1 || 'Player 1';
-    const player2 = header.p2 || 'Player 2';
+    const player1 = displayText(header.p1) || 'Player 1';
+    const player2 = displayText(header.p2) || 'Player 2';
     // Leaders are SET#NUM ids in the .swupgn header; resolve to names like the move list.
     const leader1 = header.p1Leader ? nameOf(header.p1Leader) : '';
     const leader2 = header.p2Leader ? nameOf(header.p2Leader) : '';
@@ -265,7 +266,7 @@ export default function ReplayPage() {
                 // Load/parse of a stored replay failed; say so above the upload prompt
                 // rather than claiming the replay isn't stored.
                 console.warn('Failed to load stored replay', replayId, err);
-                setLoadError(`This stored replay could not be read: ${err instanceof Error ? err.message : String(err)}`);
+                setLoadError(`This stored replay could not be read. ${replayErrorMessage(err)}`);
             })
             .finally(() => setLoading(false));
     }, [replayId]);

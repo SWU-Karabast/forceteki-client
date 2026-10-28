@@ -18,8 +18,18 @@ const HEADER_ORDER: [keyof Header, string][] = [
     ['undos', 'Undos'],
 ];
 
+/**
+ * A header value as §4 and Appendix B allow it: no line break (a run of `\r`/`\n` becomes one
+ * space, as the forceteki writer does), no other control character (the grammar's `tag-char`
+ * excludes them), and only the `\\` and `\"` escapes.
+ */
 function esc(v: string): string {
-    return v.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    return v
+        .replace(/[\r\n]+/g, ' ')
+        // eslint-disable-next-line no-control-regex
+        .replace(/[\u0000-\u001f\u007f]/g, ' ')
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"');
 }
 
 function headerLines(h: Header): string[] {
@@ -45,6 +55,12 @@ function section(name: string, records: unknown[]): string[] {
  * export is the annotation list, so the file's own prose still describes its events, and
  * without CARDS the exported copy would name nothing for a reader with no card database.
  * A document that arrived without a story gets one rendered from its own events (§16).
+ *
+ * The client is an Annotator (§3): it adds notes and changes nothing else, so what the file
+ * carried and this version does not define goes back out verbatim (§3 [A-01], §18) -- unknown
+ * header tags after the known ones, unknown sections (an `X_` extension's or a later version's)
+ * after ANNOTATIONS. The first line is always `[Game …]`, no byte order mark is written, and the
+ * file ends with one line feed (§3 [W-02]).
  */
 export function serialize(doc: SwuPgnDocument & ParseNotes): string {
     // No story line may open a section: render() interpolates file-controlled strings (an
@@ -59,6 +75,7 @@ export function serialize(doc: SwuPgnDocument & ParseNotes): string {
         // An unreadable count tag goes back out as it came in: dropping a garbled RecorderErrors
         // would relabel a possibly partial file as complete.
         ...Object.entries(doc.unreadableTags ?? {}).map(([tag, value]) => `[${tag} "${esc(value)}"]`),
+        ...(doc.extraTags ?? []).map(([tag, value]) => `[${tag} "${esc(value)}"]`),
         '',
         '%%% STORY',
         ...story,
@@ -72,6 +89,7 @@ export function serialize(doc: SwuPgnDocument & ParseNotes): string {
         ...section('EVENTS', doc.events),
         '',
         ...section('ANNOTATIONS', doc.annotations),
+        ...(doc.extraSections ?? []).flatMap((x) => ['', x.banner, ...x.lines]),
     ];
     return out.join('\n') + '\n';
 }

@@ -1,16 +1,17 @@
 [Game "SWU-PGN/1.0"]
+[WriterRevision "3"]
 [GameId "vector-minimal"]
 [Date "2026-06-16T00:00:00Z"]
 [Format "Premier"] [CardPool "SOR"] [Engine "forceteki@reference"]
 [Seed "0"]
-[P1Id "sha256:aaaa"] [P2Id "sha256:bbbb"] [P1 "Player 1"] [P2 "Player 2"]
+[P1Id "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"] [P2Id "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"] [P1 "Player 1"] [P2 "Player 2"]
 [P1Leader "SOR#010"] [P1Base "SOR#028"] [P2Leader "SOR#005"] [P2Base "SOR#020"]
 [Result "Incomplete"] [Reason "Sample"] [Rounds "2"]
 
 %%% STORY
  ── setup ──
-       ↳ Player 1 draws 3: Wampa, Wampa #2, Wampa #3
-       ↳ Player 2 draws 3: Cell Block Guard, Cell Block Guard #2, Cell Block Guard #3
+       ↳ Player 1 draws 3: Wampa · Wampa #2 · Wampa #3
+       ↳ Player 2 draws 3: Cell Block Guard · Cell Block Guard #2 · Cell Block Guard #3
        ↳ Player 1 keeps their hand
        ↳ Player 2 keeps their hand
        ↳ Player 1 resources Wampa #2
@@ -29,8 +30,8 @@
   2. Player 2 passes
   3. Player 1 passes
  ── regroup ──
-       ↳ Player 1 draws 2: Wampa #4, Wampa #5
-       ↳ Player 2 draws 2: Cell Block Guard #4, Cell Block Guard #5
+       ↳ Player 1 draws 2: Wampa #4 · Wampa #5
+       ↳ Player 2 draws 2: Cell Block Guard #4 · Cell Block Guard #5
        ↳ Player 1 resources Wampa #4
        ↳ Player 2 resources Cell Block Guard #4
 
@@ -58,7 +59,7 @@
 {"id":"SOR#108","name":"Wampa","kind":"unit"}
 
 %%% SETUP
-{"seq":"R1.S.0","t":"INIT","p1DeckOrder":["SOR#108","SOR#108:2","SOR#108:3","SOR#108:4","SOR#108:5"],"p2DeckOrder":["SOR#045","SOR#045:2","SOR#045:3","SOR#045:4","SOR#045:5"]}
+{"seq":"R0.S.0","t":"INIT","p1DeckOrder":["SOR#108","SOR#108:2","SOR#108:3","SOR#108:4","SOR#108:5"],"p2DeckOrder":["SOR#045","SOR#045:2","SOR#045:3","SOR#045:4","SOR#045:5"]}
 
 %%% EVENTS
 {"seq":"R0.S.start","t":"PHASE_START","phase":"setup"}

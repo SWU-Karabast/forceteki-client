@@ -1,7 +1,7 @@
 import type { GameEvent, ReducedState, PlayerState, CardInstanceState, Seat } from './types';
 import { eventKind, isCreditToken, isForceToken, isStatusTokenCard } from './tokens';
 
-// Vendored from forceteki swupgn/src/fold.ts at 3c4ed35d. Every block marked CLIENT-OWNED is
+// Vendored from forceteki swupgn/src/fold.ts at c233908d6. Every block marked CLIENT-OWNED is
 // a documented divergence (see VERSION.md); everything else mirrors upstream and should be
 // re-diffed, not rewritten, on the next sync.
 
@@ -17,8 +17,14 @@ export function emptyState(): ReducedState {
     return { round: 0, phase: 'setup', initiative: null, initiativeTaken: false, players: { 1: emptyPlayer(1), 2: emptyPlayer(2) } };
 }
 
-/** The seat whose leader is `id`, if a keyframe or a DEPLOY_LEADER has told us. */
+/**
+ * The seat whose leader is `id`, if a keyframe or a DEPLOY_LEADER has told us. A record with no
+ * `card` names no leader: without the guard `undefined` matched the first seat with no leader yet.
+ */
 function leaderOwner(s: ReducedState, id: string): PlayerState | undefined {
+    if (typeof id !== 'string') {
+        return undefined;
+    }
     for (const seat of [1, 2] as Seat[]) {
         const ps = s.players[seat];
         if (ps?.leader?.id === id) {
@@ -152,7 +158,7 @@ function newCard(id: string, zone: string): CardInstanceState {
  * discard, resources. A real game never comes close; a crafted one is trying to make a reader
  * do unbounded work. Past it, records are dropped rather than folded.
  */
-const MAX_ZONE_LIST = 1000;
+export const MAX_ZONE_LIST = 1000;
 
 /**
  * Put a card in an arena, ONCE.
@@ -209,8 +215,8 @@ function attachTo(s: ReducedState, hostId: string, id: string): void {
         return;
     }
     const host = findCard(s, hostId);
-    if (host && !host.upgrades.includes(id)) {
-        host.upgrades.push(id);
+    if (host) {
+        addOnce(host.upgrades, id);
     }
 }
 
@@ -348,6 +354,21 @@ function removeOne(list: string[], id: string): void {
 }
 
 /**
+ * The seat whose pile a card LEAVES: `p`'s if it holds the card, else the other seat's, else `p`'s.
+ * `p` is the card's controller as the move is recorded, which is not always the pile's owner --
+ * Stolen AT-Hauler is played by the opponent out of its owner's discard -- and a pile only ever
+ * holds its owner's cards. A copy's id is unique, so whichever pile holds it is the right one.
+ * Arriving cards need no lookup: the writer records the owner's seat on a move into a pile.
+ */
+function holder(s: ReducedState, seat: Seat, ps: PlayerState, id: string, pile: (x: PlayerState) => string[] | undefined): PlayerState {
+    if (pile(ps)?.includes(id)) {
+        return ps;
+    }
+    const other = s.players[seat === 1 ? 2 : 1];
+    return other && pile(other)?.includes(id) ? other : ps;
+}
+
+/**
  * The seat's resource-row membership list, created on first use. It stays ABSENT until a MOVE
  * or a keyframe supplies one, so a file written before `resources` existed folds to a state
  * with no `resources` at all rather than to a misleading empty row.
@@ -430,8 +451,9 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         ps.handSize += 1;
         addOnce(ps.hand, e.card);
     } else if (e.from === 'hand' && e.to !== 'hand') {
-        ps.handSize = Math.max(0, ps.handSize - 1);
-        removeOne(ps.hand, e.card);
+        const from = holder(s, e.p, ps, e.card, (x) => x.hand);
+        from.handSize = Math.max(0, from.handSize - 1);
+        removeOne(from.hand, e.card);
     }
 
     // Deck count, once a keyframe has told us where it started.
@@ -461,8 +483,9 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
         countResource(ps, 1, false);
         addOnce(resourceList(ps), e.card);
     } else if (e.from === 'resource' && e.to !== 'resource') {
-        countResource(ps, -1, e.exhausted === true);
-        removeOne(resourceList(ps), e.card);
+        const from = holder(s, e.p, ps, e.card, (x) => x.resources);
+        countResource(from, -1, e.exhausted === true);
+        removeOne(resourceList(from), e.card);
     }
 
     // Credits and the Force: the only two things that live in `base` and are counted.
@@ -479,7 +502,7 @@ function applyMoveCounts(s: ReducedState, e: { card: string; from: string; to: s
     if (e.to === 'discard' && e.from !== 'discard') {
         addOnce(ps.discard, e.card);
     } else if (e.from === 'discard' && e.to !== 'discard') {
-        removeOne(ps.discard, e.card);
+        removeOne(holder(s, e.p, ps, e.card, (x) => x.discard).discard, e.card);
     }
 
     // In-play (arena) membership. An UPGRADE never has any: it attaches to a unit, and its
@@ -588,6 +611,10 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
             // The leader's status: this record names the leader (so a reader that saw no keyframe
             // yet learns which card it is), deploys it, and readies it -- a leader deploys ready
             // whatever state it was in (CR 3.4.4). An Epic Action deploy spends the Epic Action.
+            // A record with no `card` (schema-invalid) names nothing to deploy, so it is dropped.
+            if (typeof e.card !== 'string') {
+                break;
+            }
             const ps = player(s, e.p);
             if (ps) {
                 const prev = ps.leader;
@@ -636,6 +663,9 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
             // game still lands on the right face. Falls back to the seat on the record when the
             // leader's id is not yet known (no keyframe seen, no DEPLOY_LEADER -- these leaders
             // never deploy, so that is the normal case early in a file).
+            if (typeof e.card !== 'string') {
+                break; // schema-invalid: no leader to seed, and the seat alone names no face
+            }
             const owner = leaderOwner(s, e.card) ?? player(s, e.p);
             if (owner) {
                 // A double-sided leader NEVER deploys, so in a file with no keyframe yet nothing
@@ -700,7 +730,7 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
                     continue;
                 }
                 const idx = owner.cards.findIndex((c) => c.id === e.card);
-                if (idx >= 0) {
+                if (idx >= 0 && ps.cards.length < MAX_ZONE_LIST) {
                     ps.cards.push(owner.cards.splice(idx, 1)[0]);
                     break;
                 }
@@ -724,9 +754,7 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
             const captor = e.by ? findCard(s, e.by) : undefined;
             if (captor) {
                 const captured = arr<string>(captor.captured);
-                if (!captured.includes(e.card)) {
-                    captured.push(e.card);
-                }
+                addOnce(captured, e.card);
                 captor.captured = captured;
             }
             break;

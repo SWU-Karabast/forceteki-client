@@ -4,7 +4,7 @@ import { Box, Typography, Tooltip, ButtonBase } from '@mui/material';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useCardCostMap } from '@/app/_utils/swupgnCardCosts';
 import { resourcingReport, type PlayerRoundResourcing, type ResourcingReport as ResourcingReportData } from '@/app/_utils/resourcingReport';
-import type { Seat } from '@/lib/swupgn';
+import { displayText, type Seat } from '@/lib/swupgn';
 
 const fmtPct = (v: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%`);
 const fmtNum = (v: number | null) => (v == null ? '—' : String(v));
@@ -184,8 +184,8 @@ const ResourcingReport: React.FC = () => {
             )}
             {/* Wraps to one column per row once two 260px tables no longer fit side by side. */}
             <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                <PlayerColumn seat={1} name={doc.header.p1 || 'Player 1'} report={report} />
-                <PlayerColumn seat={2} name={doc.header.p2 || 'Player 2'} report={report} />
+                <PlayerColumn seat={1} name={displayText(doc.header.p1) || 'Player 1'} report={report} />
+                <PlayerColumn seat={2} name={displayText(doc.header.p2) || 'Player 2'} report={report} />
             </Box>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', display: 'block', mt: 2 }}>
                 Red rows left ≥2 resources unspent{report.hasPaidData ? ' (by what was paid, not printed cost)' : ''}. Click a row to jump to that round.

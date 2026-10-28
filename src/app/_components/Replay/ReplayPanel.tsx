@@ -18,8 +18,7 @@ import DecisionReview from './DecisionReview';
 import TurnDigests from './TurnDigests';
 import DiscussionTab from './DiscussionTab';
 import { formatGameMeta } from '@/app/_utils/replayMoves';
-import type { ParseNotes } from '@/lib/swupgn';
-import { skippedSectionList } from '@/app/_utils/swupgnFileIssues';
+import { displayText } from '@/lib/swupgn';
 
 type TabKey = 'story' | 'moves' | 'deck' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
 // `short` is the name printed under the icon in the open panel (7 columns of ~40px on a phone);
@@ -76,16 +75,9 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
         copy(`${base}&from=${ref(clip.start)}&to=${ref(clip.end)}`,
             'Clip link copied — send the .swupgn with it, the replay lives in your browser');
     };
-    // serialize() writes the sections this reader knows; one a newer writer added (and parse()
-    // skipped) is not in the copy with notes. The file the user opened keeps it.
-    const downloadNotes = () => {
-        downloadWithAnnotations();
-        const skipped = (doc as ParseNotes).skippedSections ?? [];
-        if (skipped.length > 0) {
-            const names = skippedSectionList(skipped, false);
-            setWarning(`Saved with your notes. This viewer can't read the ${names} section${skipped.length === 1 ? '' : 's'}, so ${skipped.length === 1 ? 'it was' : 'they were'} left out. The file you opened still has everything.`);
-        }
-    };
+    // serialize() writes back, verbatim, the tags and sections this reader skipped (§3 [A-01]),
+    // so the copy with notes carries everything the file did.
+    const downloadNotes = () => downloadWithAnnotations();
     const exportWebm = async () => {
         if (recording) return;
         setRecording(true);
@@ -141,7 +133,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
             <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 1, borderBottom: BORDER, gap: 1 }}>
                 <Box sx={{ flex: 1, overflow: 'hidden' }}>
                     <Typography variant="body2" sx={{ color: 'white', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {(header.p1 || 'Player 1')} vs {(header.p2 || 'Player 2')}
+                        {(displayText(header.p1) || 'Player 1')} vs {(displayText(header.p2) || 'Player 2')}
                     </Typography>
                     {/* How long the game took and where it sits in a match, when the file says
                         (spec §5.2). Absent tags print nothing rather than a placeholder. The
