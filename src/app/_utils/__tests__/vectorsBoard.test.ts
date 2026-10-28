@@ -118,12 +118,21 @@ describe.each(VECTORS)('board at the final frame: %s', (name) => {
         }
     });
 
-    it('is a clean, current-writer file: FileHealth has nothing to report', () => {
+    it('is a current-writer file: FileHealth reports only a -dirty Engine', () => {
         expect(checkKeyframes(doc.events).mismatches).toEqual([]);
-        // Regenerated at a2c013963 from a clean commit: no `-dirty` Engine, and other-writer
-        // (no WriterRevision, Engine "examplewriter@1.0.0") is an ordinary file, not pre-release.
-        expect(doc.header.engine).not.toMatch(/-dirty$/);
-        expect(fileIssues(doc).map((i) => i.message)).toEqual([]);
+        // The eight real-game vectors were regenerated at 18cd06297 from a working tree, not a
+        // clean commit: their Engine is `forceteki@c89abd86a-dirty`, so FileHealth says so (§5.3)
+        // and says nothing else. If upstream regenerates them from a clean commit again, this
+        // fails on purpose: put back the clean-Engine check. minimal and other-writer did not
+        // change; other-writer (no WriterRevision, Engine "examplewriter@1.0.0") is an ordinary
+        // file, not pre-release.
+        if (name === 'minimal' || name === 'other-writer') {
+            expect(doc.header.engine).not.toMatch(/-dirty$/);
+            expect(fileIssues(doc).map((i) => i.message)).toEqual([]);
+        } else {
+            expect(doc.header.engine).toMatch(/-dirty$/);
+            expect(fileIssues(doc).map((i) => i.message)).toEqual([expect.stringMatching(/^Uncommitted build:/)]);
+        }
         expect(writerGeneration(doc)).toEqual([]);
     });
 });

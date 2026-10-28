@@ -15,8 +15,12 @@ import { frameAction, storyName } from '../replayAction';
 import { indexResolver } from '@/lib/swupgn';
 
 const DIR = path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors');
-// A clean, current file (forceteki writer revision 4): each test adds the one thing under test.
-const VECTOR = readFileSync(path.join(DIR, 'homeworlds.swupgn'), 'utf-8');
+// A clean, current file (forceteki writer revision 5): each test adds the one thing under test.
+// The vectors at 18cd06297 were written from a working tree (`[Engine "...-dirty"]`), which
+// FileHealth rightly flags (§5.3); drop the suffix so no test here depends on how the reference
+// repo last regenerated them.
+const VECTOR = readFileSync(path.join(DIR, 'homeworlds.swupgn'), 'utf-8')
+    .replace(/^\[Engine "([^"]*?)-dirty"\]$/m, '[Engine "$1"]');
 const RLO = String.fromCharCode(0x202e);
 
 describe('INIT at R0.S.0 (writer revision 3) and at R1.S.0 (revisions 1-2, pilot files)', () => {

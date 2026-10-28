@@ -1,13 +1,13 @@
 # Vendored SWU-PGN reader
 
-Source: forceteki `swupgn/src/`. Re-vendored 2026-10-28 at upstream **`a2c013963`** (branch
-`swu-game-notation`; "regenerate the real-game vectors from a clean commit"), on top of the
-earlier same-day syncs at `950a65a82` (client `2222127`) and `c233908d6`. Synced from that
-commit, not from a working tree. The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit, and it is
-**normative** (§2): the reference code, schemas and vectors are informative, and where they
-disagree the text governs. The conformance suite (`swupgn/test-vectors/`: 10 positive vectors,
-28 in `negative/`, `manifest.json`) is copied verbatim into `__tests__/fixtures/vectors/`. The
-forceteki writer is now `WriterRevision` 4; the nine older positive vectors were regenerated, and
+Source: forceteki `swupgn/src/`. Re-vendored 2026-10-28 at upstream **`18cd06297`** (branch
+`swu-game-notation`; "keep test names out of normative §12.1 and state reader units"), on top of
+the earlier same-day syncs at `a2c013963`, `950a65a82` (client `2222127`) and `c233908d6`. Synced
+from that commit, not from a working tree. The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit,
+and it is **normative** (§2): the reference code, schemas and vectors are informative, and where
+they disagree the text governs. The conformance suite (`swupgn/test-vectors/`: 10 positive
+vectors, 29 in `negative/`, `manifest.json`) is copied verbatim into `__tests__/fixtures/vectors/`.
+The forceteki writer is now `WriterRevision` 5; the eight real-game vectors were regenerated, and
 their `.fold.json`/`.render.txt` are byte-identical to the previous sync's.
 
 `types.ts` is **verbatim**. `render.ts` and `integrity.ts` are verbatim apart from one line each,
@@ -19,6 +19,85 @@ numbers with `swupgnMoves.isNumberedAction`, the same rule plus the kind-less fa
 the story's numbering on every vector. `ids.ts` is **verbatim** (it holds literal combining marks
 in a regex, as upstream does). `validate.ts` stays omitted (Node-only: fs/path + ajv). `tokens.ts`,
 `serialize.ts`, `displayText.ts` and `foldFrames` are client-only.
+
+## What `a2c013963..18cd06297` changed (all handled here)
+
+Reader commits `bfe77b72d` (integrity), `d6f016d03` (cardNames), `b379f99e5` (parse),
+`6eccaecef` (validate), `3ecab132c` and `7d9a04b65` (actionLinks); writer commits `861983026`,
+`d7e5e8d1e`, `b8d7d0a49`, `7d1a45dae`, `ccae9cc57`, `c89abd86a`, `4d110a699` and others that
+reach a reader only through the vectors; spec commits `70d038e27`, `18cd06297`.
+
+- **`actionLinks.ts`: nothing to port.** `3ecab132c` (a play's setup is linked from the
+  writer's `markPlaySetup` mark, not from position) and `7d9a04b65` (walking back past the
+  card's own MOVE ends the host's share of the run, marked or not) change only `linkActionSteps`,
+  which the client does not port. `TOP_LEVEL_ACTIONS` and `isTopLevelActionRecord` are
+  byte-identical at `a2c013963` and `18cd06297`; upstream also dropped its `isArena` import,
+  which the subset never had.
+- **`fold.ts`, `render.ts`, `ids.ts`, `types.ts`: unchanged** in this range (`git diff --stat`
+  is empty for all four).
+- **`cardNames.ts`: the §16 `nm()` cut.** A `name` or `backSideName` longer than 120 UTF-16 code
+  units is cut to its first 119 and `…` (U+2026), so a hostile `%%% CARDS` index cannot make every
+  story line grow without bound (no printed card's name is over 49). The client's
+  `indexResolver` stays CLIENT-OWNED (see the divergence list) and applies the cut LAST: newlines
+  flattened → `displayText` (bidi dropped, controls to a space) → cut. Flattening and bidi removal
+  can only shorten a name, so cutting after them is what keeps every name the client SHOWS within
+  120; upstream cuts the raw name, which is also what it shows. Upstream's "skip an entry whose
+  `id` or `name` is not a string" filter is NOT ported over the client's own handling (already a
+  listed divergence). Slicing is by code unit, as the spec says, so a cut at 119 can split a
+  surrogate pair (see the report). Every place the client shows an index name goes through it:
+  `Replay.context`'s `nameOf` is `indexResolver(doc.cards)` when the file has an index, and
+  DeckTab, the deck tracker's rows, the board adapter's card names and tooltips, captions and
+  `render()` all take that `nameOf`. `serialize()` writes the raw records (an export keeps the
+  file's bytes) and nothing shows the file's own STORY prose.
+- **`parse.ts`: the size cap counts UTF-8 bytes** (`b379f99e5`), verbatim: `utf8Length()` (a
+  surrogate pair is 4 bytes, a lone surrogate 3), and only when `text.length` does not already
+  exceed `maxBytes` (each UTF-16 unit is at least one byte). Message `file is over the
+  <n>-byte limit`, code still `too-large`. The per-line cap (`maxLineLength`) is still in UTF-16
+  code units. The client's earlier byte checks on an upload (`unzipReplay`'s inflated-size cap)
+  stay; `parse()` does its own.
+- **`result-mismatch` (validator only, `6eccaecef`).** The client has no validator and no table
+  of validator codes, so parse accepts the file and the fold reads it. File Health
+  (`swupgnFileIssues.resultMismatch`) adds a warning by the validator's rule (the last `GAME_END`
+  counts, `1`→`P1`, `2`→`P2`, `"Draw"`→`Draw`, none → `Incomplete`; a `Result` 1.0 does not know
+  is skipped): "The Result in the header doesn't match how the game ended (§10.2)." The replay
+  header keeps showing the file's `Result` (via `resultOf`), and the `GAME_END` banner shows
+  what the events say; the client picks neither over the other.
+- **`integrity.ts`: `diffCard` loops** over the plain fields and the set fields (`bfe77b72d`).
+  Same behaviour; ported, keeping the client's one `snapToKeyframe` line.
+- **Writer revision 5** (Appendix C), checked from the reader's side in
+  `src/app/_utils/__tests__/writerRevision5.test.ts`:
+  - *An additional phase continues its phase's numbering* (§9.1). Nothing in the client reads a
+    `.start`/`.end` suffix: `storySeek` resets on the PHASE_START record, `chapterMarks` ticks per
+    PHASE_START, `entryExhaust` and `replayLiveCues` break on the record type. A synthetic round
+    with two regroups (`R1.G.start…R1.G.end`, `R1.G.5…R1.G.9`) folds, shows two Regroup ticks, and
+    a story line in the second regroup seeks to its record. An older file that repeats
+    `R1.G.start` behaves as before: every seq lookup (deep link, `seekToSeq`, `beatAnchorSeqs`, an
+    annotation's `ref`) takes the first occurrence, so a link to the second phase's edge lands on
+    the first's.
+  - *`[W-43]`* (§12.1): `MOVE deck→ground p:1` then `TAKE_CONTROL` to 2 takes the card from seat
+    1's deck count, puts it in seat 2's `cards` and on Player 2's side of the board owned by
+    Player 1, and the beat classifies as a `steal`.
+  - *A resource given back* is a `TAKE_CONTROL` between resource rows: one resource each way,
+    not numbered, not a `play` or `resource` transition, not counted by the resourcing report.
+  - *`P1Id`/`P2Id` hash the account id.* Nothing in the client parses, shows or keys on them
+    (replay storage ids hash names, date, result, leaders and the whole content).
+  - `swupgnWriter.groupsByAdjacency` still means forceteki revisions 1–3; its comment already
+    says "revision 4 on", which covers 5.
+- **Vectors.** The eight real-game `.swupgn` files are regenerated (WriterRevision 5, new
+  Date/EndDate, P1Id/P2Id, `ms`, Engine, and the random R0.S.1 opening choice); their `.fold.json`
+  and `.render.txt` did not change, and fold and render equality still hold. `minimal` and
+  `other-writer` did not change. New hand-written well-formed negative `result-mismatch`
+  (`[Result "P1"]`, no `GAME_END`): the negatives go from 28 to 29.
+- **The `-dirty` Engine.** All eight regenerated vectors say `[Engine "forceteki@c89abd86a-dirty"]`:
+  they were written from a working tree, not a clean commit, so File Health shows its §5.3
+  "Uncommitted build" warning on each. `vectorsBoard.test.ts` now asserts exactly that (and fails
+  on purpose if upstream regenerates from a clean commit, to put the clean check back);
+  `swupgnConformance.test.ts` strips the suffix from its base vector so no other test depends on
+  it.
+- **Export.** `serialize()` copies the header it read and invents nothing. Each header line of a
+  regenerated vector comes out byte for byte, but in `HEADER_ORDER`, which puts `EndDate` after
+  `Date`; forceteki writes it last (it did at `a2c013963` too). §4 fixes no tag order past `Game`
+  first, so the export is valid, but not byte-identical in its header.
 
 ## What `950a65a82..a2c013963` changed (all handled here)
 
@@ -407,14 +486,17 @@ negative must make `parse` throw `SwuPgnError` with its listed code, and every o
 parse and fold, render, gate and adapt without crashing, touching a prototype or growing a list
 past 1000. The validator-only codes (`schema`, `bad-zone`, `duplicate-seq`, `dangling-ref`,
 `over-cap`, `keyframe-mismatch`, `pre-release`, `unknown-type`/`-section`, `newer-minor`,
-`unknown-value`, `bad-token-name`, `deck-build-move`, `credit-zone`) are not the client's to
+`unknown-value`, `bad-token-name`, `deck-build-move`, `credit-zone`, `result-mismatch`) are not the client's to
 report; `reserved-key` is a parser code now.
 `swupgnConformance.test.ts` also runs every well-formed negative through the viewer's own
 helpers (File Health, digests, decisions, captions, sided names, result formatting). The optional
 `reduced-state.schema.json` check is not run: `ajv` is only a transitive dependency here, not a
 declared devDependency.
 `src/app/_utils/__tests__/vectorsBoard.test.ts` takes each vector one level up, through
-`adaptState`, and asserts every §11 field against `.fold.json`, plus a clean `FileHealth`.
+`adaptState`, and asserts every §11 field against `.fold.json`, plus a `FileHealth` that reports
+nothing but the `-dirty` Engine on the eight regenerated vectors (and nothing at all on `minimal`
+and `other-writer`). `manifest.test.ts` also opens `result-mismatch` and asserts File Health's
+notice.
 `src/app/_utils/__tests__/swupgnCompat.test.ts` has one test per row of the §22 table,
 plus the pre-publication shapes (no `kind`, no RESOURCE). `src/app/_utils/__tests__/homeworldsReplay.test.ts` pins the §10.3/§10.4 prose and pacing,
 and requires every vector's numbered captions to equal its own STORY's numbered lines. `__tests__/fixtures/sample-game.swupgn` is a pre-1.0 file and pins the compatibility
@@ -514,7 +596,9 @@ shims.
   record (defence in depth behind the parse guard; `foldFrames` keeps the frame slot).
 - **`cardNames.ts` untyped fields** — a `null` index entry is skipped (upstream drops any entry whose `id` or `name` is not a string; the client keeps the entry, so a bad `name` does not lose its `backSideName`); a non-string `name` or `backSideName` is
   ignored and newlines in a name are flattened (a rendered story line beginning `%%%` would
-  end the STORY section of an export). Names also pass through `displayText` (§23).
+  end the STORY section of an export). Names also pass through `displayText` (§23). The §16
+  `nm()` cut (over 120 code units → 119 and `…`) runs after both, on the name as shown, so no
+  shown name is over 120; upstream cuts the raw name.
 - **`tokens.ts`** — client-only. Repairs the token lifecycle in pre-1.0 files (which emit no
   removal decrement), drops inert records, classifies token upgrades when no `kind` is stated,
   recovers a pilot's host from the keyframes when the writer named none, reads a pilot

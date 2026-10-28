@@ -196,7 +196,27 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     if (partialKeyframes > 0) {
         out.push({ severity: 'warning', message: `${plural(partialKeyframes, 'keyframe')} missing a seat; the folded state was kept for that seat instead (§13).` });
     }
+    // §10.2: GAME_END.winner MUST agree with Result, and a file with no GAME_END is Incomplete.
+    // The last GAME_END counts (play may go on after the game ends); an outcome from a newer minor
+    // is skipped (§18). The header still shows the file's Result: this only says they disagree.
+    if (resultMismatch(doc)) {
+        out.push({ severity: 'warning', message: 'The Result in the header doesn\'t match how the game ended (§10.2).' });
+    }
     return out;
+}
+
+const RESULT_OF_WINNER = new Map<unknown, string>([[1, 'P1'], [2, 'P2'], ['Draw', 'Draw']]);
+
+/** The validator's `result-mismatch` (§24), by the same rule. */
+export function resultMismatch(doc: SwuPgnDocument): boolean {
+    const result = doc.header.result;
+    if (!['P1', 'P2', 'Draw', 'Incomplete'].includes(result)) {
+        return false;
+    }
+    const gameEnd = (Array.isArray(doc.events) ? doc.events : [])
+        .filter((e) => e != null && typeof e === 'object' && e.t === 'GAME_END').pop() as { winner?: unknown } | undefined;
+    const expected = gameEnd ? RESULT_OF_WINNER.get(gameEnd.winner) : 'Incomplete';
+    return expected !== undefined && expected !== result;
 }
 
 /**

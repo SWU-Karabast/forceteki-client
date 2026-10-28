@@ -26,8 +26,11 @@ export function indexResolver(cards: readonly CardIndexRecord[] = []): NameResol
     // where a rendered story line beginning `%%%` would end the exported STORY section.
     // Upstream drops the whole entry instead; flattening keeps a bad entry's other side.
     // Bidi and control characters are neutralised too (§23): every name the client shows
-    // comes through here.
-    const flat = (v: unknown) => (typeof v === 'string' ? displayText(v.replace(/[\r\n]+/g, ' ')) : undefined);
+    // comes through here. The §16 nm() cut runs LAST, on the name as shown: newlines are
+    // flattened first (a run of them becomes one space) and bidi marks dropped, both of which
+    // can only shorten it, so cutting after them is what keeps every name the client shows
+    // within MAX_NAME_LENGTH. Upstream cuts the raw name, which it shows unchanged.
+    const flat = (v: unknown) => (typeof v === 'string' ? shorten(displayText(v.replace(/[\r\n]+/g, ' '))) : undefined);
     const entries = cards.filter((c) => !!c && typeof c === 'object');
     const byId = new Map(entries.map((c) => [c.id, flat(c.name)]));
     const backById = new Map(entries.map((c) => [c.id, flat(c.backSideName)]));
@@ -35,4 +38,11 @@ export function indexResolver(cards: readonly CardIndexRecord[] = []): NameResol
         nameOf: (id: string) => byId.get(baseId(id)) ?? baseId(id),
         backNameOf: (id: string) => backById.get(baseId(id)),
     };
+}
+
+/** Longer than any printed card's `Title, Subtitle`. */
+const MAX_NAME_LENGTH = 120;
+
+function shorten(name: string): string {
+    return name.length > MAX_NAME_LENGTH ? `${name.slice(0, MAX_NAME_LENGTH - 1)}…` : name;
 }

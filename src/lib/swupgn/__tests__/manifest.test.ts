@@ -4,6 +4,7 @@ import path from 'path';
 import { parse, fold, foldFrames, render, checkKeyframes, normalizeEvents, SwuPgnError, RESERVED_KEYS, type GameEvent } from '../index';
 import { formatResult } from '@/app/_utils/replayMoves';
 import { adaptState } from '@/app/_utils/swupgnBoardAdapter';
+import { fileIssues, resultMismatch } from '@/app/_utils/swupgnFileIssues';
 
 /**
  * Spec §20: the conformance suite, driven by forceteki `swupgn/test-vectors/manifest.json`
@@ -36,9 +37,9 @@ const protoKeys = () => [Object.prototype, Array.prototype, Function.prototype]
     .map((p) => Object.getOwnPropertyNames(p).sort().join(','));
 
 describe('manifest.json', () => {
-    it('lists 10 positive and 28 negative vectors, each naming its writer', () => {
+    it('lists 10 positive and 29 negative vectors, each naming its writer', () => {
         expect(MANIFEST.vectors.filter((v) => v.class === 'positive')).toHaveLength(10);
-        expect(MANIFEST.vectors.filter((v) => v.class === 'negative')).toHaveLength(28);
+        expect(MANIFEST.vectors.filter((v) => v.class === 'negative')).toHaveLength(29);
         for (const v of MANIFEST.vectors) {
             expect(typeof v.writer, v.file).toBe('string');
         }
@@ -142,6 +143,53 @@ describe('the newer-minor negatives (§18): validator codes only, so they parse'
         expect(formatResult('Draw')).toBe('Draw');
         for (const v of ['p1', 'P3', 'P10', 'Resigned', '', undefined]) {
             expect(formatResult(v), String(v)).toBe('Incomplete');
+        }
+    });
+});
+
+describe('result-mismatch (§10.2, §24): a validator code, so the file parses', () => {
+    const entry = MANIFEST.vectors.find((v) => v.file === 'negative/result-mismatch.swupgn')!;
+
+    it('is listed as the hand-written, well-formed negative it is', () => {
+        expect(entry).toMatchObject({ class: 'negative', writer: 'hand', level: 'well-formed', errors: ['result-mismatch'] });
+    });
+
+    it('parses and folds without touching a prototype, and File Health says the Result disagrees', () => {
+        const before = protoKeys();
+        const doc = parse(read(entry));
+        expect(doc.header.result).toBe('P1');
+        expect(doc.events.some((e) => e.t === 'GAME_END')).toBe(false);
+        expect(() => fold(normalizeEvents(doc.events))).not.toThrow();
+        expect(protoKeys()).toEqual(before);
+        expect(resultMismatch(doc)).toBe(true);
+        expect(fileIssues(doc).map((i) => i.message)).toContain('The Result in the header doesn\'t match how the game ended (§10.2).');
+        // The header still shows what the file says; the notice is the only change.
+        expect(formatResult(doc.header.result)).toBe('Player 1');
+    });
+
+    it('follows the validator: the last GAME_END counts, and an unknown Result is skipped (§18)', () => {
+        const doc = parse(read(entry));
+        const withEnd = (result: string, ...winners: unknown[]) => ({
+            ...doc,
+            header: { ...doc.header, result },
+            events: [...doc.events, ...winners.map((winner, i) => ({ seq: `R9.A.${i}`, t: 'GAME_END', winner, reason: 'x' }) as unknown as GameEvent)],
+        });
+        expect(resultMismatch(withEnd('Incomplete'))).toBe(false);
+        expect(resultMismatch(withEnd('P1', 1))).toBe(false);
+        expect(resultMismatch(withEnd('P2', 2))).toBe(false);
+        expect(resultMismatch(withEnd('Draw', 'Draw'))).toBe(false);
+        expect(resultMismatch(withEnd('P1', 2))).toBe(true);
+        expect(resultMismatch(withEnd('Incomplete', 1))).toBe(true);
+        expect(resultMismatch(withEnd('P2', 1, 2))).toBe(false);
+        expect(resultMismatch(withEnd('P1', 1, 2))).toBe(true);
+        expect(resultMismatch(withEnd('Resigned'))).toBe(false);
+        // A winner this version does not know gives no expectation, as upstream's validator.
+        expect(resultMismatch(withEnd('P1', 3))).toBe(false);
+    });
+
+    it('no positive vector trips it', () => {
+        for (const v of MANIFEST.vectors.filter((x) => x.class === 'positive')) {
+            expect(resultMismatch(parse(read(v))), v.file).toBe(false);
         }
     });
 });

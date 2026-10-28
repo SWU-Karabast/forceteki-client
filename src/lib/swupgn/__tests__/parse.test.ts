@@ -203,6 +203,57 @@ describe('parse — later-version sections and oversized counts', () => {
 });
 
 // Ported from forceteki test/server/swupgn/parse.spec.ts "parse grammar" at 950a65a82.
+describe('indexResolver cuts a name no card has (§16 nm())', () => {
+    const minimal = () => parse(readFileSync(path.join(__dirname, 'fixtures/vectors/minimal.swupgn'), 'utf-8'));
+
+    it('cuts a 121-unit name to its first 119 and an ellipsis, 120 in all', async () => {
+        const { indexResolver } = await import('../cardNames');
+        const name = 'A'.repeat(121);
+        const shown = indexResolver([{ id: 'SOR#999', name }]).nameOf('SOR#999');
+        expect(shown).toBe(`${'A'.repeat(119)}…`);
+        expect(shown).toHaveLength(120);
+    });
+
+    it('leaves a name of exactly 120 units as it is', async () => {
+        const { indexResolver } = await import('../cardNames');
+        const name = 'B'.repeat(120);
+        expect(indexResolver([{ id: 'SOR#999', name }]).nameOf('SOR#999')).toBe(name);
+    });
+
+    it('cuts a long backSideName the same way', async () => {
+        const { indexResolver } = await import('../cardNames');
+        const r = indexResolver([{ id: 'SOR#999', name: 'Front', backSideName: 'C'.repeat(500) }]);
+        expect(r.nameOf('SOR#999')).toBe('Front');
+        expect(r.backNameOf?.('SOR#999')).toBe(`${'C'.repeat(119)}…`);
+    });
+
+    it('cuts after the client flattens newlines and drops bidi marks, so the shown name is never over 120', async () => {
+        const { indexResolver } = await import('../cardNames');
+        // 125 units as written, 119 once the six RLOs go: not cut.
+        const bidi = `${String.fromCharCode(0x202e).repeat(6)}${'D'.repeat(119)}`;
+        expect(indexResolver([{ id: 'SOR#1', name: bidi }]).nameOf('SOR#1')).toBe('D'.repeat(119));
+        // Newlines become one space before the cut.
+        const shown = indexResolver([{ id: 'SOR#2', name: `${'E'.repeat(60)}\r\n\r\n${'F'.repeat(100)}` }]).nameOf('SOR#2');
+        expect(shown).toBe(`${'E'.repeat(60)} ${'F'.repeat(58)}…`);
+        expect(shown).toHaveLength(120);
+    });
+
+    it('render() prints the cut name, so a hostile index cannot grow the story without bound', async () => {
+        const { render } = await import('../render');
+        const doc = minimal();
+        const longName = 'G'.repeat(900_000);
+        doc.cards = [...(doc.cards ?? []), { id: 'SOR#999', name: longName }];
+        for (let i = 0; i < 600; i++) {
+            doc.events.push({ seq: `R2.A.${i + 1}`, t: 'REVEAL', p: 1, zone: 'hand', cards: ['SOR#999'] } as never);
+        }
+        const out = render(doc);
+        expect(out).not.toContain(longName);
+        expect(out).toContain(`${'G'.repeat(119)}…`);
+        expect(out).not.toContain('G'.repeat(120));
+        expect(out.length).toBeLessThan(1_000_000);
+    });
+});
+
 describe('parse grammar (spec §4, Appendix B, §24)', () => {
     const HEAD = [
         '[Game "SWU-PGN/1.0"]', '[GameId "g"] [Date "2026-06-16T00:00:00Z"] [CardPool "SOR"] [Engine "e"] [Seed "s"]',
@@ -346,6 +397,45 @@ describe('parse grammar (spec §4, Appendix B, §24)', () => {
         expect(code(events, { maxBytes: 100 })).toBe('too-large');
         expect(code(events, { maxLineLength: 20 })).toBe('line-too-long');
         expect(code(HEAD + '\n%%% EVENTS\n' + '['.repeat(70) + ']'.repeat(70))).toBe('too-deep');
+    });
+
+    it('measures the size cap in UTF-8 bytes, not characters', () => {
+        const text = HEAD + '\n%%% EVENTS\n';
+        const bytes = new TextEncoder().encode(text).length;
+        const utf8 = (t: string) => new TextEncoder().encode(t).length;
+        // ASCII at exactly the cap passes; one byte over does not.
+        expect(code(text, { maxBytes: bytes })).toBe('ok');
+        expect(code(text, { maxBytes: bytes - 1 })).toBe('too-large');
+        // "€" is 1 UTF-16 unit and 3 UTF-8 bytes: under the cap by length, over it by bytes.
+        const euro = text.replace('%%% EVENTS', `%%% X_PAD\n${'€'.repeat(20)}\n%%% EVENTS`);
+        expect(utf8(euro)).toBe(euro.length + 40);
+        expect(euro.length).toBeLessThan(utf8(euro) - 1);
+        expect(code(euro, { maxBytes: utf8(euro) - 1 })).toBe('too-large');
+        expect(code(euro, { maxBytes: utf8(euro) })).toBe('ok');
+        // One emoji is a surrogate pair: 2 units, 4 bytes.
+        const emoji = text.replace('%%% EVENTS', '%%% X_PAD\n\u{1F600}\n%%% EVENTS');
+        expect(utf8(emoji) - utf8(emoji.replace('\u{1F600}', ''))).toBe(4);
+        expect(code(emoji, { maxBytes: utf8(emoji) })).toBe('ok');
+        expect(code(emoji, { maxBytes: utf8(emoji) - 1 })).toBe('too-large');
+        // Upstream's own case: ten emoji are 20 units and 40 bytes.
+        const padded = text.replace('%%% EVENTS', `%%% X_PAD\n${'\u{1F600}'.repeat(10)}\n%%% EVENTS`);
+        expect(code(padded, { maxBytes: bytes + 40 })).toBe('too-large');
+        expect(code(padded, { maxBytes: bytes + 60 })).toBe('ok');
+    });
+
+    it('says the cap in bytes, and keeps the per-line cap in UTF-16 units', () => {
+        let err: unknown;
+        try {
+            parse(HEAD, { maxBytes: 10 });
+        } catch (e) {
+            err = e;
+        }
+        expect((err as SwuPgnError).code).toBe('too-large');
+        expect((err as SwuPgnError).message).toMatch(/file is over the 10-byte limit$/);
+        // A 100-unit line of "€" is 300 bytes, and passes a 100-unit line cap (the header's
+        // longest line is under 100).
+        expect(code(HEAD + '\n%%% X_PAD\n' + '€'.repeat(100), { maxLineLength: 100 })).toBe('ok');
+        expect(code(HEAD + '\n%%% X_PAD\n' + '€'.repeat(101), { maxLineLength: 100 })).toBe('line-too-long');
     });
 
     it('accepts \\r\\n line ends and a missing final line feed (§3 [P-02])', () => {
