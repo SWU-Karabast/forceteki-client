@@ -8,7 +8,7 @@
 // adapt validate.ts to `import` the JSON instead of reading from the filesystem, and
 // re-export `validate` below.
 export * from './types';
-export { parse, SwuPgnError, DEFAULT_LIMITS } from './parse';
+export { DEFAULT_LIMITS, parse, READER_MAJOR, RESERVED_KEYS, SwuPgnError } from './parse';
 export type { ParseNotes, ParsedDocument, ParseLimits } from './parse';
 export { fold, foldFrames, frameCost, reduce, stateAt, isSeat, asIdList, isCompleteKeyframe, emptyState, MAX_ZONE_LIST } from './fold';
 export { render } from './render';

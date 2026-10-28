@@ -38,3 +38,25 @@ describe('replayAnnotations merge/export', () => {
         expect(merged.annotations).toHaveLength(base + 1);
     });
 });
+
+describe('replayAnnotations — what the client writes as an Annotator (§15, §23)', () => {
+    // Value: protects=a note's text and author go out in NFC, so two notes that look the same compare the same; fails_when=toAnnotation stops normalizing; why_new=§15 SHOULD; seam=none; no_claim=notes the file already carried
+    it('writes text and by in Unicode NFC', () => {
+        const decomposed = 'Pade\u0301 cafe\u0301';
+        const a = toAnnotation({ _id: '1', ref: 'R1.A.1', text: decomposed, by: 'Jose\u0301' });
+        expect(a.text).toBe('Pad\u00e9 caf\u00e9');
+        expect(a.by).toBe('Jos\u00e9');
+        expect(a.text).toBe(a.text!.normalize('NFC'));
+    });
+
+    // Value: protects=an exported file parses again even when a stored note carries a what-if line with a reserved status token; fails_when=toAnnotation spreads the stored record again; why_new=parse now refuses a reserved token in an annotation line; seam=none; no_claim=what-if lines the file itself carried
+    it('never writes a what-if line or a stray field, so the export always parses again', () => {
+        const doc = parse(SAMPLE);
+        const ref = doc.events[0].seq;
+        const stored = { _id: 'w', ref, text: 'what if', line: [{ seq: ref, t: 'STATUS_TOKEN', card: 'SOR#108', token: '__proto__', count: 1 }], x: 1 } as unknown as WorkingAnnotation;
+        const out = serialize(mergeForExport(doc, [stored]));
+        const reparsed = parse(out);
+        expect(reparsed.annotations.at(-1)).toEqual({ ref, text: 'what if', id: 'w' });
+        expect(out).not.toMatch(/"line":|"x":1/);
+    });
+});

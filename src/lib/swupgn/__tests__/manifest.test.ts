@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { parse, fold, foldFrames, render, checkKeyframes, normalizeEvents, SwuPgnError } from '../index';
+import { parse, fold, foldFrames, render, checkKeyframes, normalizeEvents, SwuPgnError, RESERVED_KEYS, type GameEvent } from '../index';
+import { formatResult } from '@/app/_utils/replayMoves';
 import { adaptState } from '@/app/_utils/swupgnBoardAdapter';
 
 /**
@@ -33,9 +34,9 @@ const protoKeys = () => [Object.prototype, Array.prototype, Function.prototype]
     .map((p) => Object.getOwnPropertyNames(p).sort().join(','));
 
 describe('manifest.json', () => {
-    it('lists 9 positive and 14 negative vectors', () => {
+    it('lists 9 positive and 25 negative vectors', () => {
         expect(MANIFEST.vectors.filter((v) => v.class === 'positive')).toHaveLength(9);
-        expect(MANIFEST.vectors.filter((v) => v.class === 'negative')).toHaveLength(14);
+        expect(MANIFEST.vectors.filter((v) => v.class === 'negative')).toHaveLength(25);
     });
 });
 
@@ -85,15 +86,23 @@ describe.each(MANIFEST.vectors.filter((v) => v.level !== 'malformed'))('well-for
     });
 });
 
-describe('the two hostile negatives', () => {
+describe('the hostile negatives', () => {
     const entry = (name: string) => MANIFEST.vectors.find((v) => v.file === `negative/${name}.swupgn`)!;
 
-    it('proto-token: a `__proto__` status token stays an own key of its card, never a prototype', () => {
-        const doc = parse(read(entry('proto-token')));
-        const s = fold(doc.events);
+    // Its `__proto__` is a key of a keyframe card's statusTokens, so parse refuses it as a reserved key.
+    it('proto-token: parse refuses it, and fold() keeps the prototype clean in events built without parse()', () => {
+        expect(() => parse(read(entry('proto-token')))).toThrow(SwuPgnError);
+        // fold() is public: the same records, read line by line with JSON.parse and no parse().
+        const text = read(entry('proto-token'));
+        const body = text.slice(text.indexOf('%%% EVENTS') + '%%% EVENTS'.length).split('\n%%%')[0];
+        const events = body.split('\n').filter((l) => l.trim().startsWith('{')).map((l) => JSON.parse(l)) as GameEvent[];
+        const before = protoKeys();
+        const s = fold(events);
+        expect(protoKeys()).toEqual(before);
         for (const seat of [1, 2] as const) {
             for (const c of s.players[seat]!.cards) {
                 expect(Object.getPrototypeOf(c.statusTokens)).toBe(Object.prototype);
+                expect(Object.keys(c.statusTokens).filter((k) => RESERVED_KEYS.has(k))).toEqual([]);
             }
         }
     });
@@ -104,5 +113,30 @@ describe('the two hostile negatives', () => {
         expect(kf.keyframe.players['1'].hand.length).toBeGreaterThan(1000);
         expect(fold(doc.events).players[1]!.hand.length).toBeLessThan(1000);
         expect(checkKeyframes(doc.events).mismatches.map((m) => m.got)).toContain('damaged keyframe (ignored)');
+    });
+});
+
+describe('the newer-minor negatives (§18): validator codes only, so they parse', () => {
+    const entry = (name: string) => MANIFEST.vectors.find((v) => v.file === `negative/${name}.swupgn`)!;
+
+    it('newer-minor-result: an outcome 1.0 does not know is kept raw, and shows as Incomplete', () => {
+        const doc = parse(read(entry('newer-minor-result')));
+        expect(['P1', 'P2', 'Draw', 'Incomplete']).not.toContain(doc.header.result);
+        expect(formatResult(doc.header.result)).toBe('Incomplete');
+    });
+
+    it.each(['newer-minor-result-seat', 'newer-minor-bad-seat'])('%s: parses, folds, and shows as Incomplete', (name) => {
+        const doc = parse(read(entry(name)));
+        expect(() => fold(doc.events)).not.toThrow();
+        expect(formatResult(doc.header.result)).toBe('Incomplete');
+    });
+
+    it('formatResult: a lowercase seat is no seat, and P<digits> beyond P2 is no winner', () => {
+        expect(formatResult('P1')).toBe('Player 1');
+        expect(formatResult('P2')).toBe('Player 2');
+        expect(formatResult('Draw')).toBe('Draw');
+        for (const v of ['p1', 'P3', 'P10', 'Resigned', '', undefined]) {
+            expect(formatResult(v), String(v)).toBe('Incomplete');
+        }
     });
 });

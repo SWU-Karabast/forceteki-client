@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { parse, serialize, type SwuPgnDocument, type GameEvent } from '@/lib/swupgn';
+import { parse, type SwuPgnDocument, type GameEvent } from '@/lib/swupgn';
 import { fileIssues as allFileIssues, writerGeneration, skippedSectionList } from '../swupgnFileIssues';
 import type { FileIssue } from '../swupgnFileIssues';
 
@@ -210,18 +210,11 @@ describe('every event type the fold handles is a known type (§10, §18)', () =>
 });
 
 describe('fileIssues — what parse() read but could not use (§5.2, §18)', () => {
-    // Value: protects=a garbled RecorderErrors is reported, survives export, and a garbled WriterRevision is still not a pilot file; fails_when=parse stops recording unreadable count tags or File Health/serialize ignore them; why_new=strict counts made malformed tags indistinguishable from absent; seam=none; no_claim=the writer's actual error count
-    it('reports an unreadable count tag, keeps it on export, and does not call the file a pilot', () => {
-        const text = VECTOR.replace('\n%%%', '\n[RecorderErrors "3.0"]\n[WriterRevision "one"]\n%%%');
-        const doc = parse(text);
-        expect(doc.header.recorderErrors).toBeUndefined();
-        expect(fileIssues(doc).map((i) => i.message)).toEqual(expect.arrayContaining([
-            expect.stringContaining('[RecorderErrors "3.0"] is present but not a count'),
-            expect.stringContaining('[WriterRevision "one"] is present but not a count'),
-        ]));
-        expect(parse(serialize(doc)).unreadableTags).toEqual({ RecorderErrors: '3.0', WriterRevision: 'one' });
-        const pilotPass = [...doc.events, { seq: 'R9.A.1', t: 'PLAY', p: 1, card: 'X', zone: 'ground' }, { seq: 'R9.A.2', t: 'PASS', p: 1 }] as GameEvent[];
-        expect(writerGeneration({ ...doc, events: pilotPass })).toEqual([]);
+    // Value: protects=a garbled count tag refuses the file rather than reading as "no errors"; fails_when=parse drops a bad optional count silently again; why_new=upstream 0bbe90409 made optional counts fatal (bad-count), retiring unreadableTags; seam=none; no_claim=the writer's actual error count
+    it('refuses an unreadable count tag (bad-count), so it can never read as "no errors"', () => {
+        for (const tag of ['[RecorderErrors "3.0"]', '[WriterRevision "one"]', `[RecorderErrors "${'x'.repeat(60)}"]`]) {
+            expect(() => parse(VECTOR.replace('\n%%%', `\n${tag}\n%%%`)), tag).toThrow(expect.objectContaining({ code: 'bad-count' }));
+        }
     });
 
     // Value: protects=a skipped section is named in File Health so a misspelled banner is visible; fails_when=parse stops recording skipped section names; why_new=skipping unknown sections made them silent; seam=none; no_claim=what the skipped section contained
@@ -247,14 +240,7 @@ describe('writerGeneration — the per-phase tracker resets at each phase (§22)
     });
 });
 
-describe('a long unreadable count tag and an empty file', () => {
-    // Value: protects=an unreadable count tag of any length goes back out on export intact; fails_when=parse keeps a shortened value for serialize; why_new=the round-trip test used short values; seam=none; no_claim=File Health's display (shortened on purpose)
-    it('round-trips a 60-character garbled RecorderErrors intact and shows it shortened', () => {
-        const garbled = 'x'.repeat(60);
-        const doc = parse(VECTOR.replace('\n%%%', `\n[RecorderErrors "${garbled}"]\n%%%`));
-        expect(parse(serialize(doc)).unreadableTags?.RecorderErrors).toBe(garbled);
-        expect(fileIssues(doc).some((i) => i.message.includes(`${'x'.repeat(40)}…`))).toBe(true);
-    });
+describe('an empty file', () => {
     // Value: protects=a file whose events sit under a misspelled banner says which section was skipped; fails_when=the empty-file error drops skippedSections; why_new=parse no longer throws on an unknown section; seam=none; no_claim=the upload UI wiring
     it('names a skipped section when a file has no events', () => {
         const doc = parse(VECTOR.replace('%%% EVENTS', '%%% EVENT'));

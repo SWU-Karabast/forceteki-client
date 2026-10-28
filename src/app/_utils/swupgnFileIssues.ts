@@ -61,8 +61,8 @@ export function replayErrorMessage(err: unknown, fallback = 'Failed to read the 
     switch (err.code) {
         case 'not-swupgn':
             return 'This is not a SWU-PGN replay: a .swupgn file starts with a [Game "SWU-PGN/1.0"] line.';
-        case 'unsupported-version':
-            return 'This replay uses a version of SWU-PGN this viewer cannot read (it reads 1.x). A newer Karabast may open it.';
+        case 'unsupported-major':
+            return 'This replay was written in a newer, incompatible version of SWU-PGN (this viewer reads 1.x), so it cannot be opened here. A newer Karabast may open it.';
         case 'too-large':
         case 'line-too-long':
         case 'too-many-records':
@@ -77,13 +77,17 @@ export function replayErrorMessage(err: unknown, fallback = 'Failed to read the 
         case 'missing-tag':
             return 'The replay\'s header is missing a required tag, so it cannot be opened.';
         case 'bad-count':
-            return 'The replay\'s header gives a round count that is not a whole number.';
+            return 'The replay\'s header gives a count (Rounds, RecorderErrors, Undos, WriterRevision or GameNumber) that is not a whole number.';
         case 'duplicate-section':
             return `The replay has the same %%% section twice${onLine(err)}, so there is no telling which one to play.`;
         case 'record-outside-section':
             return `The replay is damaged${onLine(err)}: a record comes before the first %%% section.`;
         case 'bad-json':
             return `The replay is damaged${onLine(err)}: that line is not valid JSON. The file may be cut short or edited by hand.`;
+        case 'duplicate-key':
+            return `The replay is damaged${onLine(err)}: a record names the same field twice, so there is no telling which value is right.`;
+        case 'reserved-key':
+            return `The replay was refused${onLine(err)}: it uses a name reserved for safety (such as __proto__ or constructor) as a tag, a field or a status token.`;
         case 'not-object':
             return `The replay is damaged${onLine(err)}: a record is JSON but not an object.`;
         default:
@@ -95,8 +99,7 @@ export function replayErrorMessage(err: unknown, fallback = 'Failed to read the 
 function newerMinor(doc: SwuPgnDocument & ParseNotes): string | null {
     const m = /^SWU-PGN\/1\.(\d+)$/.exec(String(doc.header.game));
     if (!m || Number(m[1]) === 0) return null;
-    const preRelease = doc.header.writerRevision == null && doc.unreadableTags?.WriterRevision == null;
-    return Number(m[1]) === 1 && preRelease ? null : doc.header.game;
+    return Number(m[1]) === 1 && doc.header.writerRevision == null ? null : doc.header.game;
 }
 
 export function fileIssues(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
@@ -109,8 +112,8 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     const h = doc.header;
 
     // §3 [C-01]: say when a file is a pre-release file, without blocking it. A WriterRevision
-    // that is present but unreadable still says a released writer made the file.
-    if (h.writerRevision == null && doc.unreadableTags?.WriterRevision == null) {
+    // that is not a count never gets here: parse() refuses it (bad-count).
+    if (h.writerRevision == null) {
         out.push({ severity: 'info', message: 'Pre-release file (no [WriterRevision]): written before SWU-PGN 1.0 was published, so some records follow an earlier shape. It replays, with the notes below on what that costs (Appendix C).' });
     }
     // §18: a reader SHOULD warn that a file is newer than it is. What it adds is skipped.
@@ -119,11 +122,6 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
         out.push({ severity: 'info', message: `Written as ${newer}, newer than this viewer's SWU-PGN/1.0: anything the newer version added is skipped (§18).` });
     }
 
-    // A count tag that is present but unreadable is not "none": a garbled RecorderErrors may
-    // be hiding dropped events, so say so rather than presenting the file as complete.
-    for (const [tag, value] of Object.entries(doc.unreadableTags ?? {})) {
-        out.push({ severity: 'warning', message: `[${tag} "${value.length > 40 ? `${value.slice(0, 40)}…` : value}"] is present but not a count, so it was ignored${tag === 'RecorderErrors' ? ': the writer may have dropped events, and this file is not known to be complete' : ''} (§5.2).` });
-    }
     // §18: a section this reader does not know is skipped. Name it, so a misspelled banner
     // (`%%% EVENT`) is not just a file with nothing in it.
     if (doc.skippedSections?.length) {
@@ -341,8 +339,7 @@ export function writerGeneration(doc: SwuPgnDocument & ParseNotes): string[] {
     }
     // §22: a file that states a WriterRevision is not a pilot file, so none of these rows
     // describe it; a match there is a coincidence of play, not the early writer.
-    // A WriterRevision that is present but unreadable still says the file is not a pilot file.
-    const pilot = doc.header.writerRevision == null && doc.unreadableTags?.WriterRevision == null;
+    const pilot = doc.header.writerRevision == null;
     if (pilot && passAfterOwnAction > 0) {
         out.push('PASS written after every action (pilot writer): each action is followed by a "passes" line, and action numbers differ from a current file of the same game (§22).');
     }

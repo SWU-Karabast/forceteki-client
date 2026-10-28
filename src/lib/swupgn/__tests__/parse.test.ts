@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { parse, SwuPgnError } from '../index';
+import { parse, READER_MAJOR, RESERVED_KEYS, SwuPgnError } from '../index';
 
 /** The §24 code parse() rejects `text` with, or 'ok'. */
 const code = (text: string, limits = {}): string => {
@@ -67,17 +67,15 @@ describe('parse — malformed input', () => {
         expect(parse(text).events).toEqual(parse(SAMPLE).events);
     });
 
-    // Value: protects=a mangled Undos/RecorderErrors/WriterRevision/GameNumber tag reads as absent, not 0; fails_when=strictCount reverted to finiteOr (garbage -> 0); why_new=only well-formed counts were round-tripped; seam=none; no_claim=validate() schema warnings
-    it('reads header counts only when they are base-10 integers; anything else is absent, never 0', () => {
-        const withTags = (tags: string) => parse(SAMPLE.replace('[Rounds "3"]', `[Rounds "3"]\n${tags}`)).header;
-        const ok = withTags('[Undos "2"]\n[RecorderErrors "0"]\n[WriterRevision "1"]\n[GameNumber "3"]');
+    // Value: protects=a mangled Undos/RecorderErrors/WriterRevision/GameNumber tag refuses the file (bad-count), neither 0 nor absent; fails_when=optional counts are dropped silently again, so [RecorderErrors "x"] reads as "no errors"; why_new=upstream 0bbe90409 made optional counts fatal; seam=none; no_claim=validate() schema warnings
+    it('reads header counts only when they are base-10 integers; anything else is bad-count, never 0 or absent', () => {
+        const withTags = (tags: string) => SAMPLE.replace('[Rounds "3"]', `[Rounds "3"]\n${tags}`);
+        const ok = parse(withTags('[Undos "2"]\n[RecorderErrors "0"]\n[WriterRevision "1"]\n[GameNumber "3"]')).header;
         expect(ok).toMatchObject({ undos: 2, recorderErrors: 0, writerRevision: 1, gameNumber: 3 });
-        const bad = withTags('[Undos " 2 "]\n[RecorderErrors "1.5"]\n[WriterRevision "-1"]\n[GameNumber "1e3"]');
-        for (const k of ['undos', 'recorderErrors', 'writerRevision', 'gameNumber']) {
-            expect(k in bad, k).toBe(false);
+        // Spec §5: no sign, space or exponent.
+        for (const tag of ['[Undos " 2 "]', '[RecorderErrors "1.5"]', '[WriterRevision "-1"]', '[GameNumber "1e3"]', '[Undos "garbage"]', '[RecorderErrors ""]']) {
+            expect(code(withTags(tag)), tag).toBe('bad-count');
         }
-        // Spec §5: no sign, space or exponent. A padded count used to read; the grammar says it is not one.
-        expect(withTags('[Undos "garbage"]').undos).toBeUndefined();
     });
 
     it('throws on a JSON record before any %%% section', () => {
@@ -105,7 +103,7 @@ describe('parse — 1.0 sections (STORY/CARDS), and 1.1 files still read', () =>
     // and renumbered the format 1.1 -> 1.0. A reader that treats an unknown section as an
     // error rejects the whole file, which is what this client did before re-vendoring.
     const withNewSections = [
-        '[Game "SWU-PGN/1.0"] [GameId "g"] [Date "d"] [CardPool "SOR"] [Engine "e"] [Seed "0"]',
+        '[Game "SWU-PGN/1.0"]', '[GameId "g"] [Date "d"] [CardPool "SOR"] [Engine "e"] [Seed "0"]',
         '[P1Id "a"] [P2Id "b"] [P1 "One"] [P2 "Two"]',
         '[P1Leader "SOR#010"] [P1Base "SOR#028"] [P2Leader "SOR#005"] [P2Base "SOR#020"]',
         '[Result "Draw"] [Reason "r"] [Rounds "1"]',
@@ -133,7 +131,7 @@ describe('parse — DoS ceiling on event count', () => {
     // snapshot array so a hostile file cannot freeze or OOM the tab; upstream has no cap
     // because it never builds per-frame snapshots.
     it('refuses a file with an absurd number of events', () => {
-        const header = '[Game "SWU-PGN/1.0"] [GameId "g"] [Date "d"] [CardPool "S"] [Engine "e"] [Seed "0"]\n'
+        const header = '[Game "SWU-PGN/1.0"]\n[GameId "g"] [Date "d"] [CardPool "S"] [Engine "e"] [Seed "0"]\n'
             + '[P1Id "a"] [P2Id "b"] [P1 "A"] [P2 "B"]\n'
             + '[P1Leader "S#1"] [P1Base "S#2"] [P2Leader "S#3"] [P2Base "S#4"]\n'
             + '[Result "Draw"] [Reason "r"] [Rounds "1"]\n%%% EVENTS\n';
@@ -154,13 +152,15 @@ describe('parse — the Game tag gate (spec §18, §22.1)', () => {
     });
 
     it('refuses a different major version, and anything that is not SWU-PGN', () => {
-        for (const v of ['SWU-PGN/2.0', 'SWU-PGN/0.9', 'SWU-PGN/10.0', 'SWU-PGN/1', 'SWU-PGN/1.0.1']) {
-            expect(code(withGame(v)), v).toBe('unsupported-version');
+        // Compared as written: `01` is not this reader's `1` (§18).
+        for (const v of ['SWU-PGN/2.0', 'SWU-PGN/0.9', 'SWU-PGN/10.0', 'SWU-PGN/01.0']) {
+            expect(code(withGame(v)), v).toBe('unsupported-major');
         }
-        // The magic number (§4, §19): not `[Game "SWU-PGN/…"]` at all is not this format.
-        for (const v of ['PGN/1.0', 'swu-pgn/1.0', '']) {
+        // The magic number (§4, Appendix B game-line): `[Game "SWU-PGN/<major>.<minor>"]` alone.
+        for (const v of ['PGN/1.0', 'swu-pgn/1.0', '', 'SWU-PGN/1', 'SWU-PGN/1.0.1', 'SWU-PGN/x']) {
             expect(code(withGame(v)), v).toBe('not-swupgn');
         }
+        expect(READER_MAJOR).toBe(1);
     });
 
     it('reports a missing Game tag as not SWU-PGN: the first line is the magic number', () => {
@@ -198,17 +198,17 @@ describe('parse — later-version sections and oversized counts', () => {
         expect(parse(text).events).toEqual(parse(SAMPLE).events);
     });
 
-    // Value: protects=a header count past 2^53 reads absent, not Infinity; fails_when=strictCount drops its safe-integer check; why_new=strict-count test used small malformed values only; seam=none; no_claim=display of the tag
-    it('drops a header count that overflows', () => {
+    // Value: protects=a header count past 2^53 is refused, not read as Infinity; fails_when=strictCount drops its safe-integer check; why_new=strict-count test used small malformed values only; seam=none; no_claim=display of the tag
+    it('refuses a header count that overflows', () => {
         const text = SAMPLE.replace('\n%%%', `\n[WriterRevision "${'9'.repeat(400)}"]\n%%%`);
-        expect(parse(text).header.writerRevision).toBeUndefined();
+        expect(code(text)).toBe('bad-count');
     });
 });
 
-// Ported from forceteki test/server/swupgn/parse.spec.ts "parse grammar" at c233908d6.
+// Ported from forceteki test/server/swupgn/parse.spec.ts "parse grammar" at 950a65a82.
 describe('parse grammar (spec §4, Appendix B, §24)', () => {
     const HEAD = [
-        '[Game "SWU-PGN/1.0"] [GameId "g"] [Date "2026-06-16T00:00:00Z"] [CardPool "SOR"] [Engine "e"] [Seed "s"]',
+        '[Game "SWU-PGN/1.0"]', '[GameId "g"] [Date "2026-06-16T00:00:00Z"] [CardPool "SOR"] [Engine "e"] [Seed "s"]',
         '[P1Id "p"] [P2Id "q"] [P1 "Player 1"] [P2 "Player 2"]',
         '[P1Leader "SOR#010"] [P1Base "SOR#028"] [P2Leader "SOR#005"] [P2Base "SOR#020"]',
         '[Result "P1"] [Reason "r"] [Rounds "1"]',
@@ -225,6 +225,94 @@ describe('parse grammar (spec §4, Appendix B, §24)', () => {
         expect(code('\n   \n')).toBe('not-swupgn');
         // Blank lines before it are allowed (Appendix B: *blank-line game-line).
         expect(code('\n\n' + HEAD)).toBe('ok');
+    });
+
+    it('requires the Game tag alone on its line, with a numeric version', () => {
+        // The Game tag stands alone, with a numeric version (Appendix B game-line).
+        expect(code(HEAD.replace('[Game "SWU-PGN/1.0"]', '[Game "SWU-PGN/x"]'))).toBe('not-swupgn');
+        expect(code(HEAD.replace('[Game "SWU-PGN/1.0"]', '[Game "SWU-PGN/1.0"] [Format "Premier"]'))).toBe('not-swupgn');
+    });
+
+    // §18: a different major version would be misread, so it is refused, not read as 1.x.
+    it('refuses a file of another major version', () => {
+        expect(code(HEAD.replace('SWU-PGN/1.0', 'SWU-PGN/2.0'))).toBe('unsupported-major');
+        expect(code(HEAD.replace('SWU-PGN/1.0', 'SWU-PGN/0.9'))).toBe('unsupported-major');
+        // Compared as written, as the Game tag's schema does: `01` is not `1`.
+        expect(code(HEAD.replace('SWU-PGN/1.0', 'SWU-PGN/01.0'))).toBe('unsupported-major');
+        expect(code(HEAD.replace('SWU-PGN/1.0', 'SWU-PGN/1.7'))).toBe('ok');
+    });
+
+    it('reserves exactly the 13 names of Object.prototype and `prototype`', () => {
+        expect([...RESERVED_KEYS].sort()).toEqual([...Object.getOwnPropertyNames(Object.prototype), 'prototype'].sort());
+        expect(RESERVED_KEYS.size).toBe(13);
+    });
+
+    // §23: a key that names the object model is never data. `__proto__` can replace a prototype;
+    // an own `toString` or `valueOf` that is not a function makes the object impossible to print,
+    // so every reader that renders or compares the field throws. One check here protects them all.
+    it('rejects a reserved key anywhere in any record', () => {
+        const at = (section: string, line: string) => HEAD + `\n%%% ${section}\n` + line;
+        for (const key of RESERVED_KEYS) {
+            expect(code(at('EVENTS', `{"seq":"R1.A.1","t":"PASS","p":1,"x":{"${key}":1}}`)), `${key} nested`).toBe('reserved-key');
+            expect(code(at('EVENTS', `{"seq":"R1.A.1","t":"DEFEAT","card":"SOR#108","reason":{"${key}":null}}`)), `${key} as a value`).toBe('reserved-key');
+            expect(code(at('DECKS', `{"p":1,"${key}":1}`)), `${key} in DECKS`).toBe('reserved-key');
+            expect(code(at('CARDS', `{"id":"SOR#108","name":"Wampa","${key}":1}`)), `${key} in CARDS`).toBe('reserved-key');
+            expect(code(at('ANNOTATIONS', `{"ref":"R1.A.1","text":"t","x":[{"${key}":1}]}`)), `${key} in ANNOTATIONS`).toBe('reserved-key');
+            expect(code(at('EVENTS', `{"seq":"R1.A.1","t":"STATUS_TOKEN","card":"SOR#108","token":"${key}","count":1}`)), `${key} as a status token`).toBe('reserved-key');
+            expect(code(at('SETUP', `{"seq":"R0.S.1","t":"STATUS_TOKEN","card":"SOR#108","token":"${key}","count":1}`)), `${key} as a SETUP status token`).toBe('reserved-key');
+            // §15: an annotation's what-if line may be folded too.
+            expect(code(at('ANNOTATIONS', `{"ref":"R1.A.1","line":[{"seq":"R1.A.1","t":"STATUS_TOKEN","card":"SOR#108","token":"${key}","count":1}]}`)), `${key} in a what-if line`).toBe('reserved-key');
+        }
+        // The same words as values, or inside a longer key, are ordinary data.
+        expect(code(at('EVENTS', '{"seq":"R1.A.1","t":"PASS","p":1,"x_toString":"constructor"}'))).toBe('ok');
+        expect(code(at('EVENTS', '{"seq":"R1.A.1","t":"DEFEAT","card":"__proto__","reason":"toString"}'))).toBe('ok');
+        expect(code(at('ANNOTATIONS', '{"ref":"R1.A.1","text":"constructor","by":"__proto__"}'))).toBe('ok');
+        // Only a STATUS_TOKEN token is refused as a value.
+        expect(code(at('EVENTS', '{"seq":"R1.A.1","t":"STATUS_TOKEN","card":"SOR#108","token":"advantage","count":1}'))).toBe('ok');
+        expect(code(at('EVENTS', '{"seq":"R1.A.1","t":"CREATE_TOKEN","p":1,"token":"toString","zone":"ground"}'))).toBe('ok');
+        // The token check runs only where a fold reads STATUS_TOKEN records.
+        expect(code(at('DECKS', '{"p":1,"t":"STATUS_TOKEN","token":"toString"}'))).toBe('ok');
+        expect(code(at('ANNOTATIONS', '{"ref":"R1.A.1","x":[{"t":"STATUS_TOKEN","token":"toString"}]}'))).toBe('ok');
+    });
+
+    it('rejects a header tag named by a reserved key', () => {
+        for (const key of RESERVED_KEYS) {
+            if ((/^[A-Za-z0-9]+$/).test(key)) {
+                expect(code(HEAD + `\n[${key} "x"]`), key).toBe('reserved-key');
+            }
+        }
+        expect(code(HEAD + '\n[XToString "x"]')).toBe('ok');
+    });
+
+    // The depth limit stops the scan as soon as it is passed, before any more nesting is tracked.
+    it('refuses a line of a million open brackets at the depth limit', () => {
+        expect(code(HEAD + '\n%%% EVENTS\n' + '{'.repeat(1_000_000))).toBe('too-deep');
+    });
+
+    // I-JSON (spec §4): JSON.parse keeps the last of two equal keys, another language's parser
+    // the first, so a repeated key would fold to two different boards.
+    it('rejects a record that repeats a key in one object', () => {
+        const events = (line: string) => HEAD + '\n%%% EVENTS\n' + line;
+        expect(code(events('{"seq":"R1.A.1","t":"MOVE","to":"hand","to":"ground"}'))).toBe('duplicate-key');
+        expect(code(events('{"seq":"R1.A.1","t":"PASS","p":1,"x":{"a":1,"\\u0061":2}}'))).toBe('duplicate-key');
+        // The same key in two different objects, and key-like text inside a value, are fine.
+        expect(code(events('{"seq":"R1.A.1","t":"PASS","p":1,"x":{"p":1},"y":[{"p":2},{"p":3}],"z":"\\"p\\":1"}'))).toBe('ok');
+        // Not JSON at all is still bad-json, not a duplicate.
+        expect(code(events('{"a":1,"a":}'))).toBe('bad-json');
+    });
+
+    it('checks too-deep, then bad-json, then duplicate-key, then reserved-key', () => {
+        const events = (line: string) => HEAD + '\n%%% EVENTS\n' + line;
+        expect(code(events('['.repeat(70) + '{"a":1,"a":2,"__proto__":1'))).toBe('too-deep');
+        expect(code(events('{"a":1,"a":2,"__proto__":1'))).toBe('bad-json');
+        expect(code(events('{"__proto__":1,"a":1,"a":2}'))).toBe('duplicate-key');
+        expect(code(events('[{"__proto__":1}]'))).toBe('reserved-key');
+    });
+
+    it('does not count brackets inside a JSON string toward the depth limit', () => {
+        // The deep `{` run sits between escaped quotes, so a scanner that ends the string at `\"` sees it.
+        const text = '"' + '['.repeat(70) + ' \\"' + '{'.repeat(70) + '\\" "';
+        expect(code(HEAD + '\n%%% EVENTS\n{"seq":"R1.A.1","t":"PASS","p":1}\n%%% ANNOTATIONS\n{"ref":"R1.A.1","text":' + text + '}')).toBe('ok');
     });
 
     it('rejects text outside the brackets of a header line', () => {
@@ -277,13 +365,13 @@ describe('parse grammar (spec §4, Appendix B, §24)', () => {
             err = e;
         }
         expect(err).toBeInstanceOf(SwuPgnError);
-        expect((err as SwuPgnError).line).toBe(7);
+        expect((err as SwuPgnError).line).toBe(8);
     });
 });
 
 describe('parse — what the file carried that this version does not define (§18, §3 [A-01])', () => {
     const HEAD = [
-        '[Game "SWU-PGN/1.0"] [GameId "g"] [Date "2026-06-16T00:00:00Z"] [CardPool "SOR"] [Engine "e"] [Seed "s"]',
+        '[Game "SWU-PGN/1.0"]', '[GameId "g"] [Date "2026-06-16T00:00:00Z"] [CardPool "SOR"] [Engine "e"] [Seed "s"]',
         '[P1Id "p"] [P2Id "q"] [P1 "Player 1"] [P2 "Player 2"]',
         '[P1Leader "SOR#010"] [P1Base "SOR#028"] [P2Leader "SOR#005"] [P2Base "SOR#020"]',
         '[Result "P1"] [Reason "r"] [Rounds "1"]',
@@ -301,9 +389,10 @@ describe('parse — what the file carried that this version does not define (§1
         expect(doc.extraSections).toEqual([{ banner: '%%% X_SWUFORGE', lines: ['{"a":1}', '', 'not json'] }]);
     });
 
-    it('a tag named like an Object.prototype member is just a tag', () => {
-        const doc = parse(HEAD + '\n[constructor "x"] [toString "y"]');
-        expect(doc.extraTags).toEqual([['constructor', 'x'], ['toString', 'y']]);
+    it('a tag named like an Object.prototype member is refused (§23); one that merely contains it is a tag', () => {
+        expect(code(HEAD + '\n[constructor "x"]')).toBe('reserved-key');
+        expect(code(HEAD + '\n[toString "y"]')).toBe('reserved-key');
+        expect(parse(HEAD + '\n[XToString "y"]').extraTags).toEqual([['XToString', 'y']]);
         expect(({} as Record<string, unknown>).constructor).toBe(Object);
     });
 });

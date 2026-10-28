@@ -20,7 +20,7 @@ import PopupShell from '@/app/_components/_sharedcomponents/Popup/Popup';
 import { displayText, parse, SwuPgnDocument } from '@/lib/swupgn';
 import { loadReplay } from '@/app/_utils/replayStorage';
 import { replayUrl, storeReplayContent, replayTooHeavy } from '@/app/_utils/replayHandoff';
-import { formatResult } from '@/app/_utils/replayMoves';
+import { formatResult, resultOf } from '@/app/_utils/replayMoves';
 import { useCardNameMap } from '@/app/_utils/swupgnCardNames';
 import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
 
@@ -32,7 +32,8 @@ function ReplayHeader({ header }: { header: SwuPgnDocument['header'] }) {
     // Leaders are SET#NUM ids in the .swupgn header; resolve to names like the move list.
     const leader1 = header.p1Leader ? nameOf(header.p1Leader) : '';
     const leader2 = header.p2Leader ? nameOf(header.p2Leader) : '';
-    const result = header.result || '';
+    // An outcome this viewer does not know (a newer minor's, §18) reads as Incomplete.
+    const result = resultOf(header.result);
     const formattedResult = formatResult(result);
 
     const isP1Winner = result === 'P1';

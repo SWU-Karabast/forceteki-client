@@ -89,11 +89,25 @@ export async function saveAnnotations(
     });
 }
 
-/** Convert a working note to a serializable Annotation. The client `_id` is emitted as the
- *  stable `id` so threaded replies (which reference a parent id) survive export/import. */
+/**
+ * Convert a working note to a serializable Annotation. The client `_id` is emitted as the
+ * stable `id` so threaded replies (which reference a parent id) survive export/import.
+ *
+ * Only the fields the client authors go out, never the stored record as a whole: the client
+ * writes no what-if `line`, so no STATUS_TOKEN with a reserved name (§15, §23) and no reserved
+ * key can reach a file that parse() would then refuse. `text` and `by` are written in Unicode
+ * NFC (§15), so two notes that look the same compare the same.
+ */
 export function toAnnotation(w: WorkingAnnotation): Annotation {
-    const { _id, ...rest } = w;
-    return { ...rest, id: rest.id ?? _id };
+    return {
+        ref: w.ref,
+        ...(typeof w.ts === 'number' ? { ts: w.ts } : {}),
+        ...(typeof w.nag === 'string' ? { nag: w.nag } : {}),
+        ...(typeof w.text === 'string' ? { text: w.text.normalize('NFC') } : {}),
+        ...(typeof w.parent === 'string' ? { parent: w.parent } : {}),
+        ...(typeof w.by === 'string' ? { by: w.by.normalize('NFC') } : {}),
+        id: w.id ?? w._id,
+    };
 }
 
 /**

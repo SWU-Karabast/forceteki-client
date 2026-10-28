@@ -197,3 +197,18 @@ describe('a keyframe that passes isCompleteKeyframe but has malformed cards', ()
         expect(s.mismatches.filter((m) => m.path === 'keyframe')).toEqual([]);
     });
 });
+
+// Ported from forceteki test/server/swupgn/integrity.spec.ts at 950a65a82.
+describe('checkKeyframes — status tokens (§14)', () => {
+    // Value: protects=a keyframe whose status tokens list the same names in another order still verifies; fails_when=the token maps are compared as JSON text again; why_new=no test put two token names in different orders; seam=none; no_claim=none beyond protects
+    it('compares status tokens without regard to key order, but a zero entry is a difference', () => {
+        const events = (tokens: Record<string, number>): GameEvent[] => [
+            { seq: 'R1.A.0', t: 'MOVE', card: 'SOR#108', from: 'hand', to: 'ground', p: 1, kind: 'unit' },
+            { seq: 'R1.A.1', t: 'STATUS_TOKEN', card: 'SOR#108', token: 'advantage', count: 1 },
+            { seq: 'R1.A.2', t: 'STATUS_TOKEN', card: 'SOR#108', token: 'weakness', count: 1 },
+            { seq: 'R2.start', t: 'ROUND_START', round: 2, keyframe: kf({ cards: [mkCard('SOR#108', { statusTokens: tokens })] }, {}, 2) },
+        ] as GameEvent[];
+        expect(checkKeyframes(events({ weakness: 1, advantage: 1 })).mismatches).toEqual([]);
+        expect(checkKeyframes(events({ weakness: 1, advantage: 1, shield: 0 })).mismatches.map((m) => m.path)).toEqual([expect.stringContaining('statusTokens')]);
+    });
+});

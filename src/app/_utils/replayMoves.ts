@@ -1,6 +1,19 @@
-/** Expand the terse P1/P2 result tokens into full player labels. */
-export function formatResult(result: string): string {
-    return result.replace(/\bP1\b/g, 'Player 1').replace(/\bP2\b/g, 'Player 2');
+/** The four outcomes SWU-PGN/1.0 defines (§5.1 `Result`). */
+export type KnownResult = 'P1' | 'P2' | 'Draw' | 'Incomplete';
+
+/**
+ * A `Result` as this viewer reads it. A newer minor version may add an outcome 1.0 does not
+ * know (§18), and one this viewer does not know reads as `Incomplete`, as does `p1` (seats are
+ * case-sensitive) or a `P3`. Compare against this, never the raw header value.
+ */
+export function resultOf(result: unknown): KnownResult {
+    return result === 'P1' || result === 'P2' || result === 'Draw' ? result : 'Incomplete';
+}
+
+/** A `Result` in words: `Player 1`, `Player 2`, `Draw`, or `Incomplete` for anything else. */
+export function formatResult(result: unknown): string {
+    const known = resultOf(result);
+    return known === 'P1' ? 'Player 1' : known === 'P2' ? 'Player 2' : known;
 }
 
 function parseRoundPhase(seq: string): { round: string; phase: string } | null {

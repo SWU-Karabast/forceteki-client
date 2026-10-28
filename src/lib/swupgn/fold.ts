@@ -1,7 +1,8 @@
 import type { GameEvent, ReducedState, PlayerState, CardInstanceState, Seat } from './types';
 import { eventKind, isCreditToken, isForceToken, isStatusTokenCard } from './tokens';
+import { RESERVED_KEYS } from './parse';
 
-// Vendored from forceteki swupgn/src/fold.ts at c233908d6. Every block marked CLIENT-OWNED is
+// Vendored from forceteki swupgn/src/fold.ts at 950a65a82. Every block marked CLIENT-OWNED is
 // a documented divergence (see VERSION.md); everything else mirrors upstream and should be
 // re-diffed, not rewritten, on the next sync.
 
@@ -881,14 +882,16 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         // `count` may be negative: a token leaving its host is recorded as the same event with a
         // negative delta (see SwuPgnRecorder.tokenRecord). Counts clamp at 0, and a status token
         // that reaches 0 is DELETED rather than left as `{advantage: 0}` — an engine keyframe
-        // reports a host with no tokens as `statusTokens: {}`, and the integrity gate compares
-        // the two by JSON equality.
+        // reports a host with no tokens as `statusTokens: {}`, and the integrity gate counts a
+        // zero entry as a difference.
         case 'EXPERIENCE_GAIN': { const c = findCard(s, e.card); if (c) {
             c.experience = Math.max(0, c.experience + countOr(e.count, 0));
         } break; }
         case 'STATUS_TOKEN': {
             const c = findCard(s, e.card);
-            if (c && typeof e.token === 'string') {
+            // A reserved name is refused by parse() (§23); fold() is public too, so events built
+            // without parse() get the same guard: such a record does nothing.
+            if (c && typeof e.token === 'string' && !RESERVED_KEYS.has(e.token)) {
                 // Updated in place, on own keys only: the token name comes from the file, so it
                 // must never read or write an inherited property, and copying the whole map per
                 // record made a file with many token names fold in quadratic time.

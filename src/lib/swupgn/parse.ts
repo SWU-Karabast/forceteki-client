@@ -1,6 +1,6 @@
 import type { SwuPgnDocument, Header, DeckRecord, GameEvent, Annotation, SetupInitRecord, CardIndexRecord } from './types';
 
-// Vendored from forceteki swupgn/src/parse.ts at c233908d6. Every block marked CLIENT-OWNED is
+// Vendored from forceteki swupgn/src/parse.ts at 950a65a82. Every block marked CLIENT-OWNED is
 // a documented divergence (see VERSION.md); everything else mirrors upstream.
 
 /**
@@ -45,13 +45,6 @@ export const DEFAULT_LIMITS: Required<ParseLimits> = {
 // sized for a reader that never builds per-frame snapshots; the viewer does.
 const MAX_EVENTS = 200_000;
 
-// CLIENT-OWNED. Spec §18: a reader MUST refuse a different major version and MUST accept any
-// 1.x. Upstream leaves this to validate(), which the client does not ship (Node-only), so
-// the gate lives at the one place every file passes through. The shape is matched, never
-// compared numerically: §22.1 says a file declaring 1.1 is OLDER than 1.0, so `>=` is wrong.
-// §24 has no code for it; `unsupported-version` is the client's.
-const SUPPORTED_GAME_TAG = /^SWU-PGN\/1\.\d+$/;
-
 /** One `[Tag "value"]` pair. The only escapes are `\\` and `\"` (spec §4). */
 const TAG_PAIR = /\[([A-Za-z0-9]+)\s+"((?:[^"\\]|\\.)*)"\]/g;
 const HEADER_LINE = /^(?:\s*\[[A-Za-z0-9]+\s+"(?:[^"\\]|\\.)*"\])+\s*$/;
@@ -68,6 +61,10 @@ function parseHeaderLine(line: string, lineNo: number, raw: Record<string, strin
         if (!(/^(?:[^\\]|\\["\\])*$/).test(m[2])) {
             throw new SwuPgnError('bad-escape', `header tag [${m[1]}] on line ${lineNo} uses an escape other than \\\\ or \\"`, lineNo);
         }
+        // A tag name becomes a key of the header a reader builds, like a record key (§23).
+        if (RESERVED_KEYS.has(m[1])) {
+            throw new SwuPgnError('reserved-key', `header tag [${m[1]}] on line ${lineNo} is a reserved key`, lineNo);
+        }
         if (Object.prototype.hasOwnProperty.call(raw, m[1])) {
             throw new SwuPgnError('duplicate-tag', `header tag [${m[1]}] appears twice (line ${lineNo})`, lineNo);
         }
@@ -77,43 +74,110 @@ function parseHeaderLine(line: string, lineNo: number, raw: Record<string, strin
 }
 
 /**
- * Nesting depth of one JSON line, counted before `JSON.parse` sees it, so a line of ten thousand
- * `[` is refused cheaply instead of being handed to every recursive consumer downstream.
+ * Object keys that name the object model rather than data (spec §23): every property of
+ * `Object.prototype`, and `prototype`. `__proto__` assigned with `obj[key] = …` replaces an
+ * object's prototype; an own `toString`, `valueOf` or `hasOwnProperty` that is not a function
+ * breaks every reader that prints the object or calls that method on it. No record may carry
+ * one, so a parser rejects them all.
  */
-function jsonDepth(line: string): number {
-    let depth = 0;
-    let max = 0;
-    let inString = false;
-    for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (inString) {
-            if (ch === '\\') {
-                i++;
-            } else if (ch === '"') {
-                inString = false;
-            }
-        } else if (ch === '"') {
-            inString = true;
-        } else if (ch === '{' || ch === '[') {
-            depth++;
-            if (depth > max) {
-                max = depth;
-            }
-        } else if (ch === '}' || ch === ']') {
-            depth--;
-        }
-    }
-    return max;
+export const RESERVED_KEYS: ReadonlySet<string> = new Set([
+    '__proto__', '__defineGetter__', '__defineSetter__', '__lookupGetter__', '__lookupSetter__',
+    'constructor', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'prototype',
+    'toLocaleString', 'toString', 'valueOf',
+]);
+
+/** The token a `STATUS_TOKEN` record names, when that name is a reserved key. */
+function reservedStatusToken(rec: unknown): string | undefined {
+    const { t, token } = (rec ?? {}) as { t?: unknown; token?: unknown };
+    return t === 'STATUS_TOKEN' && typeof token === 'string' && RESERVED_KEYS.has(token) ? token : undefined;
+}
+
+interface ScanResult {
+    tooDeep: boolean;
+    duplicateKey?: string;
+    reservedKey?: string;
 }
 
 /**
- * A header count: base-10 digits only. Anything else is corrupt, not zero, so the tag is left
- * absent -- absent and zero mean different things for `Undos` and `RecorderErrors`.
+ * One pass over a JSON line before `JSON.parse` sees it. It stops at `maxDepth`, so a line of a
+ * million `{` is refused cheaply instead of being handed to every recursive consumer downstream.
+ * It finds the first key an object repeats: I-JSON forbids that (spec §4), and `JSON.parse` keeps
+ * the last of two where another language's parser keeps the first, so two readers would fold the
+ * line differently. And it finds the first reserved key.
  */
+function scanJson(line: string, maxDepth: number): ScanResult {
+    // One frame per open object or array. An object frame collects its keys, lazily: most
+    // objects in a record are small, and an empty one never needs a set.
+    const frames: { isObject: boolean; keys: Set<string> | null; expectKey: boolean }[] = [];
+    let duplicateKey: string | undefined;
+    let reservedKey: string | undefined;
+    let stringStart = -1;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (stringStart >= 0) {
+            if (ch === '\\') {
+                i++;
+            } else if (ch === '"') {
+                const top = frames[frames.length - 1];
+                if (top?.isObject && top.expectKey) {
+                    top.expectKey = false;
+                    const literal = line.slice(stringStart, i + 1);
+                    let key: string | undefined;
+                    try {
+                        // Compare keys as JSON reads them, so `"a"` and `"a"` are one key.
+                        key = literal.includes('\\') ? JSON.parse(literal) as string : literal.slice(1, -1);
+                    } catch {
+                        key = undefined;   // not JSON; JSON.parse rejects the whole line next
+                    }
+                    if (key !== undefined) {
+                        top.keys ??= new Set<string>();
+                        if (duplicateKey === undefined && top.keys.has(key)) {
+                            duplicateKey = key;
+                        }
+                        if (reservedKey === undefined && RESERVED_KEYS.has(key)) {
+                            reservedKey = key;
+                        }
+                        top.keys.add(key);
+                    }
+                }
+                stringStart = -1;
+            }
+        } else if (ch === '"') {
+            stringStart = i;
+        } else if (ch === '{' || ch === '[') {
+            if (frames.length >= maxDepth) {
+                return { tooDeep: true };
+            }
+            frames.push({ isObject: ch === '{', keys: null, expectKey: ch === '{' });
+        } else if (ch === '}' || ch === ']') {
+            frames.pop();
+        } else if (ch === ',') {
+            const top = frames[frames.length - 1];
+            if (top?.isObject) {
+                top.expectKey = true;
+            }
+        }
+    }
+    return {
+        tooDeep: false,
+        ...(duplicateKey !== undefined ? { duplicateKey } : {}),
+        ...(reservedKey !== undefined ? { reservedKey } : {}),
+    };
+}
+
+/** A header count: base-10 digits only, within the safe-integer range. */
 function strictCount(value: string): number | undefined {
-    // CLIENT-OWNED: a digit run past 2^53 is not a count either (400 nines parse to Infinity).
     return (/^\d+$/).test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : undefined;
 }
+
+/**
+ * The first line of every file (spec §4, Appendix B `game-line`): the `Game` tag alone, with a
+ * numeric major and minor version.
+ */
+const GAME_LINE = /^\[Game[ \t]+"SWU-PGN\/(\d+)\.(\d+)"\]$/;
+
+/** The major version this reader reads. A file of any other major is refused (spec §18). */
+export const READER_MAJOR = 1;
 
 function buildHeader(raw: Record<string, string>): Header {
     const req = (k: string): string => {
@@ -129,12 +193,16 @@ function buildHeader(raw: Record<string, string>): Header {
         }
         return n;
     };
-    const game = req('Game');
-    if (!SUPPORTED_GAME_TAG.test(game)) {
-        throw new SwuPgnError('unsupported-version', `unsupported format version [Game "${game}"] (this reader speaks SWU-PGN/1.x)`);
-    }
+    // An optional count that is present must be a count too. Dropping a corrupt one would read
+    // `[RecorderErrors "x"]` as "no errors recorded", and absent and zero mean different things.
+    const optionalCount = (k: string): number | undefined =>
+        (Object.prototype.hasOwnProperty.call(raw, k) ? requiredCount(raw[k], k) : undefined);
+    const recorderErrors = optionalCount('RecorderErrors');
+    const undos = optionalCount('Undos');
+    const writerRevision = optionalCount('WriterRevision');
+    const gameNumber = optionalCount('GameNumber');
     return {
-        game, gameId: req('GameId'), date: req('Date'),
+        game: req('Game'), gameId: req('GameId'), date: req('Date'),
         format: raw['Format'], cardPool: req('CardPool'), engine: req('Engine'),
         seed: req('Seed'),
         // The 'as' casts below are intentional: structural parsing trusts the raw
@@ -146,12 +214,12 @@ function buildHeader(raw: Record<string, string>): Header {
         p2Leader: req('P2Leader'), p2Base: req('P2Base'),
         result: req('Result') as Header['result'], reason: req('Reason'),
         rounds: requiredCount(req('Rounds'), 'Rounds'),
-        ...(strictCount(raw['RecorderErrors'] ?? '') !== undefined ? { recorderErrors: strictCount(raw['RecorderErrors']) } : {}),
-        ...(strictCount(raw['Undos'] ?? '') !== undefined ? { undos: strictCount(raw['Undos']) } : {}),
-        ...(strictCount(raw['WriterRevision'] ?? '') !== undefined ? { writerRevision: strictCount(raw['WriterRevision']) } : {}),
+        ...(recorderErrors !== undefined ? { recorderErrors } : {}),
+        ...(undos !== undefined ? { undos } : {}),
+        ...(writerRevision !== undefined ? { writerRevision } : {}),
         ...(raw['EndDate'] != null ? { endDate: raw['EndDate'] } : {}),
         ...(raw['Match'] != null ? { match: raw['Match'] } : {}),
-        ...(strictCount(raw['GameNumber'] ?? '') !== undefined ? { gameNumber: strictCount(raw['GameNumber']) } : {}),
+        ...(gameNumber !== undefined ? { gameNumber } : {}),
     };
 }
 
@@ -181,9 +249,7 @@ function trimBlankEdges(lines: string[]): string[] {
 }
 
 /**
- * CLIENT-OWNED: what parse() read but could not use. A header count that is present but
- * unreadable is absent from `header` (strictCount), and that must not read as "none": a garbled
- * RecorderErrors would pass a partial file as complete. A skipped section (a later version's,
+ * CLIENT-OWNED: what parse() read but could not use. A skipped section (a later version's,
  * §18, or a misspelled banner) is named so it is not silently empty; one with the `X_`
  * extension prefix is not named, since §18 says to ignore it without a warning.
  *
@@ -191,15 +257,11 @@ function trimBlankEdges(lines: string[]): string[] {
  * does not define, so an export with notes added drops nothing the file carried (§3 [A-01], §18).
  */
 export interface ParseNotes {
-    unreadableTags?: Record<string, string>;
     skippedSections?: string[];
     extraTags?: [string, string][];
     extraSections?: { banner: string; lines: string[] }[];
 }
 export type ParsedDocument = SwuPgnDocument & ParseNotes;
-
-/** The §5.2 header counts strictCount reads. */
-const COUNT_TAGS = ['RecorderErrors', 'Undos', 'WriterRevision', 'GameNumber'];
 
 /** Every header tag §5 defines. Anything else is a later version's or an extension's. */
 const KNOWN_TAGS = new Set([
@@ -217,8 +279,7 @@ export function parse(text: string, limits: ParseLimits = {}): ParsedDocument {
     if (text.charCodeAt(0) === 0xFEFF) {
         text = text.slice(1);
     }
-    // Prototype-less: tag names come from the file, and `constructor` is a legal one.
-    const raw: Record<string, string> = Object.create(null);
+    const raw: Record<string, string> = {};
     const tagOrder: string[] = [];
     const skipped = new Set<string>();
     const extraSections: { banner: string; lines: string[] }[] = [];
@@ -248,8 +309,13 @@ export function parse(text: string, limits: ParseLimits = {}): ParsedDocument {
                 continue;
             }
             sawFirst = true;
-            if (!(/^\[Game\s+"SWU-PGN\//).test(line)) {
-                throw new SwuPgnError('not-swupgn', 'the first line is not a [Game "SWU-PGN/…"] tag', i + 1);
+            const game = GAME_LINE.exec(line);
+            if (!game) {
+                throw new SwuPgnError('not-swupgn', 'the first line is not a [Game "SWU-PGN/<major>.<minor>"] tag alone on its line', i + 1);
+            }
+            // Compared as written: `01` is not this reader's `1` (the Game tag's schema agrees).
+            if (game[1] !== String(READER_MAJOR)) {
+                throw new SwuPgnError('unsupported-major', `SWU-PGN/${game[1]}.${game[2]} is major version ${game[1]}; this reader reads major version ${READER_MAJOR}`, i + 1);
             }
         }
 
@@ -299,7 +365,8 @@ export function parse(text: string, limits: ParseLimits = {}): ParsedDocument {
         if (++records > lim.maxRecords) {
             throw new SwuPgnError('too-many-records', `more than ${lim.maxRecords} records`, i + 1);
         }
-        if (jsonDepth(line) > lim.maxDepth) {
+        const scanned = scanJson(line, lim.maxDepth);
+        if (scanned.tooDeep) {
             throw new SwuPgnError('too-deep', `line ${i + 1} nests JSON deeper than ${lim.maxDepth}`, i + 1);
         }
         let rec: unknown;
@@ -307,6 +374,23 @@ export function parse(text: string, limits: ParseLimits = {}): ParsedDocument {
             rec = JSON.parse(line);
         } catch {
             throw new SwuPgnError('bad-json', `invalid JSON on line ${i + 1}`, i + 1);
+        }
+        if (scanned.duplicateKey !== undefined) {
+            throw new SwuPgnError('duplicate-key', `line ${i + 1} repeats the key "${scanned.duplicateKey}" in one object`, i + 1);
+        }
+        if (scanned.reservedKey !== undefined) {
+            throw new SwuPgnError('reserved-key', `line ${i + 1} uses the reserved key "${scanned.reservedKey}"`, i + 1);
+        }
+        // A status token's name is a value here, but the fold makes it a key of the card's
+        // `statusTokens` (§12), so it is the one value the reserved names are refused as: in the
+        // sections a reader folds, and in an annotation's what-if `line`, which it may fold too (§15).
+        const whatIf = section === 'ANNOTATIONS' ? (rec as { line?: unknown } | null)?.line : undefined;
+        const folded = section === 'SETUP' || section === 'EVENTS' ? [rec] : Array.isArray(whatIf) ? whatIf : [];
+        for (const event of folded) {
+            const token = reservedStatusToken(event);
+            if (token !== undefined) {
+                throw new SwuPgnError('reserved-key', `line ${i + 1} names a status token "${token}", a reserved key`, i + 1);
+            }
         }
         // CLIENT-OWNED. Every record is an object (§4). A bare `null`, number or array is
         // valid JSON, and it used to reach `events[i].seq` in the viewer, crash the page,
@@ -333,16 +417,12 @@ export function parse(text: string, limits: ParseLimits = {}): ParsedDocument {
         throw new SwuPgnError('not-swupgn', 'the file is empty');
     }
 
-    const unreadable = Object.fromEntries(COUNT_TAGS
-        .filter((tag) => raw[tag] != null && strictCount(raw[tag]) === undefined)
-        .map((tag) => [tag, raw[tag]]));
     const extraTags = tagOrder.filter((tag) => !KNOWN_TAGS.has(tag)).map((tag): [string, string] => [tag, raw[tag]]);
     for (const s of extraSections) {
         s.lines = trimBlankEdges(s.lines);
     }
     return {
         header: buildHeader(raw), story: trimBlankEdges(story), decks, cards, setup, events, annotations,
-        ...(Object.keys(unreadable).length ? { unreadableTags: unreadable } : {}),
         ...(skipped.size ? { skippedSections: [...skipped] } : {}),
         ...(extraTags.length ? { extraTags } : {}),
         ...(extraSections.length ? { extraSections } : {}),

@@ -72,9 +72,6 @@ export function serialize(doc: SwuPgnDocument & ParseNotes): string {
         .map((l) => (l.trim().startsWith('%%%') ? `\u00b7${l}` : l));
     const out: string[] = [
         ...headerLines(doc.header),
-        // An unreadable count tag goes back out as it came in: dropping a garbled RecorderErrors
-        // would relabel a possibly partial file as complete.
-        ...Object.entries(doc.unreadableTags ?? {}).map(([tag, value]) => `[${tag} "${esc(value)}"]`),
         ...(doc.extraTags ?? []).map(([tag, value]) => `[${tag} "${esc(value)}"]`),
         '',
         '%%% STORY',

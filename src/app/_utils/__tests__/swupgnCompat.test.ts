@@ -350,7 +350,7 @@ describe('§22.1 files that say SWU-PGN/1.1', () => {
         const text = VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/1.1');
         expect(parse(text).header.game).toBe('SWU-PGN/1.1');
         expect(writerGeneration(parse(text))).toEqual([expect.stringContaining('Pre-release SWU-PGN/1.1')]);
-        expect(() => parse(VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/2.0'))).toThrow(/unsupported format version/);
+        expect(() => parse(VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/2.0'))).toThrow(expect.objectContaining({ code: 'unsupported-major' }));
         expect(parse(VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/1.7')).header.game).toBe('SWU-PGN/1.7');
     });
 

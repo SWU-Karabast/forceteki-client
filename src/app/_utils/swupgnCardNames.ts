@@ -34,9 +34,8 @@ export interface SidedNameResolver extends NameResolver {
  * Name a card with two names (`backSideName`, spec §6.5) by the side that is UP in `state`:
  * a deployed Grand Moff Tarkin is The Death Star, a flipped Chancellor Palpatine is Darth
  * Sidious. The seat's folded `leader` status says which: the same rule render()'s
- * `trackSides` applies from the records, but keyed on the EXACT id, so a mirror match's
- * `SET#NUM:2` keeps its own side (render() still collapses the pair; see VERSION.md). Do not
- * "align" this with render(). Every other id resolves as `n` does.
+ * `trackSides` applies from the records, keyed like it on the EXACT id, so a mirror match's
+ * `SET#NUM:2` keeps its own side. Every other id resolves as `n` does.
  */
 export function sidedResolver(n: NameResolver, state: ReducedState | undefined): SidedNameResolver {
     const backUp = new Set<string>();
@@ -59,11 +58,12 @@ export function sidedResolver(n: NameResolver, state: ReducedState | undefined):
         }
     }
     return {
-        // Keyed on the EXACT id: in a mirror match one seat's copy is `SET#NUM:2` (§11), and
-        // turning one seat's leader over must not rename the other's.
-        nameOf: (id: string) => (backUp.has(String(id)) ? n.backNameOf?.(id) : undefined) ?? n.nameOf(id),
-        backNameOf: (id: string) => n.backNameOf?.(id),
-        frontNameOf: (id: string) => n.nameOf(id),
+        // Sides are keyed on the EXACT id: in a mirror match one seat's copy is `SET#NUM:2`
+        // (§11), and turning one seat's leader over must not rename the other's. Names are per
+        // card, so `n` is asked by base id, as render() does: a resolver need not strip `:N`.
+        nameOf: (id: string) => (backUp.has(String(id)) ? n.backNameOf?.(baseId(id)) : undefined) ?? n.nameOf(baseId(id)),
+        backNameOf: (id: string) => n.backNameOf?.(baseId(id)),
+        frontNameOf: (id: string) => n.nameOf(baseId(id)),
     };
 }
 

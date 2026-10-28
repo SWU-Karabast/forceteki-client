@@ -148,7 +148,7 @@ describe('reduce — combat & token state', () => {
     });
 
     // Value: protects=token/shield/xp counts from an uploaded file never go NaN or read inherited keys; fails_when=countOr or own-key token lookup reverted; why_new=no test fed non-numeric counts or prototype-named tokens; seam=none; no_claim=no UI rendering of tokens
-    it('a non-numeric count falls back, and a token named like an Object property is an ordinary own key', () => {
+    it('a non-numeric count falls back, and a reserved token name never becomes a key (§23)', () => {
         let s = base();
         s = reduce(s, { seq: '1', t: 'MOVE', card: 'U', from: 'hand', to: 'ground', p: 1 });
         const u = () => p1(s).cards.find((c) => c.id === 'U')!;
@@ -158,19 +158,19 @@ describe('reduce — combat & token state', () => {
         expect(u().experience).toBe(0);
         s = reduce(s, { seq: '4', t: 'STATUS_TOKEN', card: 'U', token: 'advantage', count: 'NaN' } as unknown as GameEvent);
         expect(u().statusTokens).toEqual({});
-        // `constructor`/`toString` are inherited on a plain object: reading them as a count
-        // used to turn the sum into NaN and drop the token.
+        // parse() refuses a reserved token name; reduce() is public, so events built without
+        // parse() get the same guard: the record does nothing.
         s = reduce(s, { seq: '5', t: 'STATUS_TOKEN', card: 'U', token: 'constructor', count: 2 });
         s = reduce(s, { seq: '6', t: 'STATUS_TOKEN', card: 'U', token: '__proto__', count: 1 });
-        s = reduce(s, { seq: '7', t: 'STATUS_TOKEN', card: 'U', token: 'toString', count: -1 });
-        expect(Object.keys(u().statusTokens).sort()).toEqual(['__proto__', 'constructor']);
-        expect(u().statusTokens.constructor).toBe(2);
-        expect(Object.getOwnPropertyDescriptor(u().statusTokens, '__proto__')?.value).toBe(1);
+        s = reduce(s, { seq: '7', t: 'STATUS_TOKEN', card: 'U', token: 'hasOwnProperty', count: 1 });
+        s = reduce(s, { seq: '7a', t: 'STATUS_TOKEN', card: 'U', token: 'advantage', count: 1 });
+        expect(Object.getOwnPropertyNames(u().statusTokens)).toEqual(['advantage']);
+        expect(() => String(u().statusTokens)).not.toThrow();
         expect(({} as Record<string, unknown>).polluted).toBeUndefined();
         expect(Object.getPrototypeOf(u().statusTokens)).toBe(Object.prototype);
         // A non-string token name is not a token.
         s = reduce(s, { seq: '8', t: 'STATUS_TOKEN', card: 'U', token: 7, count: 1 } as unknown as GameEvent);
-        expect(Object.keys(u().statusTokens)).toHaveLength(2);
+        expect(Object.keys(u().statusTokens)).toHaveLength(1);
     });
 });
 
@@ -1192,5 +1192,20 @@ describe('leaders: flips, mirror copies and pilots (review cycle-2 cells)', () =
         const s = fold([start(seat(1, { cards: [card('V', { upgrades: ['JTL#001'] }), card('JTL#001')], leader: { id: 'JTL#001', deployed: true, exhausted: false, epicActionUsed: false } }))] as unknown as GameEvent[]);
         expect(p1(s).cards.map((c) => c.id)).toEqual(['V']);
         expect(p1(s).leader?.deployed).toBe(true);
+    });
+});
+
+// Ported from forceteki test/server/swupgn/fold.spec.ts at 950a65a82.
+describe('fold — a reserved token name (§23)', () => {
+    // Value: protects=fold() itself never makes a reserved name a statusTokens key, for events that did not come through parse(); fails_when=the fold's guard is dropped; why_new=only parse() refused reserved token names; seam=none; no_claim=none beyond protects
+    it('skips a STATUS_TOKEN whose token is a reserved name', () => {
+        const s = fold([
+            { seq: 'R1.A.1', t: 'PLAY', p: 1, card: 'SOR#108', zone: 'ground' },
+            { seq: 'R1.A.2', t: 'STATUS_TOKEN', card: 'SOR#108', token: 'hasOwnProperty', count: 1 },
+            { seq: 'R1.A.3', t: 'STATUS_TOKEN', card: 'SOR#108', token: 'advantage', count: 1 },
+        ] as GameEvent[]);
+        const c = s.players[1]?.cards.find((x) => x.id === 'SOR#108');
+        expect(Object.keys(c!.statusTokens)).toEqual(['advantage']);
+        expect(() => String(c!.statusTokens)).not.toThrow();
     });
 });

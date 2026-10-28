@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { parse, displayText, SwuPgnError, type GameEvent, type SetupInitRecord } from '@/lib/swupgn';
+import { parse, render, emptyState, foldFrames, normalizeEvents, displayText, SwuPgnError, type GameEvent, type SetupInitRecord } from '@/lib/swupgn';
+import { formatResult, resultOf } from '../replayMoves';
+import { sidedResolver } from '../swupgnCardNames';
 import { initRecord, deckByFrame } from '../deckTracker';
 import { roundOfSeq, turnDigests } from '../turnDigests';
 import { fileIssues, replayErrorMessage, ReplayRefusedError } from '../swupgnFileIssues';
 import { storeReplayContent } from '../replayHandoff';
 import { decisionPoints, bookmarkLabel } from '../replayDecisions';
-import { frameAction } from '../replayAction';
+import { frameAction, storyName } from '../replayAction';
 import { indexResolver } from '@/lib/swupgn';
 
 const DIR = path.join(__dirname, '../../../lib/swupgn/__tests__/fixtures/vectors');
@@ -36,16 +38,20 @@ describe('INIT at R0.S.0 (writer revision 3) and at R1.S.0 (revisions 1-2, pilot
 });
 
 describe('replayErrorMessage branches on the §24 code, never on the message', () => {
-    const codes = ['not-swupgn', 'unsupported-version', 'too-large', 'line-too-long', 'too-many-records', 'too-deep',
+    const codes = ['not-swupgn', 'unsupported-major', 'too-large', 'line-too-long', 'too-many-records', 'too-deep',
         'bad-header-line', 'bad-escape', 'duplicate-tag', 'missing-tag', 'bad-count', 'duplicate-section',
-        'record-outside-section', 'bad-json', 'not-object'];
+        'record-outside-section', 'bad-json', 'duplicate-key', 'reserved-key', 'not-object'];
 
     it('gives every code a human message that does not quote the file', () => {
         for (const code of codes) {
             const msg = replayErrorMessage(new SwuPgnError(code, `SECRET ${RLO} file text`, 4));
             expect(msg, code).not.toMatch(/SECRET|SWU-PGN:/);
             expect(msg.length, code).toBeGreaterThan(20);
+            // Every code has its own words, not the catch-all.
+            expect(msg, code).not.toMatch(/could not be read \(/);
         }
+        expect(new Set(codes.map((c) => replayErrorMessage(new SwuPgnError(c, 'x')))).size).toBeGreaterThan(10);
+        expect(replayErrorMessage(new SwuPgnError('unsupported-major', 'x'))).toMatch(/newer, incompatible version/);
         expect(replayErrorMessage(new SwuPgnError('bad-json', 'x', 12))).toContain('line 12');
         expect(replayErrorMessage(new SwuPgnError('bad-escape', 'x', 2))).toContain('other than \\\\ or \\"');
     });
@@ -60,7 +66,12 @@ describe('replayErrorMessage branches on the §24 code, never on the message', (
             return 'ok';
         };
         expect(msg('hello')).toMatch(/not a SWU-PGN replay/);
-        expect(msg(VECTOR.replace('[Rounds "', '[Rounds "x'))).toMatch(/round count/);
+        expect(msg(VECTOR.replace('[Rounds "', '[Rounds "x'))).toMatch(/not a whole number/);
+        expect(msg(VECTOR.replace('[Rounds', '[RecorderErrors "x"] [Rounds'))).toMatch(/not a whole number/);
+        expect(msg(VECTOR.replace('SWU-PGN/1.0', 'SWU-PGN/2.0'))).toMatch(/newer, incompatible version/);
+        expect(msg(VECTOR.replace('%%% EVENTS\n', '%%% EVENTS\n{"seq":"R0.x","t":"PASS","p":1,"p":2}\n'))).toMatch(/same field twice/);
+        expect(msg(VECTOR.replace('%%% EVENTS\n', '%%% EVENTS\n{"seq":"R0.x","t":"PASS","constructor":1}\n'))).toMatch(/reserved for safety/);
+        expect(msg(VECTOR.replace('[Rounds', '[toString "x"] [Rounds'))).toMatch(/reserved for safety/);
         expect(msg(VECTOR.replace('%%% CARDS', '%%% DECKS'))).toMatch(/same %%% section twice/);
         expect(msg(VECTOR.replace('[Seed "', '[Seed "a\\tb'))).toMatch(/backslash escape/);
         expect(msg(VECTOR.replace(/\n/, '\n[GameId "again"]\n'))).toMatch(/same tag twice/);
@@ -135,5 +146,65 @@ describe('§23: file text is neutralised for display', () => {
         expect(decisionPoints(doc)[0]).toMatchObject({ prompt: 'Pick', offered: ['A', '7'] });
         expect(frameAction(doc.events[1], n).label).toBe('Player 1 wins — Base destroyed');
         expect(bookmarkLabel({ seq: 'x', kind: 'GAME_END', reason: `x${RLO}y` }, (id) => id)).toBe('Game end — xy');
+    });
+});
+
+describe('Result: an outcome 1.0 does not know reads as Incomplete (§18)', () => {
+    it('shows Abandoned, P3 and a lowercase p1 as Incomplete, and never crowns a seat for them', () => {
+        for (const r of ['Abandoned', 'P3', 'p1', 'P01']) {
+            const doc = parse(VECTOR.replace(/\[Result "[^"]*"\]/, `[Result "${r}"]`));
+            expect(doc.header.result, r).toBe(r);   // the parser keeps the raw value
+            expect(resultOf(doc.header.result), r).toBe('Incomplete');
+            expect(formatResult(doc.header.result), r).toBe('Incomplete');
+            expect(() => fileIssues(doc)).not.toThrow();
+        }
+        expect(formatResult(parse(VECTOR).header.result)).toBe(formatResult(resultOf(parse(VECTOR).header.result)));
+    });
+});
+
+describe('leader names in a mirror match (§11, §16)', () => {
+    // Both seats play Chancellor Palpatine; seat 1's is flipped (deployed side up), seat 2's is not.
+    // The resolver is keyed by printed id and does NOT strip `:N`, so a copy id reaching it unstripped shows as a miss.
+    const byId: Record<string, string> = { 'TWI#017': 'Chancellor Palpatine, Playing Both Sides' };
+    const strict = { nameOf: (id: string) => byId[id] ?? `?${id}`, backNameOf: (id: string) => (id === 'TWI#017' ? 'Darth Sidious, Sith Lord' : undefined) };
+
+    it('names each copy by its own side on the board, in captions and in the story', () => {
+        const state = emptyState();
+        state.players[1] = { ...state.players[1]!, leader: { id: 'TWI#017', deployed: true, exhausted: false, epicActionUsed: true } };
+        state.players[2] = { ...state.players[2]!, leader: { id: 'TWI#017:2', deployed: false, exhausted: false, epicActionUsed: false } };
+        const n = sidedResolver(strict, state);
+        expect(n.nameOf('TWI#017')).toBe('Darth Sidious, Sith Lord');
+        expect(n.nameOf('TWI#017:2')).toBe('Chancellor Palpatine, Playing Both Sides');
+        expect(n.frontNameOf('TWI#017:2')).toBe('Chancellor Palpatine, Playing Both Sides');
+        expect(storyName('TWI#017:2', n)).toBe('Chancellor Palpatine, Playing Both Sides #2');
+        expect(frameAction({ seq: 'R1.A.3', t: 'ABILITY_ACTIVATE', p: 2, card: 'TWI#017:2', kind: 'action' } as GameEvent, n).label).not.toMatch(/\?TWI|Sidious/);
+
+        const story = render({ ...parse(VECTOR), cards: [], events: [
+            { seq: 'R1.A.1', t: 'DEPLOY_LEADER', p: 1, card: 'TWI#017', zone: 'ground', epic: true },
+            { seq: 'R1.A.2', t: 'ABILITY_ACTIVATE', p: 2, card: 'TWI#017:2', kind: 'action' },
+            { seq: 'R1.A.3', t: 'ABILITY_ACTIVATE', p: 1, card: 'TWI#017', kind: 'action' },
+        ] as GameEvent[] }, strict);
+        expect(story).toContain('Player 2 uses Chancellor Palpatine, Playing Both Sides #2');
+        expect(story).toContain('Player 1 uses Darth Sidious, Sith Lord');
+        expect(story).not.toMatch(/\?TWI/);
+    });
+});
+
+describe('every well-formed negative vector reaches the viewer helpers without a crash or a polluted prototype', () => {
+    const NEG = path.join(DIR, 'negative');
+    const MANIFEST = JSON.parse(readFileSync(path.join(DIR, 'manifest.json'), 'utf-8')) as { vectors: { file: string; level: string }[] };
+    const wellFormed = MANIFEST.vectors.filter((v) => v.file.startsWith('negative/') && v.level !== 'malformed');
+
+    it.each(wellFormed.map((v) => v.file))('%s', (file) => {
+        const before = Object.getOwnPropertyNames(Object.prototype).sort().join(',');
+        const doc = parse(readFileSync(path.join(NEG, '..', file), 'utf-8'));
+        const frames = foldFrames(normalizeEvents(doc.events));
+        expect(() => fileIssues(doc)).not.toThrow();
+        expect(() => turnDigests(doc)).not.toThrow();
+        expect(() => decisionPoints(doc)).not.toThrow();
+        expect(() => doc.events.map((e) => frameAction(e, indexResolver(doc.cards ?? [])))).not.toThrow();
+        expect(() => frames.forEach((s) => sidedResolver(indexResolver(doc.cards ?? []), s).nameOf(doc.header.p1Leader))).not.toThrow();
+        expect(['Player 1', 'Player 2', 'Draw', 'Incomplete']).toContain(formatResult(doc.header.result));
+        expect(Object.getOwnPropertyNames(Object.prototype).sort().join(',')).toBe(before);
     });
 });
