@@ -5,7 +5,6 @@ import {
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
-import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
@@ -337,7 +336,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
         const payload = {
             user,
             deck: {
-                id: deckData.deckID || uuid(), // Use existing ID or generate new one
+                id: deckData.deckID || crypto.randomUUID(), // Use existing ID or generate new one
                 userId: user?.id,
                 deck: {
                     leader: { id: deckData.leader.id },

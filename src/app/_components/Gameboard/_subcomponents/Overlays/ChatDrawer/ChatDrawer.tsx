@@ -29,7 +29,6 @@ import { MatchmakingType, QuickUndoAvailableState } from '@/app/_constants/const
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
-import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
@@ -439,7 +438,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
             router.push('/');
         } else {
             openPopup('leaveGame', {
-                uuid: `${uuidv4()}`,
+                uuid: crypto.randomUUID(),
                 source: PopupSource.User
             });
         }
