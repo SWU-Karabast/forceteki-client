@@ -118,31 +118,17 @@ const TransportControls: React.FC = () => {
 
     return (
         <Box
-            sx={{
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: `${REPLAY_TRANSPORT_HEIGHT}px`,
-                backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: 'blur(8px)',
-                display: 'flex',
-                alignItems: 'center',
-                px: { xs: 0.75, sm: 2 },
-                gap: { xs: 0.25, sm: 1.5 },
-                zIndex: 1300,
-                borderTop: '1px solid rgba(255,255,255,0.1)',
-            }}
+            sx={styles.bar}
         >
             <Tooltip title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}>
-                <IconButton aria-label={isPlaying ? 'Pause' : 'Play'} onClick={handlePlayPause} sx={{ color: 'white' }}>
+                <IconButton aria-label={isPlaying ? 'Pause' : 'Play'} onClick={handlePlayPause} sx={styles.iconButton}>
                     {isPlaying ? <Pause /> : <PlayArrow />}
                 </IconButton>
             </Tooltip>
 
             <Tooltip title="Step back (←)">
                 <span>
-                    <IconButton aria-label="Step back" onClick={stepBack} disabled={currentIndex === 0} sx={{ color: 'white' }}>
+                    <IconButton aria-label="Step back" onClick={stepBack} disabled={currentIndex === 0} sx={styles.iconButton}>
                         <SkipPrevious />
                     </IconButton>
                 </span>
@@ -150,7 +136,7 @@ const TransportControls: React.FC = () => {
 
             <Tooltip title="Step forward (→)">
                 <span>
-                    <IconButton aria-label="Step forward" onClick={stepForward} disabled={currentIndex >= totalFrames - 1} sx={{ color: 'white' }}>
+                    <IconButton aria-label="Step forward" onClick={stepForward} disabled={currentIndex >= totalFrames - 1} sx={styles.iconButton}>
                         <SkipNext />
                     </IconButton>
                 </span>
@@ -161,15 +147,12 @@ const TransportControls: React.FC = () => {
                 375px bar that already had padding, pushing scrollWidth to 381 and giving the
                 fixed bar a horizontal overflow on a phone. `clip` hid it, so it only showed
                 up as a bar that could be nudged sideways. */}
-            <Box aria-live="polite" sx={{
-                position: 'absolute', width: '1px', height: '1px', overflow: 'hidden',
-                clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap',
-            }}>
+            <Box aria-live="polite" sx={styles.liveRegion}>
                 {/* Silent during autoplay: at 8x that was several announcements a second, and
                     a screen reader never finished one before the next arrived. */}
                 {isPlaying ? '' : `Beat ${currentBeat.index + 1} of ${beats.length}${currentRound ? `, ${currentRound}` : ''}`}
             </Box>
-            <Box sx={{ position: 'relative', flex: 1, mx: { xs: 0.5, sm: 1 } }}>
+            <Box sx={styles.sliderWrap}>
                 <Slider
                     aria-label="Replay position"
                     getAriaValueText={formatPosition}
@@ -180,37 +163,16 @@ const TransportControls: React.FC = () => {
                     onChange={handleSliderChange}
                     valueLabelDisplay="auto"
                     valueLabelFormat={formatPosition}
-                    sx={{
-                        color: 'var(--initiative-blue)',
-                        '& .MuiSlider-thumb': { width: 14, height: 14 },
-                        '& .MuiSlider-mark': {
-                            width: '3px',
-                            height: '10px',
-                            borderRadius: 1,
-                            backgroundColor: 'rgba(255,255,255,0.5)',
-                        },
-                        '& .MuiSlider-markActive': { backgroundColor: 'var(--selection-blue)' },
-                        '& .MuiSlider-valueLabel': {
-                            backgroundColor: 'rgba(0,0,0,0.85)',
-                            fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' },
-                        },
-                    }}
+                    sx={styles.slider}
                 />
                 {/* Phase ticks: a second row under the track. MUI marks are one style for the
                     whole slider, so a round mark (10px, labelled) and a phase tick (5px, bare)
                     can't share the `marks` prop -- these are plain positioned divs instead. */}
-                <Box aria-hidden sx={{ position: 'absolute', left: 0, right: 0, top: '22px', height: '5px', pointerEvents: 'none' }}>
+                <Box aria-hidden sx={styles.phaseTicks}>
                     {phaseMarks.map((m) => (
                         <Box
                             key={m.value}
-                            sx={{
-                                position: 'absolute',
-                                left: `${beats.length > 1 ? (m.value / (beats.length - 1)) * 100 : 0}%`,
-                                width: '1px',
-                                height: '5px',
-                                backgroundColor: 'rgba(255,255,255,0.35)',
-                                transform: 'translateX(-50%)',
-                            }}
+                            sx={styles.phaseTick(beats.length > 1 ? (m.value / (beats.length - 1)) * 100 : 0)}
                         />
                     ))}
                 </Box>
@@ -224,18 +186,12 @@ const TransportControls: React.FC = () => {
                 aria-label. Playback speed is the one real loss; stepping and scrubbing
                 still work, and a speed picker that survives 375px needs a menu, not a row.
                 The row returns at md (900px), not sm: at 600px it squeezes the scrubber. */}
-            <Typography variant="body2" sx={{
-                display: { xs: 'none', md: 'block' },
-                color: 'rgba(255,255,255,0.7)', minWidth: '70px', textAlign: 'center',
-            }}>
+            <Typography variant="body2" sx={styles.position}>
                 {currentBeat.index + 1} / {beats.length}
             </Typography>
 
             {currentRound && (
-                <Typography variant="body2" sx={{
-                    display: { xs: 'none', md: 'block' },
-                    color: 'rgba(255,255,255,0.5)', minWidth: '140px', textAlign: 'center',
-                }}>
+                <Typography variant="body2" sx={styles.round}>
                     {currentRound}
                 </Typography>
             )}
@@ -246,20 +202,7 @@ const TransportControls: React.FC = () => {
                 exclusive
                 onChange={handleSpeedChange}
                 size="small"
-                sx={{
-                    display: { xs: 'none', md: 'flex' },
-                    '& .MuiToggleButton-root': {
-                        color: 'rgba(255,255,255,0.5)',
-                        borderColor: 'rgba(255,255,255,0.2)',
-                        px: 1,
-                        py: 0.25,
-                        fontSize: '0.75rem',
-                        '&.Mui-selected': {
-                            color: 'var(--initiative-blue)',
-                            backgroundColor: 'rgba(0,186,255,0.15)',
-                        },
-                    },
-                }}
+                sx={styles.speedGroup}
             >
                 {SPEEDS.map((s) => (
                     <ToggleButton key={s} value={s} aria-label={`${s} times speed`}>
@@ -268,17 +211,14 @@ const TransportControls: React.FC = () => {
                 ))}
             </ToggleButtonGroup>
 
-            <Typography variant="body2" sx={{
-                display: { xs: 'none', md: 'block' },
-                color: 'rgba(255,255,255,0.7)', minWidth: '64px', textAlign: 'right',
-            }}>
+            <Typography variant="body2" sx={styles.perspective}>
                 {currentPerspective}
             </Typography>
             <Tooltip title={`Viewing as ${currentPerspective} — swap perspective`}>
                 <IconButton
                     aria-label={`Viewing as ${currentPerspective}. Swap perspective`}
                     onClick={togglePerspective}
-                    sx={{ color: 'white' }}
+                    sx={styles.iconButton}
                 >
                     <SwapHoriz />
                 </IconButton>
@@ -287,7 +227,7 @@ const TransportControls: React.FC = () => {
             {/* Visible at every breakpoint since it's the phone's only route to playback
                 options once the speed group hides. */}
             <Tooltip title="Playback options">
-                <IconButton aria-label="Playback options" onClick={(e) => setOptionsAnchor(e.currentTarget)} sx={{ color: 'white' }}>
+                <IconButton aria-label="Playback options" onClick={(e) => setOptionsAnchor(e.currentTarget)} sx={styles.iconButton}>
                     <Tune />
                 </IconButton>
             </Tooltip>
@@ -297,3 +237,91 @@ const TransportControls: React.FC = () => {
 };
 
 export default TransportControls;
+
+// ----------------Styles----------------//
+const styles = {
+    bar: {
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: `${REPLAY_TRANSPORT_HEIGHT}px`,
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        px: { xs: 0.75, sm: 2 },
+        gap: { xs: 0.25, sm: 1.5 },
+        zIndex: 1300,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+    },
+    iconButton: {
+        color: 'white',
+    },
+    liveRegion: {
+        position: 'absolute', width: '1px', height: '1px', overflow: 'hidden',
+        clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap',
+    },
+    sliderWrap: {
+        position: 'relative',
+        flex: 1,
+        mx: { xs: 0.5, sm: 1 },
+    },
+    slider: {
+        color: 'var(--initiative-blue)',
+        '& .MuiSlider-thumb': { width: 14, height: 14 },
+        '& .MuiSlider-mark': {
+            width: '3px',
+            height: '10px',
+            borderRadius: 1,
+            backgroundColor: 'rgba(255,255,255,0.5)',
+        },
+        '& .MuiSlider-markActive': { backgroundColor: 'var(--selection-blue)' },
+        '& .MuiSlider-valueLabel': {
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' },
+        },
+    },
+    phaseTicks: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: '22px',
+        height: '5px',
+        pointerEvents: 'none',
+    },
+    phaseTick: (leftPercent: number) => ({
+        position: 'absolute',
+        left: `${leftPercent}%`,
+        width: '1px',
+        height: '5px',
+        backgroundColor: 'rgba(255,255,255,0.35)',
+        transform: 'translateX(-50%)',
+    }),
+    position: {
+        display: { xs: 'none', md: 'block' },
+        color: 'rgba(255,255,255,0.7)', minWidth: '70px', textAlign: 'center',
+    },
+    round: {
+        display: { xs: 'none', md: 'block' },
+        color: 'rgba(255,255,255,0.5)', minWidth: '140px', textAlign: 'center',
+    },
+    speedGroup: {
+        display: { xs: 'none', md: 'flex' },
+        '& .MuiToggleButton-root': {
+            color: 'rgba(255,255,255,0.5)',
+            borderColor: 'rgba(255,255,255,0.2)',
+            px: 1,
+            py: 0.25,
+            fontSize: '0.75rem',
+            '&.Mui-selected': {
+                color: 'var(--initiative-blue)',
+                backgroundColor: 'rgba(0,186,255,0.15)',
+            },
+        },
+    },
+    perspective: {
+        display: { xs: 'none', md: 'block' },
+        color: 'rgba(255,255,255,0.7)', minWidth: '64px', textAlign: 'right',
+    },
+};

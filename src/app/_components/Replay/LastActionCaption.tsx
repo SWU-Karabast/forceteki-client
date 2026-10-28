@@ -25,32 +25,13 @@ const LastActionCaption: React.FC = () => {
     return (
         <Box
             key={currentBeat.index}
-            sx={{
-                position: 'fixed',
-                bottom: 68, // just above the 60px transport bar
-                left: '50%',
-                transform: 'translateX(-50%)',
-                maxWidth: '70vw',
-                px: 2,
-                py: 0.75,
-                borderRadius: '8px',
-                backgroundColor: 'rgba(0,0,0,0.7)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(0,186,255,0.25)',
-                zIndex: 1304,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                pointerEvents: 'none',
-                animation: `${captionIn} 0.22s ease-out`,
-                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-            }}
+            sx={styles.bar}
         >
-            <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <Typography variant="body2" sx={styles.headline}>
                 {headline}
             </Typography>
             {captionExtra > 0 && (
-                <Typography variant="caption" sx={{ color: 'var(--initiative-blue)', whiteSpace: 'nowrap' }}>
+                <Typography variant="caption" sx={styles.extra}>
                     +{captionExtra} records
                 </Typography>
             )}
@@ -59,3 +40,38 @@ const LastActionCaption: React.FC = () => {
 };
 
 export default LastActionCaption;
+
+// ----------------Styles----------------//
+const styles = {
+    bar: {
+        position: 'fixed',
+        bottom: 68, // just above the 60px transport bar
+        left: '50%',
+        transform: 'translateX(-50%)',
+        maxWidth: '70vw',
+        px: 2,
+        py: 0.75,
+        borderRadius: '8px',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(0,186,255,0.25)',
+        zIndex: 1304,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        pointerEvents: 'none',
+        animation: `${captionIn} 0.22s ease-out`,
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+    },
+    headline: {
+        color: 'white',
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+    },
+    extra: {
+        color: 'var(--initiative-blue)',
+        whiteSpace: 'nowrap',
+    },
+};

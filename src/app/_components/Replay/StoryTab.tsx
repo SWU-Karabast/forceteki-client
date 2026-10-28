@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 import { displayText, render } from '@/lib/swupgn';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { storySeekIndex, storyLineTargets, storyNumbersAbilities, roundOf } from '@/app/_utils/storySeek';
+import type { IStoryLineProps } from './ReplayTypes';
 
 /**
  * The game as prose, straight from the file's `%%% STORY` section.
@@ -19,15 +20,6 @@ import { storySeekIndex, storyLineTargets, storyNumbersAbilities, roundOf } from
  * the prose changes — an unrecognised line just renders as text.
  */
 
-interface IStoryLineProps {
-    line: string;
-
-    /** The frame a numbered action line seeks to; `null` for plain prose. */
-    target: number | null;
-    isCurrent: boolean;
-    onSeek: (frame: number) => void;
-}
-
 /** One story line. Memoised with stable props (`onSeek` is the context's `useCallback`'d
  *  `seekTo`), so a playback tick re-renders only the lines whose `isCurrent` flips, not
  *  the whole story. The ref marks a line in the current round for scroll-follow. */
@@ -35,7 +27,7 @@ const StoryLine = React.memo(React.forwardRef<HTMLDivElement, IStoryLineProps>(f
     { line, target, isCurrent, onSeek }, ref,
 ) {
     if (target == null) {
-        return <Box component="div" sx={{ color: line.trimStart().startsWith('↳') ? 'rgba(255,255,255,0.5)' : undefined }}>{line || ' '}</Box>;
+        return <Box component="div" sx={styles.prose(line.trimStart().startsWith('↳'))}>{line || ' '}</Box>;
     }
     return (
         <Box
@@ -45,12 +37,7 @@ const StoryLine = React.memo(React.forwardRef<HTMLDivElement, IStoryLineProps>(f
             tabIndex={0}
             onClick={() => onSeek(target)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSeek(target); } }}
-            sx={{
-                cursor: 'pointer', borderRadius: '3px',
-                backgroundColor: isCurrent ? 'rgba(255,255,255,0.12)' : 'transparent',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.07)' },
-                '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: '-2px' },
-            }}
+            sx={styles.actionLine(isCurrent)}
         >
             {line || ' '}
         </Box>
@@ -85,17 +72,13 @@ const StoryTab: React.FC = () => {
     }, [currentRound]);
 
     return (
-        <Box sx={{ p: 1.5 }}>
+        <Box sx={styles.container}>
             {/* Below md the theme's root font is 10-12px, which takes 0.72rem to about 7px
                 on a phone; the 11px floor applies only there. */}
             <Box
                 component="pre"
                 aria-label="Game story"
-                sx={{
-                    m: 0, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                    fontSize: { xs: 'max(11px, 0.72rem)', md: '0.72rem' }, lineHeight: 1.5, whiteSpace: 'pre',
-                    overflowX: 'auto', color: 'rgba(255,255,255,0.8)',
-                }}
+                sx={styles.story}
             >
                 {lines.map((line, i) => {
                     const r = roundOf(line);
@@ -113,7 +96,7 @@ const StoryTab: React.FC = () => {
                 })}
             </Box>
             {!doc.story?.length && (
-                <Typography variant="caption" sx={{ color: 'rgba(255,200,87,0.9)', display: 'block', mt: 1.5 }}>
+                <Typography variant="caption" sx={styles.rebuiltNotice}>
                     This replay predates the story section — showing a narrative rebuilt from the events.
                 </Typography>
             )}
@@ -122,3 +105,29 @@ const StoryTab: React.FC = () => {
 };
 
 export default StoryTab;
+
+// ----------------Styles----------------//
+const styles = {
+    prose: (isConsequence: boolean) => ({
+        color: isConsequence ? 'rgba(255,255,255,0.5)' : undefined,
+    }),
+    actionLine: (isCurrent: boolean) => ({
+        cursor: 'pointer', borderRadius: '3px',
+        backgroundColor: isCurrent ? 'rgba(255,255,255,0.12)' : 'transparent',
+        '&:hover': { backgroundColor: 'rgba(255,255,255,0.07)' },
+        '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: '-2px' },
+    }),
+    container: {
+        p: 1.5,
+    },
+    story: {
+        m: 0, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        fontSize: { xs: 'max(11px, 0.72rem)', md: '0.72rem' }, lineHeight: 1.5, whiteSpace: 'pre',
+        overflowX: 'auto', color: 'rgba(255,255,255,0.8)',
+    },
+    rebuiltNotice: {
+        color: 'rgba(255,200,87,0.9)',
+        display: 'block',
+        mt: 1.5,
+    },
+};

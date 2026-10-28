@@ -20,6 +20,7 @@ import DiscussionTab from './DiscussionTab';
 import { formatGameMeta } from '@/app/_utils/replayMoves';
 import { displayText } from '@/lib/swupgn';
 import { REPLAY_HEADER_HEIGHT, REPLAY_PANEL_WIDTH, REPLAY_TRANSPORT_HEIGHT } from '@/app/_constants/replayLayout';
+import type { IReplayPanelProps } from './ReplayTypes';
 
 type TabKey = 'story' | 'moves' | 'deck' | 'resourcing' | 'decisions' | 'digest' | 'discussion';
 // `short` is the name printed under the icon in the open panel (7 columns of ~40px on a phone);
@@ -36,12 +37,6 @@ const TABS: { key: TabKey; label: string; short: string; Icon: React.ElementType
 
 const PANEL_BG = 'rgba(8,11,17,0.94)';
 const BORDER = '1px solid rgba(255,255,255,0.1)';
-
-// The replay page owns `collapsed`, so the board can make room for the open panel.
-interface IReplayPanelProps {
-    collapsed: boolean;
-    setCollapsed: (collapsed: boolean) => void;
-}
 
 const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) => {
     const {
@@ -92,26 +87,16 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
         }
     };
 
-    const tabBtn = (active: boolean) => ({
-        color: active ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.55)',
-        backgroundColor: active ? 'rgba(0,186,255,0.12)' : 'transparent',
-        borderRadius: '6px',
-    });
-
     // Collapsed: a thin rail of tab icons on the right edge; clicking opens to that tab.
     if (collapsed) {
         return (
-            <Box sx={{
-                position: 'fixed', top: REPLAY_HEADER_HEIGHT, right: 0, bottom: REPLAY_TRANSPORT_HEIGHT, width: 48, zIndex: 1305,
-                backgroundColor: PANEL_BG, borderLeft: BORDER, display: 'flex', flexDirection: 'column',
-                alignItems: 'center', py: 1, gap: 0.5,
-            }}>
+            <Box sx={styles.rail}>
                 <Tooltip title="Open panel" placement="left">
-                    <IconButton size="small" aria-label="Expand panel" onClick={() => setCollapsed(false)} sx={{ color: 'white' }}><ChevronLeft /></IconButton>
+                    <IconButton size="small" aria-label="Expand panel" onClick={() => setCollapsed(false)} sx={styles.expandButton}><ChevronLeft /></IconButton>
                 </Tooltip>
                 {TABS.map(({ key, label, Icon }) => (
                     <Tooltip key={key} title={label} placement="left">
-                        <IconButton size="small" aria-label={`${label} tab`} onClick={() => { setTab(key); setCollapsed(false); }} sx={tabBtn(false)}>
+                        <IconButton size="small" aria-label={`${label} tab`} onClick={() => { setTab(key); setCollapsed(false); }} sx={styles.tabBtn(false)}>
                             <Icon sx={{ fontSize: 19 }} />
                         </IconButton>
                     </Tooltip>
@@ -123,15 +108,11 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
     const Body = (TABS.find((t) => t.key === tab) ?? TABS[0]).Body;
 
     return (
-        <Box sx={{
-            position: 'fixed', top: REPLAY_HEADER_HEIGHT, right: 0, bottom: REPLAY_TRANSPORT_HEIGHT, width: { xs: '88vw', sm: REPLAY_PANEL_WIDTH }, zIndex: 1305,
-            backgroundColor: PANEL_BG, borderLeft: BORDER, backdropFilter: 'blur(10px)',
-            display: 'flex', flexDirection: 'column',
-        }}>
+        <Box sx={styles.panel}>
             {/* Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 1, borderBottom: BORDER, gap: 1 }}>
-                <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                    <Typography variant="body2" sx={{ color: 'white', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <Box sx={styles.header}>
+                <Box sx={styles.headerText}>
+                    <Typography variant="body2" sx={styles.title}>
                         {(displayText(header.p1) || 'Player 1')} vs {(displayText(header.p2) || 'Player 2')}
                     </Typography>
                     {/* How long the game took and where it sits in a match, when the file says
@@ -141,38 +122,38 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
                         the 4.5:1 contrast floor against the panel ground. */}
                     {gameMeta && (
                         <Tooltip title={gameMeta}>
-                            <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.62)', fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <Typography variant="caption" sx={styles.gameMeta}>
                                 {gameMeta}
                             </Typography>
                         </Tooltip>
                     )}
                 </Box>
-                <Tooltip title="Collapse panel"><IconButton size="small" onClick={() => setCollapsed(true)} sx={{ color: 'rgba(255,255,255,0.7)' }}><ChevronRight /></IconButton></Tooltip>
+                <Tooltip title="Collapse panel"><IconButton size="small" onClick={() => setCollapsed(true)} sx={styles.actionButton}><ChevronRight /></IconButton></Tooltip>
             </Box>
 
             {/* Does the file agree with itself? */}
-            <Box sx={{ px: 1.5, py: 0.75, borderBottom: BORDER }}>
+            <Box sx={styles.fileHealth}>
                 <FileHealth />
             </Box>
 
             {/* Action toolbar (share / download / fog / clip) */}
-            <Box sx={{ display: 'flex', alignItems: 'center', px: 1, py: 0.5, borderBottom: BORDER, gap: 0.25, flexWrap: 'wrap' }}>
-                <Tooltip title="Copy link to this moment (send the .swupgn alongside it)"><IconButton size="small" onClick={shareMoment} sx={{ color: 'rgba(255,255,255,0.7)' }}><LinkOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-                <Tooltip title="Download .swupgn (with notes)"><IconButton size="small" onClick={downloadNotes} sx={{ color: 'rgba(255,255,255,0.7)' }}><FileDownloadOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-                <Tooltip title="Download text log"><IconButton size="small" onClick={downloadTextLog} sx={{ color: 'rgba(255,255,255,0.7)' }}><DescriptionOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-                <Tooltip title={fogOfWar ? 'Reveal hidden hands' : 'Hide non-perspective hand'}><IconButton size="small" onClick={toggleFogOfWar} aria-pressed={fogOfWar} aria-label="Hide non-perspective hand" sx={{ color: fogOfWar ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.7)' }}>{fogOfWar ? <VisibilityOffOutlined sx={{ fontSize: 18 }} /> : <VisibilityOutlined sx={{ fontSize: 18 }} />}</IconButton></Tooltip>
-                <Box sx={{ width: '1px', height: 18, backgroundColor: 'rgba(255,255,255,0.15)', mx: 0.5 }} />
-                <Tooltip title="Set clip start"><IconButton size="small" onClick={setClipStart} sx={{ color: 'rgba(255,255,255,0.7)' }}><FirstPage sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-                <Tooltip title="Set clip end"><IconButton size="small" onClick={setClipEnd} sx={{ color: 'rgba(255,255,255,0.7)' }}><LastPage sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-                <Typography variant="caption" sx={{ color: clip ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.4)', minWidth: 44, textAlign: 'center', fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' } }}>
+            <Box sx={styles.toolbar}>
+                <Tooltip title="Copy link to this moment (send the .swupgn alongside it)"><IconButton size="small" onClick={shareMoment} sx={styles.actionButton}><LinkOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
+                <Tooltip title="Download .swupgn (with notes)"><IconButton size="small" onClick={downloadNotes} sx={styles.actionButton}><FileDownloadOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
+                <Tooltip title="Download text log"><IconButton size="small" onClick={downloadTextLog} sx={styles.actionButton}><DescriptionOutlined sx={{ fontSize: 18 }} /></IconButton></Tooltip>
+                <Tooltip title={fogOfWar ? 'Reveal hidden hands' : 'Hide non-perspective hand'}><IconButton size="small" onClick={toggleFogOfWar} aria-pressed={fogOfWar} aria-label="Hide non-perspective hand" sx={styles.fogButton(fogOfWar)}>{fogOfWar ? <VisibilityOffOutlined sx={{ fontSize: 18 }} /> : <VisibilityOutlined sx={{ fontSize: 18 }} />}</IconButton></Tooltip>
+                <Box sx={styles.divider} />
+                <Tooltip title="Set clip start"><IconButton size="small" onClick={setClipStart} sx={styles.actionButton}><FirstPage sx={{ fontSize: 18 }} /></IconButton></Tooltip>
+                <Tooltip title="Set clip end"><IconButton size="small" onClick={setClipEnd} sx={styles.actionButton}><LastPage sx={{ fontSize: 18 }} /></IconButton></Tooltip>
+                <Typography variant="caption" sx={styles.clipRange(!!clip)}>
                     {clip ? `${clip.start}–${clip.end}` : 'clip'}
                 </Typography>
                 {/* The span keeps the tooltip alive while the button is disabled, but it also
                     takes the tooltip's aria-label, so the button names itself. */}
-                <Tooltip title="Copy clip link"><span><IconButton size="small" aria-label="Copy clip link" onClick={copyClipLink} disabled={!clip} sx={{ color: clip ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)' }}><ContentCut sx={{ fontSize: 16 }} /></IconButton></span></Tooltip>
-                <Tooltip title="Export clip as .webm"><span><IconButton size="small" aria-label="Export clip as webm" onClick={exportWebm} disabled={recording} sx={{ color: 'rgba(255,255,255,0.7)' }}>{recording ? <CircularProgress size={15} sx={{ color: 'var(--initiative-blue)' }} /> : <MovieCreationOutlined sx={{ fontSize: 18 }} />}</IconButton></span></Tooltip>
+                <Tooltip title="Copy clip link"><span><IconButton size="small" aria-label="Copy clip link" onClick={copyClipLink} disabled={!clip} sx={styles.clipLinkButton(!!clip)}><ContentCut sx={{ fontSize: 16 }} /></IconButton></span></Tooltip>
+                <Tooltip title="Export clip as .webm"><span><IconButton size="small" aria-label="Export clip as webm" onClick={exportWebm} disabled={recording} sx={styles.actionButton}>{recording ? <CircularProgress size={15} sx={styles.spinner} /> : <MovieCreationOutlined sx={{ fontSize: 18 }} />}</IconButton></span></Tooltip>
                 {clip && (
-                    <Button size="small" onClick={clearClip} aria-label="Clear clip" sx={{ minWidth: { xs: 44, md: 0 }, minHeight: { xs: 44, md: 0 }, px: 0.75, py: 0, color: 'rgba(255,255,255,0.45)', fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' }, textTransform: 'none', '&:hover': { color: 'white' } }}>
+                    <Button size="small" onClick={clearClip} aria-label="Clear clip" sx={styles.clearClip}>
                         clear
                     </Button>
                 )}
@@ -190,22 +171,22 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
                     setTab(next.key);
                     (e.currentTarget.querySelector(`[data-tab="${next.key}"]`) as HTMLElement | null)?.focus();
                 }}
-                sx={{ display: 'flex', px: 0.75, py: 0.5, gap: 0.25, borderBottom: BORDER }}
+                sx={styles.tabStrip}
             >
                 {TABS.map(({ key, label, short, Icon }) => (
                     <Tooltip key={key} title={label}>
-                        <IconButton size="small" role="tab" id={`replay-tab-${key}`} data-tab={key} aria-selected={tab === key} aria-controls="replay-tabpanel" tabIndex={tab === key ? 0 : -1} aria-label={`${short === label ? label : `${short}: ${label}`} tab`} onClick={() => setTab(key)} sx={{ ...tabBtn(tab === key), flex: 1, minWidth: 0, borderRadius: '6px', flexDirection: 'column', gap: '1px', py: 0.5, px: 0.25 }}>
+                        <IconButton size="small" role="tab" id={`replay-tab-${key}`} data-tab={key} aria-selected={tab === key} aria-controls="replay-tabpanel" tabIndex={tab === key ? 0 : -1} aria-label={`${short === label ? label : `${short}: ${label}`} tab`} onClick={() => setTab(key)} sx={{ ...styles.tabBtn(tab === key), ...styles.tab }}>
                             <Icon sx={{ fontSize: 18 }} />
                             {/* A tooltip never shows on touch: the open panel prints each tab's name. */}
                             {/* The accessible name starts with this text, so "click Notes" finds the tab by voice. */}
-                            <Typography component="span" variant="tabLabel" aria-hidden sx={{ color: 'inherit', maxWidth: '100%', overflow: 'hidden', textOverflow: 'clip' }}>{short}</Typography>
+                            <Typography component="span" variant="tabLabel" aria-hidden sx={styles.tabLabel}>{short}</Typography>
                         </IconButton>
                     </Tooltip>
                 ))}
             </Box>
 
             {/* Active tab body */}
-            <Box id="replay-tabpanel" role="tabpanel" aria-labelledby={`replay-tab-${tab}`} sx={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+            <Box id="replay-tabpanel" role="tabpanel" aria-labelledby={`replay-tab-${tab}`} sx={styles.tabPanel}>
                 <Body />
             </Box>
 
@@ -215,3 +196,127 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
 };
 
 export default ReplayPanel;
+
+// ----------------Styles----------------//
+const styles = {
+    tabBtn: (active: boolean) => ({
+        color: active ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.55)',
+        backgroundColor: active ? 'rgba(0,186,255,0.12)' : 'transparent',
+        borderRadius: '6px',
+    }),
+    rail: {
+        position: 'fixed', top: REPLAY_HEADER_HEIGHT, right: 0, bottom: REPLAY_TRANSPORT_HEIGHT, width: 48, zIndex: 1305,
+        backgroundColor: PANEL_BG, borderLeft: BORDER, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', py: 1, gap: 0.5,
+    },
+    expandButton: {
+        color: 'white',
+    },
+    panel: {
+        position: 'fixed', top: REPLAY_HEADER_HEIGHT, right: 0, bottom: REPLAY_TRANSPORT_HEIGHT, width: { xs: '88vw', sm: REPLAY_PANEL_WIDTH }, zIndex: 1305,
+        backgroundColor: PANEL_BG, borderLeft: BORDER, backdropFilter: 'blur(10px)',
+        display: 'flex', flexDirection: 'column',
+    },
+    header: {
+        display: 'flex',
+        alignItems: 'center',
+        px: 1.5,
+        py: 1,
+        borderBottom: BORDER,
+        gap: 1,
+    },
+    headerText: {
+        flex: 1,
+        overflow: 'hidden',
+    },
+    title: {
+        color: 'white',
+        fontWeight: 700,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    gameMeta: {
+        display: 'block',
+        color: 'rgba(255,255,255,0.62)',
+        fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' },
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    actionButton: {
+        color: 'rgba(255,255,255,0.7)',
+    },
+    fileHealth: {
+        px: 1.5,
+        py: 0.75,
+        borderBottom: BORDER,
+    },
+    toolbar: {
+        display: 'flex',
+        alignItems: 'center',
+        px: 1,
+        py: 0.5,
+        borderBottom: BORDER,
+        gap: 0.25,
+        flexWrap: 'wrap',
+    },
+    fogButton: (fogOfWar: boolean) => ({
+        color: fogOfWar ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.7)',
+    }),
+    divider: {
+        width: '1px',
+        height: 18,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        mx: 0.5,
+    },
+    clipRange: (hasClip: boolean) => ({
+        color: hasClip ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.4)',
+        minWidth: 44,
+        textAlign: 'center',
+        fontSize: { xs: 'max(11px, 0.7rem)', md: '0.7rem' },
+    }),
+    clipLinkButton: (hasClip: boolean) => ({
+        color: hasClip ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)',
+    }),
+    spinner: {
+        color: 'var(--initiative-blue)',
+    },
+    clearClip: {
+        minWidth: { xs: 44, md: 0 },
+        minHeight: { xs: 44, md: 0 },
+        px: 0.75,
+        py: 0,
+        color: 'rgba(255,255,255,0.45)',
+        fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' },
+        textTransform: 'none',
+        '&:hover': { color: 'white' },
+    },
+    tabStrip: {
+        display: 'flex',
+        px: 0.75,
+        py: 0.5,
+        gap: 0.25,
+        borderBottom: BORDER,
+    },
+    tab: {
+        flex: 1,
+        minWidth: 0,
+        borderRadius: '6px',
+        flexDirection: 'column',
+        gap: '1px',
+        py: 0.5,
+        px: 0.25,
+    },
+    tabLabel: {
+        color: 'inherit',
+        maxWidth: '100%',
+        overflow: 'hidden',
+        textOverflow: 'clip',
+    },
+    tabPanel: {
+        flex: 1,
+        overflowY: 'auto',
+        minHeight: 0,
+    },
+};

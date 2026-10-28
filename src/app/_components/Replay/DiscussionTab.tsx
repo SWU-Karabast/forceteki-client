@@ -2,22 +2,21 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Tooltip } from '@mui/material';
 import { Close, Reply } from '@mui/icons-material';
-import { displayText, type Annotation } from '@/lib/swupgn';
+import { displayText } from '@/lib/swupgn';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
-import { buildThreads, type ThreadNode } from '@/app/_utils/annotationThreads';
+import { buildThreads } from '@/app/_utils/annotationThreads';
 import { NAG_ORDER, nagInfo, NAG_TONE_COLOR } from '@/app/_utils/nagGlyphs';
 import AnnotationBadge from './AnnotationBadge';
+import type { IComposerProps, INagPickerProps, INoteCardProps, Note } from './ReplayTypes';
 
 // A phone needs a 44px hit area; from md up the buttons keep their compact size.
 const TOUCH_TARGET = { minWidth: { xs: 44, md: 0 }, minHeight: { xs: 44, md: 0 } };
 
-// A note carries a client `_id` while in the working copy; file notes carry `id`.
-type Note = Annotation & { _id?: string };
 const idOf = (n: Note) => n._id ?? n.id;
 
-const NagPicker: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => (
-    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+const NagPicker: React.FC<INagPickerProps> = ({ value, onChange }) => (
+    <Box sx={styles.nagPicker}>
         {NAG_ORDER.map((g) => {
             const info = nagInfo(g)!;
             const active = value === g;
@@ -31,15 +30,7 @@ const NagPicker: React.FC<{ value: string; onChange: (v: string) => void }> = ({
                         aria-label={info.label}
                         onClick={() => onChange(active ? '' : g)}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChange(active ? '' : g); } }}
-                        sx={{
-                            cursor: 'pointer', px: 0.75, py: 0.1, borderRadius: '4px', fontWeight: 700,
-                            fontSize: '0.8rem', userSelect: 'none', lineHeight: 1.6,
-                            color: active ? '#0c0f16' : NAG_TONE_COLOR[info.tone],
-                            backgroundColor: active ? NAG_TONE_COLOR[info.tone] : 'rgba(255,255,255,0.06)',
-                            border: `1px solid ${NAG_TONE_COLOR[info.tone]}55`,
-                            '&:hover': { backgroundColor: active ? NAG_TONE_COLOR[info.tone] : 'rgba(255,255,255,0.14)' },
-                            '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 1 },
-                        }}
+                        sx={styles.nagOption(active, NAG_TONE_COLOR[info.tone])}
                     >
                         {info.glyph}
                     </Box>
@@ -54,7 +45,7 @@ const NagPicker: React.FC<{ value: string; onChange: (v: string) => void }> = ({
  * keystroke or glyph), not read at Post: autoplay, a looping clip link or the scrubber can move
  * the playhead while the user types, and the note must land on the move they were writing about.
  */
-const Composer: React.FC<{ seq: string; onSubmit: (text: string, nag: string, ref: string) => void; withNag?: boolean; placeholder: string; compact?: boolean }> = ({
+const Composer: React.FC<IComposerProps> = ({
     seq, onSubmit, withNag = false, placeholder, compact = false,
 }) => {
     const [text, setText] = useState('');
@@ -68,14 +59,14 @@ const Composer: React.FC<{ seq: string; onSubmit: (text: string, nag: string, re
         setText(''); setNag(''); setPinned(null);
     };
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mt: compact ? 0.75 : 1 }}>
+        <Box sx={styles.composer(compact)}>
             {withNag && <NagPicker value={nag} onChange={(v) => { setNag(v); track(text, v); }} />}
             {pinned && pinned !== seq && (
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)' }}>
+                <Typography variant="caption" sx={styles.pinnedNotice}>
                     Posting on move {displayText(pinned)}
                 </Typography>
             )}
-            <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'flex-start' }}>
+            <Box sx={styles.composerRow}>
                 <TextField
                     value={text}
                     onChange={(e) => { setText(e.target.value); track(e.target.value, nag); }}
@@ -86,13 +77,10 @@ const Composer: React.FC<{ seq: string; onSubmit: (text: string, nag: string, re
                     maxRows={4}
                     fullWidth
                     onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
-                    sx={{
-                        '& .MuiInputBase-root': { color: 'white', fontSize: '0.82rem', backgroundColor: 'rgba(255,255,255,0.04)' },
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
-                    }}
+                    sx={styles.composerField}
                 />
                 <Button onClick={submit} size="small" variant="contained"
-                    sx={{ minWidth: 0, px: 1.5, backgroundColor: 'var(--initiative-blue)', flexShrink: 0 }}>
+                    sx={styles.submitButton}>
                     {compact ? 'Reply' : 'Post'}
                 </Button>
             </Box>
@@ -100,41 +88,36 @@ const Composer: React.FC<{ seq: string; onSubmit: (text: string, nag: string, re
     );
 };
 
-const NoteCard: React.FC<{
-    node: ThreadNode<Note>;
-    onReply: (parentId: string, ref: string, text: string) => void;
-    onDelete: (id: string) => void;
-    depth?: number;
-}> = ({ node, onReply, onDelete, depth = 0 }) => {
+const NoteCard: React.FC<INoteCardProps> = ({ node, onReply, onDelete, depth = 0 }) => {
     const [replying, setReplying] = useState(false);
     const n = node.note;
     const id = idOf(n);
     const editable = !!n._id; // only the session's own working notes can be deleted
     return (
-        <Box sx={{ mt: 1, ml: depth ? 1.5 : 0, pl: depth ? 1 : 0, borderLeft: depth ? '2px solid rgba(255,255,255,0.1)' : 'none' }}>
-            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
+        <Box sx={styles.noteCard(depth)}>
+            <Box sx={styles.noteHeader}>
                 {n.nag && <AnnotationBadge nag={n.nag} size={16} />}
-                <Typography variant="caption" sx={{ color: 'var(--initiative-blue)', fontWeight: 700 }}>
+                <Typography variant="caption" sx={styles.noteAuthor}>
                     {displayText(n.by) || 'Anonymous'}
                 </Typography>
-                <Box sx={{ flex: 1 }} />
+                <Box sx={styles.spacer} />
                 {id && (
                     <Tooltip title="Reply">
-                        <IconButton size="small" onClick={() => setReplying((r) => !r)} sx={{ color: 'rgba(255,255,255,0.5)', p: 0.25, ...TOUCH_TARGET }}>
+                        <IconButton size="small" onClick={() => setReplying((r) => !r)} sx={styles.replyButton}>
                             <Reply sx={{ fontSize: 15 }} />
                         </IconButton>
                     </Tooltip>
                 )}
                 {editable && (
                     <Tooltip title="Delete">
-                        <IconButton size="small" onClick={() => onDelete(n._id!)} sx={{ color: 'rgba(255,255,255,0.4)', p: 0.25, ...TOUCH_TARGET }}>
+                        <IconButton size="small" onClick={() => onDelete(n._id!)} sx={styles.deleteButton}>
                             <Close sx={{ fontSize: 15 }} />
                         </IconButton>
                     </Tooltip>
                 )}
             </Box>
             {n.text && (
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.84rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                <Typography variant="body2" sx={styles.noteText}>
                     {displayText(n.text)}
                 </Typography>
             )}
@@ -164,25 +147,21 @@ const DiscussionTab: React.FC = () => {
     );
 
     return (
-        <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <Box sx={styles.container}>
             <TextField
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Your name"
                 inputProps={{ 'aria-label': 'Your name' }}
                 size="small"
-                sx={{
-                    mb: 1.5,
-                    '& .MuiInputBase-root': { color: 'white', fontSize: '0.82rem' },
-                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
-                }}
+                sx={styles.authorField}
             />
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', mb: 0.5 }}>
+            <Typography variant="caption" sx={styles.threadHeading}>
                 Discussion on this move{seq ? ` (${seq})` : ''}
             </Typography>
-            <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+            <Box sx={styles.threads}>
                 {threads.length === 0 && (
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.82rem', mt: 1 }}>
+                    <Typography variant="body2" sx={styles.emptyThreads}>
                         No notes here yet. Start the thread below.
                     </Typography>
                 )}
@@ -200,7 +179,7 @@ const DiscussionTab: React.FC = () => {
                 })}
             </Box>
             {seq && (
-                <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.1)', pt: 1, mt: 1 }}>
+                <Box sx={styles.composerDock}>
                     <Composer withNag seq={seq} placeholder="Add a note on this move…" onSubmit={(text, nag, ref) => addAnnotation(ref, { text, nag })} />
                 </Box>
             )}
@@ -209,3 +188,109 @@ const DiscussionTab: React.FC = () => {
 };
 
 export default DiscussionTab;
+
+// ----------------Styles----------------//
+const styles = {
+    nagPicker: {
+        display: 'flex',
+        gap: 0.5,
+        flexWrap: 'wrap',
+    },
+    nagOption: (active: boolean, toneColor: string) => ({
+        cursor: 'pointer', px: 0.75, py: 0.1, borderRadius: '4px', fontWeight: 700,
+        fontSize: '0.8rem', userSelect: 'none', lineHeight: 1.6,
+        color: active ? '#0c0f16' : toneColor,
+        backgroundColor: active ? toneColor : 'rgba(255,255,255,0.06)',
+        border: `1px solid ${toneColor}55`,
+        '&:hover': { backgroundColor: active ? toneColor : 'rgba(255,255,255,0.14)' },
+        '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 1 },
+    }),
+    composer: (compact: boolean) => ({
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0.75,
+        mt: compact ? 0.75 : 1,
+    }),
+    pinnedNotice: {
+        color: 'rgba(255,255,255,0.55)',
+    },
+    composerRow: {
+        display: 'flex',
+        gap: 0.75,
+        alignItems: 'flex-start',
+    },
+    composerField: {
+        '& .MuiInputBase-root': { color: 'white', fontSize: '0.82rem', backgroundColor: 'rgba(255,255,255,0.04)' },
+        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
+    },
+    submitButton: {
+        minWidth: 0,
+        px: 1.5,
+        backgroundColor: 'var(--initiative-blue)',
+        flexShrink: 0,
+    },
+    noteCard: (depth: number) => ({
+        mt: 1,
+        ml: depth ? 1.5 : 0,
+        pl: depth ? 1 : 0,
+        borderLeft: depth ? '2px solid rgba(255,255,255,0.1)' : 'none',
+    }),
+    noteHeader: {
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 0.75,
+    },
+    noteAuthor: {
+        color: 'var(--initiative-blue)',
+        fontWeight: 700,
+    },
+    spacer: {
+        flex: 1,
+    },
+    replyButton: {
+        color: 'rgba(255,255,255,0.5)',
+        p: 0.25,
+        ...TOUCH_TARGET,
+    },
+    deleteButton: {
+        color: 'rgba(255,255,255,0.4)',
+        p: 0.25,
+        ...TOUCH_TARGET,
+    },
+    noteText: {
+        color: 'rgba(255,255,255,0.85)',
+        fontSize: '0.84rem',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+    },
+    container: {
+        p: 1.5,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+    },
+    authorField: {
+        mb: 1.5,
+        '& .MuiInputBase-root': { color: 'white', fontSize: '0.82rem' },
+        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
+    },
+    threadHeading: {
+        color: 'rgba(255,255,255,0.4)',
+        mb: 0.5,
+    },
+    threads: {
+        flex: 1,
+        overflowY: 'auto',
+        minHeight: 0,
+    },
+    emptyThreads: {
+        color: 'rgba(255,255,255,0.35)',
+        fontSize: '0.82rem',
+        mt: 1,
+    },
+    composerDock: {
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        pt: 1,
+        mt: 1,
+    },
+};

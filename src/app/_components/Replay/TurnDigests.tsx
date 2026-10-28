@@ -16,19 +16,15 @@ const TurnDigests: React.FC = () => {
     const p2 = displayText(header.p2) || 'Player 2';
 
     return (
-        <Box sx={{ p: 1.5 }}>
+        <Box sx={styles.container}>
             {digests.map((d) => (
-                <Box key={d.round} sx={{ mb: 2 }}>
+                <Box key={d.round} sx={styles.round}>
                     <SeekRow
                         onClick={() => { if (d.seq) seekToSeq(d.seq); }}
                         disabled={!d.seq}
-                        sx={{
-                            color: 'white',
-                            borderBottom: '1px solid rgba(255,255,255,0.12)', pb: 0.5, mb: 0.75,
-                            '&:hover': { color: d.seq ? 'var(--initiative-blue)' : 'white' },
-                        }}
+                        sx={styles.roundHeader(!!d.seq)}
                     >
-                        <Typography variant="subtitle2" sx={{ color: 'inherit', fontWeight: 700 }}>
+                        <Typography variant="subtitle2" sx={styles.roundTitle}>
                             {d.round === 0 ? 'Setup' : `Round ${d.round}`}
                         </Typography>
                     </SeekRow>
@@ -36,8 +32,8 @@ const TurnDigests: React.FC = () => {
                         const row = d.perSeat[seat];
                         if (!row) return null;
                         return (
-                            <Typography key={seat} variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.82rem' }}>
-                                <Box component="span" sx={{ color: 'var(--initiative-blue)', fontWeight: 700 }}>{seat === 1 ? p1 : p2}</Box>
+                            <Typography key={seat} variant="body2" sx={styles.seatLine}>
+                                <Box component="span" sx={styles.seatName}>{seat === 1 ? p1 : p2}</Box>
                                 {`: resourced ${row.resourced}, played ${row.played}, drawn ${row.drawn}`}
                                 {row.paid != null ? `, paid ${row.paid}` : row.spent != null ? `, cost ${row.spent}` : ''}
                             </Typography>
@@ -49,9 +45,9 @@ const TurnDigests: React.FC = () => {
                             <SeekRow
                                 key={rowKey}
                                 onClick={() => seekToSeq(b.seq)}
-                                sx={{ ml: 1, '&:hover': { textDecoration: 'underline' } }}
+                                sx={styles.bookmark}
                             >
-                                <Typography variant="caption" sx={{ color: '#ffc857', display: 'block' }}>
+                                <Typography variant="caption" sx={styles.bookmarkText}>
                                     ★ {bookmarkLabel(b, (id) => nameAtSeq(id, b.seq))}
                                 </Typography>
                             </SeekRow>
@@ -60,10 +56,48 @@ const TurnDigests: React.FC = () => {
                 </Box>
             ))}
             {digests.length === 0 && (
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>No rounds recorded.</Typography>
+                <Typography variant="caption" sx={styles.empty}>No rounds recorded.</Typography>
             )}
         </Box>
     );
 };
 
 export default TurnDigests;
+
+// ----------------Styles----------------//
+const styles = {
+    container: {
+        p: 1.5,
+    },
+    round: {
+        mb: 2,
+    },
+    roundHeader: (seekable: boolean) => ({
+        color: 'white',
+        borderBottom: '1px solid rgba(255,255,255,0.12)', pb: 0.5, mb: 0.75,
+        '&:hover': { color: seekable ? 'var(--initiative-blue)' : 'white' },
+    }),
+    roundTitle: {
+        color: 'inherit',
+        fontWeight: 700,
+    },
+    seatLine: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: '0.82rem',
+    },
+    seatName: {
+        color: 'var(--initiative-blue)',
+        fontWeight: 700,
+    },
+    bookmark: {
+        ml: 1,
+        '&:hover': { textDecoration: 'underline' },
+    },
+    bookmarkText: {
+        color: '#ffc857',
+        display: 'block',
+    },
+    empty: {
+        color: 'rgba(255,255,255,0.4)',
+    },
+};

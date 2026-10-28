@@ -4,27 +4,12 @@ import { Box, Popover, Typography, ToggleButton, ToggleButtonGroup } from '@mui/
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { SPEEDS } from '@/app/_utils/replayTiming';
 import type { StepBy } from '@/app/_utils/replayPrefs';
-
-interface PlaybackOptionsProps {
-    anchorEl: HTMLElement | null;
-    onClose: () => void;
-}
-
-const GROUP_SX = {
-    '& .MuiToggleButton-root': {
-        color: 'rgba(255,255,255,0.6)',
-        borderColor: 'rgba(255,255,255,0.2)',
-        px: 1.25,
-        fontSize: '0.75rem',
-        textTransform: 'none',
-        '&.Mui-selected': { color: 'var(--initiative-blue)', backgroundColor: 'rgba(0,186,255,0.15)' },
-    },
-};
+import type { IPlaybackOptionsProps } from './ReplayTypes';
 
 /** The Tune button's popover: speed, step unit and card animation, each a persisted
  *  preference saved to localStorage under `replay:playback` (see replayPrefs.ts).
  *  Every ToggleButtonGroup is plain MUI buttons — Tab reaches them, Space/Enter picks. */
-const PlaybackOptions: React.FC<PlaybackOptionsProps> = ({ anchorEl, onClose }) => {
+const PlaybackOptions: React.FC<IPlaybackOptionsProps> = ({ anchorEl, onClose }) => {
     const { speed, setSpeed, stepBy, setStepBy, animate, setAnimate } = useReplay();
 
     return (
@@ -37,28 +22,21 @@ const PlaybackOptions: React.FC<PlaybackOptionsProps> = ({ anchorEl, onClose }) 
             // MUI's default modal z-index (1300) sits BELOW the replay panel (1305, see
             // ReplayPanel.tsx) and the transport bar itself (1300), so without this the
             // popover paints under them — reachable by keyboard, invisible to the eye.
-            sx={{ zIndex: 1400 }}
+            sx={styles.popover}
             slotProps={{
                 paper: {
-                    sx: {
-                        backgroundColor: 'rgba(10,14,20,0.97)',
-                        border: '1px solid rgba(255,255,255,0.12)',
-                        p: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 1.5,
-                    },
+                    sx: styles.paper,
                 },
             }}
         >
             <Box>
-                <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.55)', mb: 0.5 }}>Speed</Typography>
+                <Typography variant="caption" sx={styles.groupLabel}>Speed</Typography>
                 <ToggleButtonGroup
                     aria-label="Speed"
                     value={speed}
                     exclusive
                     size="small"
-                    sx={GROUP_SX}
+                    sx={styles.group}
                     onChange={(_, v: number | null) => { if (v !== null) setSpeed(v); }}
                 >
                     {SPEEDS.map((s) => (
@@ -67,13 +45,13 @@ const PlaybackOptions: React.FC<PlaybackOptionsProps> = ({ anchorEl, onClose }) 
                 </ToggleButtonGroup>
             </Box>
             <Box>
-                <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.55)', mb: 0.5 }}>Step by</Typography>
+                <Typography variant="caption" sx={styles.groupLabel}>Step by</Typography>
                 <ToggleButtonGroup
                     aria-label="Step by"
                     value={stepBy}
                     exclusive
                     size="small"
-                    sx={GROUP_SX}
+                    sx={styles.group}
                     onChange={(_, v: StepBy | null) => { if (v !== null) setStepBy(v); }}
                 >
                     <ToggleButton value="beat" aria-label="Step by beat">Beat</ToggleButton>
@@ -81,13 +59,13 @@ const PlaybackOptions: React.FC<PlaybackOptionsProps> = ({ anchorEl, onClose }) 
                 </ToggleButtonGroup>
             </Box>
             <Box>
-                <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.55)', mb: 0.5 }}>Card animation</Typography>
+                <Typography variant="caption" sx={styles.groupLabel}>Card animation</Typography>
                 <ToggleButtonGroup
                     aria-label="Card animation"
                     value={animate}
                     exclusive
                     size="small"
-                    sx={GROUP_SX}
+                    sx={styles.group}
                     onChange={(_, v: boolean | null) => { if (v !== null) setAnimate(v); }}
                 >
                     <ToggleButton value aria-label="Card animation on">On</ToggleButton>
@@ -99,3 +77,33 @@ const PlaybackOptions: React.FC<PlaybackOptionsProps> = ({ anchorEl, onClose }) 
 };
 
 export default PlaybackOptions;
+
+// ----------------Styles----------------//
+const styles = {
+    popover: {
+        zIndex: 1400,
+    },
+    paper: {
+        backgroundColor: 'rgba(10,14,20,0.97)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        p: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+    },
+    groupLabel: {
+        display: 'block',
+        color: 'rgba(255,255,255,0.55)',
+        mb: 0.5,
+    },
+    group: {
+        '& .MuiToggleButton-root': {
+            color: 'rgba(255,255,255,0.6)',
+            borderColor: 'rgba(255,255,255,0.2)',
+            px: 1.25,
+            fontSize: '0.75rem',
+            textTransform: 'none',
+            '&.Mui-selected': { color: 'var(--initiative-blue)', backgroundColor: 'rgba(0,186,255,0.15)' },
+        },
+    },
+};

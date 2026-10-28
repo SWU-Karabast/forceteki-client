@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
-import { Box, type SxProps, type Theme } from '@mui/material';
+import { Box } from '@mui/material';
+import type { ISeekRowProps } from './ReplayTypes';
 
 /**
  * A clickable row that a keyboard can reach: Tab lands on it, Enter or Space activates it,
@@ -11,23 +12,9 @@ import { Box, type SxProps, type Theme } from '@mui/material';
  * that toggle rather than seek; the caller's `sx` comes last, so it can override the focus
  * ring's inset.
  */
-interface SeekRowProps {
-    onClick: () => void;
-    disabled?: boolean;
-    label?: string;
-
-    /** A row that toggles something on and off (a reveal, a filter) rather than seeking. */
-    pressed?: boolean;
-
-    /** A row that opens and closes a detail panel below it. */
-    expanded?: boolean;
-    sx?: SxProps<Theme>;
-    children: React.ReactNode;
-}
-
 // Forwards its ref so a `Tooltip` can wrap it: MUI hands the tooltip's anchor ref to its
 // child, and a plain function component drops it, leaving the tooltip silently dead.
-const SeekRow = React.forwardRef<HTMLDivElement, SeekRowProps>(function SeekRow(
+const SeekRow = React.forwardRef<HTMLDivElement, ISeekRowProps>(function SeekRow(
     { onClick, disabled = false, label, pressed, expanded, sx, children, ...rest }, ref,
 ) {
     return (
@@ -46,7 +33,7 @@ const SeekRow = React.forwardRef<HTMLDivElement, SeekRowProps>(function SeekRow(
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }
             }}
             sx={[
-                { cursor: disabled ? 'default' : 'pointer', '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: -2 } },
+                styles.row(disabled),
                 ...(Array.isArray(sx) ? sx : [sx]),
             ]}
         >
@@ -56,3 +43,11 @@ const SeekRow = React.forwardRef<HTMLDivElement, SeekRowProps>(function SeekRow(
 });
 
 export default SeekRow;
+
+// ----------------Styles----------------//
+const styles = {
+    row: (disabled: boolean) => ({
+        cursor: disabled ? 'default' : 'pointer',
+        '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: -2 },
+    }),
+};

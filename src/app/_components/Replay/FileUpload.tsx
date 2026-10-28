@@ -5,10 +5,7 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { parse, SwuPgnDocument, type ParseNotes } from '@/lib/swupgn';
 import { noEventsMessage, replayTooHeavy } from '@/app/_utils/replayHandoff';
 import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
-
-interface FileUploadProps {
-    onReplayLoaded: (doc: SwuPgnDocument, content: string) => void;
-}
+import type { IFileUploadProps } from './ReplayTypes';
 
 // A real replay is a few hundred KB, zipped or not.
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB (upload cap)
@@ -17,7 +14,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB (upload cap)
 // not admit a file several times larger than the viewer accepts unzipped.
 const MAX_DECOMPRESSED_SIZE = 16 * 1024 * 1024; // 16 MB
 
-const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
+const FileUpload: React.FC<IFileUploadProps> = ({ onReplayLoaded }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -113,30 +110,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
     };
 
     return (
-        <Box sx={{ width: '100%' }}>
+        <Box sx={styles.container}>
             <Box
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onClick={handleClick}
-                sx={{
-                    width: '100%',
-                    height: '200px',
-                    border: '2px solid',
-                    borderColor: isDragging ? 'var(--initiative-blue)' : error ? '#f44336' : 'rgba(114,134,160,0.4)',
-                    borderRadius: '10px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.2s, background-color 0.2s',
-                    backgroundColor: isDragging ? 'rgba(0,186,255,0.08)' : 'rgba(0,0,0,0.2)',
-                    '&:hover': {
-                        borderColor: 'var(--initiative-blue)',
-                        backgroundColor: 'rgba(0,186,255,0.05)',
-                    },
-                }}
+                sx={styles.dropZone(isDragging, !!error)}
             >
                 <input
                     ref={inputRef}
@@ -146,34 +126,34 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
                     style={{ display: 'none' }}
                 />
                 {loading ? (
-                    <Typography variant="body1" sx={{ color: 'var(--initiative-blue)', mb: 0 }}>
+                    <Typography variant="body1" sx={styles.loading}>
                         Loading replay...
                     </Typography>
                 ) : (
                     <>
-                        <Typography variant="h3" sx={{ color: 'rgba(255,255,255,0.8)', mb: 0, fontWeight: 700 }}>
+                        <Typography variant="h3" sx={styles.dropTitle}>
                             Drop a .swupgn or .zip file here
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                        <Typography variant="body2" sx={styles.hint}>
                             or click to browse
                         </Typography>
                     </>
                 )}
                 {error && (
-                    <Typography variant="body2" role="alert" sx={{ color: 'error.main', mt: 1 }}>
+                    <Typography variant="body2" role="alert" sx={styles.error}>
                         {error}
                     </Typography>
                 )}
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1.5 }}>
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+            <Box sx={styles.footer}>
+                <Typography variant="body2" sx={styles.hint}>
                     Max upload: {MAX_FILE_SIZE / 1024 / 1024} MB
                 </Typography>
                 <PreferenceButton
                     variant="warning"
                     text="Browse Files"
                     buttonFnc={handleClick}
-                    sx={{ px: 3 }}
+                    sx={styles.browseButton}
                 />
             </Box>
         </Box>
@@ -181,3 +161,53 @@ const FileUpload: React.FC<FileUploadProps> = ({ onReplayLoaded }) => {
 };
 
 export default FileUpload;
+
+// ----------------Styles----------------//
+const styles = {
+    container: {
+        width: '100%',
+    },
+    dropZone: (isDragging: boolean, hasError: boolean) => ({
+        width: '100%',
+        height: '200px',
+        border: '2px solid',
+        borderColor: isDragging ? 'var(--initiative-blue)' : hasError ? '#f44336' : 'rgba(114,134,160,0.4)',
+        borderRadius: '10px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        transition: 'border-color 0.2s, background-color 0.2s',
+        backgroundColor: isDragging ? 'rgba(0,186,255,0.08)' : 'rgba(0,0,0,0.2)',
+        '&:hover': {
+            borderColor: 'var(--initiative-blue)',
+            backgroundColor: 'rgba(0,186,255,0.05)',
+        },
+    }),
+    loading: {
+        color: 'var(--initiative-blue)',
+        mb: 0,
+    },
+    dropTitle: {
+        color: 'rgba(255,255,255,0.8)',
+        mb: 0,
+        fontWeight: 700,
+    },
+    hint: {
+        color: 'rgba(255,255,255,0.4)',
+    },
+    error: {
+        color: 'error.main',
+        mt: 1,
+    },
+    footer: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mt: 1.5,
+    },
+    browseButton: {
+        px: 3,
+    },
+};

@@ -25,7 +25,6 @@ import { useReplay } from '@/app/_contexts/Replay.context';
  * file) is shown but does not turn the badge amber.
  */
 const MAX_LISTED = 40;
-const MONO = { color: 'rgba(255,255,255,0.65)', display: 'block', fontFamily: 'monospace', fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' } } as const;
 const fmt = (v: unknown) => (v === undefined ? '—' : typeof v === 'string' ? v : JSON.stringify(v));
 // A keyframe's seq comes off the file, so it may be any JSON value; it is shown as text (§23).
 const seqText = (v: unknown) => displayText(typeof v === 'string' ? v : String(JSON.stringify(v)));
@@ -49,7 +48,7 @@ const FileHealth: React.FC = () => {
         return (
             <Tooltip title="Every keyframe agrees with the folded events (§14), and the file follows the current writer">
                 {/* Focusable so the tooltip opens from the keyboard. */}
-                <Box tabIndex={0} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'rgba(120,220,150,0.75)', '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 } }}>
+                <Box tabIndex={0} sx={styles.consistentBadge}>
                     <CheckCircleOutlined sx={{ fontSize: 15 }} />
                     <Typography variant="caption">File consistent</Typography>
                 </Box>
@@ -83,57 +82,52 @@ const FileHealth: React.FC = () => {
                 onClick={() => setOpen((o) => !o)}
                 expanded={open}
                 label={`${badge}. Show details`}
-                sx={{
-                    display: 'flex', alignItems: 'center', gap: 0.5,
-                    color,
-                    '&:hover': { filter: 'brightness(1.15)' },
-                    '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
-                }}
+                sx={styles.badgeRow(color)}
             >
                 <Icon sx={{ fontSize: 15 }} />
-                <Typography variant="caption" sx={{ flex: 1 }}>{badge}</Typography>
-                <ExpandMore sx={{ fontSize: 16, transition: 'transform 0.15s', transform: open ? 'rotate(180deg)' : 'none' }} />
+                <Typography variant="caption" sx={styles.badgeText}>{badge}</Typography>
+                <ExpandMore sx={styles.expandIcon(open)} />
             </SeekRow>
             <Collapse in={open}>
                 {mismatches.length > 0 && (
                     <>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mt: 0.5 }}>
+                        <Typography variant="caption" sx={styles.mismatchIntro}>
                             The writer&apos;s own snapshots disagree with its own event stream (§14): the
                             deltas between two keyframes are under-recorded. The board follows the events
                             and resyncs at every keyframe. Fields affected:
                         </Typography>
                         {[...byPath].map(([path, n]) => (
-                            <Typography key={path} variant="caption" sx={MONO}>{path} ×{n}</Typography>
+                            <Typography key={path} variant="caption" sx={styles.mono}>{path} ×{n}</Typography>
                         ))}
-                        <Box component="ul" aria-label="Keyframe mismatches" sx={{ m: 0, mt: 0.5, pl: 1.5, maxHeight: 160, overflowY: 'auto' }}>
+                        <Box component="ul" aria-label="Keyframe mismatches" sx={styles.mismatchList}>
                             {mismatches.slice(0, MAX_LISTED).map((m, i) => (
-                                <Typography key={`${m.seq}-${m.path}-${i}`} component="li" variant="caption" sx={MONO}>
+                                <Typography key={`${m.seq}-${m.path}-${i}`} component="li" variant="caption" sx={styles.mono}>
                                     {seqText(m.seq)} {m.path}: expected {fmt(m.expected)}, got {fmt(m.got)}
                                 </Typography>
                             ))}
                             {mismatches.length > MAX_LISTED && (
-                                <Typography component="li" variant="caption" sx={MONO}>… and {mismatches.length - MAX_LISTED} more</Typography>
+                                <Typography component="li" variant="caption" sx={styles.mono}>… and {mismatches.length - MAX_LISTED} more</Typography>
                             )}
                         </Box>
                     </>
                 )}
                 {damaged.length > 0 && (
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.65)', display: 'block', mt: 0.5 }}>
+                    <Typography variant="caption" sx={styles.damaged}>
                         {damaged.length === 1 ? 'A keyframe' : `${damaged.length} keyframes`} ({damaged.map((m) => seqText(m.seq)).join(', ')}) missing a seat or malformed: ignored, the board keeps folding through it and that round boundary is not verified (§13).
                     </Typography>
                 )}
                 {issues.map((i) => (
-                    <Typography key={i.message} variant="caption" sx={{ color: i.severity === 'warning' ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.45)', display: 'block', mt: 0.5 }}>
+                    <Typography key={i.message} variant="caption" sx={styles.issue(i.severity === 'warning')}>
                         {i.message}
                     </Typography>
                 ))}
                 {generation.length > 0 && (
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mt: 1 }}>
+                    <Typography variant="caption" sx={styles.generationIntro}>
                         Written by an earlier 1.0 writer (§22):
                     </Typography>
                 )}
                 {generation.map((g) => (
-                    <Typography key={g} variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', display: 'block', mt: 0.5 }}>
+                    <Typography key={g} variant="caption" sx={styles.generationNote}>
                         {g}
                     </Typography>
                 ))}
@@ -143,3 +137,66 @@ const FileHealth: React.FC = () => {
 };
 
 export default FileHealth;
+
+// ----------------Styles----------------//
+const styles = {
+    mono: {
+        color: 'rgba(255,255,255,0.65)',
+        display: 'block',
+        fontFamily: 'monospace',
+        fontSize: { xs: 'max(11px, 0.68rem)', md: '0.68rem' },
+    } as const,
+    consistentBadge: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.5,
+        color: 'rgba(120,220,150,0.75)',
+        '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
+    },
+    badgeRow: (color: string) => ({
+        display: 'flex', alignItems: 'center', gap: 0.5,
+        color,
+        '&:hover': { filter: 'brightness(1.15)' },
+        '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
+    }),
+    badgeText: {
+        flex: 1,
+    },
+    expandIcon: (open: boolean) => ({
+        fontSize: 16,
+        transition: 'transform 0.15s',
+        transform: open ? 'rotate(180deg)' : 'none',
+    }),
+    mismatchIntro: {
+        color: 'rgba(255,255,255,0.5)',
+        display: 'block',
+        mt: 0.5,
+    },
+    mismatchList: {
+        m: 0,
+        mt: 0.5,
+        pl: 1.5,
+        maxHeight: 160,
+        overflowY: 'auto',
+    },
+    damaged: {
+        color: 'rgba(255,255,255,0.65)',
+        display: 'block',
+        mt: 0.5,
+    },
+    issue: (isWarning: boolean) => ({
+        color: isWarning ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.45)',
+        display: 'block',
+        mt: 0.5,
+    }),
+    generationIntro: {
+        color: 'rgba(255,255,255,0.5)',
+        display: 'block',
+        mt: 1,
+    },
+    generationNote: {
+        color: 'rgba(255,255,255,0.45)',
+        display: 'block',
+        mt: 0.5,
+    },
+};

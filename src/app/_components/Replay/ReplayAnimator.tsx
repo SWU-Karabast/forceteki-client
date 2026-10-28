@@ -10,6 +10,7 @@ import { parseSetId } from '@/app/_utils/swupgnBoardAdapter';
 import { s3CardImageURL, type CardImageLocale } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import type { Seat } from '@/lib/swupgn';
+import type { IReplayAnimatorProps } from './ReplayTypes';
 
 /**
  * Card motion between beats. Runs AFTER React commits the new frame (useLayoutEffect on
@@ -17,7 +18,7 @@ import type { Seat } from '@/lib/swupgn';
  * rects, plans intents from the beat's transitions, and runs them as Web Animations on
  * clones in this overlay. Forward by exactly one beat animates; anything else snaps.
  */
-const ReplayAnimator: React.FC<{ containerRef: React.RefObject<HTMLElement | null> }> = ({ containerRef }) => {
+const ReplayAnimator: React.FC<IReplayAnimatorProps> = ({ containerRef }) => {
     const { currentIndex, beats, transitionsOf, speed, isPlaying, currentPerspective, animate, gameState } = useReplay();
     const locale = useCardImageLocale();
     const overlayRef = useRef<HTMLDivElement>(null);
