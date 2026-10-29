@@ -46,7 +46,9 @@ function tokenById(map: Record<string, CardStat>, numericId: string): CardStat |
  * so no art: it rendered as a `SET#NUM` card from a set called `TOKEN:mandalorian`.
  */
 export function statOf(id: string, map: Record<string, CardStat>): CardStat | undefined {
-    const direct = map[baseId(id)];
+    // Own keys only: a file's id of `constructor` must not resolve to Object.prototype's.
+    const key = baseId(id);
+    const direct = Object.hasOwn(map, key) ? map[key] : undefined;
     if (direct) return direct;
     const art = tokenArtId(id);
     return art ? tokenById(map, art) : undefined;

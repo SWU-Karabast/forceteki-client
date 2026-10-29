@@ -19,6 +19,7 @@ describe('deckByFrame', () => {
     it('a mulligan return goes to the end of the deck', () => {
         const out = deckByFrame(doc(['A', 'B']), [mv('1', 'A', 'deck', 'hand'), mv('2', 'A', 'hand', 'deck')]);
         expect(out.at(1)![1].remaining).toEqual(['B', 'A']);
+        expect(out.at(1)![1].ordered).toBe(false);
     });
 
     it('ignores a from:deck MOVE for a card the order never listed, and a deck->deck MOVE', () => {

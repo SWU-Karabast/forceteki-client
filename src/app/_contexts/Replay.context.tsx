@@ -24,7 +24,7 @@ import { SPEEDS, autoplayDwellMs } from '@/app/_utils/replayTiming';
 import { readPrefs, PREFS_KEY, DEFAULT_PREFS, type StepBy } from '@/app/_utils/replayPrefs';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 import { resolveFrameRef } from '@/app/_utils/replayDeepLink';
-import { recordBack, recordForward, settle, simulSpans } from '@/app/_utils/simulGroups';
+import { alignBeats, recordBack, recordForward, settle, settleClip, simulSpans } from '@/app/_utils/simulGroups';
 import { ReplayContext } from '@/app/_contexts/ReplayContextCore';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
@@ -241,7 +241,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     // The beat timeline: stepping, scrubbing and autoplay all move by beat, not by frame.
     const adjacency = groupsByAdjacency(doc.header);
-    const beats = useMemo(() => buildBeats(events, { adjacency }), [events, adjacency]);
+    const beats = useMemo(() => alignBeats(buildBeats(events, { adjacency }), spans), [events, adjacency, spans]);
     const currentBeat = useMemo(() => beatAt(beats, currentIndex), [beats, currentIndex]);
     // What moved in a beat (classifyBeat), keyed off the frames it spans.
     const transitionsOf = useCallback(
@@ -417,8 +417,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             // Floored too, by resolveFrameRef: a fractional `?from=0.5` indexed no frame and
             // opened on a blank board.
             const start = Math.min(Math.max(0, fromFrame), last);
-            setClipState({ start, end: Math.min(Math.max(start, toFrame), last) });
-            setCurrentIndex(start);
+            // Settled like any seek: a clip inside one simul instant would otherwise loop back to
+            // a start that settles onto the frame it is already on, and stall while 'playing'.
+            const settled = settleClip(spans, start, Math.min(Math.max(start, toFrame), last));
+            setClipState(settled);
+            setCurrentIndex(settled.start);
             setIsPlaying(true);
         } else {
             setClipState(null);
@@ -433,7 +436,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             setCurrentIndex(Math.max(0, Math.min(target, totalFrames - 1)));
             setIsPlaying(false);
         }
-    }, [doc, events, initialFrame, totalFrames, clipStart, clipEnd, setCurrentIndex]);
+    }, [doc, events, initialFrame, totalFrames, clipStart, clipEnd, setCurrentIndex, spans]);
 
     // What happened on the current frame: a caption + the in-play card(s) to glow.
     // One side-aware resolver per frame, shared by the caption and every card the board names.
@@ -559,11 +562,11 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         if (!isPlaying) return;
         // A clip loops within [start, end]; normal playback runs to the end and stops.
         const step = playbackStep(beats, currentIndex, totalFrames, clip);
-        if (step.kind === 'loop') { setCurrentIndex(step.to); return; }
         if (step.kind === 'stop') { setIsPlaying(false); return; }
         // One timeout per BEAT, so an attack, a resource run or a draw burst holds on screen
         // as one step instead of dealing its records one at a time. The dwell is timed for
-        // the beat on screen, whose animation is playing now (autoplayDwellMs).
+        // the beat on screen, whose animation is playing now (autoplayDwellMs) -- a clip's last
+        // beat too, before the loop jumps back to its start.
         const next = step.to;
         const t = setTimeout(() => setCurrentIndex(next), autoplayDwellMs(beats, beatAt(beats, currentIndex), currentIndex, transitionsOf, speed));
         return () => clearTimeout(t);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveFrameRef } from '../replayDeepLink';
+import { linkRefsFound, resolveFrameRef } from '../replayDeepLink';
 
 const events = [{ seq: 'S.1' }, { seq: 'R1.A.1' }, { seq: 'R1.A.2u' }, { seq: 'R1.A.2u' }];
 
@@ -25,5 +25,20 @@ describe('resolveFrameRef', () => {
         expect(resolveFrameRef(events, '')).toBeNull();
         expect(resolveFrameRef(events, null)).toBeNull();
         expect(resolveFrameRef(events, undefined)).toBeNull();
+    });
+});
+
+describe('linkRefsFound', () => {
+    // Value: protects=a shared moment still opens on the reserialized download with notes, whose bytes no longer hash to the link id; fails_when=the page goes back to matching the hash alone; why_new=red team and api-contract found the moment dropped; seam=none; no_claim=the page's hash comparison
+    it('matches a link whose every seq is in the stream', () => {
+        expect(linkRefsFound(events, ['R1.A.2u', null, null])).toBe(true);
+        expect(linkRefsFound(events, [null, 'R1.A.1', 'R1.A.2u'])).toBe(true);
+    });
+
+    it('refuses a missing seq, a bare frame index, or no moment at all', () => {
+        expect(linkRefsFound(events, ['R1.A.1', 'R9.A.9', null])).toBe(false);
+        expect(linkRefsFound(events, ['3', null, null])).toBe(false);
+        expect(linkRefsFound(events, ['R1.A.1', '2', null])).toBe(false);
+        expect(linkRefsFound(events, [null, '', undefined])).toBe(false);
     });
 });

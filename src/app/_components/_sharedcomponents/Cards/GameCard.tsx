@@ -456,10 +456,12 @@ const GameCard: React.FC<IGameCardProps> = ({
             textTransform: 'capitalize',
             whiteSpace: 'nowrap',
         },
+        // Bottom edge, mirroring reconstructedMark: the top-right corner is the token badges' and
+        // the top edge the keyword strip's, and the mark took clicks meant for a token badge.
         effectMark: {
             position: 'absolute',
-            top: '-2%',
-            right: '4%',
+            bottom: '-2%',
+            right: '25%',
             fontSize: 'clamp(0.55rem, 1.2vw, 1rem)',
             fontWeight: 900,
             color: '#c8b4ff',

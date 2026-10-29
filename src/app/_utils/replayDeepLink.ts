@@ -16,3 +16,16 @@ export function resolveFrameRef(events: readonly { seq: string }[], value: strin
     const n = Math.floor(Number(value));
     return Number.isNaN(n) ? null : n;
 }
+
+/**
+ * Whether a link's moment names records of this stream: every `t`/`from`/`to` it carries is a
+ * `seq` the stream has. The download with notes is reserialized, so it no longer hashes to the
+ * id the link names, yet its seqs are the same game's. A bare frame index proves nothing (any
+ * file has a frame 3), so a link that carries one is matched by its id alone.
+ */
+export function linkRefsFound(events: readonly { seq: string }[], refs: readonly (string | null | undefined)[]): boolean {
+    const given = refs.filter((r): r is string => r != null && r !== '');
+    if (!given.length || given.some((r) => /^\d+$/.test(r))) return false;
+    const seqs = new Set(events.map((e) => e.seq));
+    return given.every((r) => seqs.has(r));
+}

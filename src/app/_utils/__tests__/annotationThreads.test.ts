@@ -64,3 +64,26 @@ describe('buildThreads on a parent cycle', () => {
         expect(tree[0].replies.map((n) => n.note.id)).toEqual(['b']);
     });
 });
+
+describe('buildThreads on a hostile file', () => {
+    // Value: protects=a file with a very deep reply chain or many cycles builds instead of crashing or freezing the Notes tab; fails_when=mark/sort recurse per level again or cycle detach scans every node; why_new=only 2-note cycles and shallow chains were tested; seam=none; no_claim=NoteCard render depth
+    it('builds a 50,000-deep reply chain without overflowing the stack', () => {
+        const notes: N[] = Array.from({ length: 50_000 }, (_, i) => ({ id: `n${i}`, parent: i ? `n${i - 1}` : undefined, ts: i, text: '' }));
+        const tree = build(notes);
+        expect(tree.map((n) => n.note.id)).toEqual(['n0']);
+        let depth = 0;
+        for (let n = tree[0]; n.replies.length; n = n.replies[0]) depth++;
+        expect(depth).toBe(49_999);
+    });
+
+    it('promotes one member of each of 40,000 two-note cycles in near-linear time', () => {
+        const notes: N[] = [];
+        for (let i = 0; i < 40_000; i++) notes.push({ id: `a${i}`, parent: `b${i}`, ts: 2 * i, text: '' }, { id: `b${i}`, parent: `a${i}`, ts: 2 * i + 1, text: '' });
+        const t0 = performance.now();
+        const tree = build(notes);
+        // gstack-timing-ok: the per-node scan was O(n^2) (~8s here); the parent map is O(n), well under 2s
+        expect(performance.now() - t0).toBeLessThan(2000);
+        expect(tree).toHaveLength(40_000);
+        expect(tree.every((r) => r.replies.length === 1)).toBe(true);
+    });
+});

@@ -55,8 +55,10 @@ function step(cur: Decks, e: GameEvent): void {
             const idx = deck.remaining.indexOf(e.card);
             if (idx >= 0) deck.remaining.splice(idx, 1);
         } else if (e.to === 'deck' && e.from !== 'deck' && deck.remaining.length < MAX_ZONE_LIST && !deck.remaining.includes(e.card)) {
-            // The stream doesn't say where in the deck it went; the end is the honest guess.
+            // The stream doesn't say where in the deck it went; the end is the honest guess,
+            // so the draw order is no longer known.
             deck.remaining.push(e.card);
+            deck.ordered = false;
         }
     }
 }

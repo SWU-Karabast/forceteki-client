@@ -137,6 +137,17 @@ describe('parse — DoS ceiling on event count', () => {
         const huge = header + Array.from({ length: 200_001 }, () => line).join('\n');
         expect(code(huge)).toBe('too-many-records');
     });
+
+    // Value: protects=a file with an absurd number of annotations is refused like one with too many events; fails_when=MAX_ANNOTATIONS is dropped on a re-vendor; why_new=MAX_EVENTS counts events only; seam=none; no_claim=the Notes tab render
+    it('refuses a file with an absurd number of annotations', () => {
+        const header = '[Game "SWU-PGN/1.0"]\n[GameId "g"] [Date "d"] [CardPool "S"] [Engine "e"] [Seed "0"]\n'
+            + '[P1Id "a"] [P2Id "b"] [P1 "A"] [P2 "B"]\n'
+            + '[P1Leader "S#1"] [P1Base "S#2"] [P2Leader "S#3"] [P2Base "S#4"]\n'
+            + '[Result "Draw"] [Reason "r"] [Rounds "1"]\n%%% EVENTS\n{"seq":"x","t":"PASS","p":1}\n%%% ANNOTATIONS\n';
+        const note = '{"ref":"x","text":"t"}';
+        expect(code(header + Array.from({ length: 20_000 }, () => note).join('\n'))).toBe('ok');
+        expect(code(header + Array.from({ length: 20_001 }, () => note).join('\n'))).toBe('too-many-records');
+    });
 });
 
 describe('parse — the Game tag gate (spec §18, §22.1)', () => {

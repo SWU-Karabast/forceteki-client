@@ -5,12 +5,12 @@ import { parse, fold, foldFrames, normalizeEvents, indexResolver, render, type G
 import { adaptState } from '../swupgnBoardAdapter';
 import { fileIssues } from '../swupgnFileIssues';
 import { buildMoveList, isNumberedAction } from '../swupgnMoves';
-import { buildBeats, beatAt } from '../replayBeats';
+import { buildBeats, beatAt, playbackStep } from '../replayBeats';
 import { groupsByAdjacency } from '../swupgnWriter';
 import { storyLineTargets, storySeekIndex } from '../storySeek';
 import { frameAction } from '../replayAction';
 import { sidedResolver } from '../swupgnCardNames';
-import { recordBack, recordForward, settle, simulSpans } from '../simulGroups';
+import { alignBeats, recordBack, recordForward, settle, settleClip, simulSpans } from '../simulGroups';
 import { activeEffectRows, effectNotesByCard, effectSources, effectTexts, ongoingEffectSummaries, spentAbilityRows } from '../effectWords';
 
 /**
@@ -112,6 +112,50 @@ describe('a simul group is one instant (§10.2)', () => {
         const spans = simulSpans([ev('a', 'x'), ev('b', 'y'), ev('c', 'x'), ev('d', 'y'), ev('e'), ev('f', 'z')]);
         expect([...spans.end]).toEqual([3, 3, 3, 3, 4, 5]);
         expect([...spans.start]).toEqual([0, 0, 0, 0, 4, 5]);
+    });
+
+    // Value: protects=an empty replay and an out-of-range index never crash or jump the scrubber; fails_when=settle/recordForward/recordBack index past the arrays or return NaN; why_new=only in-range frames were stepped; seam=none; no_claim=UI clamping
+    it('an empty stream and an out-of-range frame are left where they are', () => {
+        const none = simulSpans([]);
+        expect([settle(none, 0), recordForward(none, 0), recordBack(none, 0)]).toEqual([0, 0, 0]);
+        const ev = (seq: string, simul?: string) => ({ seq, t: 'PASS', p: 1, ...(simul ? { simul } : {}) }) as GameEvent;
+        const spans = simulSpans([ev('a'), ev('b', 'x'), ev('c', 'x')]);
+        expect([settle(spans, -1), settle(spans, 3)]).toEqual([-1, 3]);
+        expect(recordForward(spans, 2)).toBe(2);
+        expect(recordBack(spans, 99)).toBe(0);
+        expect(recordBack(spans, 0)).toBe(0);
+    });
+
+    // Value: protects=a simul group split across two beats (each seat's draw) is one beat, so Back is never stuck and every beat is reachable; fails_when=alignBeats is dropped or stops merging; why_new=the vectors never split a group across beats; seam=none; no_claim=which seat names the merged beat
+    it('a group that buildBeats splits across beats becomes one beat whose end is settled', () => {
+        const draw = (seq: string, p: Seat) => ({ seq, t: 'DRAW', p, card: 'SOR#1', simul: 'R1.S.1' }) as unknown as GameEvent;
+        const events = [{ seq: 'R1.start', t: 'ROUND_START', round: 1 } as GameEvent, draw('R1.S.1', 1), draw('R1.S.2', 2), { seq: 'R1.A.1', t: 'PASS', p: 1 } as GameEvent];
+        const spans = simulSpans(events);
+        const raw = buildBeats(events);
+        expect(raw.some((b) => settle(spans, b.end) !== b.end)).toBe(true);
+        const beats = alignBeats(raw, spans);
+        for (const b of beats) expect(settle(spans, b.end)).toBe(b.end);
+        expect(beats.map((b) => [b.start, b.end])).toEqual([[0, 0], [1, 2], [3, 3]]);
+        expect(beats.map((b) => b.index)).toEqual([0, 1, 2]);
+    });
+
+    it.each(REAL_GAMES)('%s: aligning the beats changes nothing on a real game', (name) => {
+        const { doc, events } = vector(name);
+        const beats = buildBeats(events, { adjacency: groupsByAdjacency(doc.header) });
+        expect(alignBeats(beats, simulSpans(events))).toEqual(beats);
+    });
+
+    // Value: protects=a clip whose ends sit in one simul instant stops instead of 'playing' with no timer; fails_when=clip ends stop being settled, so the loop target settles onto the current frame; why_new=red team traced the stall, untested; seam=none; no_claim=the autoplay effect's timer
+    it('a clip inside one instant settles to a single frame, which plays once and stops', () => {
+        const { events, at } = vector('effects');
+        const spans = simulSpans(events);
+        const clip = settleClip(spans, at('R2.A.2a'), at('R2.A.2b'));
+        expect(clip).toEqual({ start: at('R2.A.2b'), end: at('R2.A.2b') });
+        const beats = alignBeats(buildBeats(events), spans);
+        expect(playbackStep(beats, clip.start, events.length, clip).kind).toBe('stop');
+        const wide = settleClip(spans, at('R2.A.2a') - 1, at('R2.A.2b'));
+        expect(wide.start).toBeLessThan(wide.end);
+        expect(playbackStep(beats, wide.end, events.length, wide)).toEqual({ kind: 'loop', to: wide.start });
     });
 });
 

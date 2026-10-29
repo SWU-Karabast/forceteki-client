@@ -21,7 +21,8 @@ export function durationWords(duration: unknown, src: string, untilText: unknown
         case 'until': return `until ${typeof untilText === 'string' ? shorten(untilText) : 'a condition is met'}`;
         case 'delayed': return 'delayed';
         case 'game': return 'for the rest of the game';
-        default: return String(duration);
+        // A newer minor's duration (§18): the file's own word, neutralised and cut (§23, §16).
+        default: return shorten(displayText(String(duration)));
     }
 }
 
@@ -33,7 +34,7 @@ export function endWords(reason: unknown): string {
         case 'sourceLeft': return 'its source left play';
         case 'targetLeft': return 'its target changed zone';
         case 'cancelled': return 'cancelled';
-        default: return String(reason);
+        default: return shorten(displayText(String(reason)));
     }
 }
 
@@ -107,7 +108,7 @@ export function spentAbilityRows(s: ReducedState | undefined, nm: (id: string) =
         .map((u) => ({
             key: `${seat}:${u.card}:${u.ability}`,
             seat,
-            text: `${nm(u.card)}: ability used ${u.count} of ${u.max} ${PER_WORDS[u.per] ? `for ${PER_WORDS[u.per]}` : ''}`.trim(),
+            text: `${nm(u.card)}: ability used ${u.count} of ${u.max} ${Object.hasOwn(PER_WORDS, u.per) ? `for ${PER_WORDS[u.per]}` : ''}`.trim(),
         })));
 }
 

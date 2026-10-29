@@ -648,6 +648,8 @@ shims.
 - **`parse.ts` `MAX_EVENTS`** — 200k-event ceiling, stricter than upstream's 1,000,000-record
   `maxRecords`, which both apply. Reported with the same code, `too-many-records`. Upstream's cap
   is sized for a reader that never builds per-frame snapshots; the viewer does.
+- **`parse.ts` `MAX_ANNOTATIONS`** — 20k-annotation ceiling, same `too-many-records` code.
+  `MAX_EVENTS` counts events only, and the Notes tab threads and renders every annotation.
 - **`render.ts` keyframe layout** — the ROUND_START board summary lays out
   `snapToKeyframe(emptyState(), keyframe)`, not the raw keyframe. Upstream's
   `isCompleteKeyframe` rejects a half-shaped keyframe card (`isCompleteKeyframeCard`); the

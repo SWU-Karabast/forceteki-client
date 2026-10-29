@@ -149,6 +149,13 @@ describe('writerGeneration — which 1.0 writer wrote the file (§22)', () => {
         ]);
     });
 
+    // Value: protects=an upgrade moved onto another host in the same arena (§10.1) names its new host and is not an early-writer exit; fails_when=the to !== from guard is dropped; why_new=only true exits were tested; seam=none; no_claim=writer output
+    it('does not flag an upgrade moved to a new host within its arena', () => {
+        const doc = current();
+        const events: GameEvent[] = [...doc.events, ev({ t: 'MOVE', card: 'X#1', from: 'ground', to: 'ground', p: 1, attachedTo: 'SOR#108' })];
+        expect(writerGeneration({ ...doc, events })).toEqual([]);
+    });
+
     it('does not throw on a hostile events line', () => {
         const doc = current();
         expect(() => writerGeneration({ ...doc, events: [null, 5, { t: 'ROUND_START', keyframe: { players: { 1: null, 2: 'x' } } }] as unknown as GameEvent[] })).not.toThrow();

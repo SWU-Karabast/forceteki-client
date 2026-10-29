@@ -10,6 +10,14 @@ import 'simplebar-react/dist/simplebar.min.css';
 
 const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards = [], allowHover = false, maxCardOverlapPercent = 0.5, scrollbarEnabled = true, cardback = undefined, showCardCount = false }) => {
     const { connectedPlayer } = useGame();
+    // A card keeps its uuid as its key so it survives reorders; a uuid the hand repeats (a damaged
+    // replay keyframe, or a server placeholder for hidden cards) takes its index so keys stay unique.
+    const seenUuids = new Set<string>();
+    const ids = cards.map((card, i) => {
+        const unique = !!card.uuid && !seenUuids.has(card.uuid);
+        if (card.uuid) seenUuids.add(card.uuid);
+        return unique ? card.uuid : `${connectedPlayer}-hand-${i}`;
+    });
     const { isPortrait } = useScreenOrientation();
     const showDebugInfo = isDebugHandScalingEnabled();
     const customScrollbarStyles = `
@@ -229,7 +237,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 >
                     {cards.map((card, i) => (
                         <Box
-                            key={card.uuid ?? `${connectedPlayer}-hand-${i}`}
+                            key={ids[i]}
                             sx={{
                                 position: 'relative',
                                 width: 'auto',
@@ -261,7 +269,7 @@ const PlayerHand: React.FC<IPlayerHandProps> = ({ clickDisabled = false, cards =
                 >
                     {cards.map((card, i) => (
                         <Box
-                            key={card.uuid ?? `${connectedPlayer}-hand-${i}`}
+                            key={ids[i]}
                             sx={{
                                 position: 'absolute',
                                 width: 'auto',

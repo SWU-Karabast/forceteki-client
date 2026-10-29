@@ -504,6 +504,16 @@ describe('every §11 field reaches the board (spec conformance, forceteki 3c4ed3
         expect(w.statsReconstructed).toBeUndefined();
     });
 
+    it('caps a hostile keyword list and stringifies its entries', () => {
+        const huge: unknown[] = Array.from({ length: 5000 }, (_, i) => `kw${i}`);
+        huge[1] = 7;
+        // An untrusted file can put any JSON in the list, not just strings.
+        const gs = adaptState(state({}, { cards: [unit({ power: 1, hp: 1, keywords: huge as string[] })] }), doc, ids, {}, {});
+        const w = ground(gs, 'p1').find((c) => c.uuid === 'SOR#108')!;
+        expect(w.keywords).toHaveLength(20);
+        expect((w.keywords as string[]).slice(0, 2)).toEqual(['kw0', '7']);
+    });
+
     it('marks stats it had to rebuild from card data (a pre-STATS file), and shows none when it cannot', () => {
         const statMap = { 'SOR#108': { type: 'unit', power: 4, hp: 5 } };
         const rebuilt = ground(adaptState(state({}, { cards: [unit({ experience: 1 })] }), doc, ids, {}, statMap), 'p1')[0];

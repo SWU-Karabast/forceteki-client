@@ -17,8 +17,16 @@ const isDraw = (e: GameEvent) => e.t === 'DRAW' || (e.t === 'MOVE' && e.from ===
 const isReady = (e: GameEvent) => e.t === 'READY' || e.t === 'READY_RESOURCES';
 const seatOf = (e: GameEvent): Seat | undefined => ('p' in e && (e.p === 1 || e.p === 2) ? e.p : undefined);
 const cardOf = (e: GameEvent) => ('card' in e && typeof e.card === 'string' ? e.card : undefined);
+// The seq before a trailing run of lowercase letters (`R2.A.6a` -> `R2.A.6`), or undefined when
+// there is none. A scan from the end, not `/^(.*?)[a-z]+$/`: that backtracks quadratically, and a
+// file's seq can be up to a line long.
+const letterBase = (seq: string): string | undefined => {
+    let j = seq.length;
+    while (j > 0 && seq.charCodeAt(j - 1) >= 97 && seq.charCodeAt(j - 1) <= 122) j--;
+    return j < seq.length ? seq.slice(0, j) : undefined;
+};
 // The seq a lettered consequence points at: `R2.A.6a` -> `R2.A.6`; a bare `R2.A.6` is its own base.
-const baseSeq = (seq: string) => { const m = /^(.*?)[a-z]+$/.exec(seq); return m ? m[1] : seq; };
+const baseSeq = (seq: string) => letterBase(seq) ?? seq;
 interface Owner { key: string; kind: BeatKind; seat?: Seat; anchor: number }
 
 export function buildBeats(events: GameEvent[], opts: { adjacency?: boolean } = {}): Beat[] {
@@ -44,8 +52,8 @@ export function buildBeats(events: GameEvent[], opts: { adjacency?: boolean } = 
     for (let i = 0; i < events.length; i++) {
         const e = events[i];
         const filedFor = typeof e.for === 'string' ? actionFrames.get(e.for) : undefined;
-        const suffix = /^(.*?)[a-z]+$/.exec(e.seq);
-        const consequenceOf = suffix ? actionFrames.get(suffix[1]) : undefined;
+        const base = letterBase(e.seq);
+        const consequenceOf = base !== undefined ? actionFrames.get(base) : undefined;
         let o: Owner;
         if (BANNERS.has(e.t)) o = { key: `banner:${e.seq}`, kind: 'banner', anchor: i };
         else if (actionFrames.has(e.seq)) o = ownerOfAction(i);

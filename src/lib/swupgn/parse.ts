@@ -44,6 +44,9 @@ export const DEFAULT_LIMITS: Required<ParseLimits> = {
 // shared between users — can't freeze/OOM the tab. Upstream's cap counts every record and is
 // sized for a reader that never builds per-frame snapshots; the viewer does.
 const MAX_EVENTS = 200_000;
+// CLIENT-OWNED. The same ceiling for annotations, which MAX_EVENTS does not count: the Notes tab
+// threads and renders them, so an unbounded list is the same freeze in another tab.
+const MAX_ANNOTATIONS = 20_000;
 
 /** One `[Tag "value"]` pair. The only escapes are `\\` and `\"` (spec §4). */
 const TAG_PAIR = /\[([A-Za-z0-9]+)\s+"((?:[^"\\]|\\.)*)"\]/g;
@@ -446,7 +449,12 @@ export function parse(text: string, limits: ParseLimits = {}): ParsedDocument {
                 }
                 events.push(rec as GameEvent);
                 break;
-            case 'ANNOTATIONS': annotations.push(rec as Annotation); break;
+            case 'ANNOTATIONS':
+                if (annotations.length >= MAX_ANNOTATIONS) {
+                    throw new SwuPgnError('too-many-records', `more than ${MAX_ANNOTATIONS} annotations`, i + 1);
+                }
+                annotations.push(rec as Annotation);
+                break;
             default: break;
         }
     }

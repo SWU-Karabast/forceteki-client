@@ -61,3 +61,29 @@ export function recordBack(spans: SimulSpans, p: number): number {
     const at = Math.max(0, Math.min(p, spans.start.length - 1));
     return settle(spans, Math.max(0, spans.start[at] - 1));
 }
+
+/**
+ * Beats with no boundary inside an instant. buildBeats knows nothing of `simul`, so a group whose
+ * members fall in two beats (both seats' draws marked simul) would leave a beat ending mid-instant:
+ * a step to it settles on to the next beat, and a step back from there settles straight back.
+ * A beat that starts inside an instant begun in the beat before joins that beat.
+ */
+export function alignBeats<B extends { index: number; start: number; end: number; anchor: number }>(beats: readonly B[], spans: SimulSpans): B[] {
+    const out: B[] = [];
+    for (const b of beats) {
+        const last = out[out.length - 1];
+        if (last && b.start < spans.start.length && spans.start[b.start] <= last.end) {
+            last.end = b.end;
+            last.anchor = b.anchor;
+            continue;
+        }
+        out.push({ ...b, index: out.length });
+    }
+    return out;
+}
+
+/** A clip's ends where a seek would rest them, so a loop back to its start is a real move. */
+export function settleClip(spans: SimulSpans, start: number, end: number): { start: number; end: number } {
+    const s = settle(spans, start);
+    return { start: s, end: Math.max(s, settle(spans, end)) };
+}

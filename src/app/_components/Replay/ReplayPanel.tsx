@@ -55,7 +55,13 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
     const copy = (url: string, msg: string) => {
         navigator.clipboard?.writeText(url).then(() => setSnack(msg)).catch(() => setSnack('Copy failed'));
     };
+    // A link names the stored copy; without one (the IndexedDB save failed) it would open nothing.
+    const linkable = () => {
+        if (!replayId) setSnack('Not saved in this browser, so a link would not open this replay');
+        return !!replayId;
+    };
     const shareMoment = () => {
+        if (!linkable()) return;
         const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
         // Share the frame's `seq`, not its index: indices shift if the reader's set of
         // dropped records changes, seqs don't.
@@ -63,7 +69,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
             'Link copied — send the .swupgn with it, the replay lives in your browser');
     };
     const copyClipLink = () => {
-        if (!clip) return;
+        if (!clip || !linkable()) return;
         const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
         // Each end as its record's `seq`, like shareMoment: indices shift, seqs don't.
         const ref = (i: number) => encodeURIComponent(String(events[i]?.seq ?? i));

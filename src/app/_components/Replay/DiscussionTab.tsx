@@ -5,7 +5,7 @@ import { Close, Reply } from '@mui/icons-material';
 import { displayText } from '@/lib/swupgn';
 import { useReplay } from '@/app/_contexts/Replay.context';
 import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context';
-import { buildThreads } from '@/app/_utils/annotationThreads';
+import { buildThreads, type ThreadNode } from '@/app/_utils/annotationThreads';
 import { NAG_ORDER, nagInfo, NAG_TONE_COLOR } from '@/app/_utils/nagGlyphs';
 import AnnotationBadge from './AnnotationBadge';
 import type { IComposerProps, INagPickerProps, INoteCardProps, Note } from './ReplayTypes';
@@ -14,6 +14,22 @@ import type { IComposerProps, INagPickerProps, INoteCardProps, Note } from './Re
 const TOUCH_TARGET = { minWidth: { xs: 44, md: 0 }, minHeight: { xs: 44, md: 0 } };
 
 const idOf = (n: Note) => n._id ?? n.id;
+
+// Replies nest this deep; anything deeper lists flat under the last level. A file's reply chain
+// can be thousands long, and one nested component per level would overflow React's stack.
+const MAX_NOTE_DEPTH = 6;
+
+/** Every reply below `node`, depth-first in thread order, each without its own replies. */
+function flatReplies(node: ThreadNode<Note>): ThreadNode<Note>[] {
+    const out: ThreadNode<Note>[] = [];
+    const stack = node.replies.slice().reverse();
+    while (stack.length) {
+        const n = stack.pop()!;
+        out.push({ note: n.note, replies: [] });
+        for (let i = n.replies.length - 1; i >= 0; i--) stack.push(n.replies[i]);
+    }
+    return out;
+}
 
 const NagPicker: React.FC<INagPickerProps> = ({ value, onChange }) => (
     <Box sx={styles.nagPicker}>
@@ -124,8 +140,8 @@ const NoteCard: React.FC<INoteCardProps> = ({ node, onReply, onDelete, depth = 0
             {replying && id && (
                 <Composer compact seq={n.ref} placeholder={`Reply to ${displayText(n.by) || 'Anonymous'}…`} onSubmit={(text, _nag, ref) => { if (text) { onReply(id, ref, text); setReplying(false); } }} />
             )}
-            {node.replies.map((child, i) => (
-                <NoteCard key={idOf(child.note) ?? i} node={child} onReply={onReply} onDelete={onDelete} depth={depth + 1} />
+            {(depth + 1 < MAX_NOTE_DEPTH ? node.replies : flatReplies(node)).map((child, i) => (
+                <NoteCard key={idOf(child.note) ?? i} node={child} onReply={onReply} onDelete={onDelete} depth={Math.min(depth + 1, MAX_NOTE_DEPTH)} />
             ))}
         </Box>
     );

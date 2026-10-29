@@ -20,7 +20,8 @@ export function makeNameResolver(map: Record<string, string>): NameResolver {
                 const name = looseTokenName(id);
                 return name.replace(/(^|[\s-])\w/g, (c) => c.toUpperCase());
             }
-            return map[baseId(id)] ?? String(id);
+            const key = baseId(id);
+            return (Object.hasOwn(map, key) ? map[key] : undefined) ?? String(id);
         },
     };
 }

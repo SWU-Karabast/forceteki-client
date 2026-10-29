@@ -12,5 +12,6 @@ export const useCardCostMap = (): Record<string, number> => useStaticJson<Record
 
 /** Cost of a card id (SET#NUM[:copy]) via the map, or undefined if unknown (no-cost / not loaded). */
 export function costOf(id: string, map: Record<string, number>): number | undefined {
-    return map[baseId(id)];
+    const key = baseId(id);
+    return Object.hasOwn(map, key) ? map[key] : undefined;
 }

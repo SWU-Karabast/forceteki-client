@@ -21,6 +21,7 @@ import { displayText, parse, SwuPgnDocument } from '@/lib/swupgn';
 import { generateReplayId, loadReplay } from '@/app/_utils/replayStorage';
 import { replayUrl, storeReplayContent, replayTooHeavy } from '@/app/_utils/replayHandoff';
 import { formatResult, resultOf } from '@/app/_utils/replayMoves';
+import { linkRefsFound } from '@/app/_utils/replayDeepLink';
 import { useCardNameMap } from '@/app/_utils/swupgnCardNames';
 import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
 import { REPLAY_PANEL_WIDTH, REPLAY_TRANSPORT_HEIGHT } from '@/app/_constants/replayLayout';
@@ -244,8 +245,10 @@ export default function ReplayPage() {
         setLoading(false);
         setLoadError(null);
         // A link's moment (t/from/to) is for the replay it names: it applies to the dropped
-        // file only when that file is the one the link's id was hashed from (or there is no id).
-        const linked = !replayId || replayId === await generateReplayId(doc.header, content);
+        // file when that file is the one the link's id was hashed from (or there is no id), or
+        // when every seq the link names is in it (the reserialized download with notes).
+        const linked = !replayId || linkRefsFound(doc.events, [tParam, clipStart, clipEnd])
+            || replayId === await generateReplayId(doc.header, content);
         if (seq !== loadSeq.current) return;
         show({ id: null, doc, linked });
         try {

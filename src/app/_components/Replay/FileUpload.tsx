@@ -19,12 +19,17 @@ const FileUpload: React.FC<IFileUploadProps> = ({ onReplayLoaded }) => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+    // Bumped per pick: a slow file (a big zip) that finishes after a newer pick must not replace it.
+    const pickRef = useRef(0);
 
     const processFile = useCallback(async (file: File) => {
+        const pick = ++pickRef.current;
+        const current = () => pick === pickRef.current;
+        const fail = (message: string) => { if (current()) setError(message); };
         setError(null);
 
         if (file.size > MAX_FILE_SIZE) {
-            setError(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is ${MAX_FILE_SIZE / 1024 / 1024} MB.`);
+            fail(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is ${MAX_FILE_SIZE / 1024 / 1024} MB.`);
             return;
         }
 
@@ -48,37 +53,37 @@ const FileUpload: React.FC<IFileUploadProps> = ({ onReplayLoaded }) => {
                     decompressed = await extractReplayFromZip(new Uint8Array(buffer), MAX_DECOMPRESSED_SIZE);
                 } catch (zipErr) {
                     if (zipErr instanceof ReplayTooLargeError) {
-                        setError(zipErr.message);
+                        fail(zipErr.message);
                         return;
                     }
                     throw zipErr;
                 }
                 if (!decompressed) {
-                    setError('No .swupgn file found in zip.');
+                    fail('No .swupgn file found in zip.');
                     return;
                 }
                 rawContent = strFromU8(decompressed);
                 doc = parse(rawContent);
             } else {
-                setError('Please upload a .swupgn or .zip file.');
+                fail('Please upload a .swupgn or .zip file.');
                 return;
             }
 
             if (doc.events.length === 0) {
-                setError(noEventsMessage(doc));
+                fail(noEventsMessage(doc));
                 return;
             }
             const heavy = replayTooHeavy(doc);
             if (heavy) {
-                setError(heavy);
+                fail(heavy);
                 return;
             }
-            onReplayLoaded(doc, rawContent);
+            if (current()) onReplayLoaded(doc, rawContent);
         } catch (err) {
             // By the §24 code, never the message: a parse message is free text and may quote the file.
-            setError(replayErrorMessage(err, 'Failed to parse file.'));
+            fail(replayErrorMessage(err, 'Failed to parse file.'));
         } finally {
-            setLoading(false);
+            if (current()) setLoading(false);
         }
     }, [onReplayLoaded]);
 

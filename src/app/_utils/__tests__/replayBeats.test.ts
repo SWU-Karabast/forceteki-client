@@ -20,6 +20,24 @@ describe('buildBeats', () => {
         for (const b of beats) { expect(b.anchor).toBeGreaterThanOrEqual(b.start); expect(b.anchor).toBeLessThanOrEqual(b.end); expect(b.index).toBe(beats.indexOf(b)); }
     });
 
+    // Value: protects=a hostile file's long seq cannot hang buildBeats on load; fails_when=a backtracking /^(.*?)[a-z]+$/ returns to the seq split; why_new=no test fed an oversized seq; seam=none; no_claim=other per-record work on huge files
+    it('splits a lettered seq in linear time, so a hostile seq cannot hang the page', () => {
+        const hostile = 'R1.A.1' + 'a'.repeat(300_000) + '!';
+        const lettered = 'R1.A.1' + 'a'.repeat(300_000);
+        const stream = [
+            { seq: 'R1.A.1', t: 'PASS', p: 1 },
+            { seq: hostile, t: 'PASS', p: 2 },
+            { seq: lettered, t: 'DAMAGE', card: 'SOR#1', amount: 1 },
+        ] as unknown as GameEvent[];
+        const t0 = performance.now();
+        const out = buildBeats(stream);
+        // gstack-timing-ok: the quadratic regex took ~30s at this size, the scan takes ~1ms; 2s only separates the two
+        expect(performance.now() - t0).toBeLessThan(2000);
+        // The lettered record still rides with the action its base names.
+        expect(out[out.length - 1].end).toBe(2);
+        expect(beatAt(out, 2).anchor).toBe(0);
+    });
+
     it('turns 540 records into 134 beats', () => {
         expect(beats).toHaveLength(134);
         const kinds = beats.reduce<Record<string, number>>((m, b) => ({ ...m, [b.kind]: (m[b.kind] ?? 0) + 1 }), {});

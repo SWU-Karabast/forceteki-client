@@ -22,6 +22,9 @@ const Board: React.FC<IBoardProps> = ({
     const opponentId = playerIds.find((id) => id !== connectedPlayer) || '';
     const titleOpponent = gameState.players[opponentId].user.username;
     const titleCurrentPlayer = gameState.players[connectedPlayer].user.username;
+    // A spectator's labels name the seat drawn there: the first player in the state is seat 1. A
+    // live spectator always watches from seat 1; the replay viewer can swap to seat 2.
+    const seatLabel = (id: string) => (id === playerIds[0] ? 'Player1' : 'Player2');
 
     const playerLeader = gameState?.players[connectedPlayer].leaders?.[0];
     let playerBase = gameState?.players[connectedPlayer].base;
@@ -322,7 +325,7 @@ const Board: React.FC<IBoardProps> = ({
                             <LeaderBaseCard
                                 card={opponentLeader}
                                 cardStyle={LeaderBaseCardStyle.Leader}
-                                title={isSpectator ? 'Player2' : titleOpponent}
+                                title={isSpectator ? seatLabel(opponentId) : titleOpponent}
                                 isLeader={true}
                             />
                         </Box>
@@ -354,7 +357,7 @@ const Board: React.FC<IBoardProps> = ({
                             <LeaderBaseCard
                                 card={playerLeader}
                                 cardStyle={LeaderBaseCardStyle.Leader}
-                                title={isSpectator ? 'Player1' : titleCurrentPlayer}
+                                title={isSpectator ? seatLabel(connectedPlayer) : titleCurrentPlayer}
                                 isLeader={true}
                             />
                         </Box>

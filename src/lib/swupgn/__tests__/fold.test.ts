@@ -1149,6 +1149,18 @@ describe('isCompleteKeyframe reads a null optional list as absent', () => {
         expect(isCompleteKeyframe({ players: { 1: seat({ resources: null, baseUpgrades: null, baseCaptured: null }), 2: seat() } })).toBe(true);
         expect(isCompleteKeyframe({ players: { 1: seat({ resources: new Array(1001).fill('X') }), 2: seat() } })).toBe(false);
     });
+
+    // Value: protects=a keyframe whose effects list the fold cannot end by id or target is damaged, not snapped to (§13); fails_when=isCompleteEffectList is dropped or loosened; why_new=only the per-seat rev-6 fields had malformed rows; seam=none; no_claim=a writer emitting it
+    it('refuses a present but unusable effects list, and accepts an absent or well-formed one', () => {
+        const players = { 1: { cards: [], hand: [], discard: [] }, 2: { cards: [], hand: [], discard: [] } };
+        expect(isCompleteKeyframe({ players })).toBe(true);
+        expect(isCompleteKeyframe({ players, effects: [] })).toBe(true);
+        expect(isCompleteKeyframe({ players, effects: [{ id: 'fx@1', targets: ['SOR#108'] }, { id: 'fx@2' }] })).toBe(true);
+        for (const bad of [5, null, [null], [{ targets: [] }], [{ id: 7 }], [{ id: 'fx@1', targets: 'SOR#108' }],
+            [{ id: 'fx@1', targets: new Array(1001).fill('X') }], new Array(1001).fill({ id: 'fx@1' })]) {
+            expect(isCompleteKeyframe({ players, effects: bad }), JSON.stringify(bad)?.slice(0, 60)).toBe(false);
+        }
+    });
 });
 
 describe('leaders: flips, mirror copies and pilots (review cycle-2 cells)', () => {
@@ -1265,5 +1277,22 @@ describe('fold record order (spec §9.1 [W-18])', () => {
         const without = [arrive, { seq: 'R1.A.2', t: 'MOVE', p: 1, card: 'SOR#108', from: 'ground', to: 'base' }] as GameEvent[];
         const withKind = [arrive, { seq: 'R1.A.2', t: 'MOVE', p: 1, card: 'SOR#108', from: 'ground', to: 'base', kind: 'unit' }] as GameEvent[];
         expect(plain(fold(withKind))).toEqual(plain(fold(without)));
+    });
+});
+
+describe('checkKeyframes abilityUses with a newer-minor per (§18)', () => {
+    const rest = (n: 1 | 2, extra = {}) => ({ seat: n, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0,
+        resourcesExhausted: 0, credits: 0, hasForce: false, discard: [], cards: [], ...extra });
+    const use = { seq: 'R1.A.1', t: 'ABILITY_ACTIVATE', p: 1, card: 'SOR#045', ability: 'a1', kind: 'action', limit: { max: 1, per: 'round' } };
+    const kf = (abilityUses: object[]) => ({ seq: 'R1.end', t: 'ROUND_END', round: 1,
+        keyframe: { round: 1, phase: 'action', initiative: 1, players: { 1: rest(1, { abilityUses }), 2: rest(2) } } });
+    const paths = (events: object[]) => checkKeyframes(events as GameEvent[]).mismatches.map((m) => m.path);
+
+    // Value: protects=a keyframe use whose per this reader does not know is left out of the compare, not reported; fails_when=sameUses stops filtering unknown per; why_new=only the fold side of an unknown per was tested; seam=none; no_claim=newer-minor writer output
+    it('ignores an entry with an unknown per, and still compares the known ones', () => {
+        const known = { card: 'SOR#045', ability: 'a1', count: 1, per: 'round', max: 1 };
+        const newer = { card: 'SOR#046', ability: 'a2', count: 1, per: 'turn', max: 1 };
+        expect(paths([use, kf([known, newer])])).toEqual([]);
+        expect(paths([use, kf([{ ...known, count: 0 }, newer])])).toEqual(['players.1.abilityUses']);
     });
 });

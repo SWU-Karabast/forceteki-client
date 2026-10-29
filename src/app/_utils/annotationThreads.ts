@@ -41,6 +41,8 @@ export function buildThreads<T>(
     }
 
     const roots: ThreadNode<T>[] = [];
+    // Each node's parent, so a cycle member detaches from the one list it is in (not a scan of all).
+    const parentNodeOf = new Map<ThreadNode<T>, ThreadNode<T>>();
     let i = 0;
     for (const n of notes) {
         const key = order[i++];
@@ -49,39 +51,46 @@ export function buildThreads<T>(
         const parentNode = parent && present.has(parent) ? nodes.get(parent) : undefined;
         if (parentNode && parentNode !== node) {
             parentNode.replies.push(node);
+            parentNodeOf.set(node, parentNode);
         } else {
             roots.push(node);
         }
     }
 
-    // A parent cycle in a file (A replies to B, B to A) attaches every member to another member,
-    // so none is a root and the whole cycle vanished while the move still showed a note badge.
-    // Promote the first unreachable note in file order, which brings the rest of its cycle back.
+    // Walks below are iterative: a file's reply chain can be thousands deep, past the call stack.
     const reached = new Set<ThreadNode<T>>();
     const mark = (list: ThreadNode<T>[]) => {
-        for (const n of list) {
-            if (!reached.has(n)) {
-                reached.add(n);
-                mark(n.replies);
-            }
+        const stack = list.slice();
+        while (stack.length) {
+            const n = stack.pop()!;
+            if (reached.has(n)) continue;
+            reached.add(n);
+            for (const r of n.replies) stack.push(r);
         }
     };
     mark(roots);
+    // A parent cycle in a file (A replies to B, B to A) attaches every member to another member,
+    // so none is a root and the whole cycle vanished while the move still showed a note badge.
+    // Promote the first unreachable note in file order, which brings the rest of its cycle back.
     for (const key of order) {
         const node = nodes.get(key)!;
         if (reached.has(node)) continue;
-        for (const other of nodes.values()) {
-            const at = other.replies.indexOf(node);
-            if (at >= 0) other.replies.splice(at, 1);
+        const parentNode = parentNodeOf.get(node);
+        if (parentNode) {
+            const at = parentNode.replies.indexOf(node);
+            if (at >= 0) parentNode.replies.splice(at, 1);
+            parentNodeOf.delete(node);
         }
         roots.push(node);
         mark([node]);
     }
 
-    const sortRec = (list: ThreadNode<T>[]) => {
-        list.sort((a, b) => tsOf(a.note) - tsOf(b.note));
-        for (const node of list) sortRec(node.replies);
-    };
-    sortRec(roots);
+    const byTs = (a: ThreadNode<T>, b: ThreadNode<T>) => tsOf(a.note) - tsOf(b.note);
+    const lists: ThreadNode<T>[][] = [roots];
+    while (lists.length) {
+        const list = lists.pop()!;
+        list.sort(byTs);
+        for (const node of list) if (node.replies.length) lists.push(node.replies);
+    }
     return roots;
 }
