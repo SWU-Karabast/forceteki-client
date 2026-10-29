@@ -11,6 +11,7 @@ import { useReplayAnnotations } from '@/app/_contexts/ReplayAnnotations.context'
 import { downloadClipWebm } from '@/app/_utils/exportClipWebm';
 import MovesTab from './MovesTab';
 import FileHealth from './FileHealth';
+import ActiveEffects from './ActiveEffects';
 import DeckTab from './DeckTab';
 import StoryTab from './StoryTab';
 import ResourcingReport from './ResourcingReport';
@@ -135,6 +136,9 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
             <Box sx={styles.fileHealth}>
                 <FileHealth />
             </Box>
+
+            {/* What is in force at this frame: lasting effects, spent limited abilities (§11). */}
+            <ActiveEffects />
 
             {/* Action toolbar (share / download / fog / clip) */}
             <Box sx={styles.toolbar}>

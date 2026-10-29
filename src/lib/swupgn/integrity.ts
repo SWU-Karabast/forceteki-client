@@ -1,5 +1,5 @@
-import type { CardInstanceState, GameEvent, PlayerState, ReducedState } from './types';
-import { emptyState, isCompleteKeyframe, reduce, snapToKeyframe } from './fold';
+import type { AbilityUse, ActiveEffect, CardInstanceState, GameEvent, PlayerState, ReducedState } from './types';
+import { clearAbilityUses, emptyState, isCompleteKeyframe, reduce, snapToKeyframe } from './fold';
 
 export interface KeyframeMismatch {
     seq: string; path: string; expected: unknown; got: unknown;
@@ -24,17 +24,21 @@ function sameTokens(a: unknown, b: unknown): boolean {
  * Fields that the keyframe gate verifies, per seat.
  *
  * GATED (reconstructable from the event model, single source of truth = the event stream):
- * `initiativeTaken`; per seat `baseHp`, `handSize`, `deckSize`, `resourcesReady`,
+ * `initiativeTaken`; `effects` (as a set by id, see sameEffects); per seat `baseHp`, `handSize`, `deckSize`, `resourcesReady`,
  * `resourcesExhausted`, `credits`, `hasForce`, `baseEpicActionUsed`, the leader's `id`/
  * `deployed`/`exhausted`/`epicActionUsed`/`onStartingSide`; `hand` (as a set — a hand is
  * unordered), `discard` (in order — the pile is), `resources`, `baseUpgrades` and
- * `baseCaptured` (as sets) and `baseDefeated` (a boolean, absent read as false); and per
+ * `baseCaptured` (as sets), `abilityUses` (as a set by card and ability, see sameUses) and
+ * `baseDefeated` (a boolean, absent read as false); and per
  * in-play card matched by id: `zone`, `damage`, `exhausted`, `shields`,
  * `experience`, `statusTokens`, `upgrades` and `captured` (both as sets — attachment order is
- * not part of the model), `power`, `hp` and `keywords` (the live values `STATS` records carry).
+ * not part of the model), `power`, `hp` and `keywords` (the live values `STATS` records carry),
+ * `traits`, `blank`, `leaderUnit`, `copyOf`, `name`, `cost` and `aspects` (see diffAttributes), and
+ * `owner` and `upgradeControllers` (see diffControl); per seat also `foreignResources` (as a set).
  * `baseHp` and `deckSize` are exempt at the first keyframe only — see checkKeyframes. Fields an
  * older file's keyframe lacks (`deckSize`, `leader`, `power`, `hp`, `keywords`,
- * `initiativeTaken`, `resources`, `baseUpgrades`, `baseCaptured`) are skipped: absent is "not recorded", not "zero".
+ * `initiativeTaken`, `resources`, `baseUpgrades`, `baseCaptured`, `effects`, `abilityUses`,
+ * `foreignResources`, and the attribute and control fields above) are skipped: absent is "not recorded", not "zero".
  *
  * `hand`/`discard` CONTENTS were previously ungated, on the belief that only the counts were
  * reconstructable. They are not: every MOVE names its card, so both lists are exact. The fold
@@ -54,7 +58,53 @@ function sameTokens(a: unknown, b: unknown): boolean {
  * which in practice happens only under the integration test harness's double-setup
  * (GameStateBuilder), not in a production game. See SwuPgnKeyframeCompleteness.spec.ts.
  */
-function diffCard(seq: string, seat: 1 | 2, e: CardInstanceState, g: CardInstanceState): KeyframeMismatch[] {
+/**
+ * The attribute fields beyond power/HP/keywords (spec §14). `traits` is written on every unit by a
+ * writer that records attributes, so a keyframe card carrying it says the rest are recorded too:
+ * then an absent `blank` / `leaderUnit` reads `false` and an absent copy field reads "not a copy".
+ * A keyframe card without `traits` predates them, and only a field it does carry is compared.
+ */
+function diffAttributes(seq: string, base: string, e: CardInstanceState, g: CardInstanceState): KeyframeMismatch[] {
+    const out: KeyframeMismatch[] = [];
+    const recorded = Array.isArray(e.traits);
+    if (recorded && !sameSet(e.traits, g.traits)) {
+        out.push({ seq, path: `${base}.traits`, expected: e.traits, got: g.traits });
+    }
+    for (const field of ['blank', 'leaderUnit'] as const) {
+        if ((recorded || e[field] !== undefined) && (e[field] === true) !== (g[field] === true)) {
+            out.push({ seq, path: `${base}.${field}`, expected: e[field] === true, got: g[field] === true });
+        }
+    }
+    for (const field of ['copyOf', 'name', 'cost'] as const) {
+        if ((recorded || e[field] !== undefined) && e[field] !== g[field]) {
+            out.push({ seq, path: `${base}.${field}`, expected: e[field], got: g[field] });
+        }
+    }
+    // As a sorted list, so as a multiset: a card may carry one aspect twice.
+    if ((recorded || e.aspects !== undefined) && !sameSet(e.aspects, g.aspects)) {
+        out.push({ seq, path: `${base}.aspects`, expected: e.aspects, got: g.aspects });
+    }
+    return out;
+}
+
+/**
+ * Control and ownership on a card (spec §14). `controlRecorded` is true when the keyframe's seat
+ * carries `foreignResources`, which a writer that records control writes on every seat: then an
+ * absent `owner` means the holding seat owns the card and an absent `upgradeControllers` means none.
+ */
+function diffControl(seq: string, base: string, e: CardInstanceState, g: CardInstanceState, controlRecorded: boolean): KeyframeMismatch[] {
+    const out: KeyframeMismatch[] = [];
+    if ((controlRecorded || e.owner !== undefined) && e.owner !== g.owner) {
+        out.push({ seq, path: `${base}.owner`, expected: e.owner, got: g.owner });
+    }
+    // A map of upgrade ids to seats, compared like a status-token map; a missing map is an empty one.
+    if ((controlRecorded || e.upgradeControllers !== undefined) && !sameTokens(e.upgradeControllers, g.upgradeControllers)) {
+        out.push({ seq, path: `${base}.upgradeControllers`, expected: e.upgradeControllers, got: g.upgradeControllers });
+    }
+    return out;
+}
+
+function diffCard(seq: string, seat: 1 | 2, e: CardInstanceState, g: CardInstanceState, controlRecorded = false): KeyframeMismatch[] {
     const out: KeyframeMismatch[] = [];
     const base = `players.${seat}.cards[${e.id}]`;
     for (const field of ['zone', 'damage', 'exhausted', 'shields', 'experience'] as const) {
@@ -81,6 +131,7 @@ function diffCard(seq: string, seat: 1 | 2, e: CardInstanceState, g: CardInstanc
     if (Array.isArray(e.keywords) && !sameSet(e.keywords, g.keywords)) {
         out.push({ seq, path: `${base}.keywords`, expected: e.keywords, got: g.keywords });
     }
+    out.push(...diffAttributes(seq, base, e, g), ...diffControl(seq, base, e, g, controlRecorded));
     return out;
 }
 
@@ -122,6 +173,15 @@ function diffSeat(seq: string, seat: 1 | 2, e: PlayerState, g: PlayerState, chec
     if (Array.isArray(e.baseCaptured) && !sameSet(e.baseCaptured, g.baseCaptured)) {
         out.push({ seq, path: `players.${seat}.baseCaptured`, expected: e.baseCaptured, got: g.baseCaptured });
     }
+    // The row's cards the other seat owns, as a set, on the same terms as `resources`.
+    if (Array.isArray(e.foreignResources) && !sameSet(e.foreignResources, g.foreignResources)) {
+        out.push({ seq, path: `players.${seat}.foreignResources`, expected: e.foreignResources, got: g.foreignResources });
+    }
+    // Limited abilities' uses, as a set. Compared only when the keyframe carries them, so a file
+    // written before `abilityUses` existed still passes.
+    if (Array.isArray(e.abilityUses) && !sameUses(e.abilityUses, g.abilityUses)) {
+        out.push({ seq, path: `players.${seat}.abilityUses`, expected: e.abilityUses, got: g.abilityUses });
+    }
     // The BASE's Epic Action. Compared only when the keyframe states it -- a base without one
     // carries no flag, and neither does a file written before this existed.
     if (typeof e.baseEpicActionUsed === 'boolean' && e.baseEpicActionUsed !== (g.baseEpicActionUsed ?? false)) {
@@ -155,7 +215,7 @@ function diffSeat(seq: string, seat: 1 | 2, e: PlayerState, g: PlayerState, chec
             out.push({ seq, path: `players.${seat}.cards[${ec.id}]`, expected: 'present', got: 'absent' });
             continue;
         }
-        out.push(...diffCard(seq, seat, ec, gc));
+        out.push(...diffCard(seq, seat, ec, gc, Array.isArray(e.foreignResources)));
     }
     for (const gc of g.cards) {
         if (!expectedById.has(gc.id)) {
@@ -165,11 +225,47 @@ function diffSeat(seq: string, seat: 1 | 2, e: PlayerState, g: PlayerState, chec
     return out;
 }
 
+/**
+ * Two effect lists hold the same effects, compared AS A SET BY ID (start order is not part of the
+ * model): each id with the same `src`, `p`, `seat`, `duration` and targets as a set. A missing
+ * list is an empty one.
+ */
+function sameEffects(a: unknown, b: unknown): boolean {
+    const norm = (x: unknown) => (Array.isArray(x) ? (x as Partial<ActiveEffect>[]) : [])
+        .map((fx) => [String(fx?.id), fx?.src, fx?.p, Array.isArray(fx?.targets) ? [...fx.targets].map(String).sort() : null, fx?.seat ?? null, fx?.duration])
+        .sort(([i1], [i2]) => (String(i1) < String(i2) ? -1 : String(i1) > String(i2) ? 1 : 0));
+    return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
+}
+
+/**
+ * Two `abilityUses` lists hold the same uses, compared AS A SET keyed by card and ability (first-use
+ * order is not part of the model): each with the same `count`, `per` and `max`. An entry whose `per` this
+ * reader does not know (a newer minor version, §18) is left out on both sides: the fold cannot
+ * reset it, so it cannot be held to it. A missing list is an empty one.
+ */
+function sameUses(a: unknown, b: unknown): boolean {
+    const known = new Set(['phase', 'round', 'game']);
+    const norm = (x: unknown) => (Array.isArray(x) ? (x as Partial<AbilityUse>[]) : [])
+        .filter((u) => known.has(String(u?.per)))
+        .map((u) => [String(u?.card), String(u?.ability), u?.count, u?.per, u?.max])
+        .sort((x, y) => {
+            const kx = JSON.stringify(x.slice(0, 2));
+            const ky = JSON.stringify(y.slice(0, 2));
+            return kx < ky ? -1 : kx > ky ? 1 : 0;
+        });
+    return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
+}
+
 /** Compares the gated set of fold-tracked invariants against each keyframe (see above). */
 function diff(seq: string, expected: ReducedState, got: ReducedState, checkBaseHp: boolean): KeyframeMismatch[] {
     const out: KeyframeMismatch[] = [];
     if (typeof expected.initiativeTaken === 'boolean' && expected.initiativeTaken !== (got.initiativeTaken ?? false)) {
         out.push({ seq, path: 'initiativeTaken', expected: expected.initiativeTaken, got: got.initiativeTaken ?? false });
+    }
+    // Lasting and delayed effects, as a set by id. Compared only when the keyframe carries them,
+    // so a file written before `effects` existed still passes.
+    if (Array.isArray(expected.effects) && !sameEffects(expected.effects, got.effects)) {
+        out.push({ seq, path: 'effects', expected: expected.effects, got: got.effects });
     }
     // `active` is deliberately NOT compared. It is stated, not reconstructed: ROUND_START,
     // PHASE_START and keyframes carry it, and deriving it from the actions in between would mean
@@ -210,10 +306,12 @@ export function checkKeyframes(events: GameEvent[]): IntegrityResult {
                 continue;
             }
             // A ROUND_START keyframe describes a round that has begun: the initiative counter is
-            // available again, whatever last round did with it (the ROUND_START rule the snap
-            // skips would have reset it).
+            // available again, whatever last round did with it, and the limited abilities' per-phase
+            // and per-round uses are cleared (the ROUND_START rule the snap skips would have reset both).
             if (e.t === 'ROUND_START') {
                 s.initiativeTaken = false;
+                // Likewise the per-phase and per-round uses of limited abilities.
+                clearAbilityUses(s, ['phase', 'round']);
             }
             mismatches.push(...diff(e.seq, e.keyframe, s, seenKeyframe));
             seenKeyframe = true;

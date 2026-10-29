@@ -37,9 +37,9 @@ const protoKeys = () => [Object.prototype, Array.prototype, Function.prototype]
     .map((p) => Object.getOwnPropertyNames(p).sort().join(','));
 
 describe('manifest.json', () => {
-    it('lists 10 positive and 29 negative vectors, each naming its writer', () => {
-        expect(MANIFEST.vectors.filter((v) => v.class === 'positive')).toHaveLength(10);
-        expect(MANIFEST.vectors.filter((v) => v.class === 'negative')).toHaveLength(29);
+    it('lists 13 positive and 33 negative vectors, each naming its writer', () => {
+        expect(MANIFEST.vectors.filter((v) => v.class === 'positive')).toHaveLength(13);
+        expect(MANIFEST.vectors.filter((v) => v.class === 'negative')).toHaveLength(33);
         for (const v of MANIFEST.vectors) {
             expect(typeof v.writer, v.file).toBe('string');
         }

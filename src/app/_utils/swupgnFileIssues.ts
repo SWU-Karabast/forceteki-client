@@ -23,6 +23,7 @@ const KNOWN_EVENT_TYPES = new Set<string>([
     'CREATE_TOKEN', 'MOVE', 'CAPTURE', 'RESCUE', 'TAKE_CONTROL', 'SHIELD_GAIN', 'SHIELD_USE',
     'EXPERIENCE_GAIN', 'STATUS_TOKEN', 'STATS', 'OVERWHELM', 'SEARCH', 'REVEAL', 'TRIGGER',
     'PHASE_START', 'PHASE_END', 'ROUND_START', 'ROUND_END', 'GAME_END', 'UNDO',
+    'LOOK', 'NAME', 'ABILITY_RESET', 'EFFECT_START', 'EFFECT_END',
 ]);
 
 /** The complete zone vocabulary (spec §6.2). Any other string in from/to/zone is non-conformant. */
@@ -155,6 +156,16 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     let inertMoves = 0;
     let badZones = 0;
     let partialKeyframes = 0;
+    // The four writer slips the CR v9.0 pass made validator errors (§24). A reader has no codes to
+    // show, so each is counted and said once, in the words the others use.
+    let roundStartNoActive = 0;
+    let tokenNotOutside = 0;
+    let fortifyEnemyBase = 0;
+    let effectEndUnknown = 0;
+    // The effects in force, by id, with the targets each still has (null: no targets), followed in
+    // file order as the validator follows them.
+    const activeFx = new Map<string, Set<string> | null>();
+    const ids = (x: unknown): string[] => (Array.isArray(x) ? x.filter((v): v is string => typeof v === 'string') : []);
     for (const e of doc.events as Array<GameEvent & { from?: unknown; to?: unknown; zone?: unknown; keyframe?: { players?: Record<string, unknown> } }>) {
         if (e == null || typeof e !== 'object') continue;
         const t = String(e.t);
@@ -164,6 +175,26 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
             continue;
         }
         if (t === 'DEFEAT' && (e as { reason?: unknown }).reason === 'unknown') unknownDefeats++;
+        const r = e as unknown as Record<string, unknown>;
+        // [W-46]: every ROUND_START names its first active seat, the initiative holder, whatever the
+        // file's revision (Appendix C: forceteki revisions 1-5 wrote it too). A pre-release file
+        // is the one exception: Appendix C makes no claim for it.
+        if (t === 'ROUND_START' && r.active !== 1 && r.active !== 2 && !isPreRelease(h)) roundStartNoActive++;
+        // [W-47]: a token leaving play ceases to exist (CR 3.7.3), so its MOVE goes to outsideTheGame.
+        if (t === 'MOVE' && typeof r.card === 'string' && r.card.startsWith('TOKEN:') && r.to !== 'outsideTheGame'
+            && r.from !== r.to && (r.from === 'base' || r.from === 'ground' || r.from === 'space')) tokenNotOutside++;
+        // §10.3: a Fortify upgrade attaches to the base of the seat that played it.
+        const fortifyHost = t === 'MOVE' && r.to === 'base' ? r.attachedTo : t === 'PLAY_UPGRADE' ? r.target : undefined;
+        if (typeof fortifyHost === 'string' && /^base@[12]$/.test(fortifyHost) && typeof r.p === 'number' && fortifyHost !== `base@${r.p}`) fortifyEnemyBase++;
+        // §10.1: an EFFECT_END ends an effect in force, and a partial one names targets it still has.
+        if (t === 'EFFECT_START' && typeof r.id === 'string') activeFx.set(r.id, Array.isArray(r.targets) ? new Set(ids(r.targets)) : null);
+        if (t === 'EFFECT_END' && typeof r.id === 'string') {
+            const held = activeFx.get(r.id);
+            const gone = ids(r.targets);
+            if (held === undefined || (gone.length > 0 && (held === null || gone.some((x) => !held.has(x))))) effectEndUnknown++;
+            else if (gone.length === 0 || held === null) activeFx.delete(r.id);
+            else { gone.forEach((x) => held.delete(x)); if (held.size === 0) activeFx.delete(r.id); }
+        }
         if (t === 'MOVE') {
             // §10.1: from/to required, non-empty, distinct, and from the vocabulary. A MOVE from an
             // arena to itself is an attachment changing hosts (§2.1 rule 4), not inert.
@@ -192,6 +223,18 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     }
     if (badZones > 0) {
         out.push({ severity: 'warning', message: `${plural(badZones, 'record')} naming a zone outside the vocabulary (§6.2).` });
+    }
+    if (roundStartNoActive > 0) {
+        out.push({ severity: 'warning', message: `${plural(roundStartNoActive, 'ROUND_START')} without an active seat: the initiative holder is whatever the keyframe, or the round before, says (§10.1).` });
+    }
+    if (tokenNotOutside > 0) {
+        out.push({ severity: 'warning', message: `${plural(tokenNotOutside, 'token')} leaving play for a zone other than outsideTheGame: a token that leaves play ceases to exist, but this file puts it in a pile (§10.1).` });
+    }
+    if (fortifyEnemyBase > 0) {
+        out.push({ severity: 'warning', message: `${plural(fortifyEnemyBase, 'upgrade')} attached to the other player's base: a Fortify upgrade attaches to its own player's base (§10.3).` });
+    }
+    if (effectEndUnknown > 0) {
+        out.push({ severity: 'warning', message: `${plural(effectEndUnknown, 'EFFECT_END')} for an effect not in force, or a target it does not have: ignored (§10.1).` });
     }
     if (partialKeyframes > 0) {
         out.push({ severity: 'warning', message: `${plural(partialKeyframes, 'keyframe')} missing a seat; the folded state was kept for that seat instead (§13).` });
@@ -279,7 +322,9 @@ export function writerGeneration(doc: SwuPgnDocument & ParseNotes): string[] {
         if (e.t === 'MOVE') {
             if (e.to === 'resource') resourced.add(e.card);
             if (e.from === 'resource') resourced.delete(e.card);
-            if ((e.from === 'ground' || e.from === 'space') && typeof e.attachedTo === 'string' && e.attachedTo) exitWithHost++;
+            // An exit only: a MOVE that stays in its arena (an upgrade moved onto another host there,
+            // §10.1) names its NEW host, as it must.
+            if ((e.from === 'ground' || e.from === 'space') && e.to !== e.from && typeof e.attachedTo === 'string' && e.attachedTo) exitWithHost++;
             if (e.from === 'outsideTheGame' && e.to === 'deck') deckBuild++;
         } else if (e.t === 'TAKE_CONTROL' && !e.zone) {
             controlNoZone++;

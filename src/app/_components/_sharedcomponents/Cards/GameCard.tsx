@@ -456,6 +456,20 @@ const GameCard: React.FC<IGameCardProps> = ({
             textTransform: 'capitalize',
             whiteSpace: 'nowrap',
         },
+        effectMark: {
+            position: 'absolute',
+            top: '-2%',
+            right: '4%',
+            fontSize: 'clamp(0.55rem, 1.2vw, 1rem)',
+            fontWeight: 900,
+            color: '#c8b4ff',
+            textShadow: '0 0 3px black',
+            lineHeight: 1,
+            zIndex: 3,
+            cursor: 'help',
+            pointerEvents: 'auto',
+            '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
+        },
         reconstructedMark: {
             position: 'absolute',
             bottom: '-2%',
@@ -636,6 +650,11 @@ const GameCard: React.FC<IGameCardProps> = ({
                         {card.statsReconstructed && (
                             <Tooltip title="Power and HP rebuilt from card data: this replay predates STATS records, so ability effects are not included" arrow>
                                 <Box sx={styles.reconstructedMark} tabIndex={0} role="img" aria-label="Stats reconstructed from card data">≈</Box>
+                            </Tooltip>
+                        )}
+                        {!!card.effectNotes?.length && (
+                            <Tooltip title={card.effectNotes.join(' · ')} arrow>
+                                <Box sx={styles.effectMark} tabIndex={0} role="img" aria-label={`Under ${card.effectNotes.length === 1 ? 'an effect' : `${card.effectNotes.length} effects`}: ${card.effectNotes.join('; ')}`}>✦</Box>
                             </Tooltip>
                         )}
                         {!!card.keywords?.length && (

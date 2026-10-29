@@ -1,14 +1,15 @@
 # Vendored SWU-PGN reader
 
-Source: forceteki `swupgn/src/`. Re-vendored 2026-10-28 at upstream **`18cd06297`** (branch
-`swu-game-notation`; "keep test names out of normative §12.1 and state reader units"), on top of
-the earlier same-day syncs at `a2c013963`, `950a65a82` (client `2222127`) and `c233908d6`. Synced
-from that commit, not from a working tree. The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit,
-and it is **normative** (§2): the reference code, schemas and vectors are informative, and where
-they disagree the text governs. The conformance suite (`swupgn/test-vectors/`: 10 positive
-vectors, 29 in `negative/`, `manifest.json`) is copied verbatim into `__tests__/fixtures/vectors/`.
-The forceteki writer is now `WriterRevision` 5; the eight real-game vectors were regenerated, and
-their `.fold.json`/`.render.txt` are byte-identical to the previous sync's.
+Source: forceteki `swupgn/src/`. Re-vendored 2026-10-29 at upstream **`6147b3c58`** (branch
+`swu-game-notation`; "initiative row names ROUND_START.active; EFFECT_START table unsplit; discard
+simul counts cards"), the CR v9.0 coverage pass, on top of the earlier syncs at `18cd06297`
+(client `2f51623`), `a2c013963`, `950a65a82` (client `2222127`) and `c233908d6`. Synced from that
+commit, not from a working tree. The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit, and it is
+**normative** (§2): the reference code, schemas and vectors are informative, and where they
+disagree the text governs. The conformance suite (`swupgn/test-vectors/`: 13 positive vectors, 33
+in `negative/`, `manifest.json` listing 46) is copied verbatim into `__tests__/fixtures/vectors/`.
+The format is still 1.0; the forceteki writer is now `WriterRevision` 6, and the eleven real-game
+vectors were regenerated from a clean commit (`forceteki@f74700d3f`).
 
 `types.ts` is **verbatim**. `render.ts` and `integrity.ts` are verbatim apart from one line each,
 the keyframe they read — see the divergence list. `fold.ts`, `parse.ts` and `cardNames.ts` are
@@ -19,6 +20,137 @@ numbers with `swupgnMoves.isNumberedAction`, the same rule plus the kind-less fa
 the story's numbering on every vector. `ids.ts` is **verbatim** (it holds literal combining marks
 in a regex, as upstream does). `validate.ts` stays omitted (Node-only: fs/path + ajv). `tokens.ts`,
 `serialize.ts`, `displayText.ts` and `foldFrames` are client-only.
+
+## What `18cd06297..6147b3c58` changed (all handled here)
+
+The CR v9.0 coverage pass (spec §22 "CR v9.0 coverage pass (2026-10-28)"): every piece of game
+state CR 1.16.1 lists is now a record the board carries, required of writers from revision 6.
+Reader files: `types.ts`, `ids.ts`, `cardNames.ts`, `fold.ts`, `integrity.ts`, `render.ts`
+(`parse.ts` and `actionLinks.ts` did not change). Ported by a three-way merge of upstream's diff
+onto the client's copy; the conflicts were the client-owned blocks below.
+
+1. **`types.ts`: verbatim.** `EffectDuration`, `EffectSeat`, `EffectEndReason`, `LimitPer`,
+   `ActiveEffect`, `AbilityUse`; records `LOOK`, `NAME`, `ABILITY_RESET`, `EFFECT_START`,
+   `EFFECT_END`; `simul` on any record, `CHOICE.blind`, `ABILITY_ACTIVATE.limit`/`usedBy`,
+   `STATS.traits`/`blank`/`leaderUnit`/`copyOf`/`name`/`cost`/`aspects`, `TAKE_CONTROL.owner`,
+   `SEARCH.owner`/`seen`, `MOVE.exhausted` into `resource`; on the board a card's
+   `owner`/`upgradeControllers`/attributes and a seat's `abilityUses`/`foreignResources`, and the
+   state's `effects`.
+2. **`ids.ts`: verbatim** (`EFFECT_ID`, `fx@N`), in the barrel.
+3. **`cardNames.ts`:** `shorten` is exported (render.ts imports it; the barrel exports it too).
+   The client-owned `indexResolver` and its flatten → `displayText` → cut order are unchanged.
+4. **`fold.ts`: upstream plus the client-owned blocks.** Every new rule of §12.2 is upstream's
+   code verbatim: ROUND_START sets `initiative` from `active` and clears `phase`/`round` uses,
+   PHASE_START clears `phase` uses; a MOVE into `resource` with `exhausted: true` counts as
+   exhausted; a leader moving `base` → arena is deployed without a DEPLOY_LEADER; a token CAPTURE
+   holds nothing; EFFECT_START/EFFECT_END build `effects`; a limited ABILITY_ACTIVATE counts into
+   `abilityUses` (latest `max` kept), ABILITY_RESET removes entries; STATS replaces the attribute
+   set; TAKE_CONTROL of an attached upgrade writes the host's `upgradeControllers`, a unit under
+   the seat that does not own it gets `owner`, a resource steal keeps `foreignResources`; a card
+   arriving from the other seat's pile is recorded with its `owner`. The client blocks that had
+   to absorb the new fields:
+   - `isCompleteSeat` (the client's per-seat §13 check) now refuses a seat whose
+     `foreignResources` is present but not a capped list, whose `abilityUses` is not a capped list
+     of complete uses, or one of whose cards has an `upgradeControllers` that is not a map:
+     upstream's rule exactly, since later records rewrite all three. (Older optional lists are
+     still read as absent when not an array; see the divergence list.)
+   - `snapToKeyframe` carries the new state: each card's `owner` (a seat only), `upgradeControllers`
+     (own, non-reserved keys whose value is a seat, `seatMap`), `traits`/`aspects` (capped string
+     lists), `blank`/`leaderUnit` (true only), `copyOf`/`name` (strings), `cost` (finite); each
+     seat's `foreignResources` and `abilityUses`; and the keyframe's `effects`, which REPLACE the
+     folded list as upstream's snap does. Each stays absent when the keyframe does not carry it.
+     A damaged `effects` (upstream would refuse the whole keyframe) keeps the folded effects, as a
+     damaged seat keeps the folded seat (`isCompleteEffectList`, upstream's check split out).
+   - `isCompleteKeyframe` calls `isCompleteSeat` for the per-seat checks; upstream's
+     `isCompleteKeyframeCard` is still not ported (the snap normalizes cards instead).
+   - `foldFrames` still produces one frame per record, each with the new fields (asserted in
+     `writerRevision6.test.ts`).
+   - The discard block (placed after the base-token counts in the client) sets `ownerSeat` as
+     upstream's does.
+5. **`integrity.ts`:** verbatim apart from the client's one `snapToKeyframe` line. The gate now
+   compares `effects`, `abilityUses`, `foreignResources` and each card's owner, upgrade
+   controllers, traits (as a multiset), `blank`, `leaderUnit` and copy fields, and clears
+   `phase`/`round` uses before comparing a ROUND_START keyframe (`clearAbilityUses`).
+6. **`render.ts`:** verbatim apart from the client's one keyframe line. New lines for
+   EFFECT_START (who, source, `plainText(text)` cut like a name, targets or the seat, duration
+   words), EFFECT_END (source looked up by id, partial targets, reason words), LOOK, NAME (cut like
+   a card name) and " (used by …)"; a copy is named by its copied name; ABILITY_RESET prints
+   nothing; `limit`, `blind`, `simul`, `SEARCH.owner`/`seen` change no line. `plainText` is in the
+   barrel. §23: the story and every caption reach the DOM as React text (no
+   `dangerouslySetInnerHTML` anywhere in the replay UI), and `text`'s icon markup is turned into
+   plain words by `plainText` before it is shown, never rendered as HTML.
+7. **`actionLinks.ts`: nothing to port.** `TOP_LEVEL_ACTIONS` and `isTopLevelActionRecord` are
+   byte-identical at `18cd06297` and `6147b3c58`, and the file itself did not change.
+8. **Lettered ability-made actions (§9.1).** An Ambush attack, an event's "attack with a unit",
+   an ability that plays a unit is a lettered sub-step now (`control` R7.A.1c). Nothing in the
+   client needed to change: `isNumberedAction` already refuses a lettered seq, so `storySeek`
+   and the captions number like the story, and `buildBeats` keeps a lettered action in the beat
+   of the action that caused it, which is what the scrubber steps by. The Moves tab is a seek
+   list, not a numbered one: it still offers the Ambush ATTACK as a row (as it offers a DEFEAT),
+   and seeking it lands on the end of the PLAY's beat. `homeworldsReplay.test.ts` holds numbered
+   captions to the story on all 13 vectors; `writerRevision6.test.ts` pins R7.A.1c. One
+   consequence fixed: a copy (Clone) is named by its copied name in the story, so
+   `swupgnCardNames.sidedResolver` now names a unit with `copyOf`/`name` on its folded entry by
+   that name (made safe and cut like an index name), and the board draws its copied art.
+9. **`simul` groups are one instant (§10.2).** New `src/app/_utils/simulGroups.ts`: each group's
+   span is its first member to its last (keyed by the `simul` value; overlapping spans merged).
+   `Replay.context`'s `setCurrentIndex` settles every seek (slider, deep link, story line, move
+   row, annotation, autoplay) on the end of the group it lands in; the per-record step goes over
+   a group whole either way. Beat steps already end at a beat's end, which is never inside a group
+   on any vector. Render needs nothing: it prints the members in file order.
+10. **Initiative.** The board's initiative token (`hasInitiative`), the clip exporter and the
+    trays' action-phase opening all read the folded `initiative`, which the fold now takes from
+    `ROUND_START.active`. Nothing derives it from anything else.
+11. **New board state** (UI coverage table below):
+    - `effects`: a compact "Active effects" list under File Health (`ActiveEffects.tsx`), one line
+      per effect in the story's words (source, what it applies to, how long), and a `✦` mark with
+      a tooltip on each unit an effect targets (`effectNotes`). `effectWords.ts` mirrors
+      render.ts's private `durationWords`/`endWords` word for word (test-held to `render()`); an
+      active effect's `until` reads "until a condition is met", since the board keeps no
+      `untilText`. A base targeted by an effect is listed, not marked.
+    - `abilityUses`: a spent limited ability (`count` ≥ `max`) is listed in the same box
+      ("ability used 1 of 1 for this round"). Unspent counts are not shown.
+    - A copy: `clonedCardId`/`clonedCardName`, which the live `GameCard` already draws. A blank
+      unit: `isBlanked`, GameCard's blank icon. `owner`: the unit's `ownerId`, so a stolen unit on
+      its controller's side shows the stolen icon. An upgrade in its host's `upgradeControllers`
+      stays drawn on its host (it is attached there) with `controllerId` = the controlling seat,
+      so GameCard marks it too. `foreignResources`: nothing beyond the resource counts.
+    - Not surfaced: `traits`, `leaderUnit`, a copy's `cost`/`aspects`, and SEARCH/LOOK/NAME
+      (story and captions only).
+12. **Notes the fold ignores** (LOOK, NAME, CHOICE.blind, SEARCH.seen/owner,
+    ABILITY_ACTIVATE.usedBy) are in the story and the captions; nothing is hidden (§21 item 1).
+13. **File Health.** Four counted warnings, one per new validator error, in the existing style:
+    `round-start-active` ("ROUND_START without an active seat"), `token-zone`, `fortify-host` and
+    `effect-end-unknown`. Fold, render and adapt survive all four negatives. A missing `active` is
+    reported whatever the revision (Appendix C: forceteki revisions 1–5 wrote it), except on a
+    pre-release file. KNOWN_EVENT_TYPES has the five new types, so a revision-6 file reports no
+    unknown types. Also fixed: `writerGeneration` counted an upgrade moved onto another host in
+    the same arena (`ground` → `ground` with `attachedTo`, allowed by §10.1) as an "early writer"
+    exit MOVE.
+14. **Older files.** `effects`, `abilityUses` and `foreignResources` stay absent for a file from
+    revisions 1–5 (upstream's fold, and the client's snap keeps absent absent), and the viewer
+    shows no effects box at all for one: `activeEffectRows`/`spentAbilityRows` return `null`, not
+    `[]`. Pinned on upstream's `minimal-rev4.swupgn` fixture (copied into `__tests__/fixtures/`).
+    `swupgnCompat` and `writerRevision5` stay green.
+15. **Vectors.** Whole `test-vectors/` re-copied from git at `6147b3c58`: positives 13 (new
+    `effects`, `visibility`, `control`), negatives 33 (new `effect-end-unknown`,
+    `fortify-enemy-base`, `round-start-no-active`, `token-to-hand`; the others gained `active` on
+    their ROUND_START). `minimal` is revision 6; `other-writer` DID change (its ROUND_START got
+    `active`, its keyframes `foreignResources`/`abilityUses`/`effects`, its STATS `traits`, its
+    regroup resource MOVEs `exhausted`). Fold and render equality hold for all 13 with no client
+    change to derived files. `vectorsBoard.test.ts` asserts no `-dirty` Engine and no File Health
+    line at all again.
+16. **Export.** `serialize()` now writes the header in the file's own tag order (`ParseNotes.tagOrder`,
+    a client-owned addition), so each real-game vector's header round-trips byte for byte
+    (`writerRevision5.test.ts`); before, `HEADER_ORDER` put `EndDate` after `Date`. Every new
+    record type and field rides through export unchanged and in order (`vectors.test.ts`
+    round trip on all 13).
+
+Tests: `__tests__/crCoverage.test.ts` ports upstream's new `fold`, `integrity`, `render` and
+`parse` cases for this range verbatim (40 cases); `types.spec.ts`'s additions hold types to the
+JSON schema the client does not copy, and `validate`/`actionLinks`/`writerLinks` specs cover code
+the client does not ship. `src/app/_utils/__tests__/writerRevision6.test.ts` covers items 8–11,
+13 and 14.
 
 ## What `a2c013963..18cd06297` changed (all handled here)
 
@@ -421,7 +553,7 @@ fallbacks noted below. Verified per vector at the final frame by
 | §11 field | Adapter output | Component |
 |---|---|---|
 | `round`, `phase` | `gameState.phase`; the round comes from the current `seq` | `TransportControls` (round/phase label, round marks) |
-| `initiative` | `players[id].hasInitiative` | `Board` initiative token |
+| `initiative` | `players[id].hasInitiative` (the fold takes it from `ROUND_START.active`, revision 6) | `Board` initiative token |
 | `initiativeTaken` | `gameState.initiativeClaimed` (older file: `initiative != null`) | `Board` initiative token (filled = taken) |
 | `baseHp` / `baseMaxHp` | `base.hp` = printed HP (card data) or the keyframe's `baseMaxHp`; `base.damage` = max − `baseHp`. Before the first keyframe the fold holds the placeholder 30, so `Replay.context.baseHpByFrame` supplies card-data HP for that window only (§21) | `LeaderBaseCard` (base) |
 | `handSize`, `hand[]` | `cardPiles.hand`: the named cards, padded to `handSize` with face-down placeholders (a Perspective file); fog-of-war hides identities and keeps the count | `PlayerHand` |
@@ -448,7 +580,14 @@ fallbacks noted below. Verified per vector at the final frame by
 | `cards[].upgrades` | one parented arena card per printed upgrade / pilot, named and aspected for the banner | `UnitsBoard` → `GameCard` upgrade bars |
 | `cards[].shields`, `experience`, `statusTokens` | one parented `token` card per counter (`Shield`, `Experience`, `Advantage`, `Weakness`, any other name titled from the token) | `GameCard` token badges; an unknown token name renders as a named bar |
 | `cards[].captured` | `cardPiles.capturedZone`, one card per captive with `parentCardId` = captor; a base's captives are `baseCaptured`, above | `UnitsBoard` → `GameCard` captured strip |
-| controller vs owner | `controllerId` = the seat whose list holds the card; `ownerId` from the file's DECKS/header (`ownerSeatMap`), so a `TAKE_CONTROL`ed card shows the stolen icon | `GameCard` status icons |
+| controller vs owner | `controllerId` = the seat whose list holds the card; `ownerId` = the card's folded `owner` when it has one (revision 6), else the file's DECKS/header (`ownerSeatMap`), so a `TAKE_CONTROL`ed card shows the stolen icon | `GameCard` status icons |
+| `cards[].upgradeControllers` | the attached upgrade's `controllerId` (it stays drawn on its host) | `GameCard` stolen icon on the upgrade |
+| `cards[].blank` | `isBlanked` | `GameCard` blank status icon |
+| `cards[].copyOf`, `name` | `clonedCardId`, `clonedCardName` (the copied art and name); the story name via `sidedResolver` | `GameCard` |
+| `cards[].traits`, `leaderUnit`, `cost`, `aspects` | **nothing** (no live-board field shows them) | — |
+| `effects` | `activeEffectRows` (one line per effect, story wording) and each target unit's `effectNotes`; `null` (no box) when absent | `ActiveEffects` (panel), `GameCard` `✦` mark |
+| `abilityUses` | `spentAbilityRows` (spent ones only); `null` when absent | `ActiveEffects` |
+| `foreignResources` | nothing beyond the resource counts | `Resources` |
 
 Live-play cues the board shows around the cards, rebuilt per frame from the file
 (`replayLiveCues.ts`): whose action it is (`isActionPhaseActivePlayer`, the trays' turn aura;
@@ -473,9 +612,10 @@ the §5.3/§6.2/§10.1/§13/§18 notes (`fileIssues`) and which earlier writer p
 
 ## Conformance gate
 
-`__tests__/vectors.test.ts` runs every positive vector `manifest.json` lists (all ten, copied
+`__tests__/vectors.test.ts` runs every positive vector `manifest.json` lists (all thirteen, copied
 verbatim from forceteki `swupgn/test-vectors/`: `minimal`, `organic`, `upgrades`, `pilot`,
-`capture`, `arrest`, `homeworlds`, `death-star`, `stolen-hauler`, `other-writer`) through parse → fold → render
+`capture`, `arrest`, `homeworlds`, `death-star`, `stolen-hauler`, `other-writer`, `effects`,
+`visibility`, `control`) through parse → fold → render
 and requires a byte-identical render (`render(doc) + '\n'`) and a fold equal to `.fold.json` as
 JSON values (the manifest's rule: key order not significant, array order significant, absent ≠
 null, so it compares with `toStrictEqual` after a JSON round trip), with no carve-out; every
@@ -486,16 +626,17 @@ negative must make `parse` throw `SwuPgnError` with its listed code, and every o
 parse and fold, render, gate and adapt without crashing, touching a prototype or growing a list
 past 1000. The validator-only codes (`schema`, `bad-zone`, `duplicate-seq`, `dangling-ref`,
 `over-cap`, `keyframe-mismatch`, `pre-release`, `unknown-type`/`-section`, `newer-minor`,
-`unknown-value`, `bad-token-name`, `deck-build-move`, `credit-zone`, `result-mismatch`) are not the client's to
-report; `reserved-key` is a parser code now.
+`unknown-value`, `bad-token-name`, `deck-build-move`, `credit-zone`, `result-mismatch`,
+`round-start-active`, `token-zone`, `fortify-host`, `effect-end-unknown`) are not the client's to
+report as codes; `reserved-key` is a parser code now. File Health words `result-mismatch` and the
+four revision-6 ones as warnings.
 `swupgnConformance.test.ts` also runs every well-formed negative through the viewer's own
 helpers (File Health, digests, decisions, captions, sided names, result formatting). The optional
 `reduced-state.schema.json` check is not run: `ajv` is only a transitive dependency here, not a
 declared devDependency.
 `src/app/_utils/__tests__/vectorsBoard.test.ts` takes each vector one level up, through
 `adaptState`, and asserts every §11 field against `.fold.json`, plus a `FileHealth` that reports
-nothing but the `-dirty` Engine on the eight regenerated vectors (and nothing at all on `minimal`
-and `other-writer`). `manifest.test.ts` also opens `result-mismatch` and asserts File Health's
+nothing at all on every vector (clean `forceteki@f74700d3f` Engines, no `-dirty`). `manifest.test.ts` also opens `result-mismatch` and asserts File Health's
 notice.
 `src/app/_utils/__tests__/swupgnCompat.test.ts` has one test per row of the §22 table,
 plus the pre-publication shapes (no `kind`, no RESOURCE). `src/app/_utils/__tests__/homeworldsReplay.test.ts` pins the §10.3/§10.4 prose and pacing,
@@ -517,7 +658,8 @@ shims.
   `extraTags` / `extraSections` (every header tag §5 does not define, and every unknown section's
   banner and lines, verbatim and unparsed, so `serialize` can write them back, §3 [A-01]). File
   Health reports the first. `types.ts` stays verbatim, so these live on the client's own type.
-  The header tag order (`tagOrder`) is tracked for `extraTags`.
+  `tagOrder` (every header tag in file order) lets `serialize` write the header back byte for
+  byte.
 - **`parse.ts` record shape** — a record that parses to `null`, a number, a string or an
   array is refused with its line number and code `not-object`. It used to reach
   `events[i].seq` in the viewer and be persisted to IndexedDB before first render, so the
@@ -575,6 +717,15 @@ shims.
   are the same arena when it names a new `attachedTo` (an upgrade changing hosts, a pilot
   ejected). The writer emits these now (§10.1) and upstream's fold handles them; only the
   inert-record filter is client-owned.
+- **`fold.ts` revision-6 keyframe fields** — `isCompleteSeat` applies upstream's strict rule to
+  `foreignResources`, `abilityUses` and a card's `upgradeControllers` (present and unusable = a
+  damaged seat). `snapToKeyframe` coerces each new card and seat field (`seatMap`,
+  `abilityUseList`, `effectList`) and takes the keyframe's `effects` unless that list is damaged,
+  in which case it keeps the folded effects instead of refusing the whole keyframe.
+- **`effectWords.ts`** — client-only mirror of render.ts's private `durationWords`/`endWords`
+  for captions and the Effects box; `writerRevision6.test.ts` holds every EFFECT_START,
+  EFFECT_END, LOOK and NAME caption of the vectors to the line `render()` prints.
+- **`simulGroups.ts`** — client-only: a `simul` group's span, for the scrubber's stops.
 - **`fold.ts` keyframe list ceiling** — `isCompleteSeat` rejects a seat whose `cards`, `hand`,
   `discard`, `resources`, `baseUpgrades` or `baseCaptured` is over `MAX_ZONE_LIST` (§13), as
   upstream's `isCompleteKeyframe` does per keyframe. Upstream also requires every keyframe card
@@ -604,7 +755,8 @@ shims.
   recovers a pilot's host from the keyframes when the writer named none, reads a pilot
   writer's "Framework effect" DAMAGE/HEAL `src` as no source (§22), and resolves token art ids
   for both id shapes.
-- **`serialize.ts`** — client-only. No exported STORY line may start with `%%%` once trimmed
+- **`serialize.ts`** — client-only. The header goes out in the file's own tag order
+  (`tagOrder`), falling back to `HEADER_ORDER` for a document `parse()` did not build. No exported STORY line may start with `%%%` once trimmed
   (a smuggled newline in an UNDO's `at` or a raw id would open a section); such a line gets a
   leading `·`. Whitespace is no escape: `parse()` trims before it looks for a banner.
   The client is an Annotator, so an export changes nothing but the notes (§3 [A-01], §18):

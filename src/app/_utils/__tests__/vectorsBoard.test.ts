@@ -118,21 +118,14 @@ describe.each(VECTORS)('board at the final frame: %s', (name) => {
         }
     });
 
-    it('is a current-writer file: FileHealth reports only a -dirty Engine', () => {
+    it('is a current-writer file: FileHealth reports nothing', () => {
         expect(checkKeyframes(doc.events).mismatches).toEqual([]);
-        // The eight real-game vectors were regenerated at 18cd06297 from a working tree, not a
-        // clean commit: their Engine is `forceteki@c89abd86a-dirty`, so FileHealth says so (§5.3)
-        // and says nothing else. If upstream regenerates them from a clean commit again, this
-        // fails on purpose: put back the clean-Engine check. minimal and other-writer did not
-        // change; other-writer (no WriterRevision, Engine "examplewriter@1.0.0") is an ordinary
-        // file, not pre-release.
-        if (name === 'minimal' || name === 'other-writer') {
-            expect(doc.header.engine).not.toMatch(/-dirty$/);
-            expect(fileIssues(doc).map((i) => i.message)).toEqual([]);
-        } else {
-            expect(doc.header.engine).toMatch(/-dirty$/);
-            expect(fileIssues(doc).map((i) => i.message)).toEqual([expect.stringMatching(/^Uncommitted build:/)]);
-        }
+        // The real-game vectors were regenerated at 6147b3c58 from a clean commit
+        // (`forceteki@f74700d3f`), so no Engine ends in `-dirty` (§5.3) and FileHealth says
+        // nothing at all; other-writer (no WriterRevision, Engine "examplewriter@1.0.0") is an
+        // ordinary file, not pre-release.
+        expect(doc.header.engine).not.toMatch(/-dirty$/);
+        expect(fileIssues(doc).map((i) => i.message)).toEqual([]);
         expect(writerGeneration(doc)).toEqual([]);
     });
 });
@@ -179,7 +172,9 @@ describe('the base carries what is on it, between keyframes too (spec §10.3, §
         const heldByBase = (gs: ReturnType<typeof at>) => gs.players.P1.cardPiles.capturedZone
             .filter((c: Card) => c.parentCardId === gs.players.P1.base.uuid).map((c: Card) => c.uuid);
         expect(heldByBase(at('R2.A.1c'))).toEqual(['LAW#253:3']);
-        expect(heldByBase(at('R2.G.1'))).toEqual([]);
+        // Revision 6 ends the Arrest effect (R2.G.1) before the rescue (R2.G.2) moves it out (R2.G.3).
+        expect(heldByBase(at('R2.G.1'))).toEqual(['LAW#253:3']);
+        expect(heldByBase(at('R2.G.3'))).toEqual([]);
     });
 
     it('death-star: a base defeated outright reads defeated with HP still on it', () => {

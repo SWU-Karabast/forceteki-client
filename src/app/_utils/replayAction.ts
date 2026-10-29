@@ -1,4 +1,5 @@
-import { type GameEvent, type NameResolver, type Seat, asIdList, displayText } from '@/lib/swupgn';
+import { type GameEvent, type NameResolver, type Seat, asIdList, displayText, shorten } from '@/lib/swupgn';
+import { effectEndLine, effectStartLine } from './effectWords';
 
 // What happened on the current frame, for the animated caption + board highlight. Unlike
 // the move list (buildMoveList), this covers EVERY frame's event, worded as the story's
@@ -56,14 +57,22 @@ const cost = (e: { cost?: unknown }): string => (typeof e.cost === 'number' ? ` 
  */
 export interface IFrameActionOptions {
     hiddenSeat?: Seat;
+    // Effect id -> source card (effectWords.effectSources), so an EFFECT_END, which carries only
+    // the id, is named by its source as the story names it. Without it the id is shown.
+    effectSourceOf?: (id: string) => string | undefined;
 }
 
 export function frameAction(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }, opts: IFrameActionOptions = {}): FrameAction {
-    const a = frameActionOf(e, n, opts.hiddenSeat);
+    const a = frameActionOf(e, n, opts.hiddenSeat, opts.effectSourceOf);
     return a.label ? { ...a, label: displayText(a.label) } : a;
 }
 
-function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }, hiddenSeat?: Seat): FrameAction {
+function frameActionOf(
+    e: GameEvent | undefined,
+    n: NameResolver & { frontNameOf?: (id: string) => string },
+    hiddenSeat?: Seat,
+    effectSourceOf?: (id: string) => string | undefined,
+): FrameAction {
     if (!e || typeof e !== 'object') return none;
     const hidden = hiddenSeat !== undefined && 'p' in e && e.p === hiddenSeat;
     const nm = (id: string) => storyName(id, n);
@@ -98,7 +107,9 @@ function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf
             // way ("Player 1 uses Director Krennic", "... 's Epic Action"). Every other kind is
             // something the game did, so the card is the subject: "Ant Droid uses an ability".
             // A granted ability names its grantor: the base has no such text of its own.
-            const granted = typeof e.grantedBy === 'string' ? ` (granted by ${nm(e.grantedBy)})` : '';
+            // One another card's ability made the player use names that card too (§16, "used by").
+            const granted = (typeof e.grantedBy === 'string' ? ` (granted by ${nm(e.grantedBy)})` : '') +
+                (typeof e.usedBy === 'string' ? ` (used by ${nm(e.usedBy)})` : '');
             return isPlayerAction(e)
                 ? { label: `${who(e.p)} uses ${nm(e.card)}${e.kind === 'epic' || e.epic ? '\'s Epic Action' : ''}${granted}`, highlight: unit(e.card), kind: 'ability' }
                 : { label: `${nm(e.card)} uses an ability${granted}`, highlight: unit(e.card), kind: 'ability' };
@@ -146,6 +157,19 @@ function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf
             return none;
         case 'REVEAL':
             return { label: `${who(e.p)} reveals ${list(e.cards)}`, highlight: [], kind: 'other' };
+        // A look names whose zone it was and, in an omniscient file, the cards seen (§16).
+        case 'LOOK': {
+            // Listed with ` · `, as the story lists cards (render.ts `list`).
+            const seen = asIdList(e.cards).length ? `: ${asIdList(e.cards).map(nm).join(' · ')}` : '';
+            return { label: `${who(e.p)} looks at ${e.count} ${e.count === 1 ? 'card' : 'cards'} of ${who(e.owner)}'s ${e.zone}${seen}`, highlight: [], kind: 'other' };
+        }
+        // The named card is the file's text, cut like a card name.
+        case 'NAME':
+            return { label: `${who(e.p)} names ${shorten(String(e.name))}`, highlight: [], kind: 'other' };
+        case 'EFFECT_START':
+            return { label: effectStartLine(e, nm), highlight: asIdList(e.targets).filter((id) => !isBase(id)), kind: 'ability' };
+        case 'EFFECT_END':
+            return { label: effectEndLine(e, nm, effectSourceOf), highlight: [], kind: 'other' };
         case 'SEARCH':
             return { label: e.found ? `${who(e.p)} searches, finds ${list(e.found)}` : `${who(e.p)} searches their deck`, highlight: [], kind: 'other' };
         case 'CREATE_TOKEN':
@@ -186,6 +210,8 @@ function frameActionOf(e: GameEvent | undefined, n: NameResolver & { frontNameOf
         case 'EXHAUST': case 'READY': case 'EXHAUST_RESOURCES': case 'READY_RESOURCES': case 'STATS':
         case 'CHOICE': case 'MODAL_CHOICE': case 'SHUFFLE': case 'PHASE_START': case 'PHASE_END':
         case 'ROUND_START': case 'ROUND_END':
+        // A limited ability's uses reset when its card changes zone: the board's state, not story.
+        case 'ABILITY_RESET':
             return none;
         default:
             return none;

@@ -30,8 +30,8 @@ export type AbilityKind =
   | 'event' | 'delayed';
 
 /**
- * Why a card was defeated (spec §6.4). The one CLOSED vocabulary in the format: these are the
- * engine's own defeat-source kinds, and a reader is expected to switch on them.
+ * Why a card was defeated (spec §6.4). A CLOSED vocabulary: these are the engine's own
+ * defeat-source kinds, and a reader is expected to switch on them.
  *
  * - `attack`   — combat damage from an attack. `defeatedBy` names the attacker.
  * - `ability`  — a card ability defeated it outright, or dealt the damage that did.
@@ -44,6 +44,35 @@ export type AbilityKind =
  */
 export type DefeatReason =
   | 'attack' | 'ability' | 'nonCombatDamage' | 'uniqueRule' | 'frameworkEffect' | 'unknown';
+
+/**
+ * How long a lasting or delayed effect lasts (spec §6.4, §10.1). Closed: a reader may branch on
+ * it. A value from a newer minor version is read per §18 (kept, not understood).
+ *
+ * - `attack` / `phase` / `round` — a lasting effect (CR 7.7.3): "for this attack", "for this phase", "for this round".
+ * - `whileSourceInPlay` — while the card that created it stays in play.
+ * - `until` — "until X happens"; `untilText` on the EFFECT_START says what X is, in words.
+ * - `delayed` — a delayed effect: it waits for a timing point or condition and then resolves (CR 7.7.4).
+ * - `game` — for the rest of the game.
+ */
+export type EffectDuration = 'attack' | 'phase' | 'round' | 'whileSourceInPlay' | 'until' | 'delayed' | 'game';
+
+/** The player(s) a player-wide effect applies to (spec §10.1 `EFFECT_START.seat`). */
+export type EffectSeat = Seat | 'both';
+
+/**
+ * Why an effect, or some of its targets, ended (spec §6.4, §10.1). Closed, like `EffectDuration`.
+ * `fired` is a delayed effect that resolved; `targetLeft` is the one a partial EFFECT_END carries.
+ */
+export type EffectEndReason = 'expired' | 'fired' | 'sourceLeft' | 'targetLeft' | 'cancelled';
+
+/**
+ * How often a limited ability may be used (spec §6.4, §10.1; CR 7.2.5): so many times each phase,
+ * each round, or in the game. Closed, like `EffectDuration`. It also says when the count resets:
+ * `PHASE_START` clears the `phase` uses, `ROUND_START` the `phase` and `round` ones, and nothing
+ * clears a `game` use.
+ */
+export type LimitPer = 'phase' | 'round' | 'game';
 
 export interface Header {
     game: string;            // "SWU-PGN/1.0"
@@ -118,6 +147,8 @@ export interface SetupInitRecord {
  *   now — `ground`/`space` (re-seat a unit), `resource` (shift one resource; `exhausted` says
  *   which bucket) or `base` (a Credit or Force token changed hands); `from` is the seat it
  *   left, present only when this record (and not a MOVE beside it) has to carry the counts.
+ *   When `card` is an attached upgrade, `zone` is its host's arena and nothing moves: the host's
+ *   `upgradeControllers` records the upgrade's new controller.
  * - `EXHAUST_RESOURCES` / `READY_RESOURCES`: resources are counted, never named. `amount` ready
  *   resources of `p` became exhausted (a cost paid, an ability, a resource that entered the row
  *   exhausted), or `amount` exhausted ones became ready (the regroup step readies each one; some
@@ -130,7 +161,8 @@ export interface SetupInitRecord {
  *   effects, upgrades, Raid during an attack, all of it — written whenever they change. This is
  *   what lets a reader show a modified unit correctly without a rules engine: it never derives
  *   stats, it is told them. `keywords` is the sorted list of active keywords, a numeric one as
- *   `"raid 2"`; absent means the writer did not record keywords.
+ *   `"raid 2"`; absent means the writer did not record keywords. `traits`, `blank`,
+ *   `leaderUnit` and the copy fields are replaced as a set: one the record leaves out is removed.
  * - `epic` on `DEPLOY_LEADER` / `ABILITY_ACTIVATE`: the ability used was an Epic Action, which
  *   the rules track as used/unused game state (CR 1.16).
  */
@@ -152,6 +184,13 @@ export interface ActionLink {
      * review question `Date` and `EndDate` cannot reach, and it is never a wall-clock time.
      */
     ms?: number;
+
+    /**
+     * The records of one simultaneous resolution share a `simul` group (spec §10.2; CR 7.1.4a,
+     * 6.3.5): the seq of the group's first record. A renderer and a scrubber treat the group as one
+     * instant and never stop inside it. Ignored by the fold.
+     */
+    simul?: string;
 }
 
 export type GameEvent = ActionLink & (
@@ -159,7 +198,9 @@ export type GameEvent = ActionLink & (
   | { seq: string; t: 'DEPLOY_LEADER'; p: Seat; card: string; zone?: string; cost?: number; kind?: CardKind; target?: string; epic?: boolean }
   | { seq: string; t: 'ATTACK'; p: Seat; atk: string; def: string; defenderType: 'unit' | 'base' }
   | { seq: string; t: 'PASS' | 'CLAIM_INITIATIVE'; p: Seat }
-  | { seq: string; t: 'CHOICE'; p: Seat; prompt?: string; offered: string[]; chose: number }
+  // `blind` groups choices made without seeing each other (CR 7.1.4a): the seq of the record that
+  // asked for them. A note; the fold ignores it.
+  | { seq: string; t: 'CHOICE'; p: Seat; prompt?: string; offered: string[]; chose: number; blind?: string }
   | { seq: string; t: 'MULLIGAN' | 'KEEP_HAND'; p: Seat }
   // A player took a decision back. The records it retracted are GONE from the file -- a reader
   // folding the stream sees only what still stands -- so this note exists purely to say that a
@@ -174,17 +215,28 @@ export type GameEvent = ActionLink & (
   // every other kind is a consequence of something else and is a sub-step. `title` is the
   // ability's printable name. `grantedBy` names the card whose text GAVE `card` this ability
   // (a Fortify upgrade's "Attached base gains: ...", an upgrade's "Attached unit gains: ...");
-  // absent when the ability is `card`'s own printed text.
+  // absent when the ability is `card`'s own printed text. `limit` is on an ability that may be used
+  // only `max` times per `per` (CR 7.2.5); the fold counts it in the seat's `abilityUses`. `usedBy`
+  // names the card whose ability made `p` use this one (CR 7.6.13d, 7.6.14d); `card` is still the
+  // card the used ability is on.
   | {
       seq: string; t: 'ABILITY_ACTIVATE'; p: Seat; card: string; ability?: string;
       kind?: AbilityKind;
       title?: string; epic?: boolean; grantedBy?: string;
+      limit?: { max: number; per: LimitPer }; usedBy?: string;
   }
   // A double-sided leader flipped in place (it never deploys). `onStartingSide` is the face
   // AFTER the flip -- an absolute value, not a toggle, so a dropped record cannot invert
   // every later face and a reader joining at a keyframe has something to apply.
   | { seq: string; t: 'LEADER_FLIP'; p: Seat; card: string; onStartingSide: boolean }
-  | { seq: string; t: 'STATS'; card: string; power: number; hp: number; keywords?: string[] }
+  // `traits`, `blank`, `leaderUnit` and the copy fields (`copyOf` with the copied `name`, `cost` and
+  // `aspects`) are the rest of the unit's attributes (spec §10.1, CR 1.16.1): a STATS states the whole
+  // set, so one it leaves out is no longer true.
+  | {
+      seq: string; t: 'STATS'; card: string; power: number; hp: number; keywords?: string[];
+      traits?: string[]; blank?: boolean; leaderUnit?: boolean;
+      copyOf?: string; name?: string; cost?: number; aspects?: string[];
+  }
   // `src` is what dealt it: a card id or `base@N`. Absent only when the rules themselves dealt
   // the damage and no card is responsible (drawing from an empty deck).
   | { seq: string; t: 'DAMAGE'; src?: string; tgt: string; amt: number; damageType: string; hp: number }
@@ -201,17 +253,46 @@ export type GameEvent = ActionLink & (
   | { seq: string; t: 'CREATE_TOKEN'; p: Seat; token: string; zone: string; power?: number; hp?: number; kind?: CardKind }
   | { seq: string; t: 'CAPTURE'; p: Seat; card: string; by?: string }
   | { seq: string; t: 'RESCUE'; p: Seat; card: string }
-  | { seq: string; t: 'TAKE_CONTROL'; p: Seat; card: string; zone?: string; from?: Seat; exhausted?: boolean }
+  // `card` may also be an attached upgrade (spec §10.1): `zone` is then its host's arena, and the fold
+  // records the upgrade's controller on the host's `upgradeControllers` rather than re-seating anything.
+  // `owner` is on a `resource` steal that changed zone (no `from`): the card's owner, so the fold can
+  // list it in `foreignResources` without shifting any count.
+  | { seq: string; t: 'TAKE_CONTROL'; p: Seat; card: string; zone?: string; from?: Seat; exhausted?: boolean; owner?: Seat }
   | { seq: string; t: 'SHIELD_GAIN' | 'SHIELD_USE'; card: string; count?: number }
   | { seq: string; t: 'EXPERIENCE_GAIN'; card: string; count: number }
   | { seq: string; t: 'STATUS_TOKEN'; card: string; token: string; count: number }
   | { seq: string; t: 'OVERWHELM'; p: Seat; tgt: string; amt: number; hp: number }
-  | { seq: string; t: 'SEARCH'; p: Seat; found?: string[]; zone?: string }
+  // `owner` is whose zone was searched; `seen` every card `p` looked at while searching.
+  | { seq: string; t: 'SEARCH'; p: Seat; found?: string[]; zone?: string; owner?: Seat; seen?: string[] }
   | { seq: string; t: 'REVEAL'; p: Seat; zone: string; cards: string[] }
+  // `p` looked at `cards` (`count` of them) in `owner`'s `zone` without revealing them (CR 8.13).
+  // The viewer and the hidden cards are separate fields, so a perspective rule can redact the
+  // cards. A note; the fold ignores it.
+  | { seq: string; t: 'LOOK'; p: Seat; owner: Seat; zone: string; cards: string[]; count: number }
+  // `p` named a card (CR 8.17): `name` is its `Title, Subtitle` as text, not an id. A note.
+  | { seq: string; t: 'NAME'; p: Seat; name: string }
+  // `card`'s limited-ability uses were reset other than at the boundary their `per` names (the card
+  // changed zone, so it is a new object): every seat's `abilityUses` entries for `card`, only the one
+  // for `ability` when it is given, are removed.
+  | { seq: string; t: 'ABILITY_RESET'; card: string; ability?: string }
   | { seq: string; t: 'TRIGGER'; p?: Seat; card: string }
   | { seq: string; t: 'PHASE_START' | 'PHASE_END'; phase: string; active?: Seat }
+  // `active` is REQUIRED on ROUND_START (the initiative holder; the schema and the `round-start-active`
+  // check enforce it) but typed optional so a reader-side fixture need not carry it.
   | { seq: string; t: 'ROUND_START' | 'ROUND_END'; round: number; keyframe?: ReducedState; active?: Seat }
   | { seq: string; t: 'GAME_END'; winner: Seat | 'Draw'; reason: string }
+  // A lasting or delayed effect began (spec §10.1): ONE record per effect as the card text states
+  // it. `id` is `fx@N`; `src` the card (or `base@N`) whose ability created it; `p` the seat that
+  // controls it; `targets` what it applies to, or `seat` (1, 2 or `both`) for a player-wide effect --
+  // exactly one of the two. `ability`,
+  // `text` and `untilText` are advisory and never folded.
+  | {
+      seq: string; t: 'EFFECT_START'; id: string; src: string; p: Seat; targets?: string[]; seat?: EffectSeat;
+      duration: EffectDuration; untilText?: string; ability?: string; text?: string;
+  }
+  // The effect ended. With `targets`, only those targets left it (a target left play) and the
+  // effect stays active for the rest; once none are left it is gone. Without, it all ended.
+  | { seq: string; t: 'EFFECT_END'; id: string; reason: EffectEndReason; targets?: string[] }
   | {
       seq: string; t: 'MOVE'; card: string; from: string; to: string; p?: Seat;
 
@@ -220,8 +301,10 @@ export type GameEvent = ActionLink & (
        *  names a host — a reader detaches on the zone transition (spec §10.1). */
       attachedTo?: string;
 
-      /** On a move out of `resource` only: the card left the row exhausted, so the fold takes it
-       *  from `resourcesExhausted` rather than `resourcesReady`. Absent means it left ready. */
+      /** On a move into or out of `resource` only. Out: the card left the row exhausted, so the
+       *  fold takes it from `resourcesExhausted` rather than `resourcesReady`. Into: the card
+       *  entered the row exhausted (a regroup resource, CR 5.5.1.c), so the fold counts it in
+       *  `resourcesExhausted`. Absent means ready. */
       exhausted?: boolean;
 
       /**
@@ -322,6 +405,58 @@ export interface CardInstanceState {
 
     /** Active keywords, sorted, a numeric one as `"raid 2"`. Same provenance as `power`. */
     keywords?: string[];
+
+    /** The unit's current traits, sorted (CR 1.16.1). Set by `STATS` and keyframes, like `power`. */
+    traits?: string[];
+
+    /** `true` while the unit has lost all its abilities (CR 8.14.2). Absent means it has not. */
+    blank?: boolean;
+
+    /** `true` when an ability made this unit a leader unit (CR 3.4.7). Absent means it did not. */
+    leaderUnit?: boolean;
+
+    /**
+     * A copy (CR 8.5): `copyOf` is the card whose printed attributes this unit now has, and `name`,
+     * `cost` and `aspects` are the copied ones. All four are absent when the unit is not a copy.
+     */
+    copyOf?: string;
+    name?: string;
+    cost?: number;
+    aspects?: string[];
+
+    /** The card's owner, present only when it is not the seat whose `cards` hold it (CR 1.7.5). */
+    owner?: Seat;
+
+    /**
+     * Each attached upgrade whose controller is not this unit's controller, by upgrade id
+     * (CR 8.27). Absent when there is none.
+     */
+    upgradeControllers?: Record<string, Seat>;
+}
+
+/**
+ * A lasting or delayed effect that is active now (spec §11): what `EFFECT_START` said, less its
+ * advisory words, with the targets a partial `EFFECT_END` removed already gone.
+ */
+export interface ActiveEffect {
+    id: string;
+    src: string;
+    p: Seat;
+    targets?: string[];
+    seat?: EffectSeat;
+    duration: EffectDuration;
+}
+
+/**
+ * A limited ability's uses so far (spec §11; CR 7.2.5, 1.16.3): `card`'s ability `ability`, used
+ * `count` times of `max` since its `per` last reset. Spent when `count` reaches `max`.
+ */
+export interface AbilityUse {
+    card: string;
+    ability: string;
+    count: number;
+    per: LimitPer;
+    max: number;
 }
 
 /** The leader card's status: where it is and whether it can still act. */
@@ -402,6 +537,21 @@ export interface PlayerState {
     /** Absent in older files, and until the first keyframe: the fold learns the leader's id
      *  from a keyframe or a `DEPLOY_LEADER`. */
     leader?: LeaderState;
+
+    /**
+     * The limited abilities this seat has used and not yet had reset, in first-use order. Built by
+     * `ABILITY_ACTIVATE` records that carry `limit`, cleared by `PHASE_START` / `ROUND_START` per
+     * `per` and by `ABILITY_RESET`, and carried by keyframes. Absent until the first limited ability (and in files written
+     * before it existed): absent means "not recorded", never "none".
+     */
+    abilityUses?: AbilityUse[];
+
+    /**
+     * The cards in this seat's `resources` that the other seat owns (CR 1.7.5), a set. Built by a
+     * resource `TAKE_CONTROL` and carried by keyframes. Absent until the first one (and in files
+     * written before it existed): absent means "not recorded", never "none".
+     */
+    foreignResources?: string[];
 }
 
 export interface ReducedState {
@@ -426,6 +576,13 @@ export interface ReducedState {
      */
     active?: Seat;
     players: Partial<Record<Seat, PlayerState>>;
+
+    /**
+     * The lasting and delayed effects active now, in the order they started (CR 1.16.1). Built by
+     * `EFFECT_START` / `EFFECT_END` and carried by keyframes. Absent in files written before it
+     * existed: absent means "not recorded", never "none".
+     */
+    effects?: ActiveEffect[];
 }
 
 export interface ConformanceIssue {

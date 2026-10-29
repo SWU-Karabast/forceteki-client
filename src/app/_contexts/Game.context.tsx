@@ -53,7 +53,9 @@ interface IGameContextType {
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
     gameIsEnded: () => boolean;
-    ongoingEffects: IOngoingEffectSummary[];
+    // `null` only in the replay viewer, for a file that does not record effects: "not recorded",
+    // not "none" (SWU-PGN §11), so the trays show no "No active effects" claim.
+    ongoingEffects: IOngoingEffectSummary[] | null;
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -623,6 +625,7 @@ export const useGame = () => {
         isSpectator: true,
         gameIsEnded: () => true,
         lobbyState: null,
+        ongoingEffects: replayContext.ongoingEffects,
     } as IGameContextType : null), [replayContext]);
 
     if (context) {

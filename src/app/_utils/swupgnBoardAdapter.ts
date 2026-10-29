@@ -3,7 +3,7 @@
 // (IBoardState.gameState: any, see Game.context.tsx which disables the same rule).
 // Typing these returns would mean typing the entire live board state — out of scope.
 import type { CardInstanceState, ReducedState, Seat, SwuPgnDocument, PlayerState } from '@/lib/swupgn';
-import { baseId, tokenArtId } from '@/lib/swupgn';
+import { baseId, displayText, shorten, tokenArtId } from '@/lib/swupgn';
 import { statOf, type CardStat } from '@/app/_utils/swupgnCardStats';
 
 /** Minimal card shape the board reads. Replay is read-only, so selection/prompt
@@ -55,6 +55,16 @@ export interface AdaptedCard {
     /** The live board's attack/defend arrows while an ATTACK resolves. */
     isAttacker?: boolean;
     isDefender?: boolean;
+
+    /** The unit has lost its abilities (`blank`, spec §11, writer revision 6): GameCard's blank icon. */
+    isBlanked?: boolean;
+
+    /** A copy of another card (CR 8.5: `copyOf`/`name`): GameCard draws the copied card's art and name. */
+    clonedCardId?: { set: string; number: number };
+    clonedCardName?: string;
+
+    /** Replay-only: the active effects (`effects`, §11) that apply to this card, in the story's words. */
+    effectNotes?: string[];
 }
 
 /** ReducedState arena zones → board cardPiles zone names. */
@@ -258,6 +268,12 @@ export function cardFromInstance(
         shields: inst.shields,
         experience: inst.experience,
         statusTokens: inst.statusTokens,
+        ...(inst.blank === true ? { isBlanked: true } : {}),
+        // A copy goes by the card it copies (CR 8.5): its art by `copyOf`, its name by `name`.
+        // The name is the file's text, so it is made safe and cut like an index name (§16, §23).
+        ...(typeof inst.copyOf === 'string' && typeof inst.name === 'string'
+            ? { clonedCardId: parseSetId(inst.copyOf), clonedCardName: shorten(displayText(inst.name.replace(/[\r\n]+/g, ' '))) }
+            : {}),
     };
 }
 
@@ -289,6 +305,9 @@ export interface AdaptOptions {
     /** The card last played, previewed in the opponent tray as the live board does. */
     lastPlayedCard?: { set: string; number: number };
     nameOf?: NameOf;
+
+    /** Card id -> the active effects that target it (effectWords.effectNotesByCard), for the card's mark. */
+    effectNotes?: Map<string, string[]>;
 }
 
 /**
@@ -391,17 +410,32 @@ interface SeatOptions {
     deckRemaining?: number;
     nameOf?: NameOf;
     ownerId?: (id: string) => string;
+    // The player id of a seat, for the fold's own `owner` / `upgradeControllers` (§11).
+    seatId?: (seat: Seat) => string;
+    // Card id -> the active effects on it, in the story's words (effectWords.activeEffectLine).
+    effectNotes?: Map<string, string[]>;
 }
 
 function adaptPlayer(
     ps: PlayerState, playerId: string, headerLeaderId: string, baseSetId: string,
     statMap: Record<string, CardStat>,
-    { hideHand = false, highlight, leaderExhausted = false, exhausted, attack, active = false, resourcedIds, baseHp, deckRemaining, nameOf, ownerId }: SeatOptions,
+    { hideHand = false, highlight, leaderExhausted = false, exhausted, attack, active = false, resourcedIds, baseHp, deckRemaining, nameOf, ownerId, seatId, effectNotes }: SeatOptions,
 ): any {
     const own = ownerId ?? (() => playerId);
+    // A unit's owner and an upgrade's controller as the fold states them (writer revision 6,
+    // spec §11), over the deck lists' answer: a stolen unit sits in its controller's `cards` with
+    // `owner` set, and an upgrade another seat controls is keyed in its host's `upgradeControllers`.
+    const ownerOf = (c: CardInstanceState) => (seatId && (c.owner === 1 || c.owner === 2) ? seatId(c.owner) : own(c.id));
+    const controllerOf = (host: CardInstanceState, id: string) => {
+        const seat = host.upgradeControllers && Object.prototype.hasOwnProperty.call(host.upgradeControllers, id) ? host.upgradeControllers[id] : undefined;
+        return seatId && (seat === 1 || seat === 2) ? seatId(seat) : playerId;
+    };
     // The file's own leader status names the card (spec §11); the header is the fallback.
     const leaderId = ps.leader?.id ? String(ps.leader.id) : headerLeaderId;
-    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap, own(c.id)));
+    const inPlay = ps.cards.map((c) => cardFromInstance(c, playerId, statOf(c.id, statMap), nameOf?.(c.id), statMap, ownerOf(c)));
+    if (effectNotes?.size) {
+        for (const c of inPlay) { const notes = effectNotes.get(c.uuid); if (notes) c.effectNotes = notes; }
+    }
     // Captives file under their captor, exactly as the live server delivers them: one card
     // per captive with `parentCardId`, which UnitsBoard groups onto the host. They are the
     // opponent's cards, held here.
@@ -419,8 +453,10 @@ function adaptPlayer(
     // UnitsBoard groups it under its host. Without this a pilot or an equipment card is
     // tracked in the fold but renders nowhere.
     // A leader flying as a pilot is one of these; its ready/exhausted flag rides along.
+    // An upgrade stays drawn on its host; one another seat controls says so by its controllerId
+    // (GameCard's stolen mark when that is not its owner).
     const upgrades = ps.cards.flatMap((c, i) => (c.upgrades ?? []).map((id) => ({
-        ...cardFromId(id, inPlay[i].zone, playerId, own(id), statOf(id, statMap), nameOf?.(id)),
+        ...cardFromId(id, inPlay[i].zone, controllerOf(c, id), own(id), statOf(id, statMap), nameOf?.(id)),
         parentCardId: inPlay[i].uuid,
         ...(ps.leader && baseId(id) === baseId(leaderId) ? { exhausted: ps.leader.exhausted === true } : {}),
     })));
@@ -572,6 +608,7 @@ export function adaptState(
             exhausted, resourcedIds: opts.resourcedIds?.[seat], baseHp: opts.baseHp?.[seat],
             deckRemaining: opts.deckRemaining?.[seat], nameOf: opts.nameOf,
             ownerId: (id) => seatToId[owners.get(baseId(id)) ?? seat],
+            seatId: (n) => seatToId[n], effectNotes: opts.effectNotes,
             attack: opts.attack, active: opts.activeSeat === seat,
         });
         adapted.hasInitiative = s.initiative === seat;

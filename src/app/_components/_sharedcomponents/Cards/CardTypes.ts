@@ -96,6 +96,8 @@ export interface ICardData {
     keywords?: string[];
     // Replay-only: power/HP were rebuilt from card data because the file states none.
     statsReconstructed?: boolean;
+    // Replay-only: the lasting effects that target this card, in the story's words (SWU-PGN `effects`).
+    effectNotes?: string[];
 }
 
 export interface IServerCardData {

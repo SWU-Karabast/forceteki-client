@@ -1,6 +1,6 @@
 import { useStaticJson } from '@/app/_utils/staticJson';
 import { storyName } from '@/app/_utils/replayAction';
-import { baseId, isTokenPseudoCard, looseTokenName, type NameResolver, type ReducedState, type Seat } from '@/lib/swupgn';
+import { baseId, displayText, isTokenPseudoCard, looseTokenName, shorten, type NameResolver, type ReducedState, type Seat } from '@/lib/swupgn';
 
 /**
  * Build a NameResolver for the move list / decklist / captions. The .swupgn carries
@@ -35,10 +35,14 @@ export interface SidedNameResolver extends NameResolver {
  * a deployed Grand Moff Tarkin is The Death Star, a flipped Chancellor Palpatine is Darth
  * Sidious. The seat's folded `leader` status says which: the same rule render()'s
  * `trackSides` applies from the records, keyed like it on the EXACT id, so a mirror match's
- * `SET#NUM:2` keeps its own side. Every other id resolves as `n` does.
+ * `SET#NUM:2` keeps its own side. A unit that is a copy of another card (CR 8.5: `copyOf` and
+ * `name` on its folded entry) goes by the copied name while it lasts, as render()'s `copies`
+ * names it; the name is the file's text, so it is made safe and cut like an index name.
+ * Every other id resolves as `n` does.
  */
 export function sidedResolver(n: NameResolver, state: ReducedState | undefined): SidedNameResolver {
     const backUp = new Set<string>();
+    const copies = new Map<string, string>();
     // Every id in an arena, on either seat: as a unit, or attached to one (a pilot).
     const inArena = new Set<string>();
     for (const seat of [1, 2] as Seat[]) {
@@ -46,6 +50,9 @@ export function sidedResolver(n: NameResolver, state: ReducedState | undefined):
         if (!Array.isArray(cards)) continue;
         for (const c of cards) {
             if (typeof c?.id === 'string') inArena.add(c.id);
+            if (typeof c?.id === 'string' && typeof c.copyOf === 'string' && typeof c.name === 'string') {
+                copies.set(c.id, shorten(displayText(c.name.replace(/[\r\n]+/g, ' '))));
+            }
             if (Array.isArray(c?.upgrades)) for (const u of c.upgrades) if (typeof u === 'string') inArena.add(u);
         }
     }
@@ -61,7 +68,7 @@ export function sidedResolver(n: NameResolver, state: ReducedState | undefined):
         // Sides are keyed on the EXACT id: in a mirror match one seat's copy is `SET#NUM:2`
         // (§11), and turning one seat's leader over must not rename the other's. Names are per
         // card, so `n` is asked by base id, as render() does: a resolver need not strip `:N`.
-        nameOf: (id: string) => (backUp.has(String(id)) ? n.backNameOf?.(baseId(id)) : undefined) ?? n.nameOf(baseId(id)),
+        nameOf: (id: string) => copies.get(String(id)) ?? (backUp.has(String(id)) ? n.backNameOf?.(baseId(id)) : undefined) ?? n.nameOf(baseId(id)),
         backNameOf: (id: string) => n.backNameOf?.(baseId(id)),
         frontNameOf: (id: string) => n.nameOf(baseId(id)),
     };

@@ -2,8 +2,9 @@ import type { SwuPgnDocument, Header } from './types';
 import type { ParseNotes } from './parse';
 import { render } from './render';
 
-// Header tag order mirrors parse()'s required set; every optional tag (§5.2) is emitted when
-// present and skipped when absent, so an export carries back out exactly what came in — a
+// Header tags go out in the order the file wrote them (`ParseNotes.tagOrder`); this order is
+// for a document parse() did not build. Every optional tag (§5.2) is emitted when present and
+// skipped when absent, so an export carries back out exactly what came in — a
 // dropped `RecorderErrors`, `Undos` or `Match` would quietly relabel a partial file as complete, or
 // orphan a game from its match.
 const HEADER_ORDER: [keyof Header, string][] = [
@@ -32,14 +33,20 @@ function esc(v: string): string {
         .replace(/"/g, '\\"');
 }
 
-function headerLines(h: Header): string[] {
-    const lines: string[] = [];
-    for (const [key, tag] of HEADER_ORDER) {
-        const value = h[key];
-        if (value === undefined || value === null) continue; // optional tags (Format, Perspective)
-        lines.push(`[${tag} "${esc(String(value))}"]`);
-    }
-    return lines;
+function headerLines(h: Header, order?: readonly string[], extraTags: readonly [string, string][] = []): string[] {
+    const known = new Map(HEADER_ORDER.map(([key, tag]) => [tag, key]));
+    const extra = new Map(extraTags);
+    const line = (tag: string): string | undefined => {
+        const key = known.get(tag);
+        const value = key !== undefined ? h[key] : extra.get(tag);
+        // optional tags (Format, Perspective) are skipped when absent
+        return value === undefined || value === null ? undefined : `[${tag} "${esc(String(value))}"]`;
+    };
+    // The file's own tag order when parse() recorded it, so an export writes the header back
+    // byte for byte; then anything it did not list, known tags in HEADER_ORDER, unknown after.
+    // `Game` is always first (§4).
+    const tags = [...new Set(['Game', ...(order ?? []), ...HEADER_ORDER.map(([, tag]) => tag), ...extraTags.map(([tag]) => tag)])];
+    return tags.flatMap((tag) => line(tag) ?? []);
 }
 
 function section(name: string, records: unknown[]): string[] {
@@ -71,8 +78,7 @@ export function serialize(doc: SwuPgnDocument & ParseNotes): string {
         .flatMap((l) => String(l).split(/\r?\n|\r/))
         .map((l) => (l.trim().startsWith('%%%') ? `\u00b7${l}` : l));
     const out: string[] = [
-        ...headerLines(doc.header),
-        ...(doc.extraTags ?? []).map(([tag, value]) => `[${tag} "${esc(value)}"]`),
+        ...headerLines(doc.header, doc.tagOrder, doc.extraTags),
         '',
         '%%% STORY',
         ...story,

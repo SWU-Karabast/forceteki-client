@@ -268,9 +268,12 @@ function trimBlankEdges(lines: string[]): string[] {
  *
  * `extraTags` and `extraSections` carry, verbatim, the header tags and sections this version
  * does not define, so an export with notes added drops nothing the file carried (§3 [A-01], §18).
+ * `tagOrder` is every header tag in the order the file wrote it, so an export writes the header
+ * back byte for byte (§4 fixes only `Game` first, and writers differ on the rest).
  */
 export interface ParseNotes {
     skippedSections?: string[];
+    tagOrder?: string[];
     extraTags?: [string, string][];
     extraSections?: { banner: string; lines: string[] }[];
 }
@@ -460,5 +463,6 @@ export function parse(text: string, limits: ParseLimits = {}): ParsedDocument {
         ...(skipped.size ? { skippedSections: [...skipped] } : {}),
         ...(extraTags.length ? { extraTags } : {}),
         ...(extraSections.length ? { extraSections } : {}),
+        tagOrder,
     };
 }

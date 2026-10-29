@@ -103,6 +103,9 @@ describe('event-type parity with the fold switch', () => {
             'STATUS_TOKEN', 'CREATE_TOKEN', 'CAPTURE', 'RESCUE', 'TAKE_CONTROL', 'TRIGGER',
             'ABILITY_ACTIVATE', 'DRAW', 'DISCARD', 'RESOURCE', 'REVEAL', 'SEARCH',
             'MULLIGAN', 'KEEP_HAND',
+            // Notes and effect bookkeeping inside an action (writer revision 6): reached by
+            // seeking to the action that caused them.
+            'LOOK', 'NAME', 'ABILITY_RESET', 'EFFECT_START', 'EFFECT_END',
         ]);
         const moveTypes = quotedNamesIn(SRC('swupgnMoves.ts'), 'MOVE_TYPES');
         const missing = [...FOLD_TYPES].filter((t) => !moveTypes.has(t) && !NOT_A_SEEK_TARGET.has(t));
@@ -129,6 +132,8 @@ describe('event-type parity with the fold switch', () => {
             'SHUFFLE', 'MULLIGAN', 'KEEP_HAND',
             // A note on the action it interrupted, so it rides in that action's beat.
             'UNDO',
+            // Notes and effects inside an action (writer revision 6), in that action's beat.
+            'LOOK', 'NAME', 'ABILITY_RESET', 'EFFECT_START', 'EFFECT_END',
         ]);
         const banners = quotedNamesIn(SRC('replayBeats.ts'), 'BANNERS');
         const missing = [...FOLD_TYPES].filter((t) => !banners.has(t) && !NOT_A_BANNER.has(t));

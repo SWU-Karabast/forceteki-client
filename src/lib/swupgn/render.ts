@@ -1,6 +1,6 @@
-import type { SwuPgnDocument, GameEvent, ReducedState, Seat } from './types';
+import type { CardInstanceState, SwuPgnDocument, GameEvent, ReducedState, Seat } from './types';
 import type { NameResolver } from './cardNames';
-import { baseId, indexResolver } from './cardNames';
+import { baseId, indexResolver, shorten } from './cardNames';
 import { emptyState, isArena, isCompleteKeyframe, snapToKeyframe } from './fold';
 import { isTopLevelActionRecord } from './actionLinks';
 
@@ -20,8 +20,52 @@ interface SidedResolver extends NameResolver {
     frontNameOf(id: string): string;
 }
 
+const ASPECTS = 'vigilance|command|aggression|cunning|villainy|heroism';
+const capitalise = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
+
+/**
+ * `text` with each icon-markup token of spec §10.1 replaced by its plain text, because the story
+ * is plain text (§16): `{keyword:restore:1}` -> `Restore 1`, `{resource:2}` -> `2 resources`,
+ * `:aggression::heroism:` -> `Aggression Heroism`. Anything else is left as it is.
+ */
+export function plainText(text: string): string {
+    return text
+        .replace(/\{keyword:([a-z]+)(?::(\d+))?\}/g, (_m, name: string, n?: string) => capitalise(name) + (n ? ` ${n}` : ''))
+        .replace(/\{resource:(\d+)\}/g, (_m, n: string) => `${n} ${n === '1' ? 'resource' : 'resources'}`)
+        .replace(new RegExp(`(?::(?:${ASPECTS}):)+`, 'g'), (run) => run.split(':').filter((w) => w !== '')
+            .map(capitalise)
+            .join(' '));
+}
+
+/** Each `EffectDuration` as the words that close an `EFFECT_START` line (spec §16). */
+function durationWords(duration: unknown, src: string, untilText: unknown, nm: (id: string) => string): string {
+    switch (duration) {
+        case 'attack': return 'for this attack';
+        case 'phase': return 'for this phase';
+        case 'round': return 'for this round';
+        case 'whileSourceInPlay': return `while ${nm(src)} is in play`;
+        // The file's text, cut like a card name, so it cannot grow the story (spec §16).
+        case 'until': return `until ${typeof untilText === 'string' ? shorten(untilText) : 'a condition is met'}`;
+        case 'delayed': return 'delayed';
+        case 'game': return 'for the rest of the game';
+        default: return String(duration);
+    }
+}
+
+/** Each `EffectEndReason` as the words that close an `EFFECT_END` line (spec §16). */
+function endWords(reason: unknown): string {
+    switch (reason) {
+        case 'expired': return 'expired';
+        case 'fired': return 'it resolved';
+        case 'sourceLeft': return 'its source left play';
+        case 'targetLeft': return 'its target changed zone';
+        case 'cancelled': return 'cancelled';
+        default: return String(reason);
+    }
+}
+
 /** Normative one-line rendering of a single event. `null` means "not part of the story". */
-function line(e: GameEvent, n: SidedResolver): string | null {
+function line(e: GameEvent, n: SidedResolver, effectSources: ReadonlyMap<string, string> = new Map()): string | null {
     const nm = (id: string) => {
         if (typeof id === 'string' && id.startsWith('base@')) {
             return `${who(Number(id.slice(5)) as Seat)}'s base`;
@@ -67,8 +111,10 @@ function line(e: GameEvent, n: SidedResolver): string | null {
         // ("Player 2 uses Director Krennic"); every other kind happened TO a card. A granted
         // ability names its grantor, because the card using it has no such text of its own
         // ("Player 1 uses Player 1's base (granted by Heavy Ion Cannon)").
+        // An ability another card's ability made the player use names that card too
+        // ("Wampa uses an ability (used by Chimaera)").
         case 'ABILITY_ACTIVATE': {
-            const granted = e.grantedBy ? ` (granted by ${nm(e.grantedBy)})` : '';
+            const granted = (e.grantedBy ? ` (granted by ${nm(e.grantedBy)})` : '') + (e.usedBy ? ` (used by ${nm(e.usedBy)})` : '');
             return e.kind === 'action' || e.kind === 'epic'
                 ? `${who(e.p)} uses ${nm(e.card)}${e.kind === 'epic' ? '\'s Epic Action' : ''}${granted}`
                 : `${nm(e.card)} uses an ability${granted}`;
@@ -84,6 +130,13 @@ function line(e: GameEvent, n: SidedResolver): string | null {
         case 'DISCARD': return `${who(e.p)} discards ${list(e.cards)}`;
         case 'RESOURCE': return `${who(e.p)} resources ${nm(e.card)}`;
         case 'REVEAL': return `${who(e.p)} reveals ${list(e.cards)}`;
+        // A look names whose zone it was and, in an omniscient file, the cards seen.
+        case 'LOOK': {
+            const seen = arr(e.cards).length ? `: ${list(e.cards)}` : '';
+            return `${who(e.p)} looks at ${e.count} ${e.count === 1 ? 'card' : 'cards'} of ${who(e.owner)}'s ${e.zone}${seen}`;
+        }
+        // The name is the file's text, not an id: cut like a card name, so it cannot grow the story.
+        case 'NAME': return `${who(e.p)} names ${shorten(String(e.name))}`;
         case 'SEARCH': return e.found ? `${who(e.p)} searches, finds ${list(e.found)}` : `${who(e.p)} searches their deck`;
         case 'CREATE_TOKEN': return `${who(e.p)} creates ${nm(e.token)} in ${e.zone}`;
         case 'CAPTURE': return `${who(e.p)} captures ${nm(e.card)}${e.by ? ` with ${nm(e.by)}` : ''}`;
@@ -91,6 +144,20 @@ function line(e: GameEvent, n: SidedResolver): string | null {
         case 'TAKE_CONTROL': return `${who(e.p)} takes control of ${nm(e.card)}`;
         case 'MULLIGAN': return `${who(e.p)} mulligans`;
         case 'KEEP_HAND': return `${who(e.p)} keeps their hand`;
+        // An effect names its source card, then what it does in words when the file says, then
+        // what it applies to: the targets, or the seat a player-wide effect is for.
+        case 'EFFECT_START': {
+            const what = e.text ? ` — ${shorten(plainText(String(e.text)))}` : '';
+            const on = arr(e.targets).length ? ` on ${list(e.targets)}` : e.seat === 1 || e.seat === 2 ? ` for ${who(e.seat)}` : e.seat === 'both' ? ' for both players' : '';
+            return `${who(e.p)}: ${nm(e.src)}${what}${on} (${durationWords(e.duration, e.src, e.untilText, nm)})`;
+        }
+        // Named by the source its EFFECT_START gave, or by its id when the file never started it.
+        case 'EFFECT_END': {
+            const src = effectSources.get(e.id);
+            const which = src !== undefined ? `Effect from ${nm(src)}` : `Effect ${e.id}`;
+            const on = arr(e.targets).length ? ` on ${list(e.targets)}` : '';
+            return `${which} ends${on} (${endWords(e.reason)})`;
+        }
         case 'GAME_END': return `*** ${e.winner === 'Draw' ? 'Game ends in a draw' : `${who(e.winner)} wins`} — ${e.reason} ***`;
         // Mechanism, not story: these are how the board changes, and each is already implied
         // by the action it sits under. MOVE in particular is the fold's source of truth and
@@ -98,7 +165,7 @@ function line(e: GameEvent, n: SidedResolver): string | null {
         // counters fire on every play and every regroup.
         case 'CHOICE': case 'PHASE_END': case 'ROUND_END': case 'SHUFFLE':
         case 'MODAL_CHOICE': case 'MOVE': case 'EXHAUST': case 'READY':
-        case 'EXHAUST_RESOURCES': case 'READY_RESOURCES': case 'STATS':
+        case 'EXHAUST_RESOURCES': case 'READY_RESOURCES': case 'STATS': case 'ABILITY_RESET':
             return null;
         case 'PHASE_START': return null;       // handled as a banner below
         case 'ROUND_START': return null;       // handled as a banner below
@@ -110,6 +177,29 @@ function line(e: GameEvent, n: SidedResolver): string | null {
 function copySuffix(ref: string): string {
     const m = (/:(\d+)$/).exec(String(ref));
     return m ? ` #${m[1]}` : '';
+}
+
+/** The copied name a unit that is a copy goes by (spec §16), cut like a card name; else undefined. */
+function copyName(c: Pick<CardInstanceState, 'copyOf' | 'name'>): string | undefined {
+    return typeof c.copyOf === 'string' && typeof c.name === 'string' ? shorten(c.name) : undefined;
+}
+
+/**
+ * Keep `copies` (unit id -> copied name) in step with the records that start and end a copy: a
+ * `STATS` states the whole attribute set, so one without `copyOf` ends it, and a unit leaving play
+ * starts over.
+ */
+function trackCopies(e: GameEvent, copies: Map<string, string>): void {
+    if (e.t === 'STATS') {
+        const name = copyName(e);
+        if (name !== undefined) {
+            copies.set(e.card, name);
+        } else {
+            copies.delete(e.card);
+        }
+    } else if (e.t === 'MOVE' && isArena(e.from) && !isArena(e.to)) {
+        copies.delete(e.card);
+    }
 }
 
 /**
@@ -172,7 +262,9 @@ function boardSummary(k: ReducedState, n: NameResolver): string[] {
                 for (const held of c.captured ?? []) {
                     bits.push(`holds ${nm(held)}`);
                 }
-                return nm(c.id) + stats + (bits.length ? ` [${bits.join(', ')}]` : '');
+                // A copy goes by the name it copied (CR 8.5).
+                const copied = copyName(c);
+                return (copied !== undefined ? copied + copySuffix(c.id) : nm(c.id)) + stats + (bits.length ? ` [${bits.join(', ')}]` : '');
             });
             out.push(`      ${zone}: ${rendered.join('  ·  ')}`);
         }
@@ -209,15 +301,22 @@ export function render(doc: SwuPgnDocument, names?: NameResolver): string {
     // leader whose Leader Unit side is another card, a double-sided leader flipped. A card is
     // named by the side that is up, so a deployed Tarkin attacks as The Death Star.
     const backUp = new Set<string>();
+    // Units that are a copy of another card (CR 8.5), by id: named by the copied name while it lasts.
+    const copies = new Map<string, string>();
     const n: SidedResolver = {
         // Sides are tracked per copy (a mirror match has two of one leader), names per card.
-        nameOf: (id) => (backUp.has(id) ? base.backNameOf?.(baseId(id)) : undefined) ?? base.nameOf(baseId(id)),
+        nameOf: (id) => copies.get(id) ?? (backUp.has(id) ? base.backNameOf?.(baseId(id)) : undefined) ?? base.nameOf(baseId(id)),
         backNameOf: (id) => base.backNameOf?.(baseId(id)),
         frontNameOf: (id) => base.nameOf(baseId(id)),
     };
     const out: string[] = [];
     let actionNum = 0;
+    // Effect id -> source card, so an EFFECT_END (which carries only the id) can name it.
+    const effectSources = new Map<string, string>();
     for (const e of doc.events) {
+        if (e.t === 'EFFECT_START' && typeof e.id === 'string' && typeof e.src === 'string') {
+            effectSources.set(e.id, e.src);
+        }
         if (e.t === 'ROUND_START' && isCompleteKeyframe(e.keyframe)) {
             // A keyframe states each leader's status, so the sides snap to it like the board does.
             for (const seat of [1, 2] as Seat[]) {
@@ -227,6 +326,16 @@ export function render(doc: SwuPgnDocument, names?: NameResolver): string {
                         backUp.add(leader.id);
                     } else {
                         backUp.delete(leader.id);
+                    }
+                }
+            }
+            // So do the copies: the keyframe states every unit's attributes.
+            copies.clear();
+            for (const seat of [1, 2] as Seat[]) {
+                for (const c of e.keyframe.players[seat]?.cards ?? []) {
+                    const copied = copyName(c);
+                    if (copied !== undefined) {
+                        copies.set(c.id, copied);
                     }
                 }
             }
@@ -259,8 +368,9 @@ export function render(doc: SwuPgnDocument, names?: NameResolver): string {
             actionNum = 0;
             continue;
         }
-        const text = line(e, n);
+        const text = line(e, n, effectSources);
         trackSides(e, backUp, base);
+        trackCopies(e, copies);
         if (text == null) {
             continue;
         }

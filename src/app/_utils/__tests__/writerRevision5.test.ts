@@ -183,19 +183,18 @@ describe('a resource given back to its owner\'s row is a TAKE_CONTROL (writer re
 });
 
 describe('P1Id / P2Id are opaque (§17): revision 5 changed their values, and nothing reads them', () => {
-    it.each(['arrest', 'capture', 'death-star', 'homeworlds', 'organic', 'pilot', 'stolen-hauler', 'upgrades'])('%s: WriterRevision 5, hashed ids, and an export carries every header line unchanged', (name) => {
+    // Every real-game vector, now WriterRevision 6 (6147b3c58), which still hashes the ids.
+    it.each(['arrest', 'capture', 'control', 'death-star', 'effects', 'homeworlds', 'organic', 'pilot', 'stolen-hauler', 'upgrades', 'visibility'])('%s: hashed ids, and an export writes the header back byte for byte', (name) => {
         const text = readFileSync(path.join(DIR, `${name}.swupgn`), 'utf-8');
         const doc = parse(text);
-        expect(doc.header.writerRevision).toBe(5);
+        expect(doc.header.writerRevision).toBe(6);
         expect(doc.header.p1Id).toMatch(/^sha256:[0-9a-f]{64}$/);
         expect(doc.header.p2Id).toMatch(/^sha256:[0-9a-f]{64}$/);
-        const header = (t: string) => t.slice(0, t.indexOf('\n%%%')).split('\n').filter(Boolean);
+        const header = (t: string) => t.slice(0, t.indexOf('\n%%%'));
+        // serialize() follows the file's own tag order (ParseNotes.tagOrder), so forceteki's
+        // EndDate-last header comes back exactly, P1Id/P2Id and WriterRevision included.
         const out = serialize(doc);
-        // Each tag line comes out byte for byte, P1Id/P2Id and WriterRevision included. The ORDER
-        // is serialize's HEADER_ORDER, not the file's: forceteki writes EndDate last, the export
-        // puts it after Date. §4 fixes no tag order beyond Game first, so this is not a defect.
-        expect([...header(out)].sort()).toEqual([...header(text)].sort());
-        expect(header(out)[0]).toBe(header(text)[0]);
+        expect(header(out)).toBe(header(text));
         expect(parse(out).header).toEqual(doc.header);
     });
 });

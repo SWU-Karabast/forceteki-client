@@ -13,6 +13,8 @@ import { firstFrameByAction } from '@/app/_utils/replayMoves';
 import { makeNameResolver, sidedResolver, nameAtSeq as nameAtSeqOf } from '@/app/_utils/swupgnCardNames';
 import { useCardStatMap } from '@/app/_utils/swupgnCardStats';
 import { frameAction } from '@/app/_utils/replayAction';
+import { activeEffectRows, effectNotesByCard, effectSources, effectTexts, ongoingEffectSummaries, spentAbilityRows } from '@/app/_utils/effectWords';
+import type { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { groupsByAdjacency } from '@/app/_utils/swupgnWriter';
 import { buildBeats, beatAt, captionForBeat, chapterMarks as chapterMarksOf, playbackStep, type Beat } from '@/app/_utils/replayBeats';
 import { entryExhaustByFrame } from '@/app/_utils/entryExhaust';
@@ -22,6 +24,7 @@ import { SPEEDS, autoplayDwellMs } from '@/app/_utils/replayTiming';
 import { readPrefs, PREFS_KEY, DEFAULT_PREFS, type StepBy } from '@/app/_utils/replayPrefs';
 import { triggerBlobDownload, sanitizeFilename } from '@/app/_utils/downloadBlob';
 import { resolveFrameRef } from '@/app/_utils/replayDeepLink';
+import { recordBack, recordForward, settle, simulSpans } from '@/app/_utils/simulGroups';
 import { ReplayContext } from '@/app/_contexts/ReplayContextCore';
 
 /** One resource commitment: what was taken, and what the player could have taken instead. */
@@ -105,6 +108,12 @@ export interface IReplayContextType {
     transitionsOf: (b: Beat) => Transition[];
     stepForward: () => void; stepBack: () => void; seekTo: (i: number) => void;
 
+    /** The frame's active effects and spent limited abilities (spec §11, writer revision 6), in
+     *  the story's words. `null` when the file does not record them: not recorded, not "none". */
+    activeEffects: { id: string; text: string }[] | null;
+    ongoingEffects: IOngoingEffectSummary[] | null;
+    spentAbilities: { key: string; seat: Seat; text: string }[] | null;
+
     /** The old per-frame step, kept for the shift-key fine-grained scrub. */
     stepRecordForward: () => void; stepRecordBack: () => void;
     seekToBeat: (i: number) => void;
@@ -160,7 +169,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         [doc],
     );
     const totalFrames = events.length;
-    const [currentIndex, setCurrentIndex] = useState(0);
+    // A `simul` group is one instant (spec §10.2): whatever sets the frame -- a seek, a deep link,
+    // a story line, a step, autoplay -- comes to rest at the end of the group it lands in.
+    const spans = useMemo(() => simulSpans(events), [events]);
+    const [currentIndex, setIndexState] = useState(0);
+    const setCurrentIndex = useCallback((next: number | ((p: number) => number)) => {
+        setIndexState((p) => settle(spans, typeof next === 'function' ? next(p) : next));
+    }, [spans]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [speed, setSpeedState] = useState<number>(DEFAULT_PREFS.speed);
     // Ignore a speed outside the supported list rather than let the dwell divide by a stray value.
@@ -418,12 +433,24 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             setCurrentIndex(Math.max(0, Math.min(target, totalFrames - 1)));
             setIsPlaying(false);
         }
-    }, [doc, events, initialFrame, totalFrames, clipStart, clipEnd]);
+    }, [doc, events, initialFrame, totalFrames, clipStart, clipEnd, setCurrentIndex]);
 
     // What happened on the current frame: a caption + the in-play card(s) to glow.
     // One side-aware resolver per frame, shared by the caption and every card the board names.
     const sidedNow = useMemo(() => resolverAt(currentIndex), [resolverAt, currentIndex]);
-    const action = useMemo(() => frameAction(events[currentIndex], sidedNow), [events, currentIndex, sidedNow]);
+    // An EFFECT_END carries only the effect's id; its source is named from the EFFECT_START (§16).
+    const fxSources = useMemo(() => effectSources(events), [events]);
+    const action = useMemo(() => frameAction(events[currentIndex], sidedNow, { effectSourceOf: (id) => fxSources.get(id) }), [events, currentIndex, sidedNow, fxSources]);
+    // The frame's active effects and spent limited abilities, each `null` when the file does not
+    // record them (a writer before revision 6): "not recorded", never "none" (spec §11).
+    const activeEffects = useMemo(() => activeEffectRows(frameStates[currentIndex], (id) => storyName(id, sidedNow)), [frameStates, currentIndex, sidedNow]);
+    const spentAbilities = useMemo(() => spentAbilityRows(frameStates[currentIndex], (id) => storyName(id, sidedNow)), [frameStates, currentIndex, sidedNow]);
+    // The same effects for the live board's trays (OngoingEffectsPanel), in its own shape.
+    const fxTexts = useMemo(() => effectTexts(events), [events]);
+    const ongoingEffects = useMemo(() => ongoingEffectSummaries(
+        frameStates[currentIndex], fxTexts, SEAT_TO_ID, (id) => sidedNow.nameOf(id),
+        (seat) => String(seat === 1 ? doc.header.p1Base : doc.header.p2Base),
+    ), [frameStates, currentIndex, fxTexts, sidedNow, doc]);
 
     const gameState = useMemo(() => {
         if (!frameStates[currentIndex]) return null;
@@ -449,6 +476,8 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             activeSeat: activeSeats[currentIndex],
             attack: attacks[currentIndex],
             lastPlayedCard: lastPlayed[currentIndex],
+            // The units an active effect targets carry its line (spec §11 `effects`).
+            effectNotes: effectNotesByCard(frameStates[currentIndex], (id) => storyName(id, sidedNow)),
         };
         return adaptState(frameStates[currentIndex], doc, SEAT_TO_ID, opts, statMap);
     }, [frameStates, currentIndex, doc, fogOfWar, perspective, statMap, action, leaderExhaustByFrame, resourcedByFrame, baseHpByFrame, deckNow, sidedNow, entryExhaust, activeSeats, attacks, lastPlayed]);
@@ -480,34 +509,35 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
 
     // The old per-frame step, kept for the shift-key fine-grained scrub (and for the
     // 'record' step-by preference).
-    const stepRecordForward = useCallback(() => setCurrentIndex((p) => Math.min(p + 1, totalFrames - 1)), [totalFrames]);
-    const stepRecordBack = useCallback(() => setCurrentIndex((p) => Math.max(p - 1, 0)), []);
+    // A simul group is stepped over whole, either way.
+    const stepRecordForward = useCallback(() => setCurrentIndex((p) => recordForward(spans, p)), [setCurrentIndex, spans]);
+    const stepRecordBack = useCallback(() => setCurrentIndex((p) => recordBack(spans, p)), [setCurrentIndex, spans]);
     // A beat step lands on the beat's END: the fully resolved board. Going back from a beat's end
     // lands on the previous beat's end, so forward then back is an identity.
     const stepBeatForward = useCallback(() => setCurrentIndex((p) => {
         const b = beatAt(beats, p);
         return p < b.end ? b.end : (beats[b.index + 1]?.end ?? p);
-    }), [beats]);
+    }), [beats, setCurrentIndex]);
     const stepBeatBack = useCallback(() => setCurrentIndex((p) => {
         const b = beatAt(beats, p);
         return beats[b.index - 1]?.end ?? 0;
-    }), [beats]);
+    }), [beats, setCurrentIndex]);
     // The arrow keys and the board chevrons step by whichever unit the preference names.
     const stepForward = stepBy === 'record' ? stepRecordForward : stepBeatForward;
     const stepBack = stepBy === 'record' ? stepRecordBack : stepBeatBack;
     const seekToBeat = useCallback((i: number) => {
         const b = beats[Math.max(0, Math.min(i, beats.length - 1))];
         if (b) setCurrentIndex(b.end);
-    }, [beats]);
-    const seekTo = useCallback((i: number) => setCurrentIndex(Math.max(0, Math.min(i, totalFrames - 1))), [totalFrames]);
+    }, [beats, setCurrentIndex]);
+    const seekTo = useCallback((i: number) => setCurrentIndex(Math.max(0, Math.min(i, totalFrames - 1))), [totalFrames, setCurrentIndex]);
     const seekToSeq = useCallback((seq: string) => {
         const i = events.findIndex((e) => e.seq === seq);
         if (i >= 0) setCurrentIndex(i);
-    }, [events]);
+    }, [events, setCurrentIndex]);
     const seekToBeatOf = useCallback((seq: string) => {
         const i = seqToFrame.get(seq);
         if (i != null) setCurrentIndex(beatAt(beats, i).end);
-    }, [seqToFrame, beats]);
+    }, [seqToFrame, beats, setCurrentIndex]);
     const play = useCallback(() => {
         setIsPlaying(true);
         // Advance immediately so Play gives instant feedback instead of a dead wait for
@@ -516,7 +546,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
             const step = playbackStep(beats, prev, totalFrames, clip);
             return step.kind === 'advance' ? step.to : prev;
         });
-    }, [clip, totalFrames, beats]);
+    }, [clip, totalFrames, beats, setCurrentIndex]);
     const pause = useCallback(() => setIsPlaying(false), []);
     const togglePerspective = useCallback(() => setPerspective((p) => (p === P1 ? P2 : P1)), []);
 
@@ -537,7 +567,7 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         const next = step.to;
         const t = setTimeout(() => setCurrentIndex(next), autoplayDwellMs(beats, beatAt(beats, currentIndex), currentIndex, transitionsOf, speed));
         return () => clearTimeout(t);
-    }, [isPlaying, speed, currentIndex, totalFrames, clip, beats, transitionsOf]);
+    }, [isPlaying, speed, currentIndex, totalFrames, clip, beats, transitionsOf, setCurrentIndex]);
 
     const value: IReplayContextType = useMemo(() => ({
         gameState, connectedPlayer: perspective, getOpponent,
@@ -548,12 +578,13 @@ export const ReplayProvider: React.FC<ReplayProviderProps> = ({
         play, pause, isPlaying, speed, setSpeed, animate, setAnimate, stepBy, setStepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
         seekToSeq, seekToBeatOf, currentEvents, captionExtra: caption.extra, togglePerspective, currentPerspective: perspective,
+        activeEffects, spentAbilities, ongoingEffects,
     }), [gameState, perspective, getOpponent, doc, events, chapterMarks, deckNow, resourcingDecisions, currentIndex, totalFrames, moves,
         currentMoveIndex, replayId, names, nameAt, nameAtSeq, frameStates, downloadTextLog, fogOfWar, toggleFogOfWar, hiddenSeat,
         clip, setClipStart, setClipEnd, clearClip,
         play, pause, isPlaying, speed, setSpeed, animate, stepBy,
         beats, currentBeat, transitionsOf, stepForward, stepBack, stepRecordForward, stepRecordBack, seekToBeat, seekTo,
-        seekToSeq, seekToBeatOf, currentEvents, caption, togglePerspective]);
+        seekToSeq, seekToBeatOf, currentEvents, caption, togglePerspective, activeEffects, spentAbilities, ongoingEffects]);
 
     return <ReplayContext.Provider value={value}>{children}</ReplayContext.Provider>;
 };
