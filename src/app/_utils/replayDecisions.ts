@@ -1,4 +1,4 @@
-import { displayText, dropFrameworkSources, isSeat, type SwuPgnDocument, type Seat } from '@/lib/swupgn';
+import { displayText, dropFrameworkSources, flatten, isSeat, type SwuPgnDocument, type Seat } from '@/lib/swupgn';
 
 // Decision review (P3): surface the explicit branch points the omniscient archive records
 // (CHOICE / MODAL_CHOICE — "offered A/B/C, chose B") and auto-bookmark the swingy moments
@@ -101,7 +101,8 @@ const defeatReason = (reason?: string) => (reason && Object.hasOwn(DEFEAT_REASON
 /** One-line caption for a key moment, shared by the Decisions and Digest tabs. File text in it
  *  (a DEFEAT or GAME_END reason) is neutralised for display (§23). */
 export function bookmarkLabel(b: Bookmark, nameOf: (id: string) => string): string {
-    return displayText(bookmarkText(b, nameOf));
+    // One line, as a story line is (§16): displayText keeps the line feeds a note may hold.
+    return flatten(displayText(bookmarkText(b, nameOf)));
 }
 
 function bookmarkText(b: Bookmark, nameOf: (id: string) => string): string {

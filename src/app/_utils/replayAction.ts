@@ -1,4 +1,4 @@
-import { type GameEvent, type NameResolver, type Seat, asIdList, displayText, shorten } from '@/lib/swupgn';
+import { type GameEvent, type NameResolver, type Seat, asIdList, displayText, flatten, shorten } from '@/lib/swupgn';
 import { effectEndLine, effectStartLine } from './effectWords';
 
 // What happened on the current frame, for the animated caption + board highlight. Unlike
@@ -42,7 +42,9 @@ export function storyName(id: string, n: NameResolver): string {
     const base = /^base@([12])$/.exec(s);
     if (base) return `${who(Number(base[1]) as Seat)}'s base`;
     const copy = /:(\d+)$/.exec(s);
-    return n.nameOf(s) + (copy ? ` #${copy[1]}` : '');
+    // Both parts are cut as render()'s nm() cuts them, so an id the index does not list, or a
+    // crafted copy number, cannot run past 120 characters either (§16, R-04).
+    return shorten(n.nameOf(s)) + (copy ? shorten(` #${copy[1]}`) : '');
 }
 
 const none: FrameAction = { label: '', highlight: [], kind: 'none' };
@@ -64,7 +66,9 @@ export interface IFrameActionOptions {
 
 export function frameAction(e: GameEvent | undefined, n: NameResolver & { frontNameOf?: (id: string) => string }, opts: IFrameActionOptions = {}): FrameAction {
     const a = frameActionOf(e, n, opts.hiddenSeat, opts.effectSourceOf);
-    return a.label ? { ...a, label: displayText(a.label) } : a;
+    // One record is one line (§16), here as in the story: displayText keeps tab and line feed
+    // for notes, so the caption and the move list flatten what it kept.
+    return a.label ? { ...a, label: flatten(displayText(a.label)) } : a;
 }
 
 function frameActionOf(
@@ -203,7 +207,10 @@ function frameActionOf(
             return { label: `${who(e.p)} passes`, highlight: [], kind: 'other' };
         case 'GAME_END':
             return {
-                label: e.winner === 'Draw' ? `Game ends in a draw — ${e.reason}` : `${who(e.winner as Seat)} wins — ${e.reason}`,
+                // `winner` is 1, 2 or "Draw" (§10.2). render() prints `Player N wins` for any other
+                // value; a caption names no winner the file does not (File Health reports it).
+                label: e.winner === 'Draw' ? `Game ends in a draw — ${e.reason}`
+                    : e.winner === 1 || e.winner === 2 ? `${who(e.winner)} wins — ${e.reason}` : `Game ends — ${e.reason}`,
                 highlight: [], kind: 'other',
             };
         // Mechanism, not story (spec §16): the board shows what these did.

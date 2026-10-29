@@ -83,11 +83,21 @@ function isCompleteSeat(p: unknown): p is PlayerState {
     if (uses !== undefined && (!Array.isArray(uses) || uses.length > MAX_ZONE_LIST || !uses.every(isCompleteAbilityUse))) {
         return false;
     }
-    return ps.cards.every((c) => {
+    // `leader` is optional too, but when present later records write its flags in place
+    // (LEADER_FLIP, DEPLOY_LEADER, EXHAUST): it must be an object with a string id.
+    const leader = ps.leader as unknown;
+    if (leader !== undefined && leader !== null && (typeof leader !== 'object' || typeof (leader as { id?: unknown }).id !== 'string')) {
+        return false;
+    }
+    const cardsOk = ps.cards.every((c) => {
         if (typeof c !== 'object' || c === null) return false;
         const controllers = (c as Partial<CardInstanceState>).upgradeControllers as unknown;
         return controllers === undefined || (typeof controllers === 'object' && controllers !== null && !Array.isArray(controllers));
     });
+    // The seat's cards hold at most MAX_ZONE_LIST upgrades and captives between them (spec §12,
+    // `[F-05]`), counted on the raw keyframe as upstream's isCompleteKeyframe counts them, before
+    // snapToKeyframe caps each card's lists.
+    return cardsOk && attachmentsHeld(ps.cards) <= MAX_ZONE_LIST;
 }
 
 /**
@@ -143,9 +153,14 @@ function isCompleteAbilityUse(u: unknown): boolean {
     return typeof use.card === 'string' && typeof use.ability === 'string' && typeof use.count === 'number';
 }
 
+/** True for a value an events line can hold that is a record at all: an object, not an array. */
+export function isRecord(e: unknown): e is GameEvent {
+    return typeof e === 'object' && e !== null && !Array.isArray(e);
+}
+
 /** True for a ROUND_START/ROUND_END that carries a keyframe a reader may snap to. */
 export function hasSnapKeyframe(e: GameEvent): e is GameEvent & { keyframe: ReducedState } {
-    return (e.t === 'ROUND_START' || e.t === 'ROUND_END') && isCompleteKeyframe(e.keyframe);
+    return isRecord(e) && (e.t === 'ROUND_START' || e.t === 'ROUND_END') && isCompleteKeyframe(e.keyframe);
 }
 
 /**
@@ -263,9 +278,36 @@ function attachTo(s: ReducedState, hostId: string, id: string): void {
         return;
     }
     const host = findCard(s, hostId);
-    if (host) {
+    if (host && !seatHoldsMaxAttachments(s, host)) {
         addOnce(host.upgrades, id);
     }
+}
+
+/**
+ * True when the cards of the seat holding `host` already hold MAX_ZONE_LIST upgrades and captives
+ * between them. Each card's list is capped on its own, but every exit scans all of them (detach),
+ * so a seat-wide cap is what keeps that scan bounded (spec §12, `[F-05]`).
+ */
+function seatHoldsMaxAttachments(s: ReducedState, host: CardInstanceState): boolean {
+    for (const seat of [1, 2] as Seat[]) {
+        const cards = s.players[seat]?.cards ?? [];
+        if (cards.includes(host)) {
+            return attachmentsHeld(cards) >= MAX_ZONE_LIST;
+        }
+    }
+    return false;
+}
+
+/**
+ * The upgrades and captives `cards` hold between them. CLIENT-OWNED: `upgrades` goes through
+ * `arr` as `captured` does, because isCompleteSeat counts a raw keyframe card with it.
+ */
+function attachmentsHeld(cards: readonly CardInstanceState[]): number {
+    let held = 0;
+    for (const c of cards) {
+        held += arr<string>(c.upgrades).length + arr<string>(c.captured).length;
+    }
+    return held;
 }
 
 /**
@@ -496,7 +538,8 @@ function endEffect(s: ReducedState, e: Extract<GameEvent, { t: 'EFFECT_END' }>):
     if (!fx.targets) {
         return;
     }
-    fx.targets = fx.targets.filter((t) => !gone.includes(t));
+    const leaving = new Set(gone);
+    fx.targets = fx.targets.filter((t) => !leaving.has(t));
     if (fx.targets.length === 0) {
         effects.splice(at, 1);
     }
@@ -864,10 +907,9 @@ function reseat(c: CardInstanceState, from: Seat, to: Seat): void {
 
 /** Apply a single event to state, mutating and returning it. */
 export function reduce(s: ReducedState, e: GameEvent): ReducedState {
-    // CLIENT-OWNED. An events line of `null`, `5` or `"x"` parses fine as JSON and then
-    // throws on the first property read, taking the whole replay down with no error
-    // boundary to catch it. Skip it instead.
-    if (e == null || typeof e !== 'object') {
+    // A file is untrusted input: an events line that parses to null, a number or an array is a
+    // record the fold cannot read, not a crash (spec §12).
+    if (!isRecord(e)) {
         return s;
     }
     // CLIENT-OWNED, pre-1.0 compatibility. A 1.0 stream states `kind`, which applyMoveCounts
@@ -905,9 +947,13 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
         case 'PLAY': case 'PLAY_SMUGGLE':
             placeCard(s, e.p, e.card, e.zone ?? 'ground'); break;
         case 'PLAY_EVENT': {
-            // Idempotent beside its own hand->discard MOVE, which is the pile's author.
+            // Idempotent beside its own MOVE, which is the pile's author and files the card under
+            // its owner: an event played out of the other seat's deck is in that seat's discard,
+            // not the player's, so it is filed only when no discard holds it yet.
             const ps = player(s, e.p);
-            if (ps) addOnce(ps.discard, e.card);
+            if (ps && !([1, 2] as Seat[]).some((seat) => s.players[seat]?.discard.includes(e.card))) {
+                addOnce(ps.discard, e.card);
+            }
             break;
         }
         case 'PLAY_UPGRADE': {
@@ -1081,7 +1127,9 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
                     continue;
                 }
                 const idx = prev.cards.findIndex((c) => c.id === e.card);
-                if (idx >= 0 && ps.cards.length < MAX_ZONE_LIST) {
+                // The unit brings its upgrades and captives, which count against its new seat's cap.
+                if (idx >= 0 && ps.cards.length < MAX_ZONE_LIST &&
+                  attachmentsHeld(ps.cards) + attachmentsHeld([prev.cards[idx]]) <= MAX_ZONE_LIST) {
                     const moved = prev.cards.splice(idx, 1)[0];
                     reseat(moved, seat, e.p);
                     ps.cards.push(moved);
@@ -1114,7 +1162,7 @@ export function reduce(s: ReducedState, e: GameEvent): ReducedState {
                 break;
             }
             const captor = e.by ? findCard(s, e.by) : undefined;
-            if (captor) {
+            if (captor && !seatHoldsMaxAttachments(s, captor)) {
                 const captured = arr<string>(captor.captured);
                 addOnce(captured, e.card);
                 captor.captured = captured;
@@ -1494,7 +1542,7 @@ export function snapToKeyframe(s: ReducedState, kf: ReducedState): ReducedState 
 function foldRange(events: GameEvent[], start: number, end: number, s: ReducedState): ReducedState {
     for (let i = start; i <= end; i++) {
         const e = events[i];
-        if (e == null || typeof e !== 'object') { continue; }
+        if (!isRecord(e)) { continue; }
         // A keyframe is authoritative: snap to it, then continue folding. A damaged one is
         // ignored per seat (see snapToKeyframe) and the event falls through to its rule.
         if ((e.t === 'ROUND_START' || e.t === 'ROUND_END') && e.keyframe && typeof e.keyframe === 'object') {
@@ -1579,7 +1627,7 @@ function isSelfSufficientKeyframe(kf: ReducedState, at: number, firstDefeat: Par
  * fold starts further back, or from the beginning.
  */
 export function stateAt(events: GameEvent[], seq: string): ReducedState {
-    const idx = events.findIndex((e) => e?.seq === seq);
+    const idx = events.findIndex((e) => isRecord(e) && e.seq === seq);
     // An unknown seq folds the whole list. That is the DOCUMENTED contract (spec §12.3).
     const end = idx >= 0 ? idx : events.length - 1;
     // Where each seat's base was first defeated: by a DEFEAT record, or by a keyframe stating it
@@ -1587,7 +1635,7 @@ export function stateAt(events: GameEvent[], seq: string): ReducedState {
     const firstDefeat: Partial<Record<Seat, number>> = {};
     for (let i = 0; i <= end; i++) {
         const e = events[i];
-        if (e == null || typeof e !== 'object') continue;
+        if (!isRecord(e)) continue;
         const seats: Seat[] = [];
         if (e.t === 'DEFEAT') {
             const seat = seatOfBaseRef(e.card);
@@ -1599,7 +1647,7 @@ export function stateAt(events: GameEvent[], seq: string): ReducedState {
     }
     for (let i = end; i >= 0; i--) {
         const e = events[i];
-        if (e != null && typeof e === 'object' && hasSnapKeyframe(e) && isSelfSufficientKeyframe(e.keyframe, i, firstDefeat)) {
+        if (hasSnapKeyframe(e) && isSelfSufficientKeyframe(e.keyframe, i, firstDefeat)) {
             return foldRange(events, i + 1, end, snapToKeyframe(emptyState(), e.keyframe));
         }
     }

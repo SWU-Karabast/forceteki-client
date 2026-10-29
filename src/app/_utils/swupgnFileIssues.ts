@@ -1,4 +1,4 @@
-import { baseId, displayText, SwuPgnError, type SwuPgnDocument, type GameEvent, type ParseNotes } from '@/lib/swupgn';
+import { baseId, displayText, SwuPgnError, TOKEN_ID, tokenNameOf, type SwuPgnDocument, type GameEvent, type ParseNotes } from '@/lib/swupgn';
 import { isLetteredSeq, isNumberedAction } from './swupgnMoves';
 import { isPreRelease } from './swupgnWriter';
 
@@ -162,6 +162,7 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     let tokenNotOutside = 0;
     let fortifyEnemyBase = 0;
     let effectEndUnknown = 0;
+    let badWinners = 0;
     // The effects in force, by id, with the targets each still has (null: no targets), followed in
     // file order as the validator follows them.
     const activeFx = new Map<string, Set<string> | null>();
@@ -181,8 +182,15 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
         // is the one exception: Appendix C makes no claim for it.
         if (t === 'ROUND_START' && r.active !== 1 && r.active !== 2 && !isPreRelease(h)) roundStartNoActive++;
         // [W-47]: a token leaving play ceases to exist (CR 3.7.3), so its MOVE goes to outsideTheGame.
+        // One moving with its unit to the other arena stays in play; a Credit or the Force token never
+        // takes an arena slot (§6.5), so it has no such move. validate.ts's `changesArena`, exactly.
+        const isArena = (z: unknown) => z === 'ground' || z === 'space';
+        const tokenNamed = (name: string) => typeof r.card === 'string' && TOKEN_ID.test(r.card) && tokenNameOf(r.card) === name;
+        const changesArena = isArena(r.from) && isArena(r.to) && !tokenNamed('credit') && !tokenNamed('the-force');
         if (t === 'MOVE' && typeof r.card === 'string' && r.card.startsWith('TOKEN:') && r.to !== 'outsideTheGame'
-            && r.from !== r.to && (r.from === 'base' || r.from === 'ground' || r.from === 'space')) tokenNotOutside++;
+            && r.from !== r.to && !changesArena && (r.from === 'base' || isArena(r.from))) tokenNotOutside++;
+        // §10.2: GAME_END.winner is 1, 2 or "Draw" (event.schema.json; another value is a `schema` error).
+        if (t === 'GAME_END' && !RESULT_OF_WINNER.has(r.winner)) badWinners++;
         // §10.3: a Fortify upgrade attaches to the base of the seat that played it.
         const fortifyHost = t === 'MOVE' && r.to === 'base' ? r.attachedTo : t === 'PLAY_UPGRADE' ? r.target : undefined;
         if (typeof fortifyHost === 'string' && /^base@[12]$/.test(fortifyHost) && typeof r.p === 'number' && fortifyHost !== `base@${r.p}`) fortifyEnemyBase++;
@@ -235,6 +243,9 @@ function fileIssuesOf(doc: SwuPgnDocument & ParseNotes): FileIssue[] {
     }
     if (effectEndUnknown > 0) {
         out.push({ severity: 'warning', message: `${plural(effectEndUnknown, 'EFFECT_END')} for an effect not in force, or a target it does not have: ignored (§10.1).` });
+    }
+    if (badWinners > 0) {
+        out.push({ severity: 'warning', message: `${plural(badWinners, 'GAME_END')} naming a winner that is not Player 1, Player 2 or a draw: the replay names no winner for ${badWinners === 1 ? 'it' : 'them'} (§10.2).` });
     }
     if (partialKeyframes > 0) {
         out.push({ severity: 'warning', message: `${plural(partialKeyframes, 'keyframe')} missing a seat; the folded state was kept for that seat instead (§13).` });

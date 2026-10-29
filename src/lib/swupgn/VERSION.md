@@ -1,9 +1,10 @@
 # Vendored SWU-PGN reader
 
-Source: forceteki `swupgn/src/`. Re-vendored 2026-10-29 at upstream **`6147b3c58`** (branch
-`swu-game-notation`; "initiative row names ROUND_START.active; EFFECT_START table unsplit; discard
-simul counts cards"), the CR v9.0 coverage pass, on top of the earlier syncs at `18cd06297`
-(client `2f51623`), `a2c013963`, `950a65a82` (client `2222127`) and `c233908d6`. Synced from that
+Source: forceteki `swupgn/src/`. Re-vendored 2026-10-29 at upstream **`c17ef7499`** (branch
+`swu-game-notation`; "docs(swupgn): Appendix E names all ten scenario vectors"), the pre-landing
+review hardening of the CR v9.0 coverage pass, on top of the earlier syncs at `6147b3c58` (client
+`0d08708`, review fixes to `53d7c3b`), `18cd06297` (client `2f51623`), `a2c013963`, `950a65a82`
+(client `2222127`) and `c233908d6`. Synced from that
 commit, not from a working tree. The spec is `docs/SWU-PGN-1.0-SPEC.md` at that commit, and it is
 **normative** (§2): the reference code, schemas and vectors are informative, and where they
 disagree the text governs. The conformance suite (`swupgn/test-vectors/`: 13 positive vectors, 33
@@ -20,6 +21,108 @@ numbers with `swupgnMoves.isNumberedAction`, the same rule plus the kind-less fa
 the story's numbering on every vector. `ids.ts` is **verbatim** (it holds literal combining marks
 in a regex, as upstream does). `validate.ts` stays omitted (Node-only: fs/path + ajv). `tokens.ts`,
 `serialize.ts`, `displayText.ts` and `foldFrames` are client-only.
+
+## What `6147b3c58..c17ef7499` changed (all handled here)
+
+Three `/ship` review rounds against hostile input and two rules corrections (spec §22, the eight
+bullets from "`nm(id)` cuts the name" to "`GAME_END.winner` is"). The format stays 1.0 and the
+writer stays `WriterRevision` 6: no record or field was added, and `types.ts`, `ids.ts`,
+`parse.ts` and the vectors did not change (`git diff --stat 6147b3c58 c17ef7499 --
+swupgn/test-vectors` is empty, and `diff -r` of the vectors against the client's copy is clean).
+Reader files: `fold.ts`, `integrity.ts`, `render.ts`, `cardNames.ts` (plus `actionLinks.ts`,
+`validate.ts` and `event.schema.json`, which the client does not carry).
+
+1. **`isRecord` ([F-04]).** Upstream's `reduce()`, `hasSnapKeyframe()` and `stateAt()` now skip
+   an events line that is null, a scalar or an array. Taken as is, and used in the client's own
+   `foldRange` and `stateAt` loops too. The client's "non-object event skip" divergence is
+   **retired**: it tested `e == null || typeof e !== 'object'`, which let an array through, so
+   upstream's is the wider of the two and covers every case the client's did. `parse.ts`'s
+   client-owned record-shape guard (`not-object`) still refuses all four shapes before the fold
+   sees them, so the fold's skip is defence in depth for a caller that builds events itself.
+2. **The seat-wide attachment cap ([F-05], §12).** `attachmentsHeld()` and
+   `seatHoldsMaxAttachments()` taken as is: `attachTo` and `CAPTURE` add nothing once the seat
+   holds 1000 upgrades and captives between them, and `TAKE_CONTROL` does not move a unit whose
+   attachments would take its new seat past 1000 (exactly 1000 moves). The keyframe half goes in
+   the client's `isCompleteSeat`, not upstream's `isCompleteKeyframe` (see "keyframe list
+   ceiling"), so a client snap, `stateAt`'s restart and `checkKeyframes` refuse the keyframes
+   upstream refuses. It counts the RAW keyframe, before `snapToKeyframe` caps each card's lists
+   at 200, as upstream counts it. `attachmentsHeld` reads `upgrades` through `arr()` (upstream
+   reads `c.upgrades.length`) because `isCompleteSeat` calls it on a card nothing has normalized.
+   One client test changed: "caps every keyframe list" had 900 cards × 900 upgrades on one
+   seat, which is now a damaged keyframe; it keeps the 900 upgrades on one card.
+3. **A keyframe seat's `leader`** must be absent, `null` or an object with a string `id`, or the
+   keyframe is damaged. In `isCompleteSeat`.
+4. **`PLAY_EVENT`** files its card only when no seat's discard holds it (§12.2); `endEffect`'s
+   partial end builds a `Set`. Both taken as is.
+5. **`integrity.ts`** taken verbatim (skips a non-record line, imports `isRecord`), with the
+   client's one line (`snapToKeyframe`) re-applied.
+6. **`cardNames.ts`**: `flatten` and the flattening `shorten` taken as is (the regex carries an
+   `eslint-disable-next-line no-control-regex` the client's lint needs). `indexResolver` is
+   unchanged. Its order is still newline runs to one space, `displayText`, then `shorten`, and it
+   still DROPS bidi marks where upstream's `shorten` spaces them. Because `indexResolver` now calls
+   the flattening `shorten`, a tab in a name (which `displayText` keeps) is a space; nothing else
+   in a client name changes. `render.test.ts` checks that `shorten` on an `indexResolver` name is
+   the identity, for ten hostile names (line breaks, U+2028/9, U+202E, NUL, NEL, ALM, tab, a
+   5,000-character name, a bidi mark at the cut point).
+7. **`render.ts`** taken verbatim (every name and ` #N` cut, unlisted ids too; non-record lines
+   skipped; the 16,777,216-character stop; every output line through `flatten`), with the client's
+   one line (the keyframe through `snapToKeyframe`) re-applied. The client's other paths that
+   show a record as a line:
+   - `replayAction.frameAction`, which is the caption, the move list (`buildMoveList`) and the
+     WebM clip's caption, now runs `flatten(displayText(label))`. `displayText` keeps tab and line
+     feed for notes; a caption is one line.
+   - `replayAction.storyName`, the caption's `nm()`, cuts the name and the ` #N` as `render()`
+     does, so an unlisted id or a crafted copy number is cut there too.
+   - `replayDecisions.bookmarkLabel` (Decisions and Digest tabs) flattens the same way.
+   - `StoryTab` shows `doc.story` or `render(doc).split('\n')`, each line through `displayText`.
+     A STORY line read from a file cannot hold a line feed, since `parse()` splits on it, and
+     `displayText` turns CR, U+2028 and U+2029 into spaces.
+   - `effectWords.ts` already cut its texts with `shorten`, which now flattens. It still words
+     each caption as `render()` does (`writerRevision6.test.ts`).
+   - `serialize.ts` writes `doc.story` or a fresh `render()`. A fresh one is now flat; the
+     client's `%%%` guard and its split on line breaks stay for a file's own STORY.
+8. **`actionLinks.ts`**: `linkActionSteps` skips non-record lines. Not ported (see "Deliberately
+   not ported"); `isTopLevelActionRecord` did not change.
+9. **`GAME_END.winner` is 1, 2 or `"Draw"`** (`event.schema.json`; another value is a `schema`
+   error, and §22 says an outcome a newer minor adds is a warning). `render.ts` is unchanged: it
+   prints `${who(winner)} wins` for anything but `"Draw"`, and `who()` gives `''` for a non-seat,
+   so a winner of 7 reads `***  wins — … ***`. The viewer itself says nothing false: File Health
+   reports "N GAME_END naming a winner that is not Player 1, Player 2 or a draw: the replay names no
+   winner for it (§10.2)", the caption reads `Game ends — <reason>`, `resultMismatch` still skips
+   an unknown outcome, and the Replay page's result comes from the header's `Result`, not from
+   `GAME_END`.
+10. **A token changing arenas with its unit stays in play ([W-47], [V-07]).** File Health's
+    `tokenNotOutside` rule now matches `validate.ts`'s `changesArena` exactly: an arena-to-arena
+    MOVE is exempt unless the id is a well-formed Credit or the Force token (`TOKEN_ID` and
+    `tokenNameOf`, upstream's test, not the client's looser `isCreditToken`). `tokens.ts` needs no
+    change: `normalizeTokenEvents` rewrites only a MOVE to `outsideTheGame`, and `dropInertRecords`
+    only a same-zone MOVE with no new host, so a token that only changed arenas is kept and the
+    fold leaves it on the board (a token unit lands in `space`; a shield keeps its count on a host
+    that changed arenas).
+11. **An event played out of the other seat's deck** shows in its owner's discard only: in the
+    fold, in `adaptState`'s discard pile (and so the pile's count), and the story still says the
+    player played it. Hand-made fixture `__tests__/fixtures/c17ef7499-cross-seat-event.swupgn`.
+12. **The attachment cap** has nothing to show. `fold.test.ts` folds a file of 3,000 attachments on
+    one seat (and a loaded unit stolen back and forth) through `foldFrames` and checks the cap
+    holds in every frame.
+13. **Hostile text.** Hand-made fixture `__tests__/fixtures/c17ef7499-hostile-text.swupgn`:
+    `\n`, `\r`, U+2028 and U+202E in CARDS names and a back side, a card id, effect text,
+    `untilText`, an EFFECT_END reason, a NAME, a zone and the GAME_END reason (winner 7), and a
+    5,000-character name. Every story line, caption, move-list label and bookmark is one line;
+    the exported STORY has one line per record, equals `render()`, and the export round-trips
+    through `serialize` → `parse` → `serialize` as a fixed point. A caption has one space fewer
+    than the story line beside a bidi control: `displayText` drops it, `flatten` spaces it.
+14. **Vectors.** Unchanged upstream and byte-identical here. Fold and render equality still hold
+    on all 13 positive vectors with no `.fold.json` or `.render.txt` touched, and every
+    well-formed negative still folds without touching `Object.prototype` (`manifest.test.ts`).
+
+Tests: `fold.test.ts` and `render.test.ts` port every new `fold.spec`/`render.spec` case
+(`stateAt`, `checkKeyframes` and `render` on non-record lines; the leader shape; the five cap
+cases; one line for effect text, `untilText` and a name; unlisted ids and copy numbers cut;
+control and bidi characters; long leader sides; the 16 MiB stop). Upstream's non-record case
+parses a file with `null` lines, which the client's `parse()` refuses, so the client splices the
+lines in after parsing. `src/app/_utils/__tests__/swupgnC17ef7499.test.ts` holds items 9 to 13,
+using `validate.spec`'s token-zone and GAME_END cases as the File Health cases.
 
 ## What `18cd06297..6147b3c58` changed (all handled here)
 
@@ -729,8 +832,11 @@ shims.
   EFFECT_END, LOOK and NAME caption of the vectors to the line `render()` prints.
 - **`simulGroups.ts`** — client-only: a `simul` group's span, for the scrubber's stops.
 - **`fold.ts` keyframe list ceiling** — `isCompleteSeat` rejects a seat whose `cards`, `hand`,
-  `discard`, `resources`, `baseUpgrades` or `baseCaptured` is over `MAX_ZONE_LIST` (§13), as
-  upstream's `isCompleteKeyframe` does per keyframe. Upstream also requires every keyframe card
+  `discard`, `resources`, `baseUpgrades` or `baseCaptured` is over `MAX_ZONE_LIST` (§13), or
+  whose cards hold more than `MAX_ZONE_LIST` upgrades and captives between them (counted raw,
+  through `arr()`, before the snap caps each card's lists), or whose `leader` is present, not
+  `null` and not an object with a string `id`, as upstream's `isCompleteKeyframe` does per
+  keyframe. Upstream also requires every keyframe card
   to be fully shaped (`isCompleteKeyframeCard`); the client normalizes cards in
   `snapToKeyframe` instead and does not port it. An optional list that is not an array
   (`resources: null`) is read as absent, as `normalizePlayer` reads it; upstream counts any
@@ -743,15 +849,24 @@ shims.
 - **`tokens.ts` `looseTokenName`** — the client's id reader for display and the pre-1.0 fallbacks
   (lower-cases, strips any `:N`), renamed from `tokenName` so it does not shadow upstream's
   `ids.tokenName` in the barrel.
+- **`replayAction.frameAction` / `storyName`, `replayDecisions.bookmarkLabel`** — client-only
+  captions: each label is `flatten(displayText(…))`, so it is one line (§16, R-04), and
+  `storyName` cuts a name and its ` #N` as `render()`'s `nm()` does. A GAME_END caption names a
+  winner only for `1`/`2`/`"Draw"`; `render()` (verbatim) prints `… wins` for any other value.
+- **`swupgnFileIssues.ts` revision-6 slips** — the [W-47] token rule is `validate.ts`'s
+  `changesArena` exactly; a GAME_END winner outside `1`/`2`/`"Draw"` is its own warning.
 - **`replayBeats` adjacency gate / `swupgnWriter.ts`** — client-only. See "What
   `950a65a82..a2c013963` changed": position grouping only for files `groupsByAdjacency` names.
-- **`fold.ts` non-object event skip** — `reduce()` returns unchanged for a `null`/scalar
-  record (defence in depth behind the parse guard; `foldFrames` keeps the frame slot).
 - **`cardNames.ts` untyped fields** — a `null` index entry is skipped (upstream drops any entry whose `id` or `name` is not a string; the client keeps the entry, so a bad `name` does not lose its `backSideName`); a non-string `name` or `backSideName` is
   ignored and newlines in a name are flattened (a rendered story line beginning `%%%` would
   end the STORY section of an export). Names also pass through `displayText` (§23). The §16
   `nm()` cut (over 120 code units → 119 and `…`) runs after both, on the name as shown, so no
-  shown name is over 120; upstream cuts the raw name.
+  shown name is over 120. Upstream's `shorten` flattens then cuts the raw name, turning each
+  line break and bidi control into its own space; the client turns a run of CR/LF into ONE
+  space and drops bidi controls. So for a CARDS name holding a CRLF or a bidi control, the
+  client's story differs from upstream's by those spaces (and can cut at a different point).
+  No vector holds one. `render()` calling the new `shorten` again on a client name changes
+  nothing (`render.test.ts`).
 - **`tokens.ts`** — client-only. Repairs the token lifecycle in pre-1.0 files (which emit no
   removal decrement), drops inert records, classifies token upgrades when no `kind` is stated,
   recovers a pilot's host from the keyframes when the writer named none, reads a pilot
@@ -804,6 +919,7 @@ the arenas (driven by `kind`); the seat/`__proto__` guard, `arr()` for scalar-wh
 fields and the primitive-keyframe guard (upstream has all three); attach-from-`attachedTo`,
 detach-on-exit and `hasForce` (upstream folds them now); the `(cost N)` render wording; the hand/discard
 CONTENTS fold (upstream adds AND removes on MOVE and dedupes the summary records now, and
-gates both in §14 — the client's version of this is retired, not divergent).
+gates both in §14 — the client's version of this is retired, not divergent); the fold's non-object event
+skip (`isRecord` since `c17ef7499`, and wider: it skips arrays too).
 
 Long-term: replace with a shared npm package (see spec "Long-term note").

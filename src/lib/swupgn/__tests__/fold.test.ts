@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fold, foldFrames, reduce, stateAt, isCompleteKeyframe, normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, tokenArtId, parse, checkKeyframes } from '../index';
+import { fold, foldFrames, reduce, stateAt, isCompleteKeyframe, normalizeTokenEvents, dropInertRecords, normalizeEvents, repairUpgradePlays, isStatusTokenCard, tokenArtId, parse, checkKeyframes, render } from '../index';
 import type { GameEvent, ReducedState, PlayerState } from '../index';
 import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
@@ -617,7 +617,8 @@ describe('a keyframe off an untrusted file is coerced to the PlayerState shape',
     it('caps every keyframe list, so one line cannot make every frame clone 1000 strings', () => {
         const big = Array.from({ length: 900 }, (_, i) => `X#${i}`);
         const ups = Array.from({ length: 900 }, (_, i) => `U#${i}`);
-        const s = fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ hand: big, discard: big, cards: big.map((id) => ({ id, zone: 'ground', upgrades: ups })) }) }] as unknown as GameEvent[]);
+        // One card holds the 900 upgrades: across the seat they stay within §12's 1000-attachment cap.
+        const s = fold([{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: kf({ hand: big, discard: big, cards: big.map((id, i) => ({ id, zone: 'ground', upgrades: i === 0 ? ups : [] })) }) }] as unknown as GameEvent[]);
         expect(p1(s).hand.length).toBe(200);
         expect(p1(s).discard.length).toBe(200);
         expect(p1(s).cards.length).toBe(200);
@@ -1294,5 +1295,172 @@ describe('checkKeyframes abilityUses with a newer-minor per (§18)', () => {
         const newer = { card: 'SOR#046', ability: 'a2', count: 1, per: 'turn', max: 1 };
         expect(paths([use, kf([known, newer])])).toEqual([]);
         expect(paths([use, kf([{ ...known, count: 0 }, newer])])).toEqual(['players.1.abilityUses']);
+    });
+});
+
+// Ported from forceteki test/server/swupgn/fold.spec.ts at c17ef7499 (the 6147b3c58..c17ef7499 review hardening).
+describe('6147b3c58..c17ef7499: PLAY_EVENT, damaged leaders, non-record lines', () => {
+    // Value: protects=an event played out of the other seat's deck stays in its owner's discard only (spec §12.2); fails_when=PLAY_EVENT files the card in the player's pile beside its owner's MOVE; why_new=c17ef7499 PLAY_EVENT owner rule; seam=none; no_claim=MOVE-less files
+    it('PLAY_EVENT leaves an event its owner\'s MOVE filed in the other seat\'s discard alone', () => {
+        const s = fold([
+            { seq: 'R1.A.0a', t: 'MOVE', card: 'SOR#142', from: 'deck', to: 'discard', p: 1, kind: 'event' },
+            { seq: 'R1.A.1', t: 'PLAY_EVENT', p: 2, card: 'SOR#142' },
+        ] as unknown as GameEvent[]);
+        expect(s.players[1]?.discard).toEqual(['SOR#142']);
+        expect(s.players[2]?.discard, 'not the player\'s').toEqual([]);
+    });
+
+    // Value: protects=PLAY_EVENT still files the card when no MOVE did (a MOVE-less file); fails_when=the owner rule refuses every PLAY_EVENT; why_new=the case above always has the MOVE; seam=none; no_claim=none
+    it('PLAY_EVENT still files the card when no discard holds it', () => {
+        const s = fold([{ seq: 'R1.A.1', t: 'PLAY_EVENT', p: 2, card: 'SOR#142' }] as unknown as GameEvent[]);
+        expect(s.players[2]?.discard).toEqual(['SOR#142']);
+    });
+
+    // Value: protects=a keyframe whose leader is not an object is a damaged checkpoint, so a later LEADER_FLIP does not throw (spec §13); fails_when=the leader's shape is not checked before the snap; why_new=c17ef7499; seam=client isCompleteSeat; no_claim=none
+    it('ignores a keyframe whose leader is not an object', () => {
+        const seat = (n: 1 | 2, leader?: unknown) => ({ seat: n, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0,
+            credits: 0, hasForce: false, discard: [], cards: [], ...(leader === undefined ? {} : { leader }) });
+        for (const leader of ['broken', 5, [], { id: 7 }]) {
+            const hostile = [
+                { seq: 'R2.start', t: 'ROUND_START', round: 2, active: 1, keyframe: { round: 2, phase: 'action', initiative: 1, players: { 1: seat(1, leader), 2: seat(2) } } },
+                { seq: 'R2.A.1', t: 'LEADER_FLIP', p: 1, card: 'TWI#017', onStartingSide: false },
+            ] as unknown as GameEvent[];
+            expect(() => fold(hostile)).not.toThrow();
+            expect(() => stateAt(hostile, 'R2.A.1')).not.toThrow();
+            expect(() => checkKeyframes(hostile)).not.toThrow();
+            expect(isCompleteKeyframe((hostile[0] as unknown as { keyframe: unknown }).keyframe), JSON.stringify(leader)).toBe(false);
+        }
+        // `null` is "no leader", not damage.
+        expect(isCompleteKeyframe({ round: 2, phase: 'action', initiative: 1, players: { 1: seat(1, null), 2: seat(2) } })).toBe(true);
+    });
+
+    // Value: protects=an events line that is not a record is skipped by every reader entry point (spec §12, [F-04]); fails_when=fold, stateAt, checkKeyframes or render dereference it; why_new=c17ef7499 isRecord; seam=parse refuses such a line (client-owned `not-object`), so the lines are spliced in after parsing; no_claim=what validate reports
+    it('skips an events line that is not a record in every reader entry point', () => {
+        const minimal = readFileSync(path.join(__dirname, 'fixtures/vectors/minimal.swupgn'), 'utf8');
+        const clean = parse(minimal);
+        const junk = [null, 5, [], 'x', [{ seq: 'R1.A.1', t: 'PASS', p: 1 }]] as unknown as GameEvent[];
+        const doc = { ...clean, events: [...junk, ...clean.events.slice(0, 3), ...junk, ...clean.events.slice(3)] };
+        const last = clean.events[clean.events.length - 1].seq;
+        expect(fold(doc.events)).toEqual(fold(clean.events));
+        expect(stateAt(doc.events, last)).toEqual(stateAt(clean.events, last));
+        expect(checkKeyframes(doc.events).mismatches).toEqual(checkKeyframes(clean.events).mismatches);
+        expect(render(doc)).toEqual(render(clean));
+        const frames = foldFrames(doc.events);
+        expect(frames.length, 'a skipped line keeps its frame slot').toBe(doc.events.length);
+        expect(frames[frames.length - 1]).toEqual(fold(clean.events));
+        // An array whose first element is a record is still not a record.
+        expect(reduce(base(), [{ seq: '1', t: 'MOVE', card: 'A', from: 'deck', to: 'hand', p: 1 }] as unknown as GameEvent)).toEqual(base());
+    });
+});
+
+describe('6147b3c58..c17ef7499: the seat-wide attachment cap ([F-05], §12)', () => {
+    const card = (id: string, upgrades: string[], captured: string[] = []) => ({ id, zone: 'ground', damage: 0, exhausted: false, upgrades, shields: 0, experience: 0, statusTokens: {}, captured });
+    const seat = (n: 1 | 2, cards: unknown[] = []) => ({ seat: n, baseHp: 30, baseMaxHp: 30, handSize: 0, hand: [], resourcesReady: 0, resourcesExhausted: 0,
+        credits: 0, hasForce: false, discard: [], cards });
+    const held = (s: ReducedState, n: 1 | 2) => (s.players[n]?.cards ?? []).reduce((k, c) => k + c.upgrades.length + (c.captured ?? []).length, 0);
+
+    // Value: protects=a seat's cards hold at most 1000 upgrades and captives between them (spec §12, [F-05]); fails_when=attachments are capped only per card; why_new=c17ef7499; seam=none; no_claim=fold time
+    it('stops attaching once a seat\'s cards hold the cap between them, upgrades and captives alike', () => {
+        const hosts = Array.from({ length: 3 }, (_, h) => ({ seq: `R1.A.${h + 1}`, t: 'MOVE', card: `SOR#${h}`, from: 'hand', to: 'ground', p: 1, kind: 'unit' }));
+        const attaches = Array.from({ length: 1000 }, (_, i) => ({ seq: `R1.A.${i + 10}`, t: 'MOVE', card: `SHD#${i}`, from: 'hand', to: 'ground', p: 1, kind: 'upgrade', attachedTo: `SOR#${i % 3}` }));
+        const s = fold([
+            ...hosts,
+            ...attaches,
+            { seq: 'R1.A.2000', t: 'MOVE', card: 'SHD#1000', from: 'hand', to: 'ground', p: 1, kind: 'upgrade', attachedTo: 'SOR#0' },
+            { seq: 'R1.A.2001', t: 'CAPTURE', p: 1, card: 'SOR#900', by: 'SOR#1' },
+            { seq: 'R1.A.2002', t: 'MOVE', card: 'SOR#5', from: 'hand', to: 'ground', p: 2, kind: 'unit' },
+            { seq: 'R1.A.2003', t: 'MOVE', card: 'SHD#2000', from: 'hand', to: 'ground', p: 2, kind: 'upgrade', attachedTo: 'SOR#5' },
+        ] as unknown as GameEvent[]);
+        const cards = s.players[1]?.cards ?? [];
+        expect(held(s, 1), 'seat 1 at the cap').toBe(1000);
+        expect(cards.some((c) => c.upgrades.includes('SHD#1000')), 'an upgrade past the cap').toBe(false);
+        expect(cards.some((c) => (c.captured ?? []).includes('SOR#900')), 'a captive past the cap').toBe(false);
+        expect(s.players[2]?.cards.find((c) => c.id === 'SOR#5')?.upgrades, 'the other seat has its own cap').toEqual(['SHD#2000']);
+    });
+
+    // Value: protects=a unit changing seats brings its upgrades into its new seat's cap; fails_when=TAKE_CONTROL moves a unit without counting its attachments; why_new=c17ef7499; seam=none; no_claim=fold time
+    it('does not move a unit by TAKE_CONTROL when its upgrades would take its new seat past the cap', () => {
+        const fill = (p: number, host: string, from: number) => Array.from({ length: 600 }, (_, i) => ({ seq: `R1.A.${p}u${from + i}`, t: 'MOVE', card: `SHD#${from + i}`, from: 'hand', to: 'ground', p, kind: 'upgrade', attachedTo: host }));
+        const s = fold([
+            { seq: 'R1.A.1', t: 'MOVE', card: 'SOR#1', from: 'hand', to: 'ground', p: 1, kind: 'unit' },
+            { seq: 'R1.A.2', t: 'MOVE', card: 'SOR#2', from: 'hand', to: 'ground', p: 2, kind: 'unit' },
+            { seq: 'R1.A.3', t: 'MOVE', card: 'SOR#3', from: 'hand', to: 'ground', p: 2, kind: 'unit' },
+            ...fill(1, 'SOR#1', 0),
+            ...fill(2, 'SOR#2', 1000),
+            { seq: 'R1.A.4', t: 'TAKE_CONTROL', p: 1, card: 'SOR#2', zone: 'ground' },
+            { seq: 'R1.A.5', t: 'TAKE_CONTROL', p: 1, card: 'SOR#3', zone: 'ground' },
+        ] as unknown as GameEvent[]);
+        expect(s.players[1]?.cards.map((c) => c.id), '600 + 600 would pass the cap; a bare unit does not').toEqual(['SOR#1', 'SOR#3']);
+        expect(s.players[2]?.cards.map((c) => c.id)).toEqual(['SOR#2']);
+    });
+
+    // Value: protects=TAKE_CONTROL's cap is inclusive and counts the moved unit's captives too; fails_when=the check becomes `<` or drops captured; why_new=c17ef7499; seam=none; no_claim=fold time
+    it('moves a unit by TAKE_CONTROL that lands its new seat exactly at the cap, counting its captives', () => {
+        const attach = (p: number, host: string, from: number, n: number) => Array.from({ length: n }, (_, i) => ({ seq: `R1.A.${p}u${from + i}`, t: 'MOVE', card: `SHD#${from + i}`, from: 'hand', to: 'ground', p, kind: 'upgrade', attachedTo: host }));
+        const s = fold([
+            { seq: 'R1.A.1', t: 'MOVE', card: 'SOR#1', from: 'hand', to: 'ground', p: 1, kind: 'unit' },
+            { seq: 'R1.A.2', t: 'MOVE', card: 'SOR#2', from: 'hand', to: 'ground', p: 2, kind: 'unit' },
+            { seq: 'R1.A.3', t: 'MOVE', card: 'SOR#3', from: 'hand', to: 'ground', p: 2, kind: 'unit' },
+            ...attach(1, 'SOR#1', 0, 400),
+            ...attach(2, 'SOR#2', 1000, 599),
+            { seq: 'R1.A.4', t: 'CAPTURE', p: 2, card: 'SOR#900', by: 'SOR#2' },
+            { seq: 'R1.A.5', t: 'CAPTURE', p: 2, card: 'SOR#901', by: 'SOR#3' },
+            { seq: 'R1.A.6', t: 'TAKE_CONTROL', p: 1, card: 'SOR#2', zone: 'ground' },
+            { seq: 'R1.A.7', t: 'TAKE_CONTROL', p: 1, card: 'SOR#3', zone: 'ground' },
+        ] as unknown as GameEvent[]);
+        expect(s.players[1]?.cards.map((c) => c.id), '400 + 599 + 1 captive is exactly the cap; one more captive is past it').toEqual(['SOR#1', 'SOR#2']);
+        expect(s.players[2]?.cards.map((c) => c.id)).toEqual(['SOR#3']);
+    });
+
+    // Value: protects=a keyframe whose seat's cards hold more than 1000 upgrades and captives between them is not snapped to (spec §13); fails_when=the client's isCompleteSeat counts each card's list only; why_new=c17ef7499; seam=client isCompleteSeat (not upstream's isCompleteKeyframe); no_claim=none
+    it('ignores a keyframe whose seat\'s cards hold more upgrades than the cap between them', () => {
+        const withUnits = (n: number, captured: string[] = []) => fold([{
+            seq: 'R1.start', t: 'ROUND_START', round: 1,
+            keyframe: { round: 1, phase: 'action', initiative: 1, players: {
+                1: seat(1, [card('SOR#010', Array.from({ length: 600 }, (_, i) => `SHD#${i}`)), card('SOR#011', Array.from({ length: n }, (_, i) => `TWI#${i}`), captured)]),
+                2: seat(2),
+            } },
+        }] as unknown as GameEvent[]);
+        expect(withUnits(400).players[1]?.cards.length, '1000 between them is a board').toBe(2);
+        expect(withUnits(401).players[1]?.cards, 'the damaged keyframe is not snapped to').toEqual([]);
+        expect(withUnits(400, ['SOR#200']).players[1]?.cards, '1000 upgrades and a captive is past the cap').toEqual([]);
+        // checkKeyframes reads the same keyframe as damaged, not as a mismatch.
+        const ev = [{ seq: 'R1.start', t: 'ROUND_START', round: 1, keyframe: { round: 1, phase: 'action', initiative: 1, players: {
+            1: seat(1, [card('SOR#010', Array.from({ length: 600 }, (_, i) => `SHD#${i}`)), card('SOR#011', Array.from({ length: 401 }, (_, i) => `TWI#${i}`))]), 2: seat(2) } } }] as unknown as GameEvent[];
+        expect(() => checkKeyframes(ev)).not.toThrow();
+    });
+
+    // Value: protects=a host's upgrades and a captor's captives stop at 1000 between them on one seat (spec §12, [F-05]); fails_when=attachTo or CAPTURE cap only their own list; why_new=c17ef7499 rewrote the per-list cap test; seam=none; no_claim=none
+    it('caps a host\'s upgrades and a captor\'s captives at 1000 between them', () => {
+        const events: unknown[] = [{ seq: 'R1.A.1', t: 'MOVE', card: 'SOR#010', from: 'hand', to: 'ground', p: 1, kind: 'unit' }];
+        for (let i = 0; i < 1005; i++) {
+            events.push({ seq: `R1.A.2u${i}`, t: 'MOVE', card: `LOF#${i}`, from: 'hand', to: 'ground', p: 1, kind: 'upgrade', attachedTo: 'SOR#010' });
+            events.push({ seq: `R1.A.2c${i}`, t: 'CAPTURE', p: 1, card: `SOR#${2000 + i}`, by: 'SOR#010' });
+        }
+        const host = fold(events as GameEvent[]).players[1]?.cards.find((c) => c.id === 'SOR#010');
+        expect((host?.upgrades.length ?? 0) + (host?.captured.length ?? 0)).toBe(1000);
+        expect(host?.upgrades, 'the ones under the cap are kept, in order').toEqual(Array.from({ length: 500 }, (_, i) => `LOF#${i}`));
+    });
+
+    // Value: protects=a crafted file over the cap loads and scrubs, and the cap holds in every frame (item 12); fails_when=foldFrames grows a seat past 1000 on any frame, or the fold slows to a hang; why_new=client-only foldFrames; seam=foldFrames; no_claim=UI responsiveness, checked by hand
+    it('holds the cap in every foldFrames frame of a file with 3000 attachments on one seat', () => {
+        const events: unknown[] = [];
+        for (let h = 0; h < 5; h++) events.push({ seq: `R1.A.${h + 1}`, t: 'MOVE', card: `SOR#${h}`, from: 'hand', to: 'ground', p: 1, kind: 'unit' });
+        events.push({ seq: 'R1.A.9', t: 'MOVE', card: 'SOR#99', from: 'hand', to: 'ground', p: 2, kind: 'unit' });
+        for (let i = 0; i < 3000; i++) {
+            events.push(i % 2
+                ? { seq: `R1.A.10.${i}`, t: 'MOVE', card: `SHD#${i}`, from: 'hand', to: 'ground', p: 1, kind: 'upgrade', attachedTo: `SOR#${i % 5}` }
+                : { seq: `R1.A.10.${i}`, t: 'CAPTURE', p: 1, card: `JTL#${i}`, by: `SOR#${i % 5}` });
+        }
+        // Stealing a loaded unit back and forth must not slip past the cap either.
+        events.push({ seq: 'R1.A.20', t: 'TAKE_CONTROL', p: 2, card: 'SOR#0', zone: 'ground' });
+        events.push({ seq: 'R1.A.21', t: 'TAKE_CONTROL', p: 1, card: 'SOR#0', zone: 'ground' });
+        const started = Date.now();
+        const frames = foldFrames(events as GameEvent[]);
+        expect(Date.now() - started, 'folds in well under a few seconds').toBeLessThan(5000);
+        let max = 0;
+        for (const f of frames) max = Math.max(max, held(f, 1), held(f, 2));
+        expect(max).toBe(1000);
+        expect(held(frames[frames.length - 1], 1) + held(frames[frames.length - 1], 2)).toBe(1000);
     });
 });

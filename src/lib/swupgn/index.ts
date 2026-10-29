@@ -10,13 +10,13 @@
 export * from './types';
 export { DEFAULT_LIMITS, engineProduct, parse, PILOT_WRITER_PRODUCTS, READER_MAJOR, RESERVED_KEYS, SwuPgnError } from './parse';
 export type { ParseNotes, ParsedDocument, ParseLimits } from './parse';
-export { fold, foldFrames, frameCost, reduce, stateAt, isSeat, asIdList, isCompleteKeyframe, emptyState, MAX_ZONE_LIST } from './fold';
+export { fold, foldFrames, frameCost, reduce, stateAt, isSeat, asIdList, isCompleteKeyframe, isRecord, emptyState, MAX_ZONE_LIST } from './fold';
 export { plainText, render } from './render';
 export { isTopLevelActionRecord } from './actionLinks';
 export { serialize } from './serialize';
 export { displayText } from './displayText';
 export type { NameResolver } from './cardNames';
-export { baseId, indexResolver, shorten } from './cardNames';
+export { baseId, flatten, indexResolver, shorten } from './cardNames';
 export { normalizeTokenEvents, dropInertRecords, dropFrameworkSources, normalizeEvents, repairUpgradePlays, isStatusTokenCard, isTokenPseudoCard, looseTokenName, tokenArtId } from './tokens';
 export { EFFECT_ID, TOKEN_ID, TOKEN_NAME, tokenName, tokenNameOf } from './ids';
 export { checkKeyframes } from './integrity';

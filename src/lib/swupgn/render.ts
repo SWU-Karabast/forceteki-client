@@ -1,10 +1,16 @@
 import type { CardInstanceState, SwuPgnDocument, GameEvent, ReducedState, Seat } from './types';
 import type { NameResolver } from './cardNames';
-import { baseId, indexResolver, shorten } from './cardNames';
-import { emptyState, isArena, isCompleteKeyframe, snapToKeyframe } from './fold';
+import { baseId, flatten, indexResolver, shorten } from './cardNames';
+import { emptyState, isArena, isCompleteKeyframe, isRecord, snapToKeyframe } from './fold';
 import { isTopLevelActionRecord } from './actionLinks';
 
 const RULE_WIDTH = 78;
+
+/** The longest story render() writes, in UTF-16 code units (spec §16): 16 MiB, the size of a file. */
+const MAX_STORY_LENGTH = 16 * 1024 * 1024;
+
+/** The line a story longer than MAX_STORY_LENGTH ends with (spec §16). */
+const STORY_CUT = '… the story stops here: it is longer than 16777216 characters';
 
 /** `x` if it is an array, else `[]`: a file is untrusted input and `cards: 5` must not throw. */
 function arr(x: unknown): string[] {
@@ -70,7 +76,7 @@ function line(e: GameEvent, n: SidedResolver, effectSources: ReadonlyMap<string,
         if (typeof id === 'string' && id.startsWith('base@')) {
             return `${who(Number(id.slice(5)) as Seat)}'s base`;
         }
-        return n.nameOf(id) + copySuffix(id);
+        return shorten(n.nameOf(id)) + shorten(copySuffix(id));
     };
     // ` · `, not `, `: a card's name has its own comma between title and subtitle, so a
     // comma-joined list cannot be split back into cards. The board lines use the same dot.
@@ -89,8 +95,8 @@ function line(e: GameEvent, n: SidedResolver, effectSources: ReadonlyMap<string,
         // Tarkin, Tyrant of the Outer Rim as The Death Star, Icon of Tyranny".
         case 'DEPLOY_LEADER': {
             const unitSide = n.backNameOf?.(e.card);
-            const leader = n.frontNameOf(baseId(e.card)) + copySuffix(e.card);
-            return `${who(e.p)} deploys ${leader}${unitSide ? ` as ${unitSide}${copySuffix(e.card)}` : ''}${e.target ? ` as a pilot on ${nm(e.target)}` : ''}`;
+            const leader = shorten(n.frontNameOf(baseId(e.card))) + shorten(copySuffix(e.card));
+            return `${who(e.p)} deploys ${leader}${unitSide ? ` as ${shorten(unitSide)}${shorten(copySuffix(e.card))}` : ''}${e.target ? ` as a pilot on ${nm(e.target)}` : ''}`;
         }
         // A double-sided leader flipping is a real, visible beat -- its title, aspects and
         // traits all change -- and no other line implies it, so it is story, not mechanism.
@@ -98,7 +104,7 @@ function line(e: GameEvent, n: SidedResolver, effectSources: ReadonlyMap<string,
             // Named by the face it left, then the face it landed on, when the index has both.
             const front = n.frontNameOf(baseId(e.card));
             const back = n.backNameOf?.(e.card);
-            return `${who(e.p)} flips ${nm(e.card)}${back ? ` to ${e.onStartingSide ? front : back}` : ''}`;
+            return `${who(e.p)} flips ${nm(e.card)}${back ? ` to ${shorten(e.onStartingSide ? front : back)}` : ''}`;
         }
         case 'ATTACK': return `${who(e.p)} attacks ${e.defenderType === 'base' ? `${who(e.p === 1 ? 2 : 1)}'s base` : nm(e.def)} with ${nm(e.atk)}`;
         case 'PASS': return `${who(e.p)} passes`;
@@ -208,7 +214,7 @@ function trackCopies(e: GameEvent, copies: Map<string, string>): void {
  * No new data: this is the keyframe the file already carries, laid out to be read.
  */
 function boardSummary(k: ReducedState, n: NameResolver): string[] {
-    const nm = (id: string) => n.nameOf(id) + copySuffix(id);
+    const nm = (id: string) => shorten(n.nameOf(id)) + shorten(copySuffix(id));
     const out: string[] = [];
     for (const seat of [1, 2] as Seat[]) {
         const p = k.players[seat];
@@ -264,7 +270,7 @@ function boardSummary(k: ReducedState, n: NameResolver): string[] {
                 }
                 // A copy goes by the name it copied (CR 8.5).
                 const copied = copyName(c);
-                return (copied !== undefined ? copied + copySuffix(c.id) : nm(c.id)) + stats + (bits.length ? ` [${bits.join(', ')}]` : '');
+                return (copied !== undefined ? copied + shorten(copySuffix(c.id)) : nm(c.id)) + stats + (bits.length ? ` [${bits.join(', ')}]` : '');
             });
             out.push(`      ${zone}: ${rendered.join('  ·  ')}`);
         }
@@ -310,10 +316,27 @@ export function render(doc: SwuPgnDocument, names?: NameResolver): string {
         frontNameOf: (id) => base.nameOf(baseId(id)),
     };
     const out: string[] = [];
+    // The story's size so far, in UTF-16 code units with a line feed per line: a file names a
+    // card in a few bytes and the story in up to 120 characters, so it is capped (spec §16).
+    let size = 0;
+    const put = (...lines: string[]) => {
+        for (const l of lines) {
+            out.push(l);
+            size += l.length + 1;
+        }
+    };
     let actionNum = 0;
     // Effect id -> source card, so an EFFECT_END (which carries only the id) can name it.
     const effectSources = new Map<string, string>();
     for (const e of doc.events) {
+        // A line that is not a record tells no story (spec §16), as the fold skips it.
+        if (!isRecord(e)) {
+            continue;
+        }
+        if (size > MAX_STORY_LENGTH) {
+            out.push(STORY_CUT);
+            break;
+        }
         if (e.t === 'EFFECT_START' && typeof e.id === 'string' && typeof e.src === 'string') {
             effectSources.set(e.id, e.src);
         }
@@ -341,7 +364,7 @@ export function render(doc: SwuPgnDocument, names?: NameResolver): string {
             }
         }
         if (e.t === 'ROUND_START') {
-            out.push('', '═'.repeat(RULE_WIDTH));
+            put('', '═'.repeat(RULE_WIDTH));
             const left = ` ROUND ${e.round}`;
             // Only a complete keyframe is laid out; a damaged one is not a board (spec §13).
             // CLIENT-OWNED: lay out the keyframe the fold would snap to, not the raw one. The
@@ -349,22 +372,22 @@ export function render(doc: SwuPgnDocument, names?: NameResolver): string {
             // and boardSummary iterating a crafted `upgrades: 5` threw inside StoryTab's render.
             const keyframe = isCompleteKeyframe(e.keyframe) ? snapToKeyframe(emptyState(), e.keyframe) : undefined;
             const right = keyframe?.initiative ? `initiative: ${who(keyframe.initiative)} ` : '';
-            out.push(right ? left.padEnd(RULE_WIDTH - right.length) + right : left);
+            put(right ? left.padEnd(RULE_WIDTH - right.length) + right : left);
             if (keyframe) {
-                out.push(...boardSummary(keyframe, n));
+                put(...boardSummary(keyframe, n));
             }
-            out.push('═'.repeat(RULE_WIDTH), '');
+            put('═'.repeat(RULE_WIDTH), '');
             actionNum = 0;
             continue;
         }
         // Neither an action nor a consequence: the records it retracted are gone from the file,
         // so it is a mark in the margin saying the narrative below was replayed from here.
         if (e.t === 'UNDO') {
-            out.push(`    ·· ${e.by ? who(e.by) : 'A player'} undid back to ${e.at} ··`);
+            put(`    ·· ${e.by ? who(e.by) : 'A player'} undid back to ${e.at} ··`);
             continue;
         }
         if (e.t === 'PHASE_START') {
-            out.push(` ── ${e.phase} ──`);
+            put(` ── ${e.phase} ──`);
             actionNum = 0;
             continue;
         }
@@ -380,10 +403,11 @@ export function render(doc: SwuPgnDocument, names?: NameResolver): string {
         // `R2.A.3b`, … — the causal grouping is already in the data, and indenting shows it.
         if (isTopLevelActionRecord(e)) {
             actionNum += 1;
-            out.push(` ${String(actionNum).padStart(2)}. ${text}`);
+            put(` ${String(actionNum).padStart(2)}. ${text}`);
         } else {
-            out.push(`       ↳ ${text}`);
+            put(`       ↳ ${text}`);
         }
     }
-    return out.join('\n');
+    // Every story line is one line, whatever a file put in a field it prints (spec §16, R-04).
+    return out.map(flatten).join('\n');
 }
