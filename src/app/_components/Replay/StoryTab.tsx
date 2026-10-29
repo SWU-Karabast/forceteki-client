@@ -1,0 +1,133 @@
+'use client';
+import React, { useMemo, useRef, useEffect } from 'react';
+import { Box, Typography } from '@mui/material';
+import { displayText, render } from '@/lib/swupgn';
+import { useReplay } from '@/app/_contexts/Replay.context';
+import { storySeekIndex, storyLineTargets, storyNumbersAbilities, roundOf } from '@/app/_utils/storySeek';
+import type { IStoryLineProps } from './ReplayTypes';
+
+/**
+ * The game as prose, straight from the file's `%%% STORY` section.
+ *
+ * The writer ships a complete narrative — real card names, a board summary at every round,
+ * and consequences indented under the action that caused them — which is more readable than
+ * anything derived from the raw event list.
+ *
+ * It is NOT parsed. Its wording is advisory and may change between writer versions; only
+ * `%%% EVENTS` is the truth. What IS stable is the shape: a numbered line is a player
+ * action, an indented `↳` line is a consequence of the line above it, a banner opens a
+ * round. That is enough to make the numbered lines clickable, and nothing here breaks if
+ * the prose changes — an unrecognised line just renders as text.
+ */
+
+/** One story line. Memoised with stable props (`onSeek` is the context's `useCallback`'d
+ *  `seekTo`), so a playback tick re-renders only the lines whose `isCurrent` flips, not
+ *  the whole story. The ref marks a line in the current round for scroll-follow. */
+const StoryLine = React.memo(React.forwardRef<HTMLDivElement, IStoryLineProps>(function StoryLine(
+    { line, target, isCurrent, onSeek }, ref,
+) {
+    if (target == null) {
+        return <Box component="div" sx={styles.prose(line.trimStart().startsWith('↳'))}>{line || ' '}</Box>;
+    }
+    return (
+        <Box
+            ref={ref}
+            component="div"
+            role="button"
+            tabIndex={0}
+            onClick={() => onSeek(target)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSeek(target); } }}
+            sx={styles.actionLine(isCurrent)}
+        >
+            {line || ' '}
+        </Box>
+    );
+}));
+
+const StoryTab: React.FC = () => {
+    const { doc, events, currentIndex, seekTo } = useReplay();
+
+    // A pre-1.0 file has no STORY section; render our own so the tab is never empty.
+    const lines = useMemo(
+        // The file's own STORY is file text: neutralise bidi/control characters for display (§23).
+        () => (doc.story?.length ? doc.story : render(doc).split('\n')).map(displayText),
+        [doc],
+    );
+
+    // Frame per story line, keyed the way the story numbers its actions (spec §16): built from
+    // EVENTS (the truth), never from the prose.
+    const targets = useMemo(() => storyLineTargets(lines, storySeekIndex(events, storyNumbersAbilities(lines, events))), [lines, events]);
+
+    const currentRound = useMemo(() => {
+        for (let i = currentIndex; i >= 0; i--) {
+            const e = events[i];
+            if (e?.t === 'ROUND_START') return e.round;
+        }
+        return 0;
+    }, [events, currentIndex]);
+
+    const activeRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        activeRef.current?.scrollIntoView({ block: 'nearest' });
+    }, [currentRound]);
+
+    return (
+        <Box sx={styles.container}>
+            {/* Below md the theme's root font is 10-12px, which takes 0.72rem to about 7px
+                on a phone; the 11px floor applies only there. */}
+            <Box
+                component="pre"
+                aria-label="Game story"
+                sx={styles.story}
+            >
+                {lines.map((line, i) => {
+                    const r = roundOf(line);
+                    const target = targets[i] ?? null;
+                    return (
+                        <StoryLine
+                            key={i}
+                            ref={target != null && r != null && r === currentRound ? activeRef : undefined}
+                            line={line}
+                            target={target}
+                            isCurrent={target != null && target === currentIndex}
+                            onSeek={seekTo}
+                        />
+                    );
+                })}
+            </Box>
+            {!doc.story?.length && (
+                <Typography variant="caption" sx={styles.rebuiltNotice}>
+                    This replay predates the story section — showing a narrative rebuilt from the events.
+                </Typography>
+            )}
+        </Box>
+    );
+};
+
+export default StoryTab;
+
+// ----------------Styles----------------//
+const styles = {
+    prose: (isConsequence: boolean) => ({
+        color: isConsequence ? 'rgba(255,255,255,0.5)' : undefined,
+    }),
+    actionLine: (isCurrent: boolean) => ({
+        cursor: 'pointer', borderRadius: '3px',
+        backgroundColor: isCurrent ? 'rgba(255,255,255,0.12)' : 'transparent',
+        '&:hover': { backgroundColor: 'rgba(255,255,255,0.07)' },
+        '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: '-2px' },
+    }),
+    container: {
+        p: 1.5,
+    },
+    story: {
+        m: 0, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        fontSize: { xs: 'max(11px, 0.72rem)', md: '0.72rem' }, lineHeight: 1.5, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+        overflowX: 'auto', color: 'rgba(255,255,255,0.8)',
+    },
+    rebuiltNotice: {
+        color: 'rgba(255,200,87,0.9)',
+        display: 'block',
+        mt: 1.5,
+    },
+};

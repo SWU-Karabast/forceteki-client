@@ -92,8 +92,8 @@ export const usePreviewCardPopover = (disabled: boolean, popoverConfig: PopoverC
             imageRendering: '-webkit-optimize-contrast',
             backfaceVisibility: 'hidden',
             userSelect: 'none',
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
+            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
+            WebkitUserSelect: 'none',   /* Prevents image selection */
             aspectRatio,
             width,
         },

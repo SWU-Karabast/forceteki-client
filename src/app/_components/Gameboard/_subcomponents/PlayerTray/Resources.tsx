@@ -135,7 +135,7 @@ const Resources: React.FC<IResourcesProps> = ({
             <Box sx={styles.resourceBorderLeft} />
 
             <CardContent sx={{ display: 'flex' }}>
-                <Box sx={styles.boxStyle}>
+                <Box sx={styles.boxStyle} data-testid={`resource-pile-${trayPlayer}`}>
                     <Image
                         src={s3TokenImageURL('resource-icon')}
                         alt="Resource Icon"

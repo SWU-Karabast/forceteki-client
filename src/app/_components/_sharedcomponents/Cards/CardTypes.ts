@@ -85,10 +85,19 @@ export interface ICardData {
     isBlanked?: boolean;
     isAttacker?: boolean;
     isDefender?: boolean;
+    // Replay-only: the base has been defeated (SWU-PGN `baseDefeated`). An ability can defeat a
+    // base outright (Grand Moff Tarkin), so its damage need not reach its HP.
+    defeated?: boolean;
     displayText?: string;
     clonedCardId?: ICardSetId;
     clonedCardName?: string;
     blockedFromPlayReason?: string;
+    // Replay-only: the unit's active keywords as the SWU-PGN file lists them, drawn as chips.
+    keywords?: string[];
+    // Replay-only: power/HP were rebuilt from card data because the file states none.
+    statsReconstructed?: boolean;
+    // Replay-only: the lasting effects that target this card, in the story's words (SWU-PGN `effects`).
+    effectNotes?: string[];
 }
 
 export interface IServerCardData {

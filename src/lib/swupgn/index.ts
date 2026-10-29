@@ -1,0 +1,23 @@
+// Public API for the SWU-PGN/1.0 reader (client-vendored subset).
+//
+// NOTE: validate.ts from the server's swupgn/src is intentionally OMITTED here — it uses
+// Node `fs`/`path` + `ajv` to load JSON schemas from disk and is not browser-safe. parse()
+// rejects every malformed file with a §24 code (SwuPgnError), and the fold and the viewer are
+// hardened against the well-formed-but-invalid rest, so parse + fold + render are sufficient.
+// If you ever need client-side validation, copy swupgn/schema/*.json from the server repo,
+// adapt validate.ts to `import` the JSON instead of reading from the filesystem, and
+// re-export `validate` below.
+export * from './types';
+export { DEFAULT_LIMITS, engineProduct, parse, PILOT_WRITER_PRODUCTS, READER_MAJOR, RESERVED_KEYS, SwuPgnError } from './parse';
+export type { ParseNotes, ParsedDocument, ParseLimits } from './parse';
+export { fold, foldFrames, frameCost, reduce, stateAt, isSeat, asIdList, isCompleteKeyframe, emptyState, MAX_ZONE_LIST } from './fold';
+export { plainText, render } from './render';
+export { isTopLevelActionRecord } from './actionLinks';
+export { serialize } from './serialize';
+export { displayText } from './displayText';
+export type { NameResolver } from './cardNames';
+export { baseId, indexResolver, shorten } from './cardNames';
+export { normalizeTokenEvents, dropInertRecords, dropFrameworkSources, normalizeEvents, repairUpgradePlays, isStatusTokenCard, isTokenPseudoCard, looseTokenName, tokenArtId } from './tokens';
+export { EFFECT_ID, TOKEN_ID, TOKEN_NAME, tokenName, tokenNameOf } from './ids';
+export { checkKeyframes } from './integrity';
+export type { IntegrityResult, KeyframeMismatch } from './integrity';

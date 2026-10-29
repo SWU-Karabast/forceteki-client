@@ -5,9 +5,11 @@ import '@mui/material/Paper';
 declare module '@mui/material/styles' {
     interface TypographyVariants {
         bodyBold: React.CSSProperties; // Define your custom variant here
+        tabLabel: React.CSSProperties;
     }
     interface TypographyVariantsOptions {
         bodyBold?: React.CSSProperties;
+        tabLabel?: React.CSSProperties;
     }
     interface BreakpointOverrides {
         xs: true,
@@ -30,6 +32,7 @@ declare module '@mui/material/styles' {
 declare module '@mui/material/Typography' {
     interface TypographyPropsVariantOverrides {
         bodyBold: true;
+        tabLabel: true;
     }
 }
 

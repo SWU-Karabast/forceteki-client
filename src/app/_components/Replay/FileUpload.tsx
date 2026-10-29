@@ -1,0 +1,220 @@
+'use client';
+import React, { useState, useCallback, useRef } from 'react';
+import { Box, Typography } from '@mui/material';
+import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { parse, SwuPgnDocument, type ParseNotes } from '@/lib/swupgn';
+import { noEventsMessage, replayTooHeavy } from '@/app/_utils/replayHandoff';
+import { replayErrorMessage } from '@/app/_utils/swupgnFileIssues';
+import type { IFileUploadProps } from './ReplayTypes';
+
+// A real replay is a few hundred KB, zipped or not.
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB (upload cap)
+// Ceiling on the DECOMPRESSED .swupgn, enforced while it inflates (extractReplayFromZip), so a
+// zip bomb stops here instead of expanding to gigabytes. Near the plain upload cap: a zip should
+// not admit a file several times larger than the viewer accepts unzipped.
+const MAX_DECOMPRESSED_SIZE = 16 * 1024 * 1024; // 16 MB
+
+const FileUpload: React.FC<IFileUploadProps> = ({ onReplayLoaded }) => {
+    const [isDragging, setIsDragging] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+    // Bumped per pick: a slow file (a big zip) that finishes after a newer pick must not replace it.
+    const pickRef = useRef(0);
+
+    const processFile = useCallback(async (file: File) => {
+        const pick = ++pickRef.current;
+        const current = () => pick === pickRef.current;
+        const fail = (message: string) => { if (current()) setError(message); };
+        setError(null);
+
+        if (file.size > MAX_FILE_SIZE) {
+            fail(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is ${MAX_FILE_SIZE / 1024 / 1024} MB.`);
+            // This pick is the current one, so it owns the spinner an older, slower pick left on.
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        const name = file.name.toLowerCase();
+
+        try {
+            let rawContent: string;
+            let doc: SwuPgnDocument & ParseNotes;
+
+            if (name.endsWith('.swupgn')) {
+                rawContent = await file.text();
+                doc = parse(rawContent);
+            } else if (name.endsWith('.zip')) {
+                const buffer = await file.arrayBuffer();
+                const [{ strFromU8 }, { extractReplayFromZip, ReplayTooLargeError }] = await Promise.all([
+                    import('fflate'), import('@/app/_utils/unzipReplay'),
+                ]);
+                let decompressed: Uint8Array | null;
+                try {
+                    decompressed = await extractReplayFromZip(new Uint8Array(buffer), MAX_DECOMPRESSED_SIZE);
+                } catch (zipErr) {
+                    if (zipErr instanceof ReplayTooLargeError) {
+                        fail(zipErr.message);
+                        return;
+                    }
+                    throw zipErr;
+                }
+                if (!decompressed) {
+                    fail('No .swupgn file found in zip.');
+                    return;
+                }
+                rawContent = strFromU8(decompressed);
+                doc = parse(rawContent);
+            } else {
+                fail('Please upload a .swupgn or .zip file.');
+                return;
+            }
+
+            if (doc.events.length === 0) {
+                fail(noEventsMessage(doc));
+                return;
+            }
+            const heavy = replayTooHeavy(doc);
+            if (heavy) {
+                fail(heavy);
+                return;
+            }
+            if (current()) onReplayLoaded(doc, rawContent);
+        } catch (err) {
+            // By the §24 code, never the message: a parse message is free text and may quote the file.
+            fail(replayErrorMessage(err, 'Failed to parse file.'));
+        } finally {
+            if (current()) setLoading(false);
+        }
+    }, [onReplayLoaded]);
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) processFile(file);
+    }, [processFile]);
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    }, []);
+
+    const handleDragLeave = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    const handleClick = () => {
+        inputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        // Cleared so choosing the same file again (after an error, or a fix) fires onChange.
+        e.target.value = '';
+        if (file) processFile(file);
+    };
+
+    return (
+        <Box sx={styles.container}>
+            <Box
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={handleClick}
+                sx={styles.dropZone(isDragging, !!error)}
+            >
+                <input
+                    ref={inputRef}
+                    type="file"
+                    accept=".swupgn,.zip"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                />
+                {loading ? (
+                    <Typography variant="body1" sx={styles.loading}>
+                        Loading replay...
+                    </Typography>
+                ) : (
+                    <>
+                        <Typography variant="h3" sx={styles.dropTitle}>
+                            Drop a .swupgn or .zip file here
+                        </Typography>
+                        <Typography variant="body2" sx={styles.hint}>
+                            or click to browse
+                        </Typography>
+                    </>
+                )}
+                {error && (
+                    <Typography variant="body2" role="alert" sx={styles.error}>
+                        {error}
+                    </Typography>
+                )}
+            </Box>
+            <Box sx={styles.footer}>
+                <Typography variant="body2" sx={styles.hint}>
+                    Max upload: {MAX_FILE_SIZE / 1024 / 1024} MB
+                </Typography>
+                <PreferenceButton
+                    variant="warning"
+                    text="Browse Files"
+                    buttonFnc={handleClick}
+                    sx={styles.browseButton}
+                />
+            </Box>
+        </Box>
+    );
+};
+
+export default FileUpload;
+
+// ----------------Styles----------------//
+const styles = {
+    container: {
+        width: '100%',
+    },
+    dropZone: (isDragging: boolean, hasError: boolean) => ({
+        width: '100%',
+        height: '200px',
+        border: '2px solid',
+        borderColor: isDragging ? 'var(--initiative-blue)' : hasError ? '#f44336' : 'rgba(114,134,160,0.4)',
+        borderRadius: '10px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        transition: 'border-color 0.2s, background-color 0.2s',
+        backgroundColor: isDragging ? 'rgba(0,186,255,0.08)' : 'rgba(0,0,0,0.2)',
+        '&:hover': {
+            borderColor: 'var(--initiative-blue)',
+            backgroundColor: 'rgba(0,186,255,0.05)',
+        },
+    }),
+    loading: {
+        color: 'var(--initiative-blue)',
+        mb: 0,
+    },
+    dropTitle: {
+        color: 'rgba(255,255,255,0.8)',
+        mb: 0,
+        fontWeight: 700,
+    },
+    hint: {
+        color: 'rgba(255,255,255,0.4)',
+    },
+    error: {
+        color: 'error.main',
+        mt: 1,
+    },
+    footer: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mt: 1.5,
+    },
+    browseButton: {
+        px: 3,
+    },
+};

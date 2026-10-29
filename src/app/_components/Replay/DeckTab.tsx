@@ -1,0 +1,199 @@
+'use client';
+import React, { useMemo, useState } from 'react';
+import { Box, Typography, Tooltip } from '@mui/material';
+import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material';
+import { useReplay } from '@/app/_contexts/Replay.context';
+import { initRecord } from '@/app/_utils/deckTracker';
+import { costOf, useCardCostMap } from '@/app/_utils/swupgnCardCosts';
+import { baseId, displayText } from '@/lib/swupgn';
+import SeekRow from './SeekRow';
+import type { ISeatDeckProps } from './ReplayTypes';
+
+/**
+ * What is left in each deck at this moment, in draw order until the deck is shuffled.
+ *
+ * The file publishes the starting deck order, so the remaining deck is exact, including what
+ * comes next. A shuffle record names the seat but not the new order, so after one only the
+ * contents are known. Upcoming cards are hidden behind a toggle: knowing the next draw is the
+ * point when you are studying a decision, and a spoiler when you are just watching.
+ */
+const PEEK = 5;
+
+const SeatDeck: React.FC<ISeatDeckProps> = ({ seat, name, reveal }) => {
+    const { deckNow, nameOf } = useReplay();
+    const costs = useCardCostMap();
+    const state = deckNow?.[seat];
+    if (!state) return null;
+
+    const { remaining, ordered } = state;
+    const counts = new Map<string, number>();
+    for (const id of remaining) {
+        const b = baseId(id);
+        counts.set(b, (counts.get(b) ?? 0) + 1);
+    }
+    const rows = [...counts].sort((a, b) => nameOf(a[0]).localeCompare(nameOf(b[0])));
+
+    return (
+        <Box sx={styles.seat}>
+            <Typography variant="subtitle2" sx={styles.seatName}>{name}</Typography>
+            <Typography variant="caption" sx={styles.cardsLeft}>
+                {remaining.length} card{remaining.length === 1 ? '' : 's'} left
+            </Typography>
+
+            {ordered && remaining.length > 0 && (
+                <Typography variant="caption" sx={styles.nextHeading}>
+                    Next {Math.min(PEEK, remaining.length)}
+                </Typography>
+            )}
+            {!ordered && remaining.length > 0 && (
+                <Typography variant="caption" sx={styles.shuffled}>
+                    Shuffled: the file does not record the new order, so the next draws are unknown.
+                </Typography>
+            )}
+            {/* Hidden draws leave the DOM entirely: a blurred name is still read aloud and
+                still found by find-in-page, which is no spoiler protection at all. */}
+            {ordered && remaining.slice(0, PEEK).map((id, i) => (
+                <Typography key={`${id}-${i}`} variant="caption" sx={styles.nextCard(reveal)}>
+                    {i + 1}. {reveal ? nameOf(id) : '· · · · ·'}
+                </Typography>
+            ))}
+            {remaining.length === 0 && (
+                <Typography variant="caption" sx={styles.empty}>
+                    Deck empty
+                </Typography>
+            )}
+
+            <Typography variant="caption" sx={styles.stillHeading}>
+                Still in deck
+            </Typography>
+            {rows.map(([id, n]) => (
+                <Box key={id} sx={styles.stillRow}>
+                    <Typography variant="caption" sx={styles.stillName}>
+                        {n > 1 ? `${n}× ` : ''}{nameOf(id)}
+                    </Typography>
+                    <Typography variant="caption" sx={styles.stillCost}>
+                        {costOf(id, costs) ?? ''}
+                    </Typography>
+                </Box>
+            ))}
+        </Box>
+    );
+};
+
+const DeckTab: React.FC = () => {
+    const { header, doc } = useReplay();
+    const [reveal, setReveal] = useState(false);
+    const hasOrder = useMemo(() => initRecord(doc) != null, [doc]);
+
+    if (!hasOrder) {
+        return (
+            <Box sx={styles.container}>
+                <Typography variant="caption" sx={styles.noOrder}>
+                    This replay carries no starting deck order, so the remaining deck can&apos;t be reconstructed.
+                </Typography>
+            </Box>
+        );
+    }
+
+    return (
+        <Box sx={styles.container}>
+            <Tooltip title="The file publishes the full starting deck order, so upcoming draws are exact until the deck is shuffled">
+                <SeekRow
+                    onClick={() => setReveal((r) => !r)}
+                    pressed={reveal}
+                    label={reveal ? 'Hide upcoming draws' : 'Reveal upcoming draws'}
+                    sx={styles.revealToggle(reveal)}
+                >
+                    {reveal ? <VisibilityOutlined sx={{ fontSize: 16 }} /> : <VisibilityOffOutlined sx={{ fontSize: 16 }} />}
+                    <Typography variant="caption">{reveal ? 'Upcoming draws shown' : 'Reveal upcoming draws'}</Typography>
+                </SeekRow>
+            </Tooltip>
+            <Box sx={styles.seats}>
+                <SeatDeck seat={1} name={displayText(header.p1) || 'Player 1'} reveal={reveal} />
+                <SeatDeck seat={2} name={displayText(header.p2) || 'Player 2'} reveal={reveal} />
+            </Box>
+            <Typography variant="caption" sx={styles.footnote}>
+                Deck counts are the file&apos;s own. The cards shown in each hand and discard pile are best-effort:
+                the file&apos;s snapshots verify only how many are there, not which (spec §14).
+            </Typography>
+        </Box>
+    );
+};
+
+export default DeckTab;
+
+// ----------------Styles----------------//
+const styles = {
+    container: {
+        p: 1.5,
+    },
+    seat: {
+        flex: 1,
+        minWidth: 0,
+    },
+    seatName: {
+        color: 'white',
+        fontWeight: 700,
+    },
+    cardsLeft: {
+        color: 'var(--initiative-blue)',
+        fontWeight: 700,
+    },
+    nextHeading: {
+        color: 'rgba(255,255,255,0.6)',
+        display: 'block',
+        mt: 1,
+        fontWeight: 600,
+    },
+    shuffled: {
+        color: 'rgba(255,255,255,0.6)',
+        display: 'block',
+        mt: 1,
+    },
+    nextCard: (reveal: boolean) => ({
+        display: 'block',
+        color: reveal ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)',
+    }),
+    empty: {
+        color: 'rgba(255,120,120,0.9)',
+        display: 'block',
+    },
+    stillHeading: {
+        color: 'rgba(255,255,255,0.6)',
+        display: 'block',
+        mt: 1.5,
+        fontWeight: 600,
+    },
+    stillRow: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: 1,
+    },
+    stillName: {
+        color: 'rgba(255,255,255,0.7)',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    stillCost: {
+        color: 'rgba(255,255,255,0.35)',
+    },
+    noOrder: {
+        color: 'rgba(255,200,87,0.9)',
+    },
+    revealToggle: (reveal: boolean) => ({
+        display: 'inline-flex', alignItems: 'center', gap: 0.5, mb: 1.5,
+        color: reveal ? 'var(--initiative-blue)' : 'rgba(255,255,255,0.6)',
+        '&:hover': { color: 'white' },
+        '&:focus-visible': { outline: '2px solid var(--selection-blue)', outlineOffset: 2 },
+    }),
+    seats: {
+        display: 'flex',
+        gap: 3,
+    },
+    footnote: {
+        color: 'rgba(255,255,255,0.35)',
+        display: 'block',
+        mt: 2,
+    },
+};

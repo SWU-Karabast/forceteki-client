@@ -24,7 +24,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                     <GameProvider>
                         {children}
                     </GameProvider>
-                </ClientProviders> 
+                </ClientProviders>
             ) : (
                 <ClientProviders>
                     <Navbar />

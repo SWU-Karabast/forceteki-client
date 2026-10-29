@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography';
 import { Divider } from '@mui/material';
 import MuiLink from '@mui/material/Link';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import DownloadGameLog from './DownloadGameLog';
 import Bo3ScoreDisplay from '@/app/_components/_sharedcomponents/Preferences/_subComponents/Bo3ScoreDisplay';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/app/_contexts/Game.context';
@@ -541,6 +542,15 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                     </MuiLink>. Thanks!
                 </Typography>
             </Box>
+
+            {/* The server answers getGameLog only for players, never for a spectator. */}
+            {!isSpectator && (
+                <Box sx={{ ...styles.functionContainer, mt: '2rem' }}>
+                    <Typography sx={styles.typographyContainer} variant={'h3'}>Game Log</Typography>
+                    <Divider sx={{ mb: '20px' }} />
+                    <DownloadGameLog />
+                </Box>
+            )}
 
             {hasStatsMessages && (
                 <Box sx={{ ...styles.functionContainer, mt: '35px', mb: '0px', height: '7rem' }}>

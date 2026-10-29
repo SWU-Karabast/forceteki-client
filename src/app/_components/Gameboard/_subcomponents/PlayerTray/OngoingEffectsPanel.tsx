@@ -260,6 +260,10 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         },
     };
 
+    // `null` is a replay of a file that does not record effects: no panel at all, rather than an
+    // empty one that reads as "none".
+    if (ongoingEffects === null) return null;
+
     if (effectGroups.length === 0) {
         return (
             <Box ref={panelRef} sx={styles.panel}>

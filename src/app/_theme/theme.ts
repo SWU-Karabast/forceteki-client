@@ -9,7 +9,12 @@ export const theme: Theme = createTheme({
         text: {
             primary: '#fff',
             secondary: '#fff'
-        }
+        },
+        // The theme is dark-only: MUI's default error red (#d32f2f) is a light-mode color, under
+        // 4.5:1 on these dark panels. This one clears it on black.
+        error: {
+            main: '#f44336',
+        },
     },
     breakpoints: {
         values: {
@@ -75,6 +80,13 @@ export const theme: Theme = createTheme({
         body2: {
             fontSize: '0.75rem',
             fontWeight: 400,
+        },
+        // The name under an icon tab: the one place a label sits in a 40-50px column.
+        tabLabel: {
+            fontSize: '11px',
+            fontWeight: 600,
+            lineHeight: 1.1,
+            whiteSpace: 'nowrap',
         },
     },
     components: {

@@ -1,0 +1,738 @@
+[Game "SWU-PGN/1.0"]
+[GameId "54e5e8fd-26d0-4e35-9e1c-9ee766f8809c"]
+[Date "2026-09-12T14:12:01.926Z"]
+[Format "premier"]
+[CardPool "ASH,HMW,IBH,IC27,JTL,LAW,LOF,SEC,SHD,SOR,TS26,TWI"]
+[Engine "forceteki@463c3022"]
+[Seed "9cb52085-d53f-4aac-8d44-f85174bf2875"]
+[P1Id "sha256:8b4e2a021e0f4b718fb4ae2084e69e0eced11b84eea0ecf8bd9a40479cdb7309"]
+[P2Id "sha256:1c98d9152d7936ed7a16bd323bff536dc9e1910fb6c94b897eeae9372bfe2cee"]
+[P1 "Player 1"]
+[P2 "Player 2"]
+[P1Leader "LAW#008"]
+[P1Base "SEC#020"]
+[P2Leader "ASH#009"]
+[P2Base "ASH#020"]
+[Result "P2"]
+[Reason "Base Destroyed"]
+[Rounds "6"]
+[EndDate "2026-09-12T14:20:49.402Z"]
+[Match "sha256:89f45c51918cb455c3b4abf9ff8d662373088d8492c4c45fafef84bf1dfffc1f"]
+[Undos "1"]
+
+%%% STORY
+ ── setup ──
+       ↳ Player 1 draws 6: Imperial Armored Commando, No Glory, Only Results, Director Krennic, On the Verge of Greatness, Chimaera, A Frightening Reality, Chimaera, A Frightening Reality #2, Condemn
+       ↳ Player 2 draws 6: Neel, The Cutest Boy, Gungi, Finding Himself, Phoenix Squadron A-Wing, Lepi Lookout, Koska Reeves, Warrior of Mandalore #4, Sabine's Masterpiece, Crazy Colorful
+       ↳ Player 2 keeps their hand
+       ↳ Player 1 mulligans
+       ↳ Player 1 draws 6: Imperial Armored Commando #3, Craving Power #3, Imperial Door Technician #3, Craving Power, Ant Droid #2, Latts Razzi, Deadly Whipmaster #2
+       ↳ Player 1 resources Craving Power
+       ↳ Player 1 resources Imperial Door Technician #3
+       ↳ Player 2 resources Neel, The Cutest Boy
+       ↳ Player 2 resources Lepi Lookout
+
+══════════════════════════════════════════════════════════════════════════════
+ ROUND 1                                                 initiative: Player 2 
+ P1  base 30/30   hand 4   resources 2/2   deck 44   leader ready
+ P2  base 30/30   hand 4   resources 2/2   deck 44   leader ready
+══════════════════════════════════════════════════════════════════════════════
+
+ ── action ──
+  1. Player 2 plays Gungi, Finding Himself to ground (cost 2)
+  2. Player 2 passes
+  3. Player 1 plays Ant Droid #2 to ground (cost 1)
+  4. Player 1 passes
+  5. Player 2 claims initiative
+  6. Player 2 passes
+  7. Player 1 uses Director Krennic, Amidst My Achievement
+       ↳ Ant Droid #2 is defeated by Director Krennic, Amidst My Achievement
+       ↳ Ant Droid #2 uses an ability
+       ↳ Player 1 draws 1: Ant Droid
+  8. Player 1 plays Ant Droid to ground (cost 1)
+ ── regroup ──
+       ↳ Player 1 draws 2: Moff Gideon, Remnant Commander, No Glory, Only Results
+       ↳ Player 2 draws 2: Huyang, Your Aptitude Falls Short, Queen Amidala, Championing Her People
+       ↳ Player 1 resources Latts Razzi, Deadly Whipmaster #2
+       ↳ Player 2 resources Huyang, Your Aptitude Falls Short
+
+══════════════════════════════════════════════════════════════════════════════
+ ROUND 2                                                 initiative: Player 2 
+ P1  base 30/30   hand 4   resources 3/3   deck 41   leader ready
+      ground: Ant Droid 1/2
+ P2  base 30/30   hand 4   resources 3/3   deck 42   leader ready
+      ground: Gungi, Finding Himself 2/5
+══════════════════════════════════════════════════════════════════════════════
+
+ ── action ──
+  1. Player 2 plays Sabine's Masterpiece, Crazy Colorful to space (cost 3)
+  2. Player 2 passes
+  3. Player 1 plays Moff Gideon, Remnant Commander to ground (cost 3)
+  4. Player 1 passes
+  5. Player 2 uses Ahsoka Tano, Trust in the Force
+  6. Player 2 passes
+  7. Player 1 uses Director Krennic, Amidst My Achievement
+       ↳ Ant Droid is defeated by Director Krennic, Amidst My Achievement
+       ↳ Ant Droid uses an ability
+       ↳ Player 1 draws 1: Hyperspace Disaster #2
+  8. Player 1 passes
+  9. Player 2 attacks Moff Gideon, Remnant Commander with Gungi, Finding Himself
+       ↳ 4 damage to Moff Gideon, Remnant Commander — 1 HP left
+       ↳ 2 damage to Gungi, Finding Himself — 3 HP left
+ 10. Player 2 passes
+ 11. Player 1 claims initiative
+ 12. Player 1 passes
+ ── regroup ──
+       ↳ Player 1 draws 2: Lawbringer, Shadow Over Lothal, Hyperspace Disaster
+       ↳ Player 2 draws 2: Latts Razzi, Deadly Whipmaster #4, Han Solo, Hibernation Sick
+       ↳ Player 1 resources Hyperspace Disaster
+       ↳ Player 2 resources Han Solo, Hibernation Sick
+
+══════════════════════════════════════════════════════════════════════════════
+ ROUND 3                                                 initiative: Player 1 
+ P1  base 30/30   hand 5   resources 4/4   deck 38   leader ready
+      ground: Moff Gideon, Remnant Commander 2/5 [4 dmg]
+ P2  base 30/30   hand 4   resources 4/4   deck 40   leader ready
+      ground: Gungi, Finding Himself 2/5 [2 dmg]
+      space: Sabine's Masterpiece, Crazy Colorful 3/3
+══════════════════════════════════════════════════════════════════════════════
+
+ ── action ──
+       ↳ Credit is defeated by Craving Power #3
+  1. Player 1 plays Craving Power #3 on Moff Gideon, Remnant Commander (cost 5)
+       ↳ Craving Power #3 uses an ability
+       ↳ 3 damage to Sabine's Masterpiece, Crazy Colorful — 0 HP left
+       ↳ Sabine's Masterpiece, Crazy Colorful is defeated by Craving Power #3
+  2. Player 1 passes
+  3. Player 2 plays Latts Razzi, Deadly Whipmaster #4 to ground (cost 3)
+       ↳ Latts Razzi, Deadly Whipmaster #4 uses an ability
+       ↳ Latts Razzi, Deadly Whipmaster #4 gains 1 experience
+       ↳ 3 damage to Moff Gideon, Remnant Commander — 0 HP left
+       ↳ Craving Power #3 is defeated
+       ↳ Moff Gideon, Remnant Commander is defeated by Latts Razzi, Deadly Whipmaster #4
+  4. Player 2 passes
+  5. Player 1 claims initiative
+  6. Player 1 passes
+  7. Player 2 uses Ahsoka Tano, Trust in the Force
+  8. Player 2 attacks Player 1's base with Gungi, Finding Himself
+       ↳ 4 damage to Player 1's base — 26 HP left
+ ── regroup ──
+       ↳ Player 1 draws 2: Imperial Armored Commando #2, Dedra Meero, With Verifiable Data #2
+       ↳ Player 2 draws 2: Sabine's Masterpiece, Crazy Colorful #2, Queen Amidala, Championing Her People #2
+       ↳ Player 1 resources Hyperspace Disaster #2
+       ↳ Player 2 resources Queen Amidala, Championing Her People #2
+
+══════════════════════════════════════════════════════════════════════════════
+ ROUND 4                                                 initiative: Player 1 
+ P1  base 26/30   hand 5   resources 5/5   deck 36   leader ready
+ P2  base 30/30   hand 4   resources 5/5   deck 38   leader ready
+      ground: Gungi, Finding Himself 2/5 [2 dmg]  ·  Latts Razzi, Deadly Whipmaster #4 3/2 [1 xp]
+══════════════════════════════════════════════════════════════════════════════
+
+ ── action ──
+  1. Player 1 plays Imperial Armored Commando #2 to ground (cost 4)
+       ↳ Imperial Armored Commando #2 uses an ability
+       ↳ Imperial Armored Commando #2 gains 1 shield
+  2. Player 1 passes
+  3. Player 2 uses Ahsoka Tano, Trust in the Force
+  4. Player 2 passes
+  5. Player 1 claims initiative
+  6. Player 1 passes
+  7. Player 2 plays Sabine's Masterpiece, Crazy Colorful #2 to space (cost 3)
+  8. Player 2 plays Phoenix Squadron A-Wing to space (cost 2)
+  9. Player 2 attacks Imperial Armored Commando #2 with Latts Razzi, Deadly Whipmaster #4
+       ↳ Shield uses an ability
+       ↳ 2 damage to Latts Razzi, Deadly Whipmaster #4 — 0 HP left
+       ↳ Imperial Armored Commando #2 loses 1 shield
+       ↳ Latts Razzi, Deadly Whipmaster #4 loses 1 experience
+       ↳ Latts Razzi, Deadly Whipmaster #4 is defeated by Latts Razzi, Deadly Whipmaster #4
+ 10. Player 2 attacks Imperial Armored Commando #2 with Gungi, Finding Himself
+       ↳ 3 damage to Imperial Armored Commando #2 — 0 HP left
+       ↳ 3 damage to Gungi, Finding Himself — 0 HP left
+       ↳ Imperial Armored Commando #2 is defeated by Gungi, Finding Himself
+       ↳ Gungi, Finding Himself is defeated by Gungi, Finding Himself
+ ── regroup ──
+       ↳ Player 1 draws 2: Expendable Mercenary #3, Ant Droid #3
+       ↳ Player 2 draws 2: Galen Erso, You'll Never Win, The Mandalorian, Devoted Rescuer
+       ↳ Player 1 resources Ant Droid #3
+       ↳ Player 2 resources Koska Reeves, Warrior of Mandalore #4
+
+══════════════════════════════════════════════════════════════════════════════
+ ROUND 5                                                 initiative: Player 1 
+ P1  base 26/30   hand 5   resources 6/6   deck 34   leader ready
+ P2  base 30/30   hand 3   resources 6/6   deck 36   leader ready
+      space: Sabine's Masterpiece, Crazy Colorful #2 3/3  ·  Phoenix Squadron A-Wing 3/2
+══════════════════════════════════════════════════════════════════════════════
+
+ ── action ──
+  1. Player 1 plays Imperial Armored Commando #3 to ground (cost 4)
+       ↳ Imperial Armored Commando #3 uses an ability
+       ↳ Imperial Armored Commando #3 gains 1 shield
+  2. Player 1 passes
+  3. Player 2 attacks Player 1's base with Sabine's Masterpiece, Crazy Colorful #2
+       ↳ Sabine's Masterpiece, Crazy Colorful #2 uses an ability
+       ↳ Sabine's Masterpiece, Crazy Colorful #2 gains 1 experience
+       ↳ 4 damage to Player 1's base — 22 HP left
+  4. Player 2 passes
+  5. Player 1 claims initiative
+  6. Player 1 passes
+  7. Player 2 uses Ahsoka Tano, Trust in the Force
+    ·· Player 2 undid back to R5.A.7b ··
+  8. Player 2 plays Galen Erso, You'll Never Win to ground (cost 4)
+       ↳ Galen Erso, You'll Never Win uses an ability
+  9. Player 2 uses Ahsoka Tano, Trust in the Force's Epic Action
+ 10. Player 2 deploys Ahsoka Tano, Trust in the Force
+       ↳ Ahsoka Tano, Trust in the Force uses an ability
+ 11. Player 2 attacks Player 1's base with Phoenix Squadron A-Wing
+       ↳ Phoenix Squadron A-Wing uses an ability
+       ↳ 5 damage to Player 1's base — 17 HP left
+ 12. Player 2 attacks Player 1's base with Ahsoka Tano, Trust in the Force
+       ↳ Ahsoka Tano, Trust in the Force uses an ability
+       ↳ 5 damage to Player 1's base — 12 HP left
+ ── regroup ──
+       ↳ Player 1 draws 2: First Light, Threatening Elegance, Onyx Squadron Brute #3
+       ↳ Player 2 draws 2: Latts Razzi, Deadly Whipmaster #5, Nothing Left to Fear
+       ↳ Player 1 resources First Light, Threatening Elegance
+       ↳ Player 2 resources Latts Razzi, Deadly Whipmaster #5
+
+══════════════════════════════════════════════════════════════════════════════
+ ROUND 6                                                 initiative: Player 1 
+ P1  base 12/30   hand 5   resources 7/7   deck 32   leader ready
+      ground: Imperial Armored Commando #3 4/3 [1 shield]
+ P2  base 30/30   hand 3   resources 7/7   deck 34   leader deployed
+      ground: Galen Erso, You'll Never Win 3/5  ·  Ahsoka Tano, Trust in the Force 5/6
+      space: Sabine's Masterpiece, Crazy Colorful #2 4/4 [1 xp]  ·  Phoenix Squadron A-Wing 3/2
+══════════════════════════════════════════════════════════════════════════════
+
+ ── action ──
+  1. Player 1 uses Director Krennic, Amidst My Achievement's Epic Action
+  2. Player 1 deploys Director Krennic, Amidst My Achievement
+       ↳ First Light, Threatening Elegance uses an ability
+  3. Player 1 plays First Light, Threatening Elegance to space (cost 7)
+       ↳ Player 1 resources Onyx Squadron Brute #2
+       ↳ First Light, Threatening Elegance uses an ability
+  4. Player 1 attacks Sabine's Masterpiece, Crazy Colorful #2 with First Light, Threatening Elegance
+       ↳ 4 damage to Sabine's Masterpiece, Crazy Colorful #2 — 0 HP left
+       ↳ 4 damage to First Light, Threatening Elegance — 3 HP left
+       ↳ Sabine's Masterpiece, Crazy Colorful #2 loses 1 experience
+       ↳ Sabine's Masterpiece, Crazy Colorful #2 is defeated by First Light, Threatening Elegance
+       ↳ First Light, Threatening Elegance uses an ability
+       ↳ Player 1 draws 1: Resupply Carrier #2
+       ↳ Director Krennic, Amidst My Achievement uses an ability
+       ↳ 5 damage to Galen Erso, You'll Never Win — 0 HP left
+       ↳ Galen Erso, You'll Never Win is defeated by First Light, Threatening Elegance
+  5. Player 1 passes
+  6. Player 2 plays Nothing Left to Fear (cost 5)
+       ↳ Nothing Left to Fear uses an ability
+       ↳ Imperial Armored Commando #3 loses 1 shield
+       ↳ Imperial Armored Commando #3 is defeated by Nothing Left to Fear
+  7. Player 2 passes
+  8. Player 1 attacks Ahsoka Tano, Trust in the Force with Director Krennic, Amidst My Achievement
+       ↳ 4 damage to Ahsoka Tano, Trust in the Force — 4 HP left
+       ↳ 7 damage to Director Krennic, Amidst My Achievement — 2 HP left
+  9. Player 1 passes
+ 10. Player 2 attacks Player 1's base with Ahsoka Tano, Trust in the Force
+       ↳ Ahsoka Tano, Trust in the Force uses an ability
+       ↳ 7 damage to Player 1's base — 5 HP left
+ 11. Player 2 passes
+ 12. Player 1 claims initiative
+ 13. Player 1 passes
+ 14. Player 2 attacks Player 1's base with Phoenix Squadron A-Wing
+       ↳ 5 damage to Player 1's base — 0 HP left
+       ↳ *** Player 2 wins — Base Destroyed ***
+
+%%% DECKS
+{"p":1,"leader":"LAW#008","base":"SEC#020","deck":[["ASH#116",3],["ASH#048",3],["ASH#052",3],["ASH#053",3],["ASH#079",3],["ASH#097",3],["JTL#119",2],["JTL#032",3],["JTL#033",3],["JTL#043",3],["LAW#101",2],["LAW#159",3],["LAW#039",3],["LAW#097",3],["LOF#091",3],["SEC#038",2],["SEC#078",2],["SEC#087",2],["SEC#088",1]],"sideboard":[["ASH#102",1],["JTL#121",2],["JTL#041",1],["LAW#132",2],["LAW#133",2],["LAW#149",1],["SEC#078",1]]}
+{"p":2,"leader":"ASH#009","base":"ASH#020","deck":[["ASH#248",3],["ASH#056",2],["ASH#062",3],["ASH#077",2],["ASH#079",3],["JTL#250",3],["JTL#095",3],["LAW#127",2],["LAW#037",3],["LAW#038",3],["LAW#039",3],["LAW#041",2],["LOF#093",3],["LOF#096",2],["SEC#101",3],["SEC#111",3],["SEC#179",1],["SEC#046",3],["SEC#099",3]],"sideboard":[["ASH#135",2],["ASH#090",2],["JTL#078",2],["LOF#100",2],["SEC#073",2]]}
+
+%%% CARDS
+{"id":"ASH#009","name":"Ahsoka Tano, Trust in the Force"}
+{"id":"ASH#020","name":"Nevarro City, Restored"}
+{"id":"ASH#048","name":"Imperial Armored Commando","kind":"unit"}
+{"id":"ASH#052","name":"Chimaera, A Frightening Reality","kind":"unit"}
+{"id":"ASH#053","name":"Pre Vizsla, Strong-Willed Ruler","kind":"unit"}
+{"id":"ASH#056","name":"Huyang, Your Aptitude Falls Short","kind":"unit"}
+{"id":"ASH#062","name":"The Mandalorian, Devoted Rescuer","kind":"unit"}
+{"id":"ASH#077","name":"Ryder Azadi, Restored Governor","kind":"unit"}
+{"id":"ASH#079","name":"Koska Reeves, Warrior of Mandalore","kind":"unit"}
+{"id":"ASH#097","name":"Moff Gideon, Remnant Commander","kind":"unit"}
+{"id":"ASH#116","name":"Ant Droid","kind":"unit"}
+{"id":"ASH#248","name":"Neel, The Cutest Boy","kind":"unit"}
+{"id":"JTL#032","name":"Director Krennic, On the Verge of Greatness","kind":"unit"}
+{"id":"JTL#033","name":"Onyx Squadron Brute","kind":"unit"}
+{"id":"JTL#043","name":"No Glory, Only Results"}
+{"id":"JTL#095","name":"Phoenix Squadron A-Wing","kind":"unit"}
+{"id":"JTL#119","name":"Resupply Carrier","kind":"unit"}
+{"id":"JTL#250","name":"Sabine's Masterpiece, Crazy Colorful","kind":"unit"}
+{"id":"LAW#008","name":"Director Krennic, Amidst My Achievement"}
+{"id":"LAW#037","name":"Han Solo, Hibernation Sick","kind":"unit"}
+{"id":"LAW#038","name":"Lepi Lookout","kind":"unit"}
+{"id":"LAW#039","name":"Latts Razzi, Deadly Whipmaster","kind":"unit"}
+{"id":"LAW#041","name":"Nothing Left to Fear"}
+{"id":"LAW#097","name":"Imperial Door Technician","kind":"unit"}
+{"id":"LAW#101","name":"Lawbringer, Shadow Over Lothal","kind":"unit"}
+{"id":"LAW#127","name":"Kill Switch","kind":"upgrade"}
+{"id":"LAW#159","name":"Expendable Mercenary","kind":"unit"}
+{"id":"LOF#091","name":"Craving Power","kind":"upgrade"}
+{"id":"LOF#093","name":"Gungi, Finding Himself","kind":"unit"}
+{"id":"LOF#096","name":"Obi-Wan Kenobi, Protective Padawan","kind":"unit"}
+{"id":"SEC#020","name":"Uscru Entertainment District"}
+{"id":"SEC#038","name":"Condemn","kind":"upgrade"}
+{"id":"SEC#046","name":"Galen Erso, You'll Never Win","kind":"unit"}
+{"id":"SEC#078","name":"Hyperspace Disaster"}
+{"id":"SEC#087","name":"Dedra Meero, With Verifiable Data","kind":"unit"}
+{"id":"SEC#088","name":"First Light, Threatening Elegance","kind":"unit"}
+{"id":"SEC#099","name":"Naboo Royal Starship, Fit For A Queen","kind":"unit"}
+{"id":"SEC#101","name":"Queen Amidala, Championing Her People","kind":"unit"}
+{"id":"SEC#111","name":"Jar Jar Binks, Mesa Propose…","kind":"unit"}
+{"id":"SEC#179","name":"Aggressive Negotiations"}
+{"id":"TOKEN:credit#8015500527","name":"Credit"}
+{"id":"TOKEN:experience#2007868442","name":"Experience","kind":"upgrade"}
+{"id":"TOKEN:shield#8752877738","name":"Shield","kind":"upgrade"}
+
+%%% SETUP
+{"seq":"R1.S.0","t":"INIT","p1DeckOrder":["ASH#048","JTL#043","JTL#032","ASH#052","ASH#052:2","SEC#038","JTL#119","LAW#097","LAW#101","ASH#048:2","JTL#033","SEC#078","ASH#116","LAW#039","JTL#119:2","LAW#159","ASH#048:3","LAW#097:2","ASH#053","LOF#091","SEC#078:2","LAW#039:2","LOF#091:2","ASH#097","JTL#033:2","ASH#097:2","SEC#087","JTL#033:3","LAW#097:3","SEC#087:2","ASH#116:2","LAW#159:2","ASH#052:3","JTL#032:2","ASH#097:3","LAW#101:2","ASH#053:2","SEC#038:2","JTL#032:3","ASH#079","JTL#043:2","ASH#116:3","LAW#159:3","LOF#091:3","LAW#039:3","ASH#053:3","JTL#043:3","ASH#079:2","ASH#079:3","SEC#088"],"p2DeckOrder":["ASH#248","LOF#093","JTL#095","LAW#038","ASH#079:4","JTL#250","ASH#056","SEC#101","LAW#039:4","LAW#037","JTL#250:2","SEC#101:2","SEC#046","ASH#062","LAW#039:5","LAW#041","LAW#037:2","SEC#111","ASH#077","SEC#099","SEC#111:2","ASH#077:2","JTL#095:2","ASH#062:2","LAW#037:3","ASH#248:2","ASH#056:2","LAW#038:2","ASH#079:5","LOF#096","LAW#127","SEC#179","SEC#111:3","SEC#046:2","LOF#093:2","LAW#041:2","LOF#093:3","LAW#038:3","SEC#046:3","ASH#248:3","SEC#099:2","ASH#062:3","JTL#095:3","LOF#096:2","SEC#101:3","JTL#250:3","LAW#127:2","LAW#039:6","SEC#099:3","ASH#079:6"]}
+
+%%% EVENTS
+{"seq":"R0.S.start","t":"PHASE_START","phase":"setup","ms":2}
+{"seq":"R0.S.1","t":"MODAL_CHOICE","p":2,"offered":["Yourself","Opponent"],"chose":0}
+{"seq":"R0.S.2","t":"SHUFFLE","p":1}
+{"seq":"R0.S.3","t":"MOVE","card":"ASH#048","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R0.S.4","t":"MOVE","card":"JTL#043","from":"deck","to":"hand","p":1}
+{"seq":"R0.S.5","t":"MOVE","card":"JTL#032","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R0.S.6","t":"MOVE","card":"ASH#052","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R0.S.7","t":"MOVE","card":"ASH#052:2","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R0.S.8","t":"MOVE","card":"SEC#038","from":"deck","to":"hand","p":1,"kind":"upgrade"}
+{"seq":"R0.S.9","t":"DRAW","p":1,"count":6,"cards":["ASH#048","JTL#043","JTL#032","ASH#052","ASH#052:2","SEC#038"]}
+{"seq":"R0.S.10","t":"SHUFFLE","p":2}
+{"seq":"R0.S.11","t":"MOVE","card":"ASH#248","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R0.S.12","t":"MOVE","card":"LOF#093","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R0.S.13","t":"MOVE","card":"JTL#095","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R0.S.14","t":"MOVE","card":"LAW#038","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R0.S.15","t":"MOVE","card":"ASH#079:4","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R0.S.16","t":"MOVE","card":"JTL#250","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R0.S.17","t":"DRAW","p":2,"count":6,"cards":["ASH#248","LOF#093","JTL#095","LAW#038","ASH#079:4","JTL#250"]}
+{"seq":"R0.S.18","t":"KEEP_HAND","p":2}
+{"seq":"R0.S.19","t":"MULLIGAN","p":1}
+{"seq":"R0.S.20","t":"MOVE","card":"ASH#048","from":"hand","to":"deck","p":1,"kind":"unit"}
+{"seq":"R0.S.21","t":"MOVE","card":"JTL#043","from":"hand","to":"deck","p":1}
+{"seq":"R0.S.22","t":"MOVE","card":"JTL#032","from":"hand","to":"deck","p":1,"kind":"unit"}
+{"seq":"R0.S.23","t":"MOVE","card":"ASH#052","from":"hand","to":"deck","p":1,"kind":"unit"}
+{"seq":"R0.S.24","t":"MOVE","card":"ASH#052:2","from":"hand","to":"deck","p":1,"kind":"unit"}
+{"seq":"R0.S.25","t":"MOVE","card":"SEC#038","from":"hand","to":"deck","p":1,"kind":"upgrade"}
+{"seq":"R0.S.26","t":"SHUFFLE","p":1}
+{"seq":"R0.S.27","t":"MOVE","card":"ASH#048:3","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R0.S.28","t":"MOVE","card":"LOF#091:3","from":"deck","to":"hand","p":1,"kind":"upgrade"}
+{"seq":"R0.S.29","t":"MOVE","card":"LAW#097:3","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R0.S.30","t":"MOVE","card":"LOF#091","from":"deck","to":"hand","p":1,"kind":"upgrade"}
+{"seq":"R0.S.31","t":"MOVE","card":"ASH#116:2","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R0.S.32","t":"MOVE","card":"LAW#039:2","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R0.S.33","t":"DRAW","p":1,"count":6,"cards":["ASH#048:3","LOF#091:3","LAW#097:3","LOF#091","ASH#116:2","LAW#039:2"]}
+{"seq":"R0.S.34","t":"MOVE","card":"LOF#091","from":"hand","to":"resource","p":1,"kind":"upgrade","for":"R0.S.35"}
+{"seq":"R0.S.35","t":"RESOURCE","p":1,"card":"LOF#091"}
+{"seq":"R0.S.36","t":"MOVE","card":"LAW#097:3","from":"hand","to":"resource","p":1,"kind":"unit","for":"R0.S.37"}
+{"seq":"R0.S.37","t":"RESOURCE","p":1,"card":"LAW#097:3"}
+{"seq":"R0.S.38","t":"MOVE","card":"ASH#248","from":"hand","to":"resource","p":2,"kind":"unit","for":"R0.S.39"}
+{"seq":"R0.S.39","t":"RESOURCE","p":2,"card":"ASH#248"}
+{"seq":"R0.S.40","t":"MOVE","card":"LAW#038","from":"hand","to":"resource","p":2,"kind":"unit","for":"R0.S.41"}
+{"seq":"R0.S.41","t":"RESOURCE","p":2,"card":"LAW#038"}
+{"seq":"R0.S.end","t":"PHASE_END","phase":"setup"}
+{"seq":"R1.start","t":"ROUND_START","round":1,"active":2,"keyframe":{"round":1,"phase":"action","initiative":2,"players":{"1":{"seat":1,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["ASH#048:3","LOF#091:3","ASH#116:2","LAW#039:2"],"resourcesReady":2,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3"],"credits":0,"hasForce":false,"discard":[],"cards":[],"deckSize":44,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["LOF#093","JTL#095","ASH#079:4","JTL#250"],"resourcesReady":2,"resourcesExhausted":0,"resources":["ASH#248","LAW#038"],"credits":0,"hasForce":false,"discard":[],"cards":[],"deckSize":44,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":false,"active":2},"ms":64128}
+{"seq":"R1.A.start","t":"PHASE_START","phase":"action","active":2,"ms":64128}
+{"seq":"R1.A.0a","t":"EXHAUST_RESOURCES","p":2,"amount":2,"for":"R1.A.1"}
+{"seq":"R1.A.0b","t":"MOVE","card":"LOF#093","from":"hand","to":"ground","p":2,"kind":"unit","for":"R1.A.1"}
+{"seq":"R1.A.0c","t":"STATS","card":"LOF#093","power":2,"hp":5,"keywords":[],"for":"R1.A.1"}
+{"seq":"R1.A.0d","t":"EXHAUST","card":"LOF#093","for":"R1.A.1"}
+{"seq":"R1.A.1","t":"PLAY","p":2,"card":"LOF#093","zone":"ground","cost":2,"ms":65609}
+{"seq":"R1.A.2","t":"PASS","p":2,"ms":65610}
+{"seq":"R1.A.2a","t":"EXHAUST_RESOURCES","p":1,"amount":1,"for":"R1.A.3"}
+{"seq":"R1.A.2b","t":"MOVE","card":"ASH#116:2","from":"hand","to":"ground","p":1,"kind":"unit","for":"R1.A.3"}
+{"seq":"R1.A.2c","t":"STATS","card":"ASH#116:2","power":1,"hp":2,"keywords":[],"for":"R1.A.3"}
+{"seq":"R1.A.2d","t":"EXHAUST","card":"ASH#116:2","for":"R1.A.3"}
+{"seq":"R1.A.3","t":"PLAY","p":1,"card":"ASH#116:2","zone":"ground","cost":1,"ms":67831}
+{"seq":"R1.A.4","t":"PASS","p":1,"ms":67831}
+{"seq":"R1.A.5","t":"CLAIM_INITIATIVE","p":2,"ms":69472}
+{"seq":"R1.A.6","t":"PASS","p":2,"ms":69472}
+{"seq":"R1.A.7","t":"ABILITY_ACTIVATE","p":1,"card":"LAW#008","ability":"director-krennic#amidst-my-achievement_action_1","kind":"action","title":"Create a Credit token","ms":71048}
+{"seq":"R1.A.7a","t":"CHOICE","p":1,"prompt":"Director Krennic","offered":["ASH#116:2"],"chose":0}
+{"seq":"R1.A.7b","t":"MOVE","card":"ASH#116:2","from":"ground","to":"discard","p":1,"kind":"unit"}
+{"seq":"R1.A.7c","t":"DEFEAT","card":"ASH#116:2","reason":"ability","defeatedBy":"LAW#008"}
+{"seq":"R1.A.7d","t":"EXHAUST","card":"LAW#008"}
+{"seq":"R1.A.7e","t":"MOVE","card":"TOKEN:credit#8015500527","from":"outsideTheGame","to":"base","p":1}
+{"seq":"R1.A.7f","t":"ABILITY_ACTIVATE","p":1,"card":"ASH#116:2","ability":"ant-droid_triggered_0","kind":"triggered","title":"Draw a card"}
+{"seq":"R1.A.7g","t":"MOVE","card":"ASH#116","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R1.A.7h","t":"DRAW","p":1,"count":1,"cards":["ASH#116"]}
+{"seq":"R1.A.7i","t":"MODAL_CHOICE","p":1,"offered":["Use 1 Credit","Pay costs without Credit tokens","Cancel"],"chose":1,"for":"R1.A.8"}
+{"seq":"R1.A.7j","t":"EXHAUST_RESOURCES","p":1,"amount":1,"for":"R1.A.8"}
+{"seq":"R1.A.7k","t":"MOVE","card":"ASH#116","from":"hand","to":"ground","p":1,"kind":"unit","for":"R1.A.8"}
+{"seq":"R1.A.7l","t":"STATS","card":"ASH#116","power":1,"hp":2,"keywords":[],"for":"R1.A.8"}
+{"seq":"R1.A.7m","t":"EXHAUST","card":"ASH#116","for":"R1.A.8"}
+{"seq":"R1.A.8","t":"PLAY","p":1,"card":"ASH#116","zone":"ground","cost":1,"ms":82209}
+{"seq":"R1.A.end","t":"PHASE_END","phase":"action"}
+{"seq":"R1.G.start","t":"PHASE_START","phase":"regroup","ms":83393}
+{"seq":"R1.G.1","t":"MOVE","card":"ASH#097","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R1.G.2","t":"MOVE","card":"JTL#043","from":"deck","to":"hand","p":1}
+{"seq":"R1.G.3","t":"DRAW","p":1,"count":2,"cards":["ASH#097","JTL#043"]}
+{"seq":"R1.G.4","t":"MOVE","card":"ASH#056","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R1.G.5","t":"MOVE","card":"SEC#101","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R1.G.6","t":"DRAW","p":2,"count":2,"cards":["ASH#056","SEC#101"]}
+{"seq":"R1.G.7","t":"MOVE","card":"LAW#039:2","from":"hand","to":"resource","p":1,"kind":"unit","for":"R1.G.8"}
+{"seq":"R1.G.8","t":"RESOURCE","p":1,"card":"LAW#039:2"}
+{"seq":"R1.G.9","t":"MOVE","card":"ASH#056","from":"hand","to":"resource","p":2,"kind":"unit","for":"R1.G.10"}
+{"seq":"R1.G.10","t":"RESOURCE","p":2,"card":"ASH#056"}
+{"seq":"R1.G.11","t":"READY","card":"ASH#116"}
+{"seq":"R1.G.12","t":"READY_RESOURCES","p":1,"amount":2}
+{"seq":"R1.G.14","t":"READY","card":"LAW#008"}
+{"seq":"R1.G.15","t":"READY","card":"LOF#093"}
+{"seq":"R1.G.16","t":"READY_RESOURCES","p":2,"amount":2}
+{"seq":"R1.G.end","t":"PHASE_END","phase":"regroup"}
+{"seq":"R1.end","t":"ROUND_END","round":1,"keyframe":{"round":1,"phase":"regroup","initiative":2,"players":{"1":{"seat":1,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["ASH#048:3","LOF#091:3","ASH#097","JTL#043"],"resourcesReady":3,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2"],"credits":1,"hasForce":false,"discard":["ASH#116:2"],"cards":[{"id":"ASH#116","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":1,"hp":2,"keywords":[]}],"deckSize":41,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["JTL#095","ASH#079:4","JTL#250","SEC#101"],"resourcesReady":3,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056"],"credits":0,"hasForce":false,"discard":[],"cards":[{"id":"LOF#093","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":2,"hp":5,"keywords":[]}],"deckSize":42,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":true}}
+{"seq":"R2.start","t":"ROUND_START","round":2,"active":2,"keyframe":{"round":2,"phase":"action","initiative":2,"players":{"1":{"seat":1,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["ASH#048:3","LOF#091:3","ASH#097","JTL#043"],"resourcesReady":3,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2"],"credits":1,"hasForce":false,"discard":["ASH#116:2"],"cards":[{"id":"ASH#116","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":1,"hp":2,"keywords":[]}],"deckSize":41,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["JTL#095","ASH#079:4","JTL#250","SEC#101"],"resourcesReady":3,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056"],"credits":0,"hasForce":false,"discard":[],"cards":[{"id":"LOF#093","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":2,"hp":5,"keywords":[]}],"deckSize":42,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":false,"active":2},"ms":103127}
+{"seq":"R2.A.start","t":"PHASE_START","phase":"action","active":2,"ms":103127}
+{"seq":"R2.A.0a","t":"EXHAUST_RESOURCES","p":2,"amount":3,"for":"R2.A.1"}
+{"seq":"R2.A.0b","t":"MOVE","card":"JTL#250","from":"hand","to":"space","p":2,"kind":"unit","for":"R2.A.1"}
+{"seq":"R2.A.0c","t":"STATS","card":"JTL#250","power":3,"hp":3,"keywords":[],"for":"R2.A.1"}
+{"seq":"R2.A.0d","t":"EXHAUST","card":"JTL#250","for":"R2.A.1"}
+{"seq":"R2.A.1","t":"PLAY","p":2,"card":"JTL#250","zone":"space","cost":3,"ms":108174}
+{"seq":"R2.A.2","t":"PASS","p":2,"ms":108175}
+{"seq":"R2.A.2a","t":"MODAL_CHOICE","p":1,"offered":["Use 1 Credit","Pay costs without Credit tokens","Cancel"],"chose":1,"for":"R2.A.3"}
+{"seq":"R2.A.2b","t":"EXHAUST_RESOURCES","p":1,"amount":3,"for":"R2.A.3"}
+{"seq":"R2.A.2c","t":"MOVE","card":"ASH#097","from":"hand","to":"ground","p":1,"kind":"unit","for":"R2.A.3"}
+{"seq":"R2.A.2d","t":"STATS","card":"ASH#097","power":2,"hp":5,"keywords":["sentinel"],"for":"R2.A.3"}
+{"seq":"R2.A.2e","t":"EXHAUST","card":"ASH#097","for":"R2.A.3"}
+{"seq":"R2.A.3","t":"PLAY","p":1,"card":"ASH#097","zone":"ground","cost":3,"ms":115202}
+{"seq":"R2.A.4","t":"PASS","p":1,"ms":115202}
+{"seq":"R2.A.4a","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["LOF#093","ASH#116","ASH#097"],"chose":0}
+{"seq":"R2.A.5","t":"ABILITY_ACTIVATE","p":2,"card":"ASH#009","ability":"ahsoka-tano#trust-in-the-force_action_1","kind":"action","title":"Choose a unit with less power than a friendly unit. It gets +2/+0 for this phase","ms":118425}
+{"seq":"R2.A.5a","t":"EXHAUST","card":"ASH#009"}
+{"seq":"R2.A.6","t":"PASS","p":2,"ms":118430}
+{"seq":"R2.A.6a","t":"STATS","card":"LOF#093","power":4,"hp":5,"keywords":[]}
+{"seq":"R2.A.7","t":"ABILITY_ACTIVATE","p":1,"card":"LAW#008","ability":"director-krennic#amidst-my-achievement_action_1","kind":"action","title":"Create a Credit token","ms":127816}
+{"seq":"R2.A.7a","t":"CHOICE","p":1,"prompt":"Director Krennic","offered":["ASH#116","ASH#097"],"chose":0}
+{"seq":"R2.A.7b","t":"MOVE","card":"ASH#116","from":"ground","to":"discard","p":1,"kind":"unit"}
+{"seq":"R2.A.7c","t":"DEFEAT","card":"ASH#116","reason":"ability","defeatedBy":"LAW#008"}
+{"seq":"R2.A.7d","t":"EXHAUST","card":"LAW#008"}
+{"seq":"R2.A.7e","t":"MOVE","card":"TOKEN:credit#8015500527:2","from":"outsideTheGame","to":"base","p":1}
+{"seq":"R2.A.7f","t":"ABILITY_ACTIVATE","p":1,"card":"ASH#116","ability":"ant-droid_triggered_0","kind":"triggered","title":"Draw a card"}
+{"seq":"R2.A.7g","t":"MOVE","card":"SEC#078:2","from":"deck","to":"hand","p":1}
+{"seq":"R2.A.7h","t":"DRAW","p":1,"count":1,"cards":["SEC#078:2"]}
+{"seq":"R2.A.8","t":"PASS","p":1,"ms":128454}
+{"seq":"R2.A.8a","t":"CHOICE","p":2,"prompt":"Gungi","offered":["ASH#097"],"chose":0,"for":"R2.A.9"}
+{"seq":"R2.A.8b","t":"EXHAUST","card":"LOF#093","for":"R2.A.9"}
+{"seq":"R2.A.9","t":"ATTACK","p":2,"atk":"LOF#093","def":"ASH#097","defenderType":"unit","ms":135204}
+{"seq":"R2.A.9a","t":"DAMAGE","src":"LOF#093","tgt":"ASH#097","amt":4,"damageType":"combat","hp":1}
+{"seq":"R2.A.9b","t":"DAMAGE","src":"LOF#093","tgt":"LOF#093","amt":2,"damageType":"combat","hp":3}
+{"seq":"R2.A.10","t":"PASS","p":2,"ms":135207}
+{"seq":"R2.A.11","t":"CLAIM_INITIATIVE","p":1,"ms":138106}
+{"seq":"R2.A.12","t":"PASS","p":1,"ms":138106}
+{"seq":"R2.A.end","t":"PHASE_END","phase":"action"}
+{"seq":"R2.A.12a","t":"STATS","card":"LOF#093","power":2,"hp":5,"keywords":[]}
+{"seq":"R2.G.start","t":"PHASE_START","phase":"regroup","ms":142596}
+{"seq":"R2.G.1","t":"MOVE","card":"LAW#101","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R2.G.2","t":"MOVE","card":"SEC#078","from":"deck","to":"hand","p":1}
+{"seq":"R2.G.3","t":"DRAW","p":1,"count":2,"cards":["LAW#101","SEC#078"]}
+{"seq":"R2.G.4","t":"MOVE","card":"LAW#039:4","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R2.G.5","t":"MOVE","card":"LAW#037","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R2.G.6","t":"DRAW","p":2,"count":2,"cards":["LAW#039:4","LAW#037"]}
+{"seq":"R2.G.7","t":"MOVE","card":"SEC#078","from":"hand","to":"resource","p":1,"for":"R2.G.8"}
+{"seq":"R2.G.8","t":"RESOURCE","p":1,"card":"SEC#078"}
+{"seq":"R2.G.9","t":"MOVE","card":"LAW#037","from":"hand","to":"resource","p":2,"kind":"unit","for":"R2.G.10"}
+{"seq":"R2.G.10","t":"RESOURCE","p":2,"card":"LAW#037"}
+{"seq":"R2.G.11","t":"READY","card":"ASH#097"}
+{"seq":"R2.G.12","t":"READY_RESOURCES","p":1,"amount":3}
+{"seq":"R2.G.15","t":"READY","card":"LAW#008"}
+{"seq":"R2.G.16","t":"READY","card":"LOF#093"}
+{"seq":"R2.G.17","t":"READY","card":"JTL#250"}
+{"seq":"R2.G.18","t":"READY_RESOURCES","p":2,"amount":3}
+{"seq":"R2.G.21","t":"READY","card":"ASH#009"}
+{"seq":"R2.G.end","t":"PHASE_END","phase":"regroup"}
+{"seq":"R2.end","t":"ROUND_END","round":2,"keyframe":{"round":2,"phase":"regroup","initiative":1,"players":{"1":{"seat":1,"baseHp":30,"baseMaxHp":30,"handSize":5,"hand":["ASH#048:3","LOF#091:3","JTL#043","SEC#078:2","LAW#101"],"resourcesReady":4,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2","SEC#078"],"credits":2,"hasForce":false,"discard":["ASH#116:2","ASH#116"],"cards":[{"id":"ASH#097","zone":"ground","damage":4,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":2,"hp":5,"keywords":["sentinel"]}],"deckSize":38,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["JTL#095","ASH#079:4","SEC#101","LAW#039:4"],"resourcesReady":4,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056","LAW#037"],"credits":0,"hasForce":false,"discard":[],"cards":[{"id":"LOF#093","zone":"ground","damage":2,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":2,"hp":5,"keywords":[]},{"id":"JTL#250","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":3,"keywords":[]}],"deckSize":40,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":true}}
+{"seq":"R3.start","t":"ROUND_START","round":3,"active":1,"keyframe":{"round":3,"phase":"action","initiative":1,"players":{"1":{"seat":1,"baseHp":30,"baseMaxHp":30,"handSize":5,"hand":["ASH#048:3","LOF#091:3","JTL#043","SEC#078:2","LAW#101"],"resourcesReady":4,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2","SEC#078"],"credits":2,"hasForce":false,"discard":["ASH#116:2","ASH#116"],"cards":[{"id":"ASH#097","zone":"ground","damage":4,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":2,"hp":5,"keywords":["sentinel"]}],"deckSize":38,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["JTL#095","ASH#079:4","SEC#101","LAW#039:4"],"resourcesReady":4,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056","LAW#037"],"credits":0,"hasForce":false,"discard":[],"cards":[{"id":"LOF#093","zone":"ground","damage":2,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":2,"hp":5,"keywords":[]},{"id":"JTL#250","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":3,"keywords":[]}],"deckSize":40,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":false,"active":1},"ms":163369}
+{"seq":"R3.A.start","t":"PHASE_START","phase":"action","active":1,"ms":163369}
+{"seq":"R3.A.0a","t":"CHOICE","p":1,"prompt":"Craving Power","offered":["ASH#097"],"chose":0}
+{"seq":"R3.A.0b","t":"MODAL_CHOICE","p":1,"offered":["Select amount","Cancel"],"chose":0}
+{"seq":"R3.A.0c","t":"MOVE","card":"TOKEN:credit#8015500527","from":"base","to":"outsideTheGame","p":1}
+{"seq":"R3.A.0d","t":"DEFEAT","card":"TOKEN:credit#8015500527","reason":"ability","defeatedBy":"LOF#091:3"}
+{"seq":"R3.A.0e","t":"EXHAUST_RESOURCES","p":1,"amount":4,"for":"R3.A.1"}
+{"seq":"R3.A.0f","t":"MOVE","card":"LOF#091:3","from":"hand","to":"ground","p":1,"kind":"upgrade","attachedTo":"ASH#097","for":"R3.A.1"}
+{"seq":"R3.A.0g","t":"STATS","card":"ASH#097","power":4,"hp":7,"keywords":["sentinel"],"for":"R3.A.1"}
+{"seq":"R3.A.1","t":"PLAY_UPGRADE","p":1,"card":"LOF#091:3","zone":"ground","target":"ASH#097","cost":5,"ms":175936}
+{"seq":"R3.A.1a","t":"CHOICE","p":1,"prompt":"Craving Power","offered":["LOF#093","JTL#250"],"chose":1}
+{"seq":"R3.A.1b","t":"ABILITY_ACTIVATE","p":1,"card":"LOF#091:3","ability":"craving-power_triggered_0","kind":"triggered","title":"Deal damage to an enemy unit equal to attached unit's power"}
+{"seq":"R3.A.1c","t":"DAMAGE","src":"LOF#091:3","tgt":"JTL#250","amt":3,"damageType":"ability","hp":0}
+{"seq":"R3.A.1d","t":"MOVE","card":"JTL#250","from":"space","to":"discard","p":2,"kind":"unit"}
+{"seq":"R3.A.1e","t":"DEFEAT","card":"JTL#250","reason":"nonCombatDamage","defeatedBy":"LOF#091:3"}
+{"seq":"R3.A.2","t":"PASS","p":1,"ms":177134}
+{"seq":"R3.A.2a","t":"EXHAUST_RESOURCES","p":2,"amount":3,"for":"R3.A.3"}
+{"seq":"R3.A.2b","t":"MOVE","card":"LAW#039:4","from":"hand","to":"ground","p":2,"kind":"unit","for":"R3.A.3"}
+{"seq":"R3.A.2c","t":"STATS","card":"LAW#039:4","power":2,"hp":1,"keywords":[],"for":"R3.A.3"}
+{"seq":"R3.A.2d","t":"EXHAUST","card":"LAW#039:4","for":"R3.A.3"}
+{"seq":"R3.A.3","t":"PLAY","p":2,"card":"LAW#039:4","zone":"ground","cost":3,"ms":187381}
+{"seq":"R3.A.3a","t":"MODAL_CHOICE","p":2,"offered":["Give a Shield Token to this unit","Give an Experience token to this unit"],"chose":1}
+{"seq":"R3.A.3b","t":"ABILITY_ACTIVATE","p":2,"card":"LAW#039:4","ability":"latts-razzi#deadly-whipmaster_triggered_0","kind":"triggered","title":"Give a Shield token or an Experience token to this unit. Then, she deals damage equal to her power to an enemy ground unit"}
+{"seq":"R3.A.3c","t":"MOVE","card":"TOKEN:experience#2007868442","from":"outsideTheGame","to":"ground","p":2,"kind":"upgrade","attachedTo":"LAW#039:4"}
+{"seq":"R3.A.3d","t":"EXPERIENCE_GAIN","card":"LAW#039:4","count":1}
+{"seq":"R3.A.3e","t":"STATS","card":"LAW#039:4","power":3,"hp":2,"keywords":[]}
+{"seq":"R3.A.3f","t":"CHOICE","p":2,"prompt":"Latts Razzi","offered":["ASH#097"],"chose":0}
+{"seq":"R3.A.3g","t":"DAMAGE","src":"LAW#039:4","tgt":"ASH#097","amt":3,"damageType":"ability","hp":0}
+{"seq":"R3.A.3h","t":"MOVE","card":"LOF#091:3","from":"ground","to":"discard","p":1,"kind":"upgrade"}
+{"seq":"R3.A.3i","t":"STATS","card":"ASH#097","power":2,"hp":5,"keywords":["sentinel"]}
+{"seq":"R3.A.3j","t":"DEFEAT","card":"LOF#091:3","reason":"frameworkEffect"}
+{"seq":"R3.A.3k","t":"MOVE","card":"ASH#097","from":"ground","to":"discard","p":1,"kind":"unit"}
+{"seq":"R3.A.3l","t":"DEFEAT","card":"ASH#097","reason":"nonCombatDamage","defeatedBy":"LAW#039:4"}
+{"seq":"R3.A.4","t":"PASS","p":2,"ms":190044}
+{"seq":"R3.A.5","t":"CLAIM_INITIATIVE","p":1,"ms":195025}
+{"seq":"R3.A.6","t":"PASS","p":1,"ms":195025}
+{"seq":"R3.A.6a","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["LOF#093"],"chose":0}
+{"seq":"R3.A.7","t":"ABILITY_ACTIVATE","p":2,"card":"ASH#009","ability":"ahsoka-tano#trust-in-the-force_action_1","kind":"action","title":"Choose a unit with less power than a friendly unit. It gets +2/+0 for this phase","ms":197016}
+{"seq":"R3.A.7a","t":"EXHAUST","card":"ASH#009"}
+{"seq":"R3.A.7b","t":"CHOICE","p":2,"prompt":"Gungi","offered":["base@1"],"chose":0}
+{"seq":"R3.A.7c","t":"STATS","card":"LOF#093","power":4,"hp":5,"keywords":[]}
+{"seq":"R3.A.7d","t":"EXHAUST","card":"LOF#093","for":"R3.A.8"}
+{"seq":"R3.A.8","t":"ATTACK","p":2,"atk":"LOF#093","def":"base@1","defenderType":"base","ms":198433}
+{"seq":"R3.A.8a","t":"DAMAGE","src":"LOF#093","tgt":"base@1","amt":4,"damageType":"combat","hp":26}
+{"seq":"R3.A.end","t":"PHASE_END","phase":"action"}
+{"seq":"R3.A.8b","t":"STATS","card":"LOF#093","power":2,"hp":5,"keywords":[]}
+{"seq":"R3.G.start","t":"PHASE_START","phase":"regroup","ms":200493}
+{"seq":"R3.G.1","t":"MOVE","card":"ASH#048:2","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R3.G.2","t":"MOVE","card":"SEC#087:2","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R3.G.3","t":"DRAW","p":1,"count":2,"cards":["ASH#048:2","SEC#087:2"]}
+{"seq":"R3.G.4","t":"MOVE","card":"JTL#250:2","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R3.G.5","t":"MOVE","card":"SEC#101:2","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R3.G.6","t":"DRAW","p":2,"count":2,"cards":["JTL#250:2","SEC#101:2"]}
+{"seq":"R3.G.7","t":"MOVE","card":"SEC#078:2","from":"hand","to":"resource","p":1,"for":"R3.G.8"}
+{"seq":"R3.G.8","t":"RESOURCE","p":1,"card":"SEC#078:2"}
+{"seq":"R3.G.9","t":"MOVE","card":"SEC#101:2","from":"hand","to":"resource","p":2,"kind":"unit","for":"R3.G.10"}
+{"seq":"R3.G.10","t":"RESOURCE","p":2,"card":"SEC#101:2"}
+{"seq":"R3.G.11","t":"READY_RESOURCES","p":1,"amount":4}
+{"seq":"R3.G.15","t":"READY","card":"LOF#093"}
+{"seq":"R3.G.16","t":"READY","card":"LAW#039:4"}
+{"seq":"R3.G.17","t":"READY_RESOURCES","p":2,"amount":3}
+{"seq":"R3.G.20","t":"READY","card":"ASH#009"}
+{"seq":"R3.G.end","t":"PHASE_END","phase":"regroup"}
+{"seq":"R3.end","t":"ROUND_END","round":3,"keyframe":{"round":3,"phase":"regroup","initiative":1,"players":{"1":{"seat":1,"baseHp":26,"baseMaxHp":30,"handSize":5,"hand":["ASH#048:3","JTL#043","LAW#101","ASH#048:2","SEC#087:2"],"resourcesReady":5,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2","SEC#078","SEC#078:2"],"credits":1,"hasForce":false,"discard":["ASH#116:2","ASH#116","LOF#091:3","ASH#097"],"cards":[],"deckSize":36,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["JTL#095","ASH#079:4","SEC#101","JTL#250:2"],"resourcesReady":5,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056","LAW#037","SEC#101:2"],"credits":0,"hasForce":false,"discard":["JTL#250"],"cards":[{"id":"LOF#093","zone":"ground","damage":2,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":2,"hp":5,"keywords":[]},{"id":"LAW#039:4","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":1,"statusTokens":{},"captured":[],"power":3,"hp":2,"keywords":[]}],"deckSize":38,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":true}}
+{"seq":"R4.start","t":"ROUND_START","round":4,"active":1,"keyframe":{"round":4,"phase":"action","initiative":1,"players":{"1":{"seat":1,"baseHp":26,"baseMaxHp":30,"handSize":5,"hand":["ASH#048:3","JTL#043","LAW#101","ASH#048:2","SEC#087:2"],"resourcesReady":5,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2","SEC#078","SEC#078:2"],"credits":1,"hasForce":false,"discard":["ASH#116:2","ASH#116","LOF#091:3","ASH#097"],"cards":[],"deckSize":36,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":4,"hand":["JTL#095","ASH#079:4","SEC#101","JTL#250:2"],"resourcesReady":5,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056","LAW#037","SEC#101:2"],"credits":0,"hasForce":false,"discard":["JTL#250"],"cards":[{"id":"LOF#093","zone":"ground","damage":2,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":2,"hp":5,"keywords":[]},{"id":"LAW#039:4","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":1,"statusTokens":{},"captured":[],"power":3,"hp":2,"keywords":[]}],"deckSize":38,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":false,"active":1},"ms":216995}
+{"seq":"R4.A.start","t":"PHASE_START","phase":"action","active":1,"ms":216995}
+{"seq":"R4.A.0a","t":"MODAL_CHOICE","p":1,"offered":["Use 1 Credit","Pay costs without Credit tokens","Cancel"],"chose":1,"for":"R4.A.1"}
+{"seq":"R4.A.0b","t":"EXHAUST_RESOURCES","p":1,"amount":4,"for":"R4.A.1"}
+{"seq":"R4.A.0c","t":"MOVE","card":"ASH#048:2","from":"hand","to":"ground","p":1,"kind":"unit","for":"R4.A.1"}
+{"seq":"R4.A.0d","t":"STATS","card":"ASH#048:2","power":4,"hp":3,"keywords":["sentinel","shielded"],"for":"R4.A.1"}
+{"seq":"R4.A.0e","t":"EXHAUST","card":"ASH#048:2","for":"R4.A.1"}
+{"seq":"R4.A.1","t":"PLAY","p":1,"card":"ASH#048:2","zone":"ground","cost":4,"ms":231608}
+{"seq":"R4.A.1a","t":"ABILITY_ACTIVATE","p":1,"card":"ASH#048:2","ability":"imperial-armored-commando_keyword_shielded_0","kind":"keyword","title":"{keyword:shielded}"}
+{"seq":"R4.A.1b","t":"MOVE","card":"TOKEN:shield#8752877738","from":"outsideTheGame","to":"ground","p":1,"kind":"upgrade","attachedTo":"ASH#048:2"}
+{"seq":"R4.A.1c","t":"SHIELD_GAIN","card":"ASH#048:2"}
+{"seq":"R4.A.2","t":"PASS","p":1,"ms":231609}
+{"seq":"R4.A.2a","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["LOF#093"],"chose":0}
+{"seq":"R4.A.3","t":"ABILITY_ACTIVATE","p":2,"card":"ASH#009","ability":"ahsoka-tano#trust-in-the-force_action_1","kind":"action","title":"Choose a unit with less power than a friendly unit. It gets +2/+0 for this phase","ms":251455}
+{"seq":"R4.A.3a","t":"EXHAUST","card":"ASH#009"}
+{"seq":"R4.A.4","t":"PASS","p":2,"ms":251456}
+{"seq":"R4.A.4a","t":"STATS","card":"LOF#093","power":4,"hp":5,"keywords":[]}
+{"seq":"R4.A.5","t":"CLAIM_INITIATIVE","p":1,"ms":255716}
+{"seq":"R4.A.6","t":"PASS","p":1,"ms":255716}
+{"seq":"R4.A.6a","t":"EXHAUST_RESOURCES","p":2,"amount":3,"for":"R4.A.7"}
+{"seq":"R4.A.6b","t":"MOVE","card":"JTL#250:2","from":"hand","to":"space","p":2,"kind":"unit","for":"R4.A.7"}
+{"seq":"R4.A.6c","t":"STATS","card":"JTL#250:2","power":3,"hp":3,"keywords":[],"for":"R4.A.7"}
+{"seq":"R4.A.6d","t":"EXHAUST","card":"JTL#250:2","for":"R4.A.7"}
+{"seq":"R4.A.7","t":"PLAY","p":2,"card":"JTL#250:2","zone":"space","cost":3,"ms":262792}
+{"seq":"R4.A.7a","t":"EXHAUST_RESOURCES","p":2,"amount":2,"for":"R4.A.8"}
+{"seq":"R4.A.7b","t":"MOVE","card":"JTL#095","from":"hand","to":"space","p":2,"kind":"unit","for":"R4.A.8"}
+{"seq":"R4.A.7c","t":"STATS","card":"JTL#095","power":3,"hp":2,"keywords":[],"for":"R4.A.8"}
+{"seq":"R4.A.7d","t":"EXHAUST","card":"JTL#095","for":"R4.A.8"}
+{"seq":"R4.A.8","t":"PLAY","p":2,"card":"JTL#095","zone":"space","cost":2,"ms":263783}
+{"seq":"R4.A.8a","t":"CHOICE","p":2,"prompt":"Latts Razzi","offered":["ASH#048:2"],"chose":0,"for":"R4.A.9"}
+{"seq":"R4.A.8b","t":"EXHAUST","card":"LAW#039:4","for":"R4.A.9"}
+{"seq":"R4.A.9","t":"ATTACK","p":2,"atk":"LAW#039:4","def":"ASH#048:2","defenderType":"unit","ms":274300}
+{"seq":"R4.A.9a","t":"ABILITY_ACTIVATE","p":1,"card":"TOKEN:shield#8752877738","ability":"shield_replacement_0","kind":"replacement","title":"Defeat Shield to prevent attached unit from taking damage"}
+{"seq":"R4.A.9b","t":"DAMAGE","src":"LAW#039:4","tgt":"LAW#039:4","amt":2,"damageType":"combat","hp":0}
+{"seq":"R4.A.9c","t":"MOVE","card":"TOKEN:shield#8752877738","from":"ground","to":"outsideTheGame","p":1,"kind":"upgrade"}
+{"seq":"R4.A.9d","t":"SHIELD_USE","card":"ASH#048:2"}
+{"seq":"R4.A.9e","t":"MOVE","card":"TOKEN:experience#2007868442","from":"ground","to":"outsideTheGame","p":2,"kind":"upgrade"}
+{"seq":"R4.A.9f","t":"STATS","card":"LAW#039:4","power":2,"hp":1,"keywords":[]}
+{"seq":"R4.A.9g","t":"EXPERIENCE_GAIN","card":"LAW#039:4","count":-1}
+{"seq":"R4.A.9h","t":"MOVE","card":"LAW#039:4","from":"ground","to":"discard","p":2,"kind":"unit"}
+{"seq":"R4.A.9i","t":"DEFEAT","card":"LAW#039:4","reason":"attack","defeatedBy":"LAW#039:4"}
+{"seq":"R4.A.9j","t":"CHOICE","p":2,"prompt":"Gungi","offered":["ASH#048:2"],"chose":0,"for":"R4.A.10"}
+{"seq":"R4.A.9k","t":"EXHAUST","card":"LOF#093","for":"R4.A.10"}
+{"seq":"R4.A.10","t":"ATTACK","p":2,"atk":"LOF#093","def":"ASH#048:2","defenderType":"unit","ms":277348}
+{"seq":"R4.A.10a","t":"DAMAGE","src":"LOF#093","tgt":"ASH#048:2","amt":3,"damageType":"combat","hp":0}
+{"seq":"R4.A.10b","t":"DAMAGE","src":"LOF#093","tgt":"LOF#093","amt":3,"damageType":"combat","hp":0}
+{"seq":"R4.A.10c","t":"MOVE","card":"ASH#048:2","from":"ground","to":"discard","p":1,"kind":"unit"}
+{"seq":"R4.A.10d","t":"DEFEAT","card":"ASH#048:2","reason":"attack","defeatedBy":"LOF#093"}
+{"seq":"R4.A.10e","t":"MOVE","card":"LOF#093","from":"ground","to":"discard","p":2,"kind":"unit"}
+{"seq":"R4.A.10f","t":"DEFEAT","card":"LOF#093","reason":"attack","defeatedBy":"LOF#093"}
+{"seq":"R4.A.end","t":"PHASE_END","phase":"action"}
+{"seq":"R4.G.start","t":"PHASE_START","phase":"regroup","ms":279001}
+{"seq":"R4.G.1","t":"MOVE","card":"LAW#159:3","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R4.G.2","t":"MOVE","card":"ASH#116:3","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R4.G.3","t":"DRAW","p":1,"count":2,"cards":["LAW#159:3","ASH#116:3"]}
+{"seq":"R4.G.4","t":"MOVE","card":"SEC#046","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R4.G.5","t":"MOVE","card":"ASH#062","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R4.G.6","t":"DRAW","p":2,"count":2,"cards":["SEC#046","ASH#062"]}
+{"seq":"R4.G.7","t":"MOVE","card":"ASH#116:3","from":"hand","to":"resource","p":1,"kind":"unit","for":"R4.G.8"}
+{"seq":"R4.G.8","t":"RESOURCE","p":1,"card":"ASH#116:3"}
+{"seq":"R4.G.9","t":"MOVE","card":"ASH#079:4","from":"hand","to":"resource","p":2,"kind":"unit","for":"R4.G.10"}
+{"seq":"R4.G.10","t":"RESOURCE","p":2,"card":"ASH#079:4"}
+{"seq":"R4.G.11","t":"READY_RESOURCES","p":1,"amount":4}
+{"seq":"R4.G.15","t":"READY","card":"JTL#250:2"}
+{"seq":"R4.G.16","t":"READY","card":"JTL#095"}
+{"seq":"R4.G.17","t":"READY_RESOURCES","p":2,"amount":5}
+{"seq":"R4.G.22","t":"READY","card":"ASH#009"}
+{"seq":"R4.G.end","t":"PHASE_END","phase":"regroup"}
+{"seq":"R4.end","t":"ROUND_END","round":4,"keyframe":{"round":4,"phase":"regroup","initiative":1,"players":{"1":{"seat":1,"baseHp":26,"baseMaxHp":30,"handSize":5,"hand":["ASH#048:3","JTL#043","LAW#101","SEC#087:2","LAW#159:3"],"resourcesReady":6,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2","SEC#078","SEC#078:2","ASH#116:3"],"credits":1,"hasForce":false,"discard":["ASH#116:2","ASH#116","LOF#091:3","ASH#097","ASH#048:2"],"cards":[],"deckSize":34,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":3,"hand":["SEC#101","SEC#046","ASH#062"],"resourcesReady":6,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056","LAW#037","SEC#101:2","ASH#079:4"],"credits":0,"hasForce":false,"discard":["JTL#250","LAW#039:4","LOF#093"],"cards":[{"id":"JTL#250:2","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":3,"keywords":[]},{"id":"JTL#095","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":2,"keywords":[]}],"deckSize":36,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":true}}
+{"seq":"R5.start","t":"ROUND_START","round":5,"active":1,"keyframe":{"round":5,"phase":"action","initiative":1,"players":{"1":{"seat":1,"baseHp":26,"baseMaxHp":30,"handSize":5,"hand":["ASH#048:3","JTL#043","LAW#101","SEC#087:2","LAW#159:3"],"resourcesReady":6,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2","SEC#078","SEC#078:2","ASH#116:3"],"credits":1,"hasForce":false,"discard":["ASH#116:2","ASH#116","LOF#091:3","ASH#097","ASH#048:2"],"cards":[],"deckSize":34,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":3,"hand":["SEC#101","SEC#046","ASH#062"],"resourcesReady":6,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056","LAW#037","SEC#101:2","ASH#079:4"],"credits":0,"hasForce":false,"discard":["JTL#250","LAW#039:4","LOF#093"],"cards":[{"id":"JTL#250:2","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":3,"keywords":[]},{"id":"JTL#095","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":2,"keywords":[]}],"deckSize":36,"leader":{"id":"ASH#009","deployed":false,"exhausted":false,"epicActionUsed":false}}},"initiativeTaken":false,"active":1},"ms":306666}
+{"seq":"R5.A.start","t":"PHASE_START","phase":"action","active":1,"ms":306666}
+{"seq":"R5.A.0a","t":"MODAL_CHOICE","p":1,"offered":["Use 1 Credit","Pay costs without Credit tokens","Cancel"],"chose":1,"for":"R5.A.1"}
+{"seq":"R5.A.0b","t":"EXHAUST_RESOURCES","p":1,"amount":4,"for":"R5.A.1"}
+{"seq":"R5.A.0c","t":"MOVE","card":"ASH#048:3","from":"hand","to":"ground","p":1,"kind":"unit","for":"R5.A.1"}
+{"seq":"R5.A.0d","t":"STATS","card":"ASH#048:3","power":4,"hp":3,"keywords":["sentinel","shielded"],"for":"R5.A.1"}
+{"seq":"R5.A.0e","t":"EXHAUST","card":"ASH#048:3","for":"R5.A.1"}
+{"seq":"R5.A.1","t":"PLAY","p":1,"card":"ASH#048:3","zone":"ground","cost":4,"ms":343773}
+{"seq":"R5.A.1a","t":"ABILITY_ACTIVATE","p":1,"card":"ASH#048:3","ability":"imperial-armored-commando_keyword_shielded_0","kind":"keyword","title":"{keyword:shielded}"}
+{"seq":"R5.A.1b","t":"MOVE","card":"TOKEN:shield#8752877738:2","from":"outsideTheGame","to":"ground","p":1,"kind":"upgrade","attachedTo":"ASH#048:3"}
+{"seq":"R5.A.1c","t":"SHIELD_GAIN","card":"ASH#048:3"}
+{"seq":"R5.A.2","t":"PASS","p":1,"ms":343774}
+{"seq":"R5.A.2a","t":"MODAL_CHOICE","p":2,"offered":["Deploy Ahsoka Tano","(No effect) Choose a unit with less power than a friendly unit. It gets +2/+0 for this phase","Cancel"],"chose":2,"for":"R5.A.3"}
+{"seq":"R5.A.2b","t":"CHOICE","p":2,"prompt":"Sabine's Masterpiece","offered":["base@1"],"chose":0,"for":"R5.A.3"}
+{"seq":"R5.A.2c","t":"EXHAUST","card":"JTL#250:2","for":"R5.A.3"}
+{"seq":"R5.A.3","t":"ATTACK","p":2,"atk":"JTL#250:2","def":"base@1","defenderType":"base","ms":389533}
+{"seq":"R5.A.3a","t":"ABILITY_ACTIVATE","p":2,"card":"JTL#250:2","ability":"sabines-masterpiece#crazy-colorful_triggered_0","kind":"triggered","title":"If you control: a :vigilance: unit, heal 2 damage from a base, a :command: unit, give an Experience token to a unit, a :aggression: unit, deal 1 damage to a unit or base, a :cunning: unit, exhaust or ready a resource"}
+{"seq":"R5.A.3b","t":"CHOICE","p":2,"prompt":"Sabine's Masterpiece","offered":["JTL#250:2","JTL#095","ASH#048:3"],"chose":0}
+{"seq":"R5.A.3c","t":"MOVE","card":"TOKEN:experience#2007868442:2","from":"outsideTheGame","to":"space","p":2,"kind":"upgrade","attachedTo":"JTL#250:2"}
+{"seq":"R5.A.3d","t":"EXPERIENCE_GAIN","card":"JTL#250:2","count":1}
+{"seq":"R5.A.3e","t":"STATS","card":"JTL#250:2","power":4,"hp":4,"keywords":[]}
+{"seq":"R5.A.3f","t":"DAMAGE","src":"JTL#250:2","tgt":"base@1","amt":4,"damageType":"combat","hp":22}
+{"seq":"R5.A.4","t":"PASS","p":2,"ms":390632}
+{"seq":"R5.A.5","t":"CLAIM_INITIATIVE","p":1,"ms":394430}
+{"seq":"R5.A.6","t":"PASS","p":1,"ms":394430}
+{"seq":"R5.A.6a","t":"MODAL_CHOICE","p":2,"offered":["Deploy Ahsoka Tano","Choose a unit with less power than a friendly unit. It gets +2/+0 for this phase","Cancel"],"chose":1,"for":"R5.A.7"}
+{"seq":"R5.A.6b","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["JTL#095"],"chose":0,"for":"R5.A.7"}
+{"seq":"R5.A.7","t":"ABILITY_ACTIVATE","p":2,"card":"ASH#009","ability":"ahsoka-tano#trust-in-the-force_action_1","kind":"action","title":"Choose a unit with less power than a friendly unit. It gets +2/+0 for this phase","ms":398700}
+{"seq":"R5.A.7a","t":"EXHAUST","card":"ASH#009"}
+{"seq":"R5.A.7b-undo","t":"UNDO","at":"R5.A.7b","by":2}
+{"seq":"R5.A.7b","t":"EXHAUST_RESOURCES","p":2,"amount":4,"for":"R5.A.8"}
+{"seq":"R5.A.7c","t":"STATS","card":"JTL#095","power":5,"hp":2,"keywords":[],"for":"R5.A.8"}
+{"seq":"R5.A.7d","t":"MOVE","card":"SEC#046","from":"hand","to":"ground","p":2,"kind":"unit","for":"R5.A.8"}
+{"seq":"R5.A.7e","t":"STATS","card":"SEC#046","power":3,"hp":5,"keywords":["plot"],"for":"R5.A.8"}
+{"seq":"R5.A.7f","t":"EXHAUST","card":"SEC#046","for":"R5.A.8"}
+{"seq":"R5.A.8","t":"PLAY","p":2,"card":"SEC#046","zone":"ground","cost":4,"ms":430182}
+{"seq":"R5.A.8a","t":"ABILITY_ACTIVATE","p":2,"card":"SEC#046","ability":"galen-erso#youll-never-win_triggered_2","kind":"triggered","title":"Name a card. Cards the opponent owns with that name lose all abilities while Galen Erso is in play."}
+{"seq":"R5.A.8b","t":"MODAL_CHOICE","p":2,"offered":["Deploy Ahsoka Tano","Cancel"],"chose":0}
+{"seq":"R5.A.8c","t":"STATS","card":"ASH#048:3","power":4,"hp":3,"keywords":[]}
+{"seq":"R5.A.9","t":"ABILITY_ACTIVATE","p":2,"card":"ASH#009","ability":"ahsoka-tano#trust-in-the-force_action_0","kind":"epic","title":"Deploy Ahsoka Tano","epic":true,"ms":441542}
+{"seq":"R5.A.9a","t":"MOVE","card":"ASH#009","from":"base","to":"ground","p":2,"kind":"unit","for":"R5.A.10"}
+{"seq":"R5.A.9b","t":"STATS","card":"ASH#009","power":5,"hp":6,"keywords":["support"],"for":"R5.A.10"}
+{"seq":"R5.A.10","t":"DEPLOY_LEADER","p":2,"card":"ASH#009","zone":"ground","epic":true,"cost":6,"ms":441543}
+{"seq":"R5.A.10a","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["JTL#095"],"chose":0}
+{"seq":"R5.A.10b","t":"ABILITY_ACTIVATE","p":2,"card":"ASH#009","ability":"ahsoka-tano#trust-in-the-force_keyword_support_3","kind":"keyword","title":"{keyword:support}"}
+{"seq":"R5.A.10c","t":"CHOICE","p":2,"prompt":"Phoenix Squadron A-Wing","offered":["base@1"],"chose":0,"for":"R5.A.11"}
+{"seq":"R5.A.10d","t":"EXHAUST","card":"JTL#095","for":"R5.A.11"}
+{"seq":"R5.A.11","t":"ATTACK","p":2,"atk":"JTL#095","def":"base@1","defenderType":"base","ms":444802}
+{"seq":"R5.A.11a","t":"CHOICE","p":2,"prompt":"Phoenix Squadron A-Wing","offered":["SEC#046","JTL#250:2","ASH#048:3"],"chose":1}
+{"seq":"R5.A.11b","t":"ABILITY_ACTIVATE","p":2,"card":"JTL#095","ability":"ahsoka-tano#trust-in-the-force_triggered_2","kind":"triggered","title":"Give a unit with less power than this unit +2/+0 for this phase"}
+{"seq":"R5.A.11c","t":"DAMAGE","src":"JTL#095","tgt":"base@1","amt":5,"damageType":"combat","hp":17}
+{"seq":"R5.A.11d","t":"STATS","card":"JTL#250:2","power":6,"hp":4,"keywords":[]}
+{"seq":"R5.A.11e","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["ASH#048:3","base@1"],"chose":1,"for":"R5.A.12"}
+{"seq":"R5.A.11f","t":"EXHAUST","card":"ASH#009","for":"R5.A.12"}
+{"seq":"R5.A.12","t":"ATTACK","p":2,"atk":"ASH#009","def":"base@1","defenderType":"base","ms":449168}
+{"seq":"R5.A.12a","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["SEC#046","ASH#048:3"],"chose":0}
+{"seq":"R5.A.12b","t":"ABILITY_ACTIVATE","p":2,"card":"ASH#009","ability":"ahsoka-tano#trust-in-the-force_triggered_2","kind":"triggered","title":"Give a unit with less power than this unit +2/+0 for this phase"}
+{"seq":"R5.A.12c","t":"DAMAGE","src":"ASH#009","tgt":"base@1","amt":5,"damageType":"combat","hp":12}
+{"seq":"R5.A.12d","t":"STATS","card":"SEC#046","power":5,"hp":5,"keywords":["plot"]}
+{"seq":"R5.A.end","t":"PHASE_END","phase":"action"}
+{"seq":"R5.A.12e","t":"STATS","card":"SEC#046","power":3,"hp":5,"keywords":["plot"]}
+{"seq":"R5.A.12f","t":"STATS","card":"JTL#250:2","power":4,"hp":4,"keywords":[]}
+{"seq":"R5.A.12g","t":"STATS","card":"JTL#095","power":3,"hp":2,"keywords":[]}
+{"seq":"R5.G.start","t":"PHASE_START","phase":"regroup","ms":451934}
+{"seq":"R5.G.1","t":"MOVE","card":"SEC#088","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R5.G.2","t":"MOVE","card":"JTL#033:3","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R5.G.3","t":"DRAW","p":1,"count":2,"cards":["SEC#088","JTL#033:3"]}
+{"seq":"R5.G.4","t":"MOVE","card":"LAW#039:5","from":"deck","to":"hand","p":2,"kind":"unit"}
+{"seq":"R5.G.5","t":"MOVE","card":"LAW#041","from":"deck","to":"hand","p":2}
+{"seq":"R5.G.6","t":"DRAW","p":2,"count":2,"cards":["LAW#039:5","LAW#041"]}
+{"seq":"R5.G.7","t":"MOVE","card":"SEC#088","from":"hand","to":"resource","p":1,"kind":"unit","for":"R5.G.8"}
+{"seq":"R5.G.8","t":"RESOURCE","p":1,"card":"SEC#088"}
+{"seq":"R5.G.9","t":"MOVE","card":"LAW#039:5","from":"hand","to":"resource","p":2,"kind":"unit","for":"R5.G.10"}
+{"seq":"R5.G.10","t":"RESOURCE","p":2,"card":"LAW#039:5"}
+{"seq":"R5.G.11","t":"READY","card":"ASH#048:3"}
+{"seq":"R5.G.12","t":"READY_RESOURCES","p":1,"amount":4}
+{"seq":"R5.G.16","t":"READY","card":"SEC#046"}
+{"seq":"R5.G.17","t":"READY","card":"ASH#009"}
+{"seq":"R5.G.18","t":"READY","card":"JTL#250:2"}
+{"seq":"R5.G.19","t":"READY","card":"JTL#095"}
+{"seq":"R5.G.20","t":"READY_RESOURCES","p":2,"amount":4}
+{"seq":"R5.G.end","t":"PHASE_END","phase":"regroup"}
+{"seq":"R5.end","t":"ROUND_END","round":5,"keyframe":{"round":5,"phase":"regroup","initiative":1,"players":{"1":{"seat":1,"baseHp":12,"baseMaxHp":30,"handSize":5,"hand":["JTL#043","LAW#101","SEC#087:2","LAW#159:3","JTL#033:3"],"resourcesReady":7,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2","SEC#078","SEC#078:2","ASH#116:3","SEC#088"],"credits":1,"hasForce":false,"discard":["ASH#116:2","ASH#116","LOF#091:3","ASH#097","ASH#048:2"],"cards":[{"id":"ASH#048:3","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":1,"experience":0,"statusTokens":{},"captured":[],"power":4,"hp":3,"keywords":[]}],"deckSize":32,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":3,"hand":["SEC#101","ASH#062","LAW#041"],"resourcesReady":7,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056","LAW#037","SEC#101:2","ASH#079:4","LAW#039:5"],"credits":0,"hasForce":false,"discard":["JTL#250","LAW#039:4","LOF#093"],"cards":[{"id":"SEC#046","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":5,"keywords":["plot"]},{"id":"ASH#009","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":5,"hp":6,"keywords":["support"]},{"id":"JTL#250:2","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":1,"statusTokens":{},"captured":[],"power":4,"hp":4,"keywords":[]},{"id":"JTL#095","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":2,"keywords":[]}],"deckSize":34,"leader":{"id":"ASH#009","deployed":true,"exhausted":false,"epicActionUsed":true}}},"initiativeTaken":true}}
+{"seq":"R6.start","t":"ROUND_START","round":6,"active":1,"keyframe":{"round":6,"phase":"action","initiative":1,"players":{"1":{"seat":1,"baseHp":12,"baseMaxHp":30,"handSize":5,"hand":["JTL#043","LAW#101","SEC#087:2","LAW#159:3","JTL#033:3"],"resourcesReady":7,"resourcesExhausted":0,"resources":["LOF#091","LAW#097:3","LAW#039:2","SEC#078","SEC#078:2","ASH#116:3","SEC#088"],"credits":1,"hasForce":false,"discard":["ASH#116:2","ASH#116","LOF#091:3","ASH#097","ASH#048:2"],"cards":[{"id":"ASH#048:3","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":1,"experience":0,"statusTokens":{},"captured":[],"power":4,"hp":3,"keywords":[]}],"deckSize":32,"leader":{"id":"LAW#008","deployed":false,"exhausted":false,"epicActionUsed":false}},"2":{"seat":2,"baseHp":30,"baseMaxHp":30,"handSize":3,"hand":["SEC#101","ASH#062","LAW#041"],"resourcesReady":7,"resourcesExhausted":0,"resources":["ASH#248","LAW#038","ASH#056","LAW#037","SEC#101:2","ASH#079:4","LAW#039:5"],"credits":0,"hasForce":false,"discard":["JTL#250","LAW#039:4","LOF#093"],"cards":[{"id":"SEC#046","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":5,"keywords":["plot"]},{"id":"ASH#009","zone":"ground","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":5,"hp":6,"keywords":["support"]},{"id":"JTL#250:2","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":1,"statusTokens":{},"captured":[],"power":4,"hp":4,"keywords":[]},{"id":"JTL#095","zone":"space","damage":0,"exhausted":false,"upgrades":[],"shields":0,"experience":0,"statusTokens":{},"captured":[],"power":3,"hp":2,"keywords":[]}],"deckSize":34,"leader":{"id":"ASH#009","deployed":true,"exhausted":false,"epicActionUsed":true}}},"initiativeTaken":false,"active":1},"ms":472304}
+{"seq":"R6.A.start","t":"PHASE_START","phase":"action","active":1,"ms":472304}
+{"seq":"R6.A.0a","t":"MODAL_CHOICE","p":1,"offered":["Deploy Director Krennic","Create a Credit token","Cancel"],"chose":0,"for":"R6.A.1"}
+{"seq":"R6.A.1","t":"ABILITY_ACTIVATE","p":1,"card":"LAW#008","ability":"director-krennic#amidst-my-achievement_action_0","kind":"epic","title":"Deploy Director Krennic","epic":true,"ms":479458}
+{"seq":"R6.A.1a","t":"MOVE","card":"LAW#008","from":"base","to":"ground","p":1,"kind":"unit","for":"R6.A.2"}
+{"seq":"R6.A.1b","t":"STATS","card":"LAW#008","power":4,"hp":9,"keywords":[],"for":"R6.A.2"}
+{"seq":"R6.A.2","t":"DEPLOY_LEADER","p":1,"card":"LAW#008","zone":"ground","epic":true,"cost":7,"ms":479459}
+{"seq":"R6.A.2a","t":"ABILITY_ACTIVATE","p":1,"card":"SEC#088","ability":"first-light#threatening-elegance_keyword_plot_0","kind":"keyword","title":"Play First Light using {keyword:plot}"}
+{"seq":"R6.A.2b","t":"MODAL_CHOICE","p":1,"offered":["Use 1 Credit","Pay costs without Credit tokens"],"chose":1,"for":"R6.A.3"}
+{"seq":"R6.A.2c","t":"EXHAUST_RESOURCES","p":1,"amount":7,"for":"R6.A.3"}
+{"seq":"R6.A.2d","t":"MOVE","card":"SEC#088","from":"resource","to":"space","p":1,"kind":"unit","exhausted":true,"for":"R6.A.3"}
+{"seq":"R6.A.2e","t":"STATS","card":"SEC#088","power":5,"hp":7,"keywords":["ambush","plot"],"for":"R6.A.3"}
+{"seq":"R6.A.2f","t":"EXHAUST","card":"SEC#088","for":"R6.A.3"}
+{"seq":"R6.A.3","t":"PLAY","p":1,"card":"SEC#088","zone":"space","cost":7,"ms":486724}
+{"seq":"R6.A.3a","t":"MOVE","card":"JTL#033:2","from":"deck","to":"resource","p":1,"kind":"unit","for":"R6.A.3b"}
+{"seq":"R6.A.3b","t":"RESOURCE","p":1,"card":"JTL#033:2"}
+{"seq":"R6.A.3c","t":"EXHAUST_RESOURCES","p":1,"amount":1}
+{"seq":"R6.A.3d","t":"ABILITY_ACTIVATE","p":1,"card":"SEC#088","ability":"first-light#threatening-elegance_keyword_ambush_3","kind":"keyword","title":"{keyword:ambush}"}
+{"seq":"R6.A.3e","t":"CHOICE","p":1,"prompt":"First Light","offered":["JTL#250:2","JTL#095"],"chose":0}
+{"seq":"R6.A.4","t":"ATTACK","p":1,"atk":"SEC#088","def":"JTL#250:2","defenderType":"unit","ms":488856}
+{"seq":"R6.A.4a","t":"DAMAGE","src":"SEC#088","tgt":"JTL#250:2","amt":4,"damageType":"combat","hp":0}
+{"seq":"R6.A.4b","t":"DAMAGE","src":"SEC#088","tgt":"SEC#088","amt":4,"damageType":"combat","hp":3}
+{"seq":"R6.A.4c","t":"MOVE","card":"TOKEN:experience#2007868442:2","from":"space","to":"outsideTheGame","p":2,"kind":"upgrade"}
+{"seq":"R6.A.4d","t":"STATS","card":"JTL#250:2","power":3,"hp":3,"keywords":[]}
+{"seq":"R6.A.4e","t":"EXPERIENCE_GAIN","card":"JTL#250:2","count":-1}
+{"seq":"R6.A.4f","t":"MOVE","card":"JTL#250:2","from":"space","to":"discard","p":2,"kind":"unit"}
+{"seq":"R6.A.4g","t":"DEFEAT","card":"JTL#250:2","reason":"attack","defeatedBy":"SEC#088"}
+{"seq":"R6.A.4h","t":"ABILITY_ACTIVATE","p":1,"card":"SEC#088","ability":"first-light#threatening-elegance_triggered_2","kind":"triggered","title":"Draw a card"}
+{"seq":"R6.A.4i","t":"MOVE","card":"JTL#119:2","from":"deck","to":"hand","p":1,"kind":"unit"}
+{"seq":"R6.A.4j","t":"DRAW","p":1,"count":1,"cards":["JTL#119:2"]}
+{"seq":"R6.A.4k","t":"CHOICE","p":1,"prompt":"Director Krennic","offered":["ASH#048:3","SEC#088"],"chose":1}
+{"seq":"R6.A.4l","t":"CHOICE","p":1,"prompt":"Director Krennic","offered":["SEC#046","ASH#009","JTL#095"],"chose":0}
+{"seq":"R6.A.4m","t":"ABILITY_ACTIVATE","p":1,"card":"LAW#008","ability":"director-krennic#amidst-my-achievement_triggered_2","kind":"triggered","title":"Another friendly unit deals damage equal to its power to an enemy unit"}
+{"seq":"R6.A.4n","t":"DAMAGE","src":"LAW#008","tgt":"SEC#046","amt":5,"damageType":"ability","hp":0}
+{"seq":"R6.A.4o","t":"MOVE","card":"SEC#046","from":"ground","to":"discard","p":2,"kind":"unit"}
+{"seq":"R6.A.4p","t":"DEFEAT","card":"SEC#046","reason":"nonCombatDamage","defeatedBy":"SEC#088"}
+{"seq":"R6.A.5","t":"PASS","p":1,"ms":495863}
+{"seq":"R6.A.5a","t":"STATS","card":"ASH#048:3","power":4,"hp":3,"keywords":["sentinel","shielded"],"for":"R6.A.6"}
+{"seq":"R6.A.5b","t":"CHOICE","p":2,"prompt":"Nothing Left to Fear","offered":["ASH#009","JTL#095"],"chose":0,"for":"R6.A.6"}
+{"seq":"R6.A.5c","t":"EXHAUST_RESOURCES","p":2,"amount":5,"for":"R6.A.6"}
+{"seq":"R6.A.5d","t":"MOVE","card":"LAW#041","from":"hand","to":"discard","p":2,"for":"R6.A.6"}
+{"seq":"R6.A.6","t":"PLAY_EVENT","p":2,"card":"LAW#041","zone":"discard","cost":5,"ms":508608}
+{"seq":"R6.A.6a","t":"ABILITY_ACTIVATE","p":2,"card":"LAW#041","ability":"nothing-left-to-fear_anonymous","title":"Choose a friendly unit and give it +2/+2 for this phase. Then, you may defeat a non-leader unit with power equal to or less than the chosen unit."}
+{"seq":"R6.A.6b","t":"CHOICE","p":2,"prompt":"Nothing Left to Fear","offered":["JTL#095","ASH#048:3","SEC#088"],"chose":1}
+{"seq":"R6.A.6c","t":"STATS","card":"ASH#009","power":7,"hp":8,"keywords":["support"]}
+{"seq":"R6.A.6d","t":"MOVE","card":"TOKEN:shield#8752877738:2","from":"ground","to":"outsideTheGame","p":1,"kind":"upgrade"}
+{"seq":"R6.A.6e","t":"SHIELD_USE","card":"ASH#048:3"}
+{"seq":"R6.A.6f","t":"MOVE","card":"ASH#048:3","from":"ground","to":"discard","p":1,"kind":"unit"}
+{"seq":"R6.A.6g","t":"DEFEAT","card":"ASH#048:3","reason":"ability","defeatedBy":"LAW#041"}
+{"seq":"R6.A.7","t":"PASS","p":2,"ms":509257}
+{"seq":"R6.A.7a","t":"CHOICE","p":1,"prompt":"Director Krennic","offered":["ASH#009","base@2"],"chose":0,"for":"R6.A.8"}
+{"seq":"R6.A.7b","t":"EXHAUST","card":"LAW#008","for":"R6.A.8"}
+{"seq":"R6.A.8","t":"ATTACK","p":1,"atk":"LAW#008","def":"ASH#009","defenderType":"unit","ms":515944}
+{"seq":"R6.A.8a","t":"DAMAGE","src":"LAW#008","tgt":"ASH#009","amt":4,"damageType":"combat","hp":4}
+{"seq":"R6.A.8b","t":"DAMAGE","src":"LAW#008","tgt":"LAW#008","amt":7,"damageType":"combat","hp":2}
+{"seq":"R6.A.9","t":"PASS","p":1,"ms":515944}
+{"seq":"R6.A.9a","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["LAW#008","base@1"],"chose":1,"for":"R6.A.10"}
+{"seq":"R6.A.9b","t":"EXHAUST","card":"ASH#009","for":"R6.A.10"}
+{"seq":"R6.A.10","t":"ATTACK","p":2,"atk":"ASH#009","def":"base@1","defenderType":"base","ms":519943}
+{"seq":"R6.A.10a","t":"CHOICE","p":2,"prompt":"Ahsoka Tano","offered":["JTL#095","LAW#008","SEC#088"],"chose":0}
+{"seq":"R6.A.10b","t":"ABILITY_ACTIVATE","p":2,"card":"ASH#009","ability":"ahsoka-tano#trust-in-the-force_triggered_2","kind":"triggered","title":"Give a unit with less power than this unit +2/+0 for this phase"}
+{"seq":"R6.A.10c","t":"DAMAGE","src":"ASH#009","tgt":"base@1","amt":7,"damageType":"combat","hp":5}
+{"seq":"R6.A.10d","t":"STATS","card":"JTL#095","power":5,"hp":2,"keywords":[]}
+{"seq":"R6.A.11","t":"PASS","p":2,"ms":521207}
+{"seq":"R6.A.12","t":"CLAIM_INITIATIVE","p":1,"ms":525175}
+{"seq":"R6.A.13","t":"PASS","p":1,"ms":525177}
+{"seq":"R6.A.13a","t":"CHOICE","p":2,"prompt":"Phoenix Squadron A-Wing","offered":["SEC#088","base@1"],"chose":1,"for":"R6.A.14"}
+{"seq":"R6.A.13b","t":"EXHAUST","card":"JTL#095","for":"R6.A.14"}
+{"seq":"R6.A.14","t":"ATTACK","p":2,"atk":"JTL#095","def":"base@1","defenderType":"base","ms":527476}
+{"seq":"R6.A.14a","t":"DAMAGE","src":"JTL#095","tgt":"base@1","amt":5,"damageType":"combat","hp":0}
+{"seq":"R6.A.game-end","t":"GAME_END","winner":2,"reason":"Base Destroyed"}
+
+%%% ANNOTATIONS

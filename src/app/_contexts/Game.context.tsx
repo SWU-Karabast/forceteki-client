@@ -8,6 +8,7 @@ import React, {
     ReactNode,
     useEffect,
     useRef,
+    useMemo,
 } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
@@ -24,8 +25,10 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
+import { ReplayContext } from '@/app/_contexts/ReplayContextCore';
 import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import { emitLobby } from '@/app/_utils/gameLogRequest';
 
 interface IGameContextType {
     gameState: any;
@@ -38,7 +41,7 @@ interface IGameContextType {
     sendGameMessage: (args: any[]) => void;
     getOpponent: (player: string) => string;
     connectedPlayer: string;
-    sendLobbyMessage: (args: any[]) => void;
+    sendLobbyMessage: (args: any[], timeoutMs?: number) => void;
     resetStates: () => void;
     getConnectedPlayerPrompt: () => any;
     updateDistributionPrompt: (uuid: string, amount: number) => void;
@@ -50,7 +53,9 @@ interface IGameContextType {
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
     gameIsEnded: () => boolean;
-    ongoingEffects: IOngoingEffectSummary[];
+    // `null` only in the replay viewer, for a file that does not record effects: "not recorded",
+    // not "none" (SWU-PGN §11), so the trays show no "No active effects" claim.
+    ongoingEffects: IOngoingEffectSummary[] | null;
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -135,7 +140,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             if (promptType === 'actionWindow') {
                 clearDistributionPrompt();
                 return;
-            } 
+            }
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
@@ -372,7 +377,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 resetMessages();
                 lastGameIdRef.current = gameState.id;
             }
-            
+
             // Handle message delta if present in gameState
             if (gameState.newMessages !== undefined && gameState.messageOffset !== undefined && gameState.totalMessages !== undefined) {
                 const delta: IMessageDelta = {
@@ -389,7 +394,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     newSocket.emit('lobby', 'retransmitGameMessages', messagesToRetransmit.startIndex, messagesToRetransmit.endIndex);
                 }
             }
-            
+
             setGameState(gameState);
             if (process.env.NODE_ENV === 'development') {
                 const byteSize = new TextEncoder().encode(JSON.stringify(gameState)).length;
@@ -476,13 +481,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.warn('Error playing sound:', error);
         }
-        
+
         socket?.emit('game', ...args);
     };
 
-    const sendLobbyMessage = (args: any[]) => {
-        socket?.emit('lobby', ...args);
-    }
+    // With `timeoutMs`, the trailing ack always answers (see emitLobby).
+    const sendLobbyMessage = (args: any[], timeoutMs?: number) => emitLobby(socket, args, timeoutMs);
 
     const getOpponent = (player: string) => {
         if (gameState) {
@@ -566,12 +570,75 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
+const noopFn = () => {};
+const noopStringFn = () => '';
+const noopBoolFn = () => false;
+
+// Inert defaults spread under the ReplayContext fields for the replay viewer's useGame value
+// (useGame throws when neither provider is present). Hoisted to module scope so consumers get a stable reference and avoid
+// unnecessary re-renders.
+const FALLBACK_GAME_CONTEXT: IGameContextType = {
+    gameState: null,
+    gameMessages: [],
+    lobbyState: null,
+    bugReportState: null,
+    playerReportState: null,
+    statsSubmitNotification: null,
+    sendMessage: noopFn,
+    sendGameMessage: noopFn,
+    connectedPlayer: '',
+    getOpponent: noopStringFn,
+    // No socket here: a timed ack is answered with the not-connected error, like a dropped socket.
+    sendLobbyMessage: (args: any[], timeoutMs?: number) => emitLobby(null, args, timeoutMs),
+    resetStates: noopFn,
+    getConnectedPlayerPrompt: noopFn,
+    updateDistributionPrompt: noopFn,
+    distributionPromptData: null,
+    isSpectator: true,
+    lastQueueHeartbeat: 0,
+    queueMatchmakingStatus: null,
+    isAnonymousPlayer: noopBoolFn,
+    hasChatDisabled: noopBoolFn,
+    gameIsEnded: noopBoolFn,
+    createNewSocket: noopFn,
+    ongoingEffects: [],
+    hoveredChatCard: { id: null, hover: noopFn, clear: noopFn },
+} as IGameContextType;
+
 export const useGame = () => {
     const context = useContext(GameContext);
-    if (!context) {
-        throw new Error('useGame must be used within a GameProvider');
+    // Always call useContext for ReplayContext (Rules of Hooks — same order every render).
+    // Imported from ReplayContextCore, not Replay.context, so a live-game page does not
+    // bundle the replay engine; neither module imports Game.context, so there is no cycle.
+    const replayContext = useContext(ReplayContext);
+
+    // When outside a GameProvider (e.g., /Replay page), pull board state from ReplayContext
+    // so the board components get the correct connectedPlayer and gameState. Memoized so
+    // consumers see one object per replay frame instead of one per render. The replay is a
+    // finished game watched by a non-player: spectator, ended, no lobby, no chat.
+    const replayGame = useMemo<IGameContextType | null>(() => (replayContext ? {
+        ...FALLBACK_GAME_CONTEXT,
+        gameState: replayContext.gameState,
+        connectedPlayer: replayContext.connectedPlayer,
+        getOpponent: replayContext.getOpponent,
+        gameMessages: [],
+        isSpectator: true,
+        gameIsEnded: () => true,
+        lobbyState: null,
+        ongoingEffects: replayContext.ongoingEffects,
+    } as IGameContextType : null), [replayContext]);
+
+    if (context) {
+        return context;
     }
-    return context;
+    if (replayGame) {
+        return replayGame;
+    }
+
+    // No GameProvider AND no ReplayContext — this is genuine misuse. Fail loudly
+    // rather than silently returning a no-op fallback (which would turn every
+    // consumer into a dead, click-swallowing spectator view).
+    throw new Error('useGame must be used within a GameProvider (or a ReplayProvider for the replay viewer)');
 };
 
 /**
