@@ -17,6 +17,8 @@ npm run dev          # dev server on :3000
 npm run lint         # tsc --noemit && next lint   <- what CI runs; run this before finishing
 npm run lint:fix     # same, with --fix
 npm run test         # vitest (node env): the SWU-PGN reader and replay utils under src/**/__tests__ <- CI runs it too
+npm run test:watch   # vitest in watch mode
+npm run gen:card-data  # regenerate public/card-{names,costs,stats}.json from a sibling ../forceteki/test/json (or FORCETEKI_JSON_DIR)
 npm run build        # next build (does NOT lint: eslint.ignoreDuringBuilds is true in next.config.mjs)
 npm run storybook    # component workbench on :6006
 docker compose up    # Adobe S3Mock on :9090, only needed for local cosmetics upload work
@@ -26,7 +28,8 @@ Node 22.x. Unit tests are vitest (`npm run test`, `vitest.config.ts`, node envir
 cover the vendored SWU-PGN reader (`src/lib/swupgn/__tests__`, golden vectors under `fixtures/vectors`)
 and the replay viewer's pure utils (`src/app/_utils/__tests__`). UI components have no test harness, so
 verification there is `npm run lint`, `npm run build` and manual play against a local backend. CI
-(`.github/workflows/pullrequest.yml`) runs lint, build and the tests.
+(`.github/workflows/pullrequest.yml`) runs lint, build and the tests. `src/lib/swupgn/VERSION.md` records
+the vendored reader's upstream commit and the client-owned divergences to preserve when re-vendoring.
 
 ## Architecture
 
@@ -46,15 +49,19 @@ nearly every component carries `'use client'`. Nesting order (outermost first): 
 
 `src/app/_contexts/Game.context.tsx` owns the single socket.io connection (`path: '/ws'`) and is the only
 place server state enters the app. It re-creates the socket whenever user/session identity changes.
-Everything on a game page reads `useGame()`.
+Everything on a game page reads `useGame()`. Outside a `GameProvider` (the `/Replay` viewer), `useGame()`
+returns an inert spectator value built from `ReplayContext` (`ReplayContextCore.ts`); with neither provider
+it throws.
 
 Three outbound channels:
 
 - `sendGameMessage([command, ...args])` → `socket.emit('game', ...)` — in-game actions. Commands are
   usually not hardcoded; the server sends `promptState.buttons` with `{ command, arg, uuid }` and the UI
   echoes them back.
-- `sendLobbyMessage([command, ...args])` → `socket.emit('lobby', ...)` — `setReadyStatus`, `updateDeck`,
-  `startGameAsync`, `rematch`, `sendChatMessage`, `submitReport`, `updateSetting`, …
+- `sendLobbyMessage([command, ...args], timeoutMs?)` → `socket.emit('lobby', ...)` — `setReadyStatus`, `updateDeck`,
+  `startGameAsync`, `rematch`, `sendChatMessage`, `submitReport`, `updateSetting`, `getGameLog`, … With
+  `timeoutMs`, `emitLobby` (`_utils/gameLogRequest.ts`) uses socket.io's ack timeout, so the trailing ack
+  always answers (an error on timeout or with no connected socket).
 - `sendMessage(event, args)` — raw emit.
 
 Inbound: `gamestate`, `lobbystate`, `queueHeartbeat`, `retransmitResponse`, `bugReportResult`,
