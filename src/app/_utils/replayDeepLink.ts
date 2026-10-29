@@ -18,12 +18,17 @@ export function resolveFrameRef(events: readonly { seq: string }[], value: strin
 }
 
 /**
- * Whether a link's moment names records of this stream: every `t`/`from`/`to` it carries is a
- * `seq` the stream has. The download with notes is reserialized, so it no longer hashes to the
- * id the link names, yet its seqs are the same game's. A bare frame index proves nothing (any
- * file has a frame 3), so a link that carries one is matched by its id alone.
+ * Whether a link's moment belongs to this file when its bytes no longer hash to the link's id
+ * (the download with notes is reserialized): the link names the file's `GameId` (`g`) and every
+ * `t`/`from`/`to` it carries is a `seq` the stream has. Seqs alone prove nothing -- every game has
+ * an `R1.A.1` -- and neither does a bare frame index, so a link without `g` or with an index is
+ * matched by its id alone.
  */
-export function linkRefsFound(events: readonly { seq: string }[], refs: readonly (string | null | undefined)[]): boolean {
+export function linkRefsFound(
+    gameIdParam: string | null | undefined, header: { gameId?: unknown },
+    events: readonly { seq: string }[], refs: readonly (string | null | undefined)[],
+): boolean {
+    if (!gameIdParam || header.gameId !== gameIdParam) return false;
     const given = refs.filter((r): r is string => r != null && r !== '');
     if (!given.length || given.some((r) => /^\d+$/.test(r))) return false;
     const seqs = new Set(events.map((e) => e.seq));

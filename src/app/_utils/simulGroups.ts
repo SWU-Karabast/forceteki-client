@@ -68,13 +68,21 @@ export function recordBack(spans: SimulSpans, p: number): number {
  * a step to it settles on to the next beat, and a step back from there settles straight back.
  * A beat that starts inside an instant begun in the beat before joins that beat.
  */
-export function alignBeats<B extends { index: number; start: number; end: number; anchor: number }>(beats: readonly B[], spans: SimulSpans): B[] {
+export function alignBeats<B extends { index: number; start: number; end: number; anchor: number; kind: string; seat?: unknown }>(
+    beats: readonly B[], spans: SimulSpans,
+): B[] {
     const out: B[] = [];
     for (const b of beats) {
         const last = out[out.length - 1];
-        if (last && b.start < spans.start.length && spans.start[b.start] <= last.end) {
+        // A banner stays its own beat (chapter marks read it), even if a careless span covers it.
+        const across = last && last.kind !== 'banner' && b.kind !== 'banner'
+            && b.start < spans.start.length && spans.start[b.start] <= last.end;
+        if (across) {
             last.end = b.end;
-            last.anchor = b.anchor;
+            // The first beat names the merge (its caption, its seat's dwell); a run of one kind
+            // and seat reads as its last record, as buildBeats' own runs do.
+            if (last.kind === b.kind && last.seat === b.seat) last.anchor = b.anchor;
+            else if (last.seat !== b.seat) last.seat = undefined;
             continue;
         }
         out.push({ ...b, index: out.length });

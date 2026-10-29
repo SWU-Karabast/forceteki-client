@@ -12,7 +12,7 @@ import { ReplayRefusedError, skippedSectionList } from '@/app/_utils/swupgnFileI
  */
 export function replayUrl(id: string, current: { get(k: string): string | null }): string {
     const keep = new URLSearchParams();
-    for (const k of ['t', 'from', 'to']) {
+    for (const k of ['t', 'from', 'to', 'g']) {
         const v = current.get(k);
         if (v != null) keep.set(k, v);
     }

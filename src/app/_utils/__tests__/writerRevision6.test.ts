@@ -5,7 +5,7 @@ import { parse, fold, foldFrames, normalizeEvents, indexResolver, render, type G
 import { adaptState } from '../swupgnBoardAdapter';
 import { fileIssues } from '../swupgnFileIssues';
 import { buildMoveList, isNumberedAction } from '../swupgnMoves';
-import { buildBeats, beatAt, playbackStep } from '../replayBeats';
+import { buildBeats, beatAt, chapterMarks, playbackStep } from '../replayBeats';
 import { groupsByAdjacency } from '../swupgnWriter';
 import { storyLineTargets, storySeekIndex } from '../storySeek';
 import { frameAction } from '../replayAction';
@@ -137,6 +137,18 @@ describe('a simul group is one instant (§10.2)', () => {
         for (const b of beats) expect(settle(spans, b.end)).toBe(b.end);
         expect(beats.map((b) => [b.start, b.end])).toEqual([[0, 0], [1, 2], [3, 3]]);
         expect(beats.map((b) => b.index)).toEqual([0, 1, 2]);
+        // Two seats' draws: the first beat names it, and it is neither seat's.
+        expect(beats[1].anchor).toBe(1);
+        expect(beats[1].seat).toBeUndefined();
+    });
+
+    // Value: protects=a careless simul span over a ROUND_START never folds the banner, so the round keeps its chapter mark; fails_when=alignBeats merges across banner beats; why_new=red team traced a lost round tick; seam=none; no_claim=scrubbing inside the span
+    it('never folds a banner beat, even under a span that covers it', () => {
+        const ev = (seq: string, t: string, simul?: string) => ({ seq, t, p: 1, round: 2, ...(simul ? { simul } : {}) }) as unknown as GameEvent;
+        const events = [ev('R1.A.1', 'PASS', 'x'), ev('R2.start', 'ROUND_START', 'x'), ev('R2.A.1', 'PASS')];
+        const beats = alignBeats(buildBeats(events), simulSpans(events));
+        expect(beats.map((b) => b.kind)).toContain('banner');
+        expect(chapterMarks(beats, events).map((m) => m.kind)).toContain('round');
     });
 
     it.each(REAL_GAMES)('%s: aligning the beats changes nothing on a real game', (name) => {

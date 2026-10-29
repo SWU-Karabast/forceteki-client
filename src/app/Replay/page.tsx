@@ -246,8 +246,8 @@ export default function ReplayPage() {
         setLoadError(null);
         // A link's moment (t/from/to) is for the replay it names: it applies to the dropped
         // file when that file is the one the link's id was hashed from (or there is no id), or
-        // when every seq the link names is in it (the reserialized download with notes).
-        const linked = !replayId || linkRefsFound(doc.events, [tParam, clipStart, clipEnd])
+        // when it is the game the link names and has every seq it names (the download with notes).
+        const linked = !replayId || linkRefsFound(searchParams.get('g'), doc.header, doc.events, [tParam, clipStart, clipEnd])
             || replayId === await generateReplayId(doc.header, content);
         if (seq !== loadSeq.current) return;
         show({ id: null, doc, linked });

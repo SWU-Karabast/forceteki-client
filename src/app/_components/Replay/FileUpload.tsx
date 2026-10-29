@@ -30,6 +30,8 @@ const FileUpload: React.FC<IFileUploadProps> = ({ onReplayLoaded }) => {
 
         if (file.size > MAX_FILE_SIZE) {
             fail(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max is ${MAX_FILE_SIZE / 1024 / 1024} MB.`);
+            // This pick is the current one, so it owns the spinner an older, slower pick left on.
+            setLoading(false);
             return;
         }
 

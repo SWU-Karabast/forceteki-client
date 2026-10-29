@@ -60,9 +60,12 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
         if (!replayId) setSnack('Not saved in this browser, so a link would not open this replay');
         return !!replayId;
     };
+    // The GameId rides along so a recipient's reserialized copy (the download with notes) still
+    // matches the link's moment; its bytes no longer hash to the id.
+    const linkBase = () => `${window.location.origin}/Replay?id=${encodeURIComponent(replayId!)}${header.gameId ? `&g=${encodeURIComponent(String(header.gameId))}` : ''}`;
     const shareMoment = () => {
         if (!linkable()) return;
-        const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
+        const base = linkBase();
         // Share the frame's `seq`, not its index: indices shift if the reader's set of
         // dropped records changes, seqs don't.
         copy(`${base}&t=${encodeURIComponent(String(events[currentIndex]?.seq ?? currentIndex))}`,
@@ -70,7 +73,7 @@ const ReplayPanel: React.FC<IReplayPanelProps> = ({ collapsed, setCollapsed }) =
     };
     const copyClipLink = () => {
         if (!clip || !linkable()) return;
-        const base = `${window.location.origin}/Replay?id=${replayId ?? ''}`;
+        const base = linkBase();
         // Each end as its record's `seq`, like shareMoment: indices shift, seqs don't.
         const ref = (i: number) => encodeURIComponent(String(events[i]?.seq ?? i));
         copy(`${base}&from=${ref(clip.start)}&to=${ref(clip.end)}`,
