@@ -12,12 +12,14 @@ import {
     Button, Checkbox, FormControlLabel
 } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
+import { DiscordInviteUrl } from '@/app/_constants/constants';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import {
     IPlayerReportDialogProps,
     IReportTypeConfig,
     PlayerReportType
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { getPlayerReportWarnings } from './PlayerReportWarnings';
 
 const REPORT_TYPES: IReportTypeConfig[] = [
     {
@@ -53,6 +55,7 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
 
     const [selectedReportType, setSelectedReportType] = useState<PlayerReportType | null>(null);
     const [description, setDescription] = useState('');
+    const reportWarnings = getPlayerReportWarnings(description, selectedReportType);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [disableChat, setDisableChat] = useState(true);
@@ -341,6 +344,29 @@ const PlayerReportDialog: React.FC<IPlayerReportDialogProps> = ({
                                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'white' }}>
                                     Describe what happened:
                                 </Typography>
+
+                                <Box aria-live="polite" sx={{ mb: reportWarnings.length > 0 ? '24px' : 0 }}>
+                                    {reportWarnings.map((warning) => (
+                                        <Box
+                                            key={warning.id}
+                                            sx={{
+                                                color: '#ef5350',
+                                                fontSize: 'calc(0.75rem + 1pt)',
+                                                '&:not(:last-child)': { mb: '16px' },
+                                            }}
+                                        >
+                                            <Typography sx={{ color: 'inherit', fontSize: 'inherit', mb: '8px' }}>
+                                                {warning.message}
+                                            </Typography>
+                                            <Typography sx={{ color: 'inherit', fontSize: 'inherit', mb: 0 }}>
+                                                Feel free to raise any concerns on our{' '}
+                                                <Link href={DiscordInviteUrl} target="_blank" rel="noopener noreferrer">
+                                                    Discord
+                                                </Link>.
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                </Box>
 
                                 <TextField
                                     label={requiresDescription ? 'Description (required)' : 'Description (optional)'}
