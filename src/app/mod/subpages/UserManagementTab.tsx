@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Box, Checkbox, FormControlLabel, MenuItem, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -16,18 +16,28 @@ import {
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
-import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
-import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, generateResetUsername, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel, isResetUsername } from '@/app/_utils/ModerationUtils';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
+import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
+import {
+    FORCE_RENAME_BLOCKED_MESSAGE,
+    getNewUsernameError,
+    MOD_ACTION_HELP_TEXT,
+    pickResetUsername,
+    submitModActionAsync,
+} from '@/app/_utils/modActionSubmission';
 
-const actionHelpText: Partial<Record<ModActionType, string>> = {
-    [ModActionType.Rename]: 'The player must choose a new username themselves the next time they log in.',
-    [ModActionType.ChangeUsername]: 'Sets the username directly. Resolves a pending Force Rename and does not lift Block Username Changes.',
-    [ModActionType.UsernameChangesBlocked]: 'The player can no longer change their own username and must request changes from moderators.',
-};
+interface IUserManagementTabProps {
 
-const forceRenameBlockedMessage = 'Force Rename is unavailable while username changes are blocked. Use Change Username instead.';
+    /** Search to run on mount or whenever it changes, e.g. when a report opens a player's profile */
+    searchRequest?: { query: string; requestId: number } | null;
 
-const UserManagementTab: React.FC = () => {
+    /** Called once the search request ran, so returning to this tab later does not repeat it */
+    onSearchRequestHandled?: () => void;
+}
+
+const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, onSearchRequestHandled }) => {
+    const dateFormat = useDateFormat();
+
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
     const [searchLoading, setSearchLoading] = useState(false);
@@ -64,15 +74,16 @@ const UserManagementTab: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const trimmedNewUsername = newUsername.trim();
-    const newUsernameError = !modActionDefinitions[actionType].requiresNewUsername || !trimmedNewUsername
-        ? null
-        : validateDiscordUsername(trimmedNewUsername)
-            ?? (trimmedNewUsername === selectedPlayer?.username ? 'The player already has this username.' : null);
+    const newUsernameError = modActionDefinitions[actionType].requiresNewUsername
+        ? getNewUsernameError(newUsername, selectedPlayer?.username)
+        : null;
     const isForceRenameBlocked = actionType === ModActionType.Rename && !!selectedPlayer?.activeUsernameChangesBlockedId;
 
     // ==================== Handlers ====================
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) return;
+    const handleSearch = () => runSearch(searchQuery);
+
+    const runSearch = async (query: string) => {
+        if (!query.trim()) return;
 
         setSearchLoading(true);
         setSearchError(null);
@@ -83,7 +94,7 @@ const UserManagementTab: React.FC = () => {
         setSuccessMessage(null);
 
         try {
-            const result = await ServerApiService.findUserAsync(searchQuery.trim());
+            const result = await ServerApiService.findUserAsync(query.trim());
             setPlayers(result.players);
             setModActions(result.modActions || []);
             setUsernameChanges(result.usernameChanges || []);
@@ -115,6 +126,16 @@ const UserManagementTab: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        if (searchRequest?.query) {
+            setSearchQuery(searchRequest.query);
+            runSearch(searchRequest.query);
+            onSearchRequestHandled?.();
+        }
+        // runSearch is recreated every render; only a new request should trigger a search
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchRequest?.requestId]);
+
     const getDurationInDays = (): number => {
         const value = parseInt(durationValue);
         if (!value || value <= 0) return 0;
@@ -125,7 +146,7 @@ const UserManagementTab: React.FC = () => {
         if (!selectedPlayer) return;
 
         if (isForceRenameBlocked) {
-            setSearchError(forceRenameBlockedMessage);
+            setSearchError(FORCE_RENAME_BLOCKED_MESSAGE);
             return;
         }
 
@@ -138,9 +159,7 @@ const UserManagementTab: React.FC = () => {
             return;
         }
 
-        const resetRequested = definition.supportsUsernameReset && resetUsername;
-        // A player who already has a reset name keeps it instead of being given a second one
-        const resetName = resetRequested && !isResetUsername(selectedPlayer.username) ? generateResetUsername() : undefined;
+        const resetName = pickResetUsername(actionType, resetUsername, selectedPlayer.username);
 
         const actionMessages: Record<ModActionType, string> = {
             [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} for ${durationValue} ${durationUnit.toLowerCase()}. Are you sure?`,
@@ -163,41 +182,18 @@ const UserManagementTab: React.FC = () => {
                 setSearchError(null);
                 let submissionMessage: string | undefined;
                 try {
-                    const result = await ServerApiService.submitModActionAsync(
-                        selectedPlayer.id,
+                    const result = await submitModActionAsync({
+                        playerId: selectedPlayer.id,
+                        currentUsername: selectedPlayer.username,
                         actionType,
-                        note.trim(),
-                        definition.requiresDuration ? durationDays : undefined,
-                        {
-                            newUsername: definition.requiresNewUsername ? trimmedNewUsername : undefined,
-                        },
-                    );
-                    let submissionSucceeded = result.success;
+                        note: note.trim(),
+                        durationDays,
+                        newUsername: trimmedNewUsername,
+                        resetRequested: resetUsername,
+                        resetName,
+                    });
+                    const submissionSucceeded = result.success;
                     submissionMessage = result.message;
-                    if (result.success && resetRequested) {
-                        if (!resetName) {
-                            submissionMessage += ` The username is already '${selectedPlayer.username}', so no username update was needed.`;
-                        } else {
-                            try {
-                                const resetResult = await ServerApiService.submitModActionAsync(
-                                    selectedPlayer.id,
-                                    ModActionType.ChangeUsername,
-                                    note.trim(),
-                                    undefined,
-                                    { newUsername: resetName },
-                                );
-                                submissionSucceeded = resetResult.success;
-                                submissionMessage += ` ${resetResult.message}`;
-                                if (!resetResult.success) {
-                                    submissionMessage += ' The username-change restriction remains in place. Use Change Username to retry if needed.';
-                                }
-                            } catch (error) {
-                                submissionSucceeded = false;
-                                const failure = error instanceof Error ? error.message : 'Failed to update the username';
-                                submissionMessage += ` The username update failed: ${failure}. The username-change restriction remains in place. Use Change Username to retry.`;
-                            }
-                        }
-                    }
                     if (submissionSucceeded) {
                         setSuccessMessage(submissionMessage);
                     } else {
@@ -463,7 +459,7 @@ const UserManagementTab: React.FC = () => {
                                                 Last active:
                                             </Typography>
                                             <Typography sx={{ color: 'white', fontSize: '0.875rem' }}>
-                                                {formatDate(player.lastLogin)}
+                                                {formatDate(player.lastLogin, dateFormat)}
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -495,13 +491,13 @@ const UserManagementTab: React.FC = () => {
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Last login:</Typography>
                                     <Typography sx={styles.userDetailValue}>
-                                        {formatDate(selectedPlayer.lastLogin)}
+                                        {formatDate(selectedPlayer.lastLogin, dateFormat)}
                                     </Typography>
                                 </Box>
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Created:</Typography>
                                     <Typography sx={styles.userDetailValue}>
-                                        {formatDate(selectedPlayer.createdAt)}
+                                        {formatDate(selectedPlayer.createdAt, dateFormat)}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -635,14 +631,14 @@ const UserManagementTab: React.FC = () => {
                                 />
                             )}
 
-                            {actionHelpText[actionType] && (
+                            {MOD_ACTION_HELP_TEXT[actionType] && (
                                 <Typography sx={{
                                     color: isForceRenameBlocked ? '#ffd54f' : '#B0B0B0',
                                     fontWeight: isForceRenameBlocked ? 700 : 400,
                                     fontSize: '0.75rem',
                                     mb: '0.5rem',
                                 }}>
-                                    {isForceRenameBlocked ? forceRenameBlockedMessage : actionHelpText[actionType]}
+                                    {isForceRenameBlocked ? FORCE_RENAME_BLOCKED_MESSAGE : MOD_ACTION_HELP_TEXT[actionType]}
                                 </Typography>
                             )}
 
@@ -710,7 +706,7 @@ const UserManagementTab: React.FC = () => {
                                                             }}
                                                         />
                                                         <Typography sx={{ color: isModDrivenChange ? '#ffd54f' : 'white', fontSize: '0.85rem', mb:'0px' }}>
-                                                            {getUsernameChangeLabel(change)}
+                                                            {getUsernameChangeLabel(change, dateFormat)}
                                                         </Typography>
                                                     </Box>
                                                 </Box>
@@ -768,7 +764,7 @@ const UserManagementTab: React.FC = () => {
                                                         }}
                                                     />
                                                     <Typography sx={{ color: '#ffd54f', fontSize: '0.85rem', mb:'0px', minWidth: 0, overflowWrap: 'anywhere' }}>
-                                                        {getModActionEntryLabel(entry, selectedPlayer)}
+                                                        {getModActionEntryLabel(entry, selectedPlayer, dateFormat)}
                                                     </Typography>
                                                     {status.label && (
                                                         <Typography sx={styles.statusBadge(status.color)}>
@@ -828,7 +824,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Started
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.startedAt)}
+                                                                    {formatDate(action.startedAt, dateFormat)}
                                                                 </Typography>
                                                             </Box>
                                                         )}
@@ -838,7 +834,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Expires
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.expiresAt)}
+                                                                    {formatDate(action.expiresAt, dateFormat)}
                                                                 </Typography>
                                                             </Box>
                                                         )}
@@ -860,7 +856,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Cancelled
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.cancelledAt)} by {action.cancelledByUsername}
+                                                                    {formatDate(action.cancelledAt, dateFormat)} by {action.cancelledByUsername}
                                                                 </Typography>
                                                             </Box>
                                                         )}

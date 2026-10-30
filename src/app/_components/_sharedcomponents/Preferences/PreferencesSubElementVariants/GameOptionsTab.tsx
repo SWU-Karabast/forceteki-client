@@ -11,7 +11,8 @@ import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions'
 import { CARD_IMAGE_LOCALE_LABELS, CardImageLocale, SUPPORTED_CARD_IMAGE_LOCALES } from '@/app/_utils/s3Utils';
 import { loadPreferencesFromLocalStorage } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useCardImageLocaleContext } from '@/app/_contexts/CardImageLocale.context';
-import { TimerVisibility } from '@/app/_contexts/UserTypes';
+import { DateFormat, TimerVisibility } from '@/app/_contexts/UserTypes';
+import { DEFAULT_DATE_FORMAT, formatDateTime } from '@/app/_utils/dateFormatUtils';
 import { DEFAULT_TIMER_VISIBILITY, useTimerVisibilityContext } from '@/app/_contexts/TimerVisibility.context';
 import TimerPreview from '@/app/_components/_sharedcomponents/Timer/TimerPreview';
 
@@ -39,6 +40,11 @@ const TIMER_VISIBILITY_OPTIONS: Array<{ value: TimerVisibility, label: string, d
     },
 ];
 
+const DATE_FORMAT_OPTIONS: Array<{ value: DateFormat, label: string }> = [
+    { value: DateFormat.MonthFirst, label: 'MM/DD/YYYY' },
+    { value: DateFormat.DayFirst, label: 'DD/MM/YYYY' },
+];
+
 function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' | 'homePage', setHasNewChanges?: (has: boolean) => void }) {
     const { user, updateUserPreferences } = useUser();
     const { setLocale } = useCardImageLocaleContext();
@@ -57,6 +63,9 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
 
     const [timerVisibility, setTimerVisibility] = useState<TimerVisibility>(DEFAULT_TIMER_VISIBILITY);
     const [originalTimerVisibility, setOriginalTimerVisibility] = useState<TimerVisibility>(DEFAULT_TIMER_VISIBILITY);
+
+    const [dateFormat, setDateFormat] = useState<DateFormat>(DEFAULT_DATE_FORMAT);
+    const [originalDateFormat, setOriginalDateFormat] = useState<DateFormat>(DEFAULT_DATE_FORMAT);
 
     const [hasChanges, setHasChanges] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -92,15 +101,25 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
         }
         setCardLanguage(currentLanguage);
         setOriginalCardLanguage(currentLanguage);
+
+        let currentDateFormat: DateFormat;
+        if (user?.preferences?.gameOptions?.dateFormat) {
+            currentDateFormat = user.preferences.gameOptions.dateFormat;
+        } else {
+            currentDateFormat = loadPreferencesFromLocalStorage().gameOptions?.dateFormat
+                ?? DEFAULT_DATE_FORMAT;
+        }
+        setDateFormat(currentDateFormat);
+        setOriginalDateFormat(currentDateFormat);
     }, [user]);
 
     useEffect(() => {
-        const unsaved = muteChatEnabled !== originalMuteChat || cardLanguage !== originalCardLanguage || timerVisibility !== originalTimerVisibility || autoSingleTargetEnabled !== originalAutoSingleTarget;
+        const unsaved = muteChatEnabled !== originalMuteChat || cardLanguage !== originalCardLanguage || timerVisibility !== originalTimerVisibility || autoSingleTargetEnabled !== originalAutoSingleTarget || dateFormat !== originalDateFormat;
         setHasChanges(unsaved);
         if (setHasNewChanges) {
             setHasNewChanges(unsaved);
         }
-    }, [muteChatEnabled, originalMuteChat, cardLanguage, originalCardLanguage, timerVisibility, originalTimerVisibility, autoSingleTargetEnabled, originalAutoSingleTarget, setHasNewChanges]);
+    }, [muteChatEnabled, originalMuteChat, cardLanguage, originalCardLanguage, timerVisibility, originalTimerVisibility, autoSingleTargetEnabled, originalAutoSingleTarget, dateFormat, originalDateFormat, setHasNewChanges]);
 
     const handleMuteChatChange = (value: boolean) => {
         setMuteChatEnabled(value);
@@ -122,6 +141,11 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
         setSaveStatus(SaveStatus.NoChange);
     };
 
+    const handleDateFormatChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setDateFormat(event.target.value as DateFormat);
+        setSaveStatus(SaveStatus.NoChange);
+    };
+
     const handleSave = async () => {
         setIsSaving(true);
         setSaveStatus(SaveStatus.NoChange);
@@ -130,13 +154,14 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
         try {
             const result = await savePreferencesGeneric(
                 user,
-                { gameOptions: { muteChat: muteChatEnabled, cardLanguage, timerVisibility, autoResolve: { singleTarget: autoSingleTargetEnabled } } },
+                { gameOptions: { muteChat: muteChatEnabled, cardLanguage, timerVisibility, dateFormat, autoResolve: { singleTarget: autoSingleTargetEnabled } } },
                 updateUserPreferences
             );
             if (result.success) {
                 setOriginalMuteChat(muteChatEnabled);
                 setOriginalCardLanguage(cardLanguage);
                 setOriginalAutoSingleTarget(autoSingleTargetEnabled);
+                setOriginalDateFormat(dateFormat);
                 // The server reads autoSingleTarget when the game is created, so a mid-game change
                 // must also be pushed to the running game to take effect this game.
                 if (autoSingleTargetChanged && variant === 'gameBoard') {
@@ -341,6 +366,33 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                                 <Box sx={styles.radioPreview}>
                                     <TimerPreview visibility={opt.value} />
                                 </Box>
+                            </Box>
+                        ))}
+                    </RadioGroup>
+                </FormControl>
+            </Box>
+
+            <Box sx={styles.functionContainer}>
+                <Typography sx={styles.typographyContainer} variant={'h2'}>Date Format</Typography>
+                <Divider sx={{ mb: '20px' }} />
+                <Typography sx={{ mb: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
+                    Choose whether dates show the month or the day first.
+                </Typography>
+                <FormControl component="fieldset">
+                    <RadioGroup
+                        value={dateFormat}
+                        onChange={handleDateFormatChange}
+                    >
+                        {DATE_FORMAT_OPTIONS.map((opt) => (
+                            <Box key={opt.value} sx={styles.radioRowText}>
+                                <FormControlLabel
+                                    value={opt.value}
+                                    control={<Radio sx={styles.radio} />}
+                                    label={<Typography sx={styles.radioLabel}>{opt.label}</Typography>}
+                                />
+                                <Typography sx={styles.radioDescription}>
+                                    For example: {formatDateTime(new Date(), opt.value)}
+                                </Typography>
                             </Box>
                         ))}
                     </RadioGroup>
