@@ -20,7 +20,7 @@ export const savePreferencesGeneric = async (
     updateUserPreferences: (preferences: IPreferences) => void
 ): Promise<{ success: boolean, updatedPreferences: IPreferences }> => {
     if (user) {
-        const success = await savePreferencesToServer(user, partialPreferences);
+        const success = await savePreferencesToServer(partialPreferences);
 
         if (success) {
             // Deep merge for nested objects like sound and cosmetics
