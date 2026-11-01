@@ -72,7 +72,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 /**
  * The identity hint to send with a request. A signed-in user is identified by their session cookie, and the
  * server works out the rest from its own records, so only the id and username are included. These are what
- * an anonymous user and the local dev users are identified by.
+ * an anonymous user is identified by.
  * @param {Object} user - Optional user object
  * @return {Object} The user object to use in payloads
  */
@@ -706,7 +706,6 @@ const removeUndefinedValues = <T>(obj: T): T => {
 };
 
 export const savePreferencesToServer = async (
-    user: IUser,
     preferences: IPreferences
 ): Promise<boolean> => {
     try {
@@ -717,7 +716,7 @@ export const savePreferencesToServer = async (
             preferences: cleanedPreferences
         };
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/preferences`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/preferences`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

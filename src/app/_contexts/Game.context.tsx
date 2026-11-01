@@ -306,7 +306,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const isSpectatorMode = spectatorParam === 'true';
         setIsSpectator(isSpectatorMode);
         const token = session?.jwtToken;
-        // a signed-in session is identified by its token alone; only anonymous and dev users send an id
+        // a signed-in session (the local dev users included) is identified by its token alone; only anonymous users send an id
         const identityHint = token
             ? null
             : user
