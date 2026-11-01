@@ -10,7 +10,8 @@
 		"lint": "npx tsc --noemit && next lint",
 		"lint:fix": "npx tsc --noemit && next lint --fix",
 		"storybook": "storybook dev -p 6006 --no-version-updates",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"states": "node scripts/states.mjs"
 	},
 	"dependencies": {
 		"@aws-sdk/client-dynamodb": "^3.917.0",

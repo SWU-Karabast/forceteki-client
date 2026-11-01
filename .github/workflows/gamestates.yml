@@ -1,0 +1,29 @@
+name: Game states in sync
+# Its own workflow so editing the PR description (to link a backend PR) re-runs only this check
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+    branches:
+      - main
+  merge_group:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  game-states:
+    name: Game states in sync
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      # the checkout is a merge commit; depth 2 brings its first parent, the base the PR is measured against
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.x"
+      - run: node scripts/checkStates.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

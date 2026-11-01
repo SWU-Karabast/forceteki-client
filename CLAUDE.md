@@ -21,8 +21,9 @@ npm run storybook    # component workbench on :6006
 docker compose up    # Adobe S3Mock on :9090, only needed for local cosmetics upload work
 ```
 
-Node 22.x. There is **no test framework** in this repo — verification is `npm run lint`, `npm run build`,
-and manual play against a local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build only.
+Node 22.x. There is **no test framework** in this repo yet — verification is `npm run lint`, `npm run build`,
+and manual play against a local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build;
+`.github/workflows/gamestates.yml` runs the game states sync check below.
 
 ## Architecture
 
@@ -103,6 +104,25 @@ no-op in development.
 `ServerSettings.context` polls the backend every 20s. `gamesEnabled` defaults to **false**, so an
 unreachable backend reads as maintenance; gate maintenance UI on `hasLoaded` too, or every page load
 flashes it. The client-side gate is presentation only — the server 503s anyway.
+
+### Game state fixtures
+
+`src/__fixtures__/gamestates/` is a committed copy of the game states forceteki sends, taken from the
+snapshots forceteki commits in `test/stateSnapshots/` (`<scenario>/<step>.<player1|player2|spectator>.json`).
+`manifest.json` records the backend ref and commit the copy came from. Use them to test the board against
+what the server really sends.
+
+- `npm run states -- --ref main|<branch>|pr/<number>` replaces the copy. A `pr/<number>` ref copies GitHub's
+  merge of that backend PR into current main, which is what main will hold once it merges. `--local [path]`
+  copies a forceteki working tree (default `../forceteki`) to try changes before pushing; CI rejects it.
+- Never edit the copy by hand, including to resolve a merge conflict: merge main, then re-run `npm run states`.
+- A client PR paired with a backend PR that changes snapshots puts `Backend: forceteki#<number>` in its
+  description and runs `npm run states -- --ref pr/<number>`. Merge the backend PR first, then the client PR.
+- After a backend PR that changes snapshots merges with no client PR, open a client PR that only runs
+  `npm run states -- --ref main`.
+- The `Game states in sync` check (`scripts/checkStates.mjs`) compares the copy with the linked backend PR,
+  or backend main. It fails only when this PR changed the copy and the copy is wrong; a copy that is merely
+  behind passes with a warning saying whether to update from main or that a sync PR is needed.
 
 ## Conventions
 
