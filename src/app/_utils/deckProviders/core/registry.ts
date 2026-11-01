@@ -17,6 +17,7 @@ import { SwumetastatsDeckProvider } from '../SwumetastatsDeckProvider';
 import { SwUnlimitedDbDeckProvider } from '../SwUnlimitedDbDeckProvider';
 import { SwustatsDeckProvider } from '../SwustatsDeckProvider';
 import { SwupediaDeckProvider } from '../SwupediaDeckProvider';
+import { SwuteamDeckProvider } from '../SwuteamDeckProvider';
 import { buildTagStyle } from './tagStyle';
 import { DeckFetchError, DeckFetchErrorReason } from './types';
 
@@ -49,6 +50,7 @@ const providers: readonly DeckProviderBase[] = [
     new HoloscanDeckProvider(),
     new SwupediaDeckProvider(),
     new SithvaultDeckProvider(),
+    new SwuteamDeckProvider(),
 ];
 
 /**
