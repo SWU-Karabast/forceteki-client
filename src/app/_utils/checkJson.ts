@@ -229,6 +229,7 @@ export const parseInputAsDeckData = (input: string): {
         input.includes('swupedia.com') ||
         input.includes('sithvault.com') ||
         input.includes('swuteam.link') ||
+        input.includes('swu-competitivehub.com') ||
         input.includes('melee.gg')
     ) {
         return { type: 'url', data: null };
