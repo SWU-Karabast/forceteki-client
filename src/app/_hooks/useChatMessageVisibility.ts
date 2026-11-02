@@ -2,7 +2,7 @@ import { RefObject, useEffect } from 'react';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 
 interface IUseChatMessageVisibilityOptions {
-    chatBoxRef: RefObject<HTMLDivElement>;
+    chatBoxRef: RefObject<HTMLDivElement | null>;
     chatHistory: IChatEntry[];
     isVisible: boolean;
     unreadMessageIndices?: ReadonlySet<number>;

@@ -220,7 +220,7 @@ const DeckDetails: React.FC = () => {
         }
     };
 
-    const fetchDeckFromServer = async (rawDeckId: string | string[]) => {
+    const fetchDeckFromServer = async (rawDeckId: string | string[] | undefined) => {
         if (rawDeckId) {
             // we need to check if the deck is still available
             const deckId = Array.isArray(rawDeckId) ? rawDeckId[0] : rawDeckId;
