@@ -11,6 +11,7 @@ import { ProtectThePodDeckProvider } from '../ProtectThePodDeckProvider';
 import { SithvaultDeckProvider } from '../SithvaultDeckProvider';
 import { SwubaseDeckProvider } from '../SwubaseDeckProvider';
 import { SwucardhubDeckProvider } from '../SwucardhubDeckProvider';
+import { SwuCompetitiveHubDeckProvider } from '../SwuCompetitiveHubDeckProvider';
 import { SwudbDeckProvider } from '../SwudbDeckProvider';
 import { SwuforgeDeckProvider } from '../SwuforgeDeckProvider';
 import { SwumetastatsDeckProvider } from '../SwumetastatsDeckProvider';
@@ -51,6 +52,7 @@ const providers: readonly DeckProviderBase[] = [
     new SwupediaDeckProvider(),
     new SithvaultDeckProvider(),
     new SwuteamDeckProvider(),
+    new SwuCompetitiveHubDeckProvider(),
 ];
 
 /**
