@@ -12,6 +12,9 @@ import { formatDate } from '@/app/_utils/ModerationUtils';
 import { getOutcomeOption, REPORT_OUTCOME_OPTIONS } from '@/app/_utils/playerReportUtils';
 import { IReportClosePanelProps } from './reportTypes';
 
+/** Mirrors the server's limit for closing notes */
+const MAX_CLOSING_NOTE_LENGTH = 2000;
+
 /**
  * Closing a ticket records how it was resolved. Closed tickets show that outcome and can be reopened.
  */
@@ -36,21 +39,17 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
         if (!outcome) {
             return;
         }
-        const result = await ServerApiService.closePlayerReportAsync(report.id, outcome, closingNote.trim() || undefined);
-        if (result.success) {
-            onClosed();
-        } else {
-            onError(result.message ?? 'Failed to close ticket');
-        }
+        await ServerApiService.updatePlayerReportStatusAsync(report.id, {
+            status: PlayerReportStatus.Closed,
+            outcome,
+            closingNote: closingNote.trim() || undefined,
+        });
+        onClosed();
     });
 
     const handleReopen = () => runAsync(async () => {
-        const result = await ServerApiService.reopenPlayerReportAsync(report.id);
-        if (result.success) {
-            onReopened();
-        } else {
-            onError(result.message ?? 'Failed to reopen ticket');
-        }
+        await ServerApiService.updatePlayerReportStatusAsync(report.id, { status: PlayerReportStatus.Open });
+        onReopened();
     });
 
     // ----------------Styles----------------//
@@ -98,7 +97,7 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
         const closedOutcome = getOutcomeOption(report.outcome);
         return (
             <Box sx={styles.closedSummary}>
-                <Typography sx={styles.title}>Ticket closed</Typography>
+                <Typography sx={styles.title}>Ticket Closed</Typography>
                 <Typography sx={{ ...styles.summaryText, color: closedOutcome?.color ?? 'white', fontWeight: 600 }}>
                     {closedOutcome?.label ?? report.outcome}
                 </Typography>
@@ -107,7 +106,7 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
                 </Typography>
                 {report.closingNote && <Typography sx={styles.summaryText}>Note: {report.closingNote}</Typography>}
                 <Box sx={styles.footer}>
-                    <PreferenceButton variant="standard" text="Reopen ticket" disabled={submitting} buttonFnc={handleReopen} />
+                    <PreferenceButton variant="standard" text="Reopen Ticket" disabled={submitting} buttonFnc={handleReopen} />
                 </Box>
             </Box>
         );
@@ -115,7 +114,7 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
 
     return (
         <Box>
-            <Typography sx={styles.title}>Close ticket</Typography>
+            <Typography sx={styles.title}>Close Ticket</Typography>
             <RadioGroup row value={outcome} onChange={(e) => setOutcome(e.target.value as PlayerReportOutcome)} sx={styles.radioGroup}>
                 {REPORT_OUTCOME_OPTIONS.map((option) => (
                     <FormControlLabel
@@ -132,14 +131,18 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
             </RadioGroup>
             <StyledTextField
                 fullWidth
+                multiline
+                minRows={1}
                 placeholder="Closing note (optional)"
                 value={closingNote}
+                inputProps={{ maxLength: MAX_CLOSING_NOTE_LENGTH }}
+                helperText={closingNote.length > MAX_CLOSING_NOTE_LENGTH * 0.9 ? `${closingNote.length}/${MAX_CLOSING_NOTE_LENGTH}` : undefined}
                 onChange={(e) => setClosingNote(e.target.value)}
             />
             <Box sx={styles.footer}>
                 <PreferenceButton
                     variant="concede"
-                    text={submitting ? 'Closing…' : 'Close ticket'}
+                    text={submitting ? 'Closing…' : 'Close Ticket'}
                     disabled={!outcome || submitting}
                     buttonFnc={handleClose}
                 />

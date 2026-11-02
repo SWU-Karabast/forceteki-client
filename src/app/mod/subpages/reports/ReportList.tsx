@@ -1,61 +1,85 @@
-import React, { useMemo, useState } from 'react';
-import { Box, CircularProgress, MenuItem, Tooltip, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, CircularProgress, FormControlLabel, IconButton, Menu, MenuItem, Switch, Tooltip, Typography } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
+import { REPORT_TYPES } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import {
     IPlayerReport,
+    ModActionType,
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate } from '@/app/_utils/ModerationUtils';
 import {
-    FREQUENT_FALSE_REPORTER_THRESHOLD,
     formatTimeAgo,
     getOffenseLabel,
     getOutcomeOption,
+    OPEN_TICKET_ACCENT,
+    OPEN_TICKET_COLOR,
+    OPEN_TICKET_ROW_BACKGROUND,
 } from '@/app/_utils/playerReportUtils';
-import { IReportListProps } from './reportTypes';
+import { ALL_OFFENSES, IReportListProps } from './reportTypes';
+import PlayerPenaltyTooltip from './PlayerPenaltyTooltip';
+import { REPORT_QUICK_ACTION_LABELS } from './ReportQuickActionDialog';
 
-enum SortOrder {
-    OldestFirst = 'oldestFirst',
-    NewestFirst = 'newestFirst',
-}
+const COLUMNS = '80px 110px 1fr 1fr 1fr 2fr 1fr 40px';
 
-const ALL_OFFENSES = 'all';
-
-const ReportList: React.FC<IReportListProps> = ({ status, reports, loading, error, hasMore, onOpenReport, onLoadMore }) => {
+/**
+ * The report queue: open and closed tickets in one list, newest first, filtered and paged by the server. Each entry
+ * previews the reporter's description, so noise can be closed right from the list through the entry's menu.
+ */
+const ReportList: React.FC<IReportListProps> = ({
+    reports,
+    total,
+    loading,
+    error,
+    hasMore,
+    filters,
+    onFiltersChange,
+    onOpenReport,
+    onQuickClose,
+    onQuickAction,
+    onLoadMore,
+}) => {
     const dateFormat = useDateFormat();
-    const isOpenList = status === PlayerReportStatus.Open;
-    const [sortOrder, setSortOrder] = useState<SortOrder>(isOpenList ? SortOrder.OldestFirst : SortOrder.NewestFirst);
-    const [offenseFilter, setOffenseFilter] = useState<string>(ALL_OFFENSES);
+    const [menu, setMenu] = useState<{ anchor: HTMLElement; report: IPlayerReport } | null>(null);
 
-    const offenses = useMemo(() => [...new Set(reports.map((report) => report.offense))], [reports]);
-
-    const visibleReports = useMemo(() => {
-        const sortKey = (report: IPlayerReport) => (isOpenList ? report.createdAt : report.closedAt ?? report.createdAt);
-        return reports
-            .filter((report) => offenseFilter === ALL_OFFENSES || report.offense === offenseFilter)
-            .sort((a, b) => {
-                const compared = sortKey(a).localeCompare(sortKey(b));
-                return sortOrder === SortOrder.OldestFirst ? compared : -compared;
-            });
-    }, [reports, offenseFilter, sortOrder, isOpenList]);
+    const closeMenuAnd = (action: (report: IPlayerReport) => void) => {
+        const report = menu?.report;
+        setMenu(null);
+        if (report) {
+            action(report);
+        }
+    };
 
     // ----------------Styles----------------//
-    const columns = isOpenList ? '90px 1.4fr 1fr 1fr 1fr' : '170px 1.4fr 1fr 1fr 1fr 1fr';
     const styles = {
         toolbar: {
             display: 'flex',
+            flexWrap: 'wrap' as const,
             gap: '0.75rem',
             alignItems: 'center',
             mb: '1rem',
         },
+        search: {
+            width: '260px',
+        },
         select: {
-            width: '200px',
+            width: '220px',
+        },
+        switchLabel: {
+            color: 'white',
+            '& .MuiFormControlLabel-label': { fontSize: '0.875rem' },
+        },
+        count: {
+            color: '#9e9e9e',
+            fontSize: '0.8rem',
+            ml: 'auto',
         },
         headerRow: {
             display: 'grid',
-            gridTemplateColumns: columns,
+            gridTemplateColumns: COLUMNS,
             gap: '0.75rem',
             padding: '0.5rem 0.75rem',
             color: '#9e9e9e',
@@ -65,15 +89,20 @@ const ReportList: React.FC<IReportListProps> = ({ status, reports, loading, erro
         },
         row: {
             display: 'grid',
-            gridTemplateColumns: columns,
+            gridTemplateColumns: COLUMNS,
             gap: '0.75rem',
             alignItems: 'center',
-            padding: '0.6rem 0.75rem',
+            padding: '0.4rem 0.75rem',
             borderBottom: '1px solid rgba(74, 85, 104, 0.5)',
             cursor: 'pointer',
             '&:hover': {
                 backgroundColor: 'rgba(47, 125, 182, 0.15)',
             },
+        },
+        // Ties the open tickets to the red counter on the tabs
+        openRow: {
+            backgroundColor: OPEN_TICKET_ROW_BACKGROUND,
+            boxShadow: `inset 3px 0 0 ${OPEN_TICKET_ACCENT}`,
         },
         cell: {
             color: 'white',
@@ -88,12 +117,29 @@ const ReportList: React.FC<IReportListProps> = ({ status, reports, loading, erro
             fontSize: '0.875rem',
             mb: 0,
         },
-        marker: (color: string) => ({
-            color,
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            ml: '0.4rem',
-        }),
+        description: {
+            color: '#E0E0E0',
+            fontSize: '0.85rem',
+            mb: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap' as const,
+        },
+        noDescription: {
+            color: '#7a7a7a',
+            fontSize: '0.85rem',
+            fontStyle: 'italic',
+            mb: 0,
+        },
+        tooltipText: {
+            whiteSpace: 'pre-wrap' as const,
+            fontSize: '0.8rem',
+        },
+        menuButton: {
+            color: '#B0B0B0',
+            padding: '4px',
+            '&:hover': { color: 'white' },
+        },
         empty: {
             color: '#9e9e9e',
             padding: '2rem 0.75rem',
@@ -110,103 +156,120 @@ const ReportList: React.FC<IReportListProps> = ({ status, reports, loading, erro
         },
     };
 
-    const renderReporter = (report: IPlayerReport) => (
-        <Typography sx={styles.cell}>
-            {report.reporterUsername}
-            {report.reporterPriorFalseReportCount >= FREQUENT_FALSE_REPORTER_THRESHOLD && (
-                <Tooltip title={`${report.reporterPriorFalseReportCount} earlier reports closed as false reports`}>
-                    <Box component="span" sx={styles.marker('#ffb74d')}>⚑</Box>
-                </Tooltip>
-            )}
-        </Typography>
-    );
+    const renderStatus = (report: IPlayerReport) => {
+        if (report.status === PlayerReportStatus.Open) {
+            return <Typography sx={{ ...styles.cell, color: OPEN_TICKET_COLOR, fontWeight: 700 }}>Open</Typography>;
+        }
+        const outcome = getOutcomeOption(report.outcome);
+        return <Typography sx={{ ...styles.cell, color: outcome?.color ?? 'white', fontWeight: 600 }}>{outcome?.label ?? report.outcome}</Typography>;
+    };
 
-    const renderReportedPlayer = (report: IPlayerReport) => (
-        <Typography sx={styles.cell}>
-            {report.reportedPlayerUsername}
-            {report.reportedPlayerPriorReportCount > 0 && (
-                <Tooltip title={`${report.reportedPlayerPriorReportCount} earlier reports against this player`}>
-                    <Box component="span" sx={styles.marker('#ef5350')}>⚠{report.reportedPlayerPriorReportCount}</Box>
-                </Tooltip>
-            )}
-        </Typography>
-    );
+    const renderDescription = (report: IPlayerReport) => {
+        if (!report.description.trim()) {
+            return <Typography sx={styles.noDescription}>(no description)</Typography>;
+        }
+        return (
+            <Tooltip title={<Box component="span" sx={styles.tooltipText}>{report.description}</Box>} placement="bottom-start" enterDelay={300}>
+                <Typography sx={styles.description}>{report.description}</Typography>
+            </Tooltip>
+        );
+    };
 
     return (
         <Box>
             <Box sx={styles.toolbar}>
                 <StyledTextField
-                    select
-                    label="Offense"
-                    value={offenseFilter}
-                    onChange={(e) => setOffenseFilter(e.target.value)}
-                    sx={styles.select}
-                >
-                    <MenuItem value={ALL_OFFENSES}>All</MenuItem>
-                    {offenses.map((offense) => (
-                        <MenuItem key={offense} value={offense}>{getOffenseLabel(offense)}</MenuItem>
-                    ))}
-                </StyledTextField>
+                    placeholder="Search Username"
+                    value={filters.search}
+                    onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
+                    size="small"
+                    sx={styles.search}
+                />
                 <StyledTextField
                     select
-                    label="Sort"
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                    label="Offense"
+                    value={filters.offense}
+                    onChange={(e) => onFiltersChange({ ...filters, offense: e.target.value })}
+                    size="small"
                     sx={styles.select}
                 >
-                    <MenuItem value={SortOrder.OldestFirst}>Oldest first</MenuItem>
-                    <MenuItem value={SortOrder.NewestFirst}>Newest first</MenuItem>
+                    <MenuItem value={ALL_OFFENSES}>All Offenses</MenuItem>
+                    {REPORT_TYPES.map((config) => (
+                        <MenuItem key={config.type} value={config.type}>{config.label}</MenuItem>
+                    ))}
                 </StyledTextField>
+                <FormControlLabel
+                    sx={styles.switchLabel}
+                    control={<Switch checked={filters.openOnly} onChange={(e) => onFiltersChange({ ...filters, openOnly: e.target.checked })} />}
+                    label="Open Tickets Only"
+                />
                 {loading && <CircularProgress size={20} />}
+                {!error && <Typography sx={styles.count}>{reports.length} of {total}</Typography>}
             </Box>
 
             <Box sx={styles.headerRow}>
-                <span>{isOpenList ? 'Received' : 'Closed'}</span>
+                <span>Received</span>
+                <span>Status</span>
                 <span>Offense</span>
                 <span>Reporter</span>
-                <span>Reported</span>
-                {isOpenList ? <span>Handled by</span> : <><span>Outcome</span><span>Closed by</span></>}
+                <span>Reported Player</span>
+                <span>Description</span>
+                <span>Closed By</span>
+                <span />
             </Box>
 
             {error && <Typography sx={styles.error}>{error}</Typography>}
 
-            {!loading && !error && visibleReports.length === 0 && (
+            {!loading && !error && reports.length === 0 && (
                 <Typography sx={styles.empty}>
-                    {isOpenList ? 'No open reports.' : 'No closed reports.'}
+                    {filters.openOnly ? 'No open reports.' : 'No reports.'}
                 </Typography>
             )}
 
-            {visibleReports.map((report) => {
-                const outcome = getOutcomeOption(report.outcome);
-                return (
-                    <Box key={report.id} sx={styles.row} onClick={() => onOpenReport(report)}>
-                        {isOpenList ? (
-                            <Tooltip title={formatDate(report.createdAt, dateFormat)}>
-                                <Typography sx={styles.mutedCell}>{formatTimeAgo(report.createdAt)}</Typography>
-                            </Tooltip>
-                        ) : (
-                            <Typography sx={styles.mutedCell}>{report.closedAt ? formatDate(report.closedAt, dateFormat) : ''}</Typography>
-                        )}
-                        <Typography sx={styles.cell}>{getOffenseLabel(report.offense)}</Typography>
-                        {renderReporter(report)}
-                        {renderReportedPlayer(report)}
-                        {isOpenList ? (
-                            <Typography sx={report.claimedByUsername ? styles.cell : styles.mutedCell}>
-                                {report.claimedByUsername ?? '–'}
-                            </Typography>
-                        ) : (
-                            <>
-                                <Typography sx={{ ...styles.cell, color: outcome?.color ?? 'white' }}>{outcome?.label ?? report.outcome}</Typography>
-                                <Typography sx={styles.cell}>{report.closedByUsername}</Typography>
-                            </>
-                        )}
-                    </Box>
-                );
-            })}
+            {reports.map((report) => (
+                <Box key={report.id} sx={report.status === PlayerReportStatus.Open ? { ...styles.row, ...styles.openRow } : styles.row} onClick={() => onOpenReport(report)}>
+                    <Tooltip title={formatDate(report.createdAt, dateFormat)}>
+                        <Typography sx={styles.mutedCell}>{formatTimeAgo(report.createdAt)}</Typography>
+                    </Tooltip>
+                    {renderStatus(report)}
+                    <Typography sx={styles.cell}>{getOffenseLabel(report.offense)}</Typography>
+                    <PlayerPenaltyTooltip playerId={report.reporterId} username={report.reporterUsername}>
+                        <Typography sx={styles.cell}>{report.reporterUsername}</Typography>
+                    </PlayerPenaltyTooltip>
+                    <PlayerPenaltyTooltip playerId={report.reportedPlayerId} username={report.reportedPlayerUsername}>
+                        <Typography sx={styles.cell}>{report.reportedPlayerUsername}</Typography>
+                    </PlayerPenaltyTooltip>
+                    {renderDescription(report)}
+                    <Typography sx={report.closedByUsername ? styles.cell : styles.mutedCell}>{report.closedByUsername ?? '–'}</Typography>
+                    <IconButton
+                        aria-label={`Actions for the report against ${report.reportedPlayerUsername}`}
+                        sx={styles.menuButton}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            setMenu({ anchor: event.currentTarget, report });
+                        }}
+                    >
+                        <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                </Box>
+            ))}
 
-            {hasMore && onLoadMore && (
+            <Menu anchorEl={menu?.anchor} open={!!menu} onClose={() => setMenu(null)}>
+                <MenuItem onClick={() => closeMenuAnd(onOpenReport)}>Open Ticket</MenuItem>
+                {menu?.report.status === PlayerReportStatus.Open && [
+                    <MenuItem key="warning" onClick={() => closeMenuAnd((report) => onQuickAction(report, ModActionType.Warning))}>
+                        {REPORT_QUICK_ACTION_LABELS[ModActionType.Warning]}: {menu.report.reportedPlayerUsername}
+                    </MenuItem>,
+                    <MenuItem key="mute" onClick={() => closeMenuAnd((report) => onQuickAction(report, ModActionType.Mute))}>
+                        {REPORT_QUICK_ACTION_LABELS[ModActionType.Mute]}: {menu.report.reportedPlayerUsername}
+                    </MenuItem>,
+                    <MenuItem key="close" onClick={() => closeMenuAnd(onQuickClose)}>Close with No Action</MenuItem>,
+                ]}
+            </Menu>
+
+            {hasMore && (
                 <Box sx={styles.loadMoreRow}>
-                    <PreferenceButton variant="standard" text="Load older reports" buttonFnc={onLoadMore} disabled={loading} />
+                    <PreferenceButton variant="standard" text="Load More" buttonFnc={onLoadMore} disabled={loading} />
                 </Box>
             )}
         </Box>

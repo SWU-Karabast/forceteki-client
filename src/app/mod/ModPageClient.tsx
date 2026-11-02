@@ -6,12 +6,14 @@ import CosmeticsManagerTab from './subpages/CosmeticsManagerTab';
 import UserManagementSection from './subpages/UserManagementSection';
 import { useOpenReportCount } from '@/app/_hooks/useOpenReportCount';
 import ServerControlsTab from './subpages/ServerControlsTab';
+import ModPreferencesTab from './subpages/ModPreferencesTab';
 import { useRouter } from 'next/navigation';
 
 enum ModToolsTab {
     CosmeticsManager = 0,
     UserManagement = 1,
-    ServerControls = 2,
+    ModPreferences = 2,
+    ServerControls = 3,
 }
 
 interface IModPageClientProps {
@@ -128,8 +130,9 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                     TabIndicatorProps={{ style: { display: 'none' } }}
                     sx={styles.tabContainer}
                 >
-                    <Tab label="Cosmetics Manager" sx={styles.tab} />
+                    <Tab value={ModToolsTab.CosmeticsManager} label="Cosmetics Manager" sx={styles.tab} />
                     <Tab
+                        value={ModToolsTab.UserManagement}
                         label={(
                             <Badge badgeContent={openCount ?? 0} max={99} sx={styles.badge}>
                                 User Management
@@ -137,7 +140,8 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                         )}
                         sx={styles.tab}
                     />
-                    {isAdmin && <Tab label="Server Controls" sx={styles.tab} />}
+                    <Tab value={ModToolsTab.ModPreferences} label="Mod Preferences" sx={styles.tab} />
+                    {isAdmin && <Tab value={ModToolsTab.ServerControls} label="Server Controls" sx={styles.tab} />}
                 </Tabs>
 
                 {/* Tab Content */}
@@ -146,6 +150,7 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                     {activeTab === ModToolsTab.UserManagement && (
                         <UserManagementSection openReportCount={openCount} onReportsChanged={refreshOpenCount} />
                     )}
+                    {activeTab === ModToolsTab.ModPreferences && <ModPreferencesTab />}
                     {isAdmin && activeTab === ModToolsTab.ServerControls && <ServerControlsTab />}
                 </Box>
             </Box>

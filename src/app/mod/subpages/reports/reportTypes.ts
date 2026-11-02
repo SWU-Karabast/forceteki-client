@@ -2,24 +2,49 @@ import {
     IPlayerReport,
     IPlayerReportLog,
     IPlayerReportPlayerContext,
-    PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import type { ReportQuickAction } from './ReportQuickActionDialog';
+
+/** Offense filter value for every offense */
+export const ALL_OFFENSES = 'all';
+
+export interface IReportListFilters {
+    openOnly: boolean;
+
+    /** Part of a username, as typed */
+    search: string;
+
+    /** A PlayerReportType, or ALL_OFFENSES */
+    offense: string;
+}
 
 export interface IReportListProps {
-    status: PlayerReportStatus;
+
+    /** The pages loaded so far, newest first */
     reports: IPlayerReport[];
+
+    /** Reports matching the filters over all pages */
+    total: number;
     loading: boolean;
     error: string | null;
     hasMore: boolean;
+    filters: IReportListFilters;
+    onFiltersChange: (filters: IReportListFilters) => void;
     onOpenReport: (report: IPlayerReport) => void;
-    onLoadMore?: () => void;
+
+    /** Closes an open report as No Action without opening it */
+    onQuickClose: (report: IPlayerReport) => void;
+
+    /** Starts a Warning or a one-week Mute against the reported player of an open report */
+    onQuickAction: (report: IPlayerReport, actionType: ReportQuickAction) => void;
+    onLoadMore: () => void;
 }
 
 export interface IReportDetailDialogProps {
     reportId: string | null;
     onClose: () => void;
 
-    /** Called after anything that changes a report's list entry (claim, close, reopen, actions) */
+    /** Called after anything that changes a report's list entry (close, reopen, actions) */
     onReportChanged: () => void;
 
     /** Opens the player in the Find User tab */
@@ -29,6 +54,9 @@ export interface IReportDetailDialogProps {
 export interface IReportPlayerPanelProps {
     roleLabel: string;
     context: IPlayerReportPlayerContext;
+
+    /** For the reporter: false reports they filed in the RECENT_FALSE_REPORT_DAYS before this report */
+    recentFalseReportCount?: number;
     usernameAtReport: string;
     selected: boolean;
     onSelect: () => void;
@@ -56,7 +84,10 @@ export interface IReportActionPanelProps {
     target: IPlayerReportPlayerContext;
 
     /** Called with the server message after an action was issued; `isWarning` when a follow-up step failed */
-    onActionApplied: (message: string, isWarning?: boolean) => void;
+    onActionApplied: (message: string, isWarning?: boolean) => Promise<void> | void;
+
+    /** The action was issued and the ticket closed along with it */
+    onTicketClosed: (message: string, isWarning?: boolean) => void;
     onError: (message: string) => void;
 }
 

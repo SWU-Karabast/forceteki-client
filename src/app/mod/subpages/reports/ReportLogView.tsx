@@ -1,25 +1,39 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Box, FormControlLabel, Switch, Tab, Tabs, Typography } from '@mui/material';
-import { IPlayerReportLog } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { IPlayerReportLogLine } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate } from '@/app/_utils/ModerationUtils';
 import { formatLogTime, getGameFormatLabel, getMatchTypeLabel, LOG_RETENTION_DAYS } from '@/app/_utils/playerReportUtils';
 import { IReportLogViewProps } from './reportTypes';
 
 enum LogTab {
-    Chat = 0,
-    Game = 1,
-    Details = 2,
+    Log = 0,
+    Details = 1,
+}
+
+enum LogSource {
+    Chat = 'Chat',
+    Game = 'Game',
+}
+
+interface ISourcedLine extends IPlayerReportLogLine {
+    source: LogSource;
 }
 
 /**
- * Chat log, game log and technical details of a report. Lines that mention the selected player
- * are highlighted; the toggle hides everything else.
+ * Chat and game log of a report in one timeline, so what players said can be read next to what happened in the
+ * game; switches show or hide either source. Lines that mention the selected player are highlighted.
  */
 const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog, highlightPlayerId }) => {
     const dateFormat = useDateFormat();
-    const [activeTab, setActiveTab] = useState<LogTab>(LogTab.Chat);
-    const [onlySelectedPlayer, setOnlySelectedPlayer] = useState(false);
+    const [activeTab, setActiveTab] = useState<LogTab>(LogTab.Log);
+    const [showChat, setShowChat] = useState(true);
+    const [showGameLog, setShowGameLog] = useState(true);
+
+    const timeline = useMemo<ISourcedLine[]>(() => [
+        ...(chatLog?.lines ?? []).map((line) => ({ ...line, source: LogSource.Chat })),
+        ...(gameLog?.lines ?? []).map((line) => ({ ...line, source: LogSource.Game })),
+    ].sort((a, b) => a.at.localeCompare(b.at)), [chatLog, gameLog]);
 
     // ----------------Styles----------------//
     const styles = {
@@ -36,6 +50,7 @@ const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog
         toolbar: {
             display: 'flex',
             justifyContent: 'flex-end',
+            gap: '0.5rem',
             minHeight: '32px',
         },
         switchLabel: {
@@ -67,13 +82,21 @@ const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog
             flexShrink: 0,
             mb: 0,
         },
-        text: {
-            color: '#E0E0E0',
+        sourceTag: (source: LogSource) => ({
+            color: source === LogSource.Chat ? '#81c784' : '#7a7a7a',
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            width: '2.5rem',
+            flexShrink: 0,
+            mb: 0,
+        }),
+        text: (source: LogSource) => ({
+            color: source === LogSource.Chat ? '#ffffff' : '#B0B0B0',
             fontSize: '0.8rem',
             whiteSpace: 'pre-wrap' as const,
             wordBreak: 'break-word' as const,
             mb: 0,
-        },
+        }),
         notice: {
             color: '#ffb74d',
             fontSize: '0.75rem',
@@ -104,21 +127,22 @@ const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog
         },
     };
 
-    const renderLog = (log: IPlayerReportLog | null) => {
-        const lines = (log?.lines ?? []).filter((line) => !onlySelectedPlayer || line.playerIds.includes(highlightPlayerId));
+    const renderLog = () => {
+        const lines = timeline.filter((line) => (line.source === LogSource.Chat ? showChat : showGameLog));
         return (
             <Box sx={styles.logBox}>
                 {report.logsDeletedAt && (
                     <Typography sx={styles.notice}>
-                        The logs were deleted on {formatDate(report.logsDeletedAt, dateFormat)}, when the {LOG_RETENTION_DAYS}-day retention period after closing the ticket had passed.
+                        The logs were deleted on {formatDate(report.logsDeletedAt, dateFormat)}, after the {LOG_RETENTION_DAYS}-day retention period after closing the ticket had passed.
                     </Typography>
                 )}
-                {log?.truncated && <Typography sx={styles.notice}>Older lines were cut off because the log was too long.</Typography>}
+                {(chatLog?.truncated || gameLog?.truncated) && <Typography sx={styles.notice}>Older lines were cut off because the log was too long.</Typography>}
                 {lines.length === 0 && !report.logsDeletedAt && <Typography sx={styles.empty}>(no messages)</Typography>}
                 {lines.map((line, index) => (
-                    <Box key={`${line.at}-${index}`} sx={styles.line(line.playerIds.includes(highlightPlayerId))}>
+                    <Box key={`${line.source}-${line.at}-${index}`} sx={styles.line(line.playerIds.includes(highlightPlayerId))}>
                         <Typography sx={styles.time}>{formatLogTime(line.at)}</Typography>
-                        <Typography sx={styles.text}>{line.text}</Typography>
+                        <Typography sx={styles.sourceTag(line.source)}>{line.source === LogSource.Chat ? 'CHAT' : 'GAME'}</Typography>
+                        <Typography sx={styles.text(line.source)}>{line.text}</Typography>
                     </Box>
                 ))}
             </Box>
@@ -129,30 +153,35 @@ const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog
         ['Lobby ID', report.lobbyId],
         ['Game ID', report.gameId ?? 'N/A'],
         ['Format', getGameFormatLabel(report.gameFormat)],
-        ['Match type', getMatchTypeLabel(report.matchType)],
-        ['Game steps since last undo', report.gameStepsSinceLastUndo],
-        ['Screen resolution', report.screenResolution ? `${report.screenResolution.width}x${report.screenResolution.height}` : undefined],
+        ['Match Type', getMatchTypeLabel(report.matchType)],
+        ['Game Steps Since Last Undo', report.gameStepsSinceLastUndo],
+        ['Screen Resolution', report.screenResolution ? `${report.screenResolution.width}x${report.screenResolution.height}` : undefined],
         ['Viewport', report.viewport ? `${report.viewport.width}x${report.viewport.height}` : undefined],
     ];
 
     return (
         <Box>
             <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)} sx={styles.tabs}>
-                <Tab label={`Chat (${chatLog?.lines.length ?? 0})`} />
-                <Tab label={`Game log (${gameLog?.lines.length ?? 0})`} />
+                <Tab label="Log" />
                 <Tab label="Details" />
             </Tabs>
-            {activeTab !== LogTab.Details && (
-                <Box sx={styles.toolbar}>
-                    <FormControlLabel
-                        sx={styles.switchLabel}
-                        control={<Switch size="small" checked={onlySelectedPlayer} onChange={(e) => setOnlySelectedPlayer(e.target.checked)} />}
-                        label="Only selected player"
-                    />
-                </Box>
+            {activeTab === LogTab.Log && (
+                <>
+                    <Box sx={styles.toolbar}>
+                        <FormControlLabel
+                            sx={styles.switchLabel}
+                            control={<Switch size="small" checked={showChat} onChange={(e) => setShowChat(e.target.checked)} />}
+                            label="Chat"
+                        />
+                        <FormControlLabel
+                            sx={styles.switchLabel}
+                            control={<Switch size="small" checked={showGameLog} onChange={(e) => setShowGameLog(e.target.checked)} />}
+                            label="Game Log"
+                        />
+                    </Box>
+                    {renderLog()}
+                </>
             )}
-            {activeTab === LogTab.Chat && renderLog(chatLog)}
-            {activeTab === LogTab.Game && renderLog(gameLog)}
             {activeTab === LogTab.Details && (
                 <Box sx={{ ...styles.logBox, fontFamily: 'inherit' }}>
                     {details.filter(([, value]) => value !== undefined && value !== '').map(([label, value]) => (

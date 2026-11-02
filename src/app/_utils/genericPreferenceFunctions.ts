@@ -128,7 +128,7 @@ const getDefaultPreferences = (): IPreferences => ({
         muteChat: false,
         cardLanguage: CardImageLocale.English,
         timerVisibility: TimerVisibility.Standard,
-        dateFormat: DateFormat.MonthFirst,
+        dateFormat: DateFormat.MMDDYYYY,
         autoResolve: {
             singleTarget: false,
         },

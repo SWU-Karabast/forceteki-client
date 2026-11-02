@@ -4,6 +4,7 @@ import {
     IModActionResponse,
     IPlayerSearchResult,
     IUsernameChangeResponse,
+    PlayerReportOutcome,
     PlayerReportRole,
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
@@ -18,10 +19,11 @@ import {
     getUsernameChangeSourceLabel,
 } from '@/app/_utils/ModerationUtils';
 import { DateFormat } from '@/app/_contexts/UserTypes';
-import { describeModAction, getOffenseLabel, getOutcomeOption } from '@/app/_utils/playerReportUtils';
+import { describeModAction, getOffenseLabel, getOutcomeOption, OPEN_TICKET_COLOR } from '@/app/_utils/playerReportUtils';
 import { IReportPlayerHistoryProps } from './reportTypes';
 
-const ACTION_RESULT_COLOR = '#ef5350';
+/** Same color as the Action Taken outcome; red is kept for open tickets */
+const ACTION_RESULT_COLOR = getOutcomeOption(PlayerReportOutcome.ActionTaken)?.color ?? '#81c784';
 
 interface IHistoryRow {
     key: string;
@@ -116,14 +118,14 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
 
         const reportRows: IHistoryRow[] = [...context.reportsAgainst, ...context.reportsFiled].map((entry) => {
             const outcome = getOutcomeOption(entry.outcome);
-            const isReported = entry.role === PlayerReportRole.Reported;
+            const isReported = entry.role === PlayerReportRole.ReportedPlayer;
             const actionsFromTicket = context.modActions.filter((action) => action.relatedReportId === entry.reportId);
 
             let status: { label: string; color: string };
             if (actionsFromTicket.length > 0) {
                 status = { label: actionsFromTicket.map(describeModAction).join(', '), color: ACTION_RESULT_COLOR };
             } else if (entry.status === PlayerReportStatus.Open) {
-                status = { label: 'Open', color: '#64b5f6' };
+                status = { label: 'Open', color: OPEN_TICKET_COLOR };
             } else {
                 status = { label: outcome?.label ?? 'Closed', color: outcome?.color ?? '#9E9E9E' };
             }

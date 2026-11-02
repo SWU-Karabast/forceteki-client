@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { ModActionType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
+import { RECENT_FALSE_REPORT_DAYS } from '@/app/_utils/playerReportUtils';
 import { IReportPlayerPanelProps } from './reportTypes';
 
 /**
@@ -11,7 +12,7 @@ import { IReportPlayerPanelProps } from './reportTypes';
 /** How many earlier usernames the card lists; the full list is in the history column */
 const MAX_PREVIOUS_NAMES_SHOWN = 3;
 
-const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, context, usernameAtReport, selected, onSelect, onOpenProfile }) => {
+const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, context, recentFalseReportCount, usernameAtReport, selected, onSelect, onOpenProfile }) => {
     // Newest first, without the current name and without repeats
     const previousNames = [...new Set(context.usernameChanges.map((change) => change.previousUsername))]
         .filter((name): name is string => !!name && name !== context.username);
@@ -81,6 +82,11 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             fontSize: '0.8rem',
             mb: 0,
         },
+        statWarning: {
+            color: '#ffb74d',
+            fontSize: '0.8rem',
+            mb: 0,
+        },
         statusMuted: {
             color: '#ef5350',
             fontSize: '0.8rem',
@@ -110,7 +116,7 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
                             onOpenProfile();
                         }}
                     >
-                        Open profile ↗
+                        Open Profile ↗
                     </Typography>
                 )}
             </Box>
@@ -119,9 +125,14 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             )}
             <Typography sx={styles.stat}>Reports against: {context.reportsAgainst.length}</Typography>
             <Typography sx={styles.stat}>Reports filed: {context.reportsFiled.length}</Typography>
+            {!!recentFalseReportCount && (
+                <Typography sx={styles.statWarning}>
+                    {recentFalseReportCount} false report{recentFalseReportCount === 1 ? '' : 's'} in the {RECENT_FALSE_REPORT_DAYS} days before this one
+                </Typography>
+            )}
             {previousNames.length > 0 && <Typography sx={styles.stat}>Previous names: {shownPreviousNames}</Typography>}
             {muteText && <Typography sx={styles.statusMuted}>{muteText}</Typography>}
-            {context.activeRename && <Typography sx={styles.statusRename}>Pending force rename</Typography>}
+            {context.activeRename && <Typography sx={styles.statusRename}>Pending Force Rename</Typography>}
             {context.activeReportingDisabledId && <Typography sx={styles.statusRename}>Reporting disabled</Typography>}
             {context.activeUsernameChangesBlockedId && <Typography sx={styles.statusRename}>Username changes blocked</Typography>}
         </Box>

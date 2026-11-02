@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Box, CircularProgress, Dialog, Divider, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import {
     IPlayerReportDetailResponse,
     PlayerReportStatus,
@@ -9,7 +8,7 @@ import {
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate, formatUsernameTransition, getActionLabel } from '@/app/_utils/ModerationUtils';
-import { formatTimeAgo, getGameFormatLabel, getMatchTypeLabel, getOffenseLabel } from '@/app/_utils/playerReportUtils';
+import { formatTimeAgoPhrase, getGameFormatLabel, getMatchTypeLabel, getOffenseLabel } from '@/app/_utils/playerReportUtils';
 import ReportActionPanel from './ReportActionPanel';
 import ReportClosePanel from './ReportClosePanel';
 import ReportLogView from './ReportLogView';
@@ -18,8 +17,7 @@ import ReportPlayerPanel from './ReportPlayerPanel';
 import { IReportDetailDialogProps } from './reportTypes';
 
 /**
- * A single report ticket: both players, the reason, chat and game log, quick actions and closing.
- * Opening an unclaimed ticket claims it for the current moderator.
+ * A single report ticket: both players, the reason, chat and game log, mod actions and closing.
  */
 const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onClose, onReportChanged, onOpenPlayerProfile }) => {
     const dateFormat = useDateFormat();
@@ -54,7 +52,7 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
     const isShowing = (id: string | null) => !!id && id === currentReportIdRef.current;
 
     /** @returns false if the report could not be loaded (or the load was superseded) */
-    const loadAsync = useCallback(async (claimIfUnclaimed: boolean): Promise<boolean> => {
+    const loadAsync = useCallback(async (): Promise<boolean> => {
         // A handler from a report that is no longer shown must not reload (and so cancel) the current one
         if (!reportId || reportId !== currentReportIdRef.current) {
             return false;
@@ -73,22 +71,6 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
             setSelectedPlayerId((current) => (current === result.reporter.playerId || current === result.reportedPlayer.playerId
                 ? current
                 : result.reportedPlayer.playerId));
-
-            if (claimIfUnclaimed && result.report.status === PlayerReportStatus.Open && !result.report.claimedById) {
-                try {
-                    const claimed = await ServerApiService.claimPlayerReportAsync(reportId);
-                    // The claim is in place on the server either way, so the list must show it
-                    onReportChangedRef.current();
-                    if (isCurrent() && claimed.report) {
-                        setDetail((current) => (current ? { ...current, report: claimed.report! } : current));
-                    }
-                } catch (claimError) {
-                    // The report itself loaded fine; only taking it over failed
-                    if (isCurrent()) {
-                        setError(`Could not take over the ticket: ${claimError instanceof Error ? claimError.message : 'unknown error'}`);
-                    }
-                }
-            }
             return true;
         } catch (loadError) {
             if (isCurrent()) {
@@ -109,26 +91,8 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
         setError(null);
         setInfo(null);
         setSelectedPlayerId(null);
-        loadAsync(true);
+        loadAsync();
     }, [loadAsync]);
-
-    const handleTakeOver = async () => {
-        const forReportId = reportId;
-        if (!forReportId) {
-            return;
-        }
-        try {
-            const claimed = await ServerApiService.claimPlayerReportAsync(forReportId);
-            onReportChangedRef.current();
-            if (isShowing(forReportId) && claimed.report) {
-                setDetail((current) => (current?.report.id === forReportId ? { ...current, report: claimed.report! } : current));
-            }
-        } catch (claimError) {
-            if (isShowing(forReportId)) {
-                setError(claimError instanceof Error ? claimError.message : 'Failed to take over ticket');
-            }
-        }
-    };
 
     const handleActionApplied = async (message: string, isWarning = false) => {
         onReportChangedRef.current();
@@ -138,15 +102,26 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
         if (!isWarning) {
             setError(null);
             setInfo(message);
-            await loadAsync(false);
+            await loadAsync();
             return;
         }
         // Set after the reload, so a failing reload cannot replace the warning that a follow-up step is missing
         setInfo(null);
-        const reloaded = await loadAsync(false);
+        const reloaded = await loadAsync();
         if (isShowing(reportId)) {
             setError(reloaded ? message : `${message} Reloading the ticket failed, so it may not show the action yet.`);
         }
+    };
+
+    /** An action was issued and the ticket closed with it: the ticket stays shown, now closed, with the result */
+    const handleTicketClosedByAction = async (message: string, isWarning = false) => {
+        onReportChangedRef.current();
+        if (!isShowing(reportId)) {
+            return;
+        }
+        setError(isWarning ? message : null);
+        setInfo(isWarning ? null : message);
+        await loadAsync();
     };
 
     const handleClosed = () => {
@@ -174,7 +149,7 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
             return;
         }
         setInfo(null);
-        await loadAsync(false);
+        await loadAsync();
         if (isShowing(reportId)) {
             setError(message);
         }
@@ -186,12 +161,11 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
             return;
         }
         setInfo('Ticket reopened');
-        await loadAsync(false);
+        await loadAsync();
     };
 
     const report = detail?.report;
     const selectedContext = detail && (selectedPlayerId === detail.reporter.playerId ? detail.reporter : detail.reportedPlayer);
-    const claimedByOther = report?.status === PlayerReportStatus.Open && !!report.claimedById && report.claimedById !== detail?.viewerId;
     const usernameById = (playerId: string) =>
         (detail && [detail.reporter, detail.reportedPlayer].find((context) => context.playerId === playerId)?.username) ?? playerId;
 
@@ -257,6 +231,12 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
             wordBreak: 'break-word' as const,
             mb: 0,
         },
+        noReasonText: {
+            color: '#7a7a7a',
+            fontSize: '0.9rem',
+            fontStyle: 'italic',
+            mb: 0,
+        },
         contentRow: {
             display: 'flex',
             gap: '1.25rem',
@@ -287,17 +267,6 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
             fontWeight: 600,
             mb: '0.25rem',
         },
-        claimBanner: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '1rem',
-            border: '1px solid #ffb74d',
-            borderRadius: '8px',
-            padding: '0.5rem 0.75rem',
-            color: '#ffb74d',
-            fontSize: '0.85rem',
-        },
         loading: {
             display: 'flex',
             justifyContent: 'center',
@@ -317,10 +286,9 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
                     </Typography>
                     {report && (
                         <Typography sx={styles.subtitle}>
-                            {formatDate(report.createdAt, dateFormat)} ({formatTimeAgo(report.createdAt)} ago)
+                            {formatDate(report.createdAt, dateFormat)} ({formatTimeAgoPhrase(report.createdAt)})
                             {' · '}{getGameFormatLabel(report.gameFormat)}
                             {' · '}{getMatchTypeLabel(report.matchType)}
-                            {report.claimedByUsername && report.status === PlayerReportStatus.Open ? ` · handled by ${report.claimedByUsername}` : ''}
                         </Typography>
                     )}
                 </Box>
@@ -339,24 +307,18 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
 
                 {detail && report && selectedContext && (
                     <>
-                        {claimedByOther && (
-                            <Box sx={styles.claimBanner}>
-                                <span>{report.claimedByUsername} is handling this ticket.</span>
-                                <PreferenceButton variant="warning" text="Take over" buttonFnc={handleTakeOver} />
-                            </Box>
-                        )}
-
                         <Box sx={styles.playerRow}>
                             <ReportPlayerPanel
                                 roleLabel="Reporter"
                                 context={detail.reporter}
+                                recentFalseReportCount={report.reporterRecentFalseReportCount}
                                 usernameAtReport={report.reporterUsername}
                                 selected={selectedPlayerId === detail.reporter.playerId}
                                 onSelect={() => setSelectedPlayerId(detail.reporter.playerId)}
                                 onOpenProfile={() => onOpenPlayerProfile(detail.reporter.playerId)}
                             />
                             <ReportPlayerPanel
-                                roleLabel="Reported"
+                                roleLabel="Reported Player"
                                 context={detail.reportedPlayer}
                                 usernameAtReport={report.reportedPlayerUsername}
                                 selected={selectedPlayerId === detail.reportedPlayer.playerId}
@@ -367,7 +329,9 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
 
                         <Box sx={styles.reason}>
                             <Typography sx={styles.reasonLabel}>Reason given by {report.reporterUsername}</Typography>
-                            <Typography sx={styles.reasonText}>{report.description || '(no description)'}</Typography>
+                            {report.description.trim()
+                                ? <Typography sx={styles.reasonText}>{report.description}</Typography>
+                                : <Typography sx={styles.noReasonText}>(no description)</Typography>}
                         </Box>
 
                         <Box sx={styles.contentRow}>
@@ -386,7 +350,7 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
 
                         {detail.ticketActions.length > 0 && (
                             <Box sx={styles.ticketActions}>
-                                <Typography sx={styles.sectionTitle}>Actions in this ticket</Typography>
+                                <Typography sx={styles.sectionTitle}>Actions in This Ticket</Typography>
                                 {detail.ticketActions.map((action) => (
                                     <Typography key={action.id} sx={styles.ticketActionText}>
                                         • {usernameById(action.playerId)}: {getActionLabel(action, dateFormat)}
@@ -406,6 +370,7 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
                                     reportId={report.id}
                                     target={selectedContext}
                                     onActionApplied={handleActionApplied}
+                                    onTicketClosed={handleTicketClosedByAction}
                                     onError={handlePanelError}
                                 />
                             </>

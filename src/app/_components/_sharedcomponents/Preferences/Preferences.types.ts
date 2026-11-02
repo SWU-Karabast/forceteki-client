@@ -253,15 +253,15 @@ export enum PlayerReportStatus {
 }
 
 export enum PlayerReportOutcome {
-    Punished = 'Punished',
+    ActionTaken = 'ActionTaken',
     NoAction = 'NoAction',
     FalseReport = 'FalseReport',
     TimerAbuse = 'TimerAbuse',
 }
 
 export enum PlayerReportRole {
-    Reporter = 'Reporter',
-    Reported = 'Reported',
+    ReportSubmitter = 'ReportSubmitter',
+    ReportedPlayer = 'ReportedPlayer',
 }
 
 export interface IPlayerReport {
@@ -282,10 +282,9 @@ export interface IPlayerReport {
     screenResolution?: { width: number; height: number };
     viewport?: { width: number; height: number };
     reportedPlayerPriorReportCount: number;
-    reporterPriorFalseReportCount: number;
-    claimedById?: string;
-    claimedByUsername?: string;
-    claimedAt?: string;
+
+    /** False reports the reporter filed in the 30 days before this one */
+    reporterRecentFalseReportCount: number;
     closedAt?: string;
     closedById?: string;
     closedByUsername?: string;
@@ -343,16 +342,39 @@ export interface IPlayerReportDetailResponse {
     reporter: IPlayerReportPlayerContext;
     reportedPlayer: IPlayerReportPlayerContext;
     ticketActions: IModActionResponse[];
+}
 
-    /** Id of the moderator who requested the report, as the server sees them */
-    viewerId: string;
+export interface IPlayerReportListQuery {
+
+    /** Omitted for open and closed reports together */
+    status?: PlayerReportStatus;
+
+    /** Part of the reporter's, the reported player's or the closing moderator's username */
+    search?: string;
+    offense?: string;
+    limit: number;
+
+    /** `nextCursor` of the previous page */
+    cursor?: string;
 }
 
 export interface IPlayerReportListResponse {
     success: boolean;
+
+    /** Newest first */
     reports: IPlayerReport[];
-    nextBeforeMonth: string | null;
+
+    /** Pass as `cursor` to load the next page; null on the last page */
+    nextCursor: string | null;
+
+    /** Number of reports matching the filters, over all pages */
+    total: number;
 }
+
+/** The state a moderator puts a report into */
+export type PlayerReportStatusUpdate =
+    | { status: PlayerReportStatus.Closed; outcome: PlayerReportOutcome; closingNote?: string }
+    | { status: PlayerReportStatus.Open };
 
 export interface IPlayerReportUpdateResponse {
     success: boolean;

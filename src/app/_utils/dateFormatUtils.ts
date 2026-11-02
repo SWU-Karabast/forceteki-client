@@ -1,6 +1,6 @@
 import { DateFormat, IPreferences } from '@/app/_contexts/UserTypes';
 
-export const DEFAULT_DATE_FORMAT = DateFormat.MonthFirst;
+export const DEFAULT_DATE_FORMAT = DateFormat.MMDDYYYY;
 
 const DATE_TIME_OPTIONS: Intl.DateTimeFormatOptions = {
     day: '2-digit',
@@ -42,7 +42,7 @@ export const formatDateTime = (value: Date | string, dateFormat: DateFormat = DE
     }
 
     const parts = new Intl.DateTimeFormat('en-US', DATE_TIME_OPTIONS).formatToParts(date);
-    if (dateFormat !== DateFormat.DayFirst) {
+    if (dateFormat !== DateFormat.DDMMYYYY) {
         return parts.map((part) => part.value).join('');
     }
 
@@ -69,6 +69,6 @@ export const formatLongDate = (value: Date | string, dateFormat: DateFormat = DE
         return INVALID_DATE_TEXT;
     }
 
-    const locale = dateFormat === DateFormat.DayFirst ? 'en-GB' : 'en-US';
+    const locale = dateFormat === DateFormat.DDMMYYYY ? 'en-GB' : 'en-US';
     return new Intl.DateTimeFormat(locale, LONG_DATE_OPTIONS).format(date);
 };

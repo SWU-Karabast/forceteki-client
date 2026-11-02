@@ -1,19 +1,29 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Badge, Box, Tab, Tabs } from '@mui/material';
+import { Alert, Badge, Box, Tab, Tabs } from '@mui/material';
 import {
     IPlayerReport,
+    PlayerReportOutcome,
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerApiService } from '@/app/_services/ServerApiService';
+import { REPORT_PAGE_SIZE } from '@/app/_utils/playerReportUtils';
 import UserManagementTab from './UserManagementTab';
 import ReportList from './reports/ReportList';
 import ReportDetailDialog from './reports/ReportDetailDialog';
+import { ALL_OFFENSES, IReportListFilters } from './reports/reportTypes';
+import ReportQuickActionDialog, { ReportQuickAction } from './reports/ReportQuickActionDialog';
+import { forgetPlayerPenalties } from './reports/PlayerPenaltyTooltip';
+import { IReportActionOutcome } from '@/app/_utils/reportActionSubmission';
 
 enum UserManagementSubTab {
-    OpenReports = 0,
-    ClosedReports = 1,
-    FindUser = 2,
+    Reports = 0,
+    FindUser = 1,
 }
+
+/** Typing in the search waits this long before the list reloads */
+const SEARCH_DEBOUNCE_MS = 300;
+
+const INITIAL_FILTERS: IReportListFilters = { openOnly: true, search: '', offense: ALL_OFFENSES };
 
 interface IUserManagementSectionProps {
     openReportCount: number | null;
@@ -23,92 +33,108 @@ interface IUserManagementSectionProps {
 }
 
 /**
- * User management in the mod tools: the player report queue (open and closed tickets)
- * next to the existing player search.
+ * User management in the mod tools: the player report queue next to the player search.
  */
 const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openReportCount, onReportsChanged }) => {
-    const [activeTab, setActiveTab] = useState<UserManagementSubTab>(UserManagementSubTab.OpenReports);
+    const [activeTab, setActiveTab] = useState<UserManagementSubTab>(UserManagementSubTab.Reports);
+    const [filters, setFilters] = useState<IReportListFilters>(INITIAL_FILTERS);
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [reports, setReports] = useState<IPlayerReport[]>([]);
-    const [nextBeforeMonth, setNextBeforeMonth] = useState<string | null>(null);
+    const [total, setTotal] = useState(0);
+    const [nextCursor, setNextCursor] = useState<string | null>(null);
     // Starts as loading so the first paint shows the spinner, not an empty queue
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [notice, setNotice] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+    const [quickAction, setQuickAction] = useState<{ report: IPlayerReport; actionType: ReportQuickAction } | null>(null);
     const [searchRequest, setSearchRequest] = useState<{ query: string; requestId: number } | null>(null);
 
-    const listStatus = activeTab === UserManagementSubTab.ClosedReports ? PlayerReportStatus.Closed : PlayerReportStatus.Open;
+    useEffect(() => {
+        const timeout = setTimeout(() => setDebouncedSearch(filters.search.trim()), SEARCH_DEBOUNCE_MS);
+        return () => clearTimeout(timeout);
+    }, [filters.search]);
 
-    // Only the newest request may update the list, so a slow response for the other tab cannot overwrite it
+    // Only the newest request may update the list, so a slow response for older filters cannot overwrite it
     const latestListRequestRef = useRef(0);
 
-    const loadReportsAsync = useCallback(async (status: PlayerReportStatus) => {
+    const loadPageAsync = useCallback(async (cursor: string | null) => {
         const requestId = ++latestListRequestRef.current;
         setLoading(true);
         setError(null);
         try {
-            const result = await ServerApiService.listPlayerReportsAsync(status);
+            const result = await ServerApiService.listPlayerReportsAsync({
+                status: filters.openOnly ? PlayerReportStatus.Open : undefined,
+                search: debouncedSearch || undefined,
+                offense: filters.offense === ALL_OFFENSES ? undefined : filters.offense,
+                limit: REPORT_PAGE_SIZE,
+                cursor: cursor ?? undefined,
+            });
             if (requestId !== latestListRequestRef.current) {
                 return;
             }
-            setReports(result.reports);
-            setNextBeforeMonth(result.nextBeforeMonth);
+            setReports((current) => (cursor ? [...current, ...result.reports] : result.reports));
+            setTotal(result.total);
+            setNextCursor(result.nextCursor);
         } catch (loadError) {
             if (requestId !== latestListRequestRef.current) {
                 return;
             }
-            setReports([]);
-            setNextBeforeMonth(null);
+            if (!cursor) {
+                setReports([]);
+                setTotal(0);
+                setNextCursor(null);
+            }
             setError(loadError instanceof Error ? loadError.message : 'Failed to load reports');
         } finally {
             if (requestId === latestListRequestRef.current) {
                 setLoading(false);
             }
         }
-    }, []);
+    }, [filters.openOnly, filters.offense, debouncedSearch]);
 
     useEffect(() => {
-        // Never show the other tab's tickets in this tab's columns while the new list loads
-        setReports([]);
-        setNextBeforeMonth(null);
-        if (activeTab !== UserManagementSubTab.FindUser) {
-            loadReportsAsync(listStatus);
+        if (activeTab === UserManagementSubTab.Reports) {
+            loadPageAsync(null);
         }
-    }, [activeTab, listStatus, loadReportsAsync]);
+    }, [activeTab, loadPageAsync]);
 
-    const handleLoadOlder = async () => {
-        if (!nextBeforeMonth) {
-            return;
+    const handleReportChanged = useCallback(() => {
+        if (activeTab === UserManagementSubTab.Reports) {
+            loadPageAsync(null);
         }
-        const requestId = ++latestListRequestRef.current;
-        setLoading(true);
+        onReportsChanged();
+    }, [activeTab, loadPageAsync, onReportsChanged]);
+
+    const handleQuickClose = async (report: IPlayerReport) => {
+        setNotice(null);
         try {
-            const result = await ServerApiService.listPlayerReportsAsync(PlayerReportStatus.Closed, nextBeforeMonth);
-            if (requestId !== latestListRequestRef.current) {
-                return;
-            }
-            setReports((current) => [...current, ...result.reports]);
-            setNextBeforeMonth(result.nextBeforeMonth);
-        } catch (loadError) {
-            if (requestId === latestListRequestRef.current) {
-                setError(loadError instanceof Error ? loadError.message : 'Failed to load older reports');
-            }
-        } finally {
-            if (requestId === latestListRequestRef.current) {
-                setLoading(false);
-            }
+            await ServerApiService.updatePlayerReportStatusAsync(report.id, { status: PlayerReportStatus.Closed, outcome: PlayerReportOutcome.NoAction });
+            setNotice({ severity: 'success', message: `Closed the report against ${report.reportedPlayerUsername} as No Action.` });
+        } catch (closeError) {
+            setNotice({
+                severity: 'error',
+                message: `Could not close the report against ${report.reportedPlayerUsername}: ${closeError instanceof Error ? closeError.message : 'unknown error'}`,
+            });
+        }
+        handleReportChanged();
+    };
+
+    const handleQuickActionDone = (outcome: IReportActionOutcome) => {
+        const report = quickAction?.report;
+        setQuickAction(null);
+        if (report) {
+            forgetPlayerPenalties(report.reportedPlayerId);
+        }
+        setNotice({ severity: outcome.isWarning ? 'error' : 'success', message: outcome.message });
+        if (outcome.actionApplied) {
+            handleReportChanged();
         }
     };
 
-    const handleReportChanged = useCallback(() => {
-        if (activeTab !== UserManagementSubTab.FindUser) {
-            loadReportsAsync(listStatus);
-        }
-        onReportsChanged();
-    }, [activeTab, listStatus, loadReportsAsync, onReportsChanged]);
-
     const handleTabChange = (tab: UserManagementSubTab) => {
-        // Set together with the tab, so the new tab never renders a moment of "no reports" before loading
-        if (tab !== UserManagementSubTab.FindUser) {
+        // Set together with the tab, so the list never renders a moment of "no reports" before loading
+        if (tab === UserManagementSubTab.Reports) {
             setLoading(true);
         }
         setActiveTab(tab);
@@ -141,6 +167,9 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
                 color: 'white',
             },
         },
+        notice: {
+            mb: '1rem',
+        },
     };
 
     return (
@@ -148,28 +177,38 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
             <Tabs value={activeTab} onChange={(_, value) => handleTabChange(value)} sx={styles.tabs}>
                 <Tab label={(
                     <Badge badgeContent={openReportCount ?? 0} sx={styles.badge} max={99}>
-                        Open Reports
+                        Reports
                     </Badge>
                 )}
                 />
-                <Tab label="Closed Reports" />
                 <Tab label="Find User" />
             </Tabs>
 
             {activeTab === UserManagementSubTab.FindUser ? (
                 <UserManagementTab searchRequest={searchRequest} onSearchRequestHandled={() => setSearchRequest(null)} />
             ) : (
-                <ReportList
-                    key={listStatus}
-                    status={listStatus}
-                    reports={reports}
-                    loading={loading}
-                    error={error}
-                    hasMore={listStatus === PlayerReportStatus.Closed && !!nextBeforeMonth}
-                    onOpenReport={(report) => setSelectedReportId(report.id)}
-                    onLoadMore={handleLoadOlder}
-                />
+                <>
+                    {notice && <Alert severity={notice.severity} onClose={() => setNotice(null)} sx={styles.notice}>{notice.message}</Alert>}
+                    <ReportList
+                        reports={reports}
+                        total={total}
+                        loading={loading}
+                        error={error}
+                        hasMore={!!nextCursor}
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                        onOpenReport={(report) => setSelectedReportId(report.id)}
+                        onQuickClose={handleQuickClose}
+                        onQuickAction={(report, actionType) => {
+                            setNotice(null);
+                            setQuickAction({ report, actionType });
+                        }}
+                        onLoadMore={() => loadPageAsync(nextCursor)}
+                    />
+                </>
             )}
+
+            <ReportQuickActionDialog request={quickAction} onCancel={() => setQuickAction(null)} onDone={handleQuickActionDone} />
 
             <ReportDetailDialog
                 reportId={selectedReportId}

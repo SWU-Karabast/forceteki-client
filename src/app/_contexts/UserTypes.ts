@@ -90,8 +90,8 @@ export enum TimerVisibility {
 }
 
 export enum DateFormat {
-    MonthFirst = 'monthFirst', // MM/DD/YYYY
-    DayFirst = 'dayFirst', // DD/MM/YYYY
+    MMDDYYYY = 'MMDDYYYY',
+    DDMMYYYY = 'DDMMYYYY',
 }
 
 export enum PlayerTimeRemainingStatus {

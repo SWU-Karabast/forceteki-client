@@ -1,8 +1,8 @@
 import {
     IFindUserResponse, IModActionResponse,
     ICosmeticEntity, IServerSettings,
-    IPlayerReportDetailResponse, IPlayerReportListResponse, IPlayerReportUpdateResponse,
-    PlayerReportOutcome, PlayerReportStatus
+    IPlayerReportDetailResponse, IPlayerReportListQuery, IPlayerReportListResponse, IPlayerReportUpdateResponse,
+    PlayerReportStatusUpdate
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
 
@@ -209,14 +209,14 @@ export class ServerApiService {
     }
 
     // Player report API methods
-    public static async listPlayerReportsAsync(status: PlayerReportStatus, beforeMonth?: string): Promise<IPlayerReportListResponse> {
-        return await this.fetchWithErrorHandling<IPlayerReportListResponse>(
-            `${this.baseUrl}/api/mod/reports/list`,
-            {
-                method: 'POST',
-                body: JSON.stringify({ status, beforeMonth }),
+    public static async listPlayerReportsAsync(query: IPlayerReportListQuery): Promise<IPlayerReportListResponse> {
+        const params = new URLSearchParams({ limit: String(query.limit) });
+        for (const key of ['status', 'search', 'offense', 'cursor'] as const) {
+            if (query[key]) {
+                params.set(key, query[key]);
             }
-        );
+        }
+        return await this.fetchWithErrorHandling<IPlayerReportListResponse>(`${this.baseUrl}/api/mod/reports?${params.toString()}`);
     }
 
     public static async getOpenPlayerReportCountAsync(): Promise<number> {
@@ -228,40 +228,17 @@ export class ServerApiService {
 
     public static async getPlayerReportAsync(reportId: string): Promise<IPlayerReportDetailResponse> {
         return await this.fetchWithErrorHandling<IPlayerReportDetailResponse>(
-            `${this.baseUrl}/api/mod/reports/get`,
-            {
-                method: 'POST',
-                body: JSON.stringify({ reportId }),
-            }
+            `${this.baseUrl}/api/mod/reports/${encodeURIComponent(reportId)}`
         );
     }
 
-    public static async claimPlayerReportAsync(reportId: string): Promise<IPlayerReportUpdateResponse> {
+    /** Closes the report with an outcome, or opens it again */
+    public static async updatePlayerReportStatusAsync(reportId: string, update: PlayerReportStatusUpdate): Promise<IPlayerReportUpdateResponse> {
         return await this.fetchWithErrorHandling<IPlayerReportUpdateResponse>(
-            `${this.baseUrl}/api/mod/reports/claim`,
+            `${this.baseUrl}/api/mod/reports/${encodeURIComponent(reportId)}`,
             {
-                method: 'POST',
-                body: JSON.stringify({ reportId }),
-            }
-        );
-    }
-
-    public static async closePlayerReportAsync(reportId: string, outcome: PlayerReportOutcome, closingNote?: string): Promise<IPlayerReportUpdateResponse> {
-        return await this.fetchWithErrorHandling<IPlayerReportUpdateResponse>(
-            `${this.baseUrl}/api/mod/reports/close`,
-            {
-                method: 'POST',
-                body: JSON.stringify({ reportId, outcome, closingNote }),
-            }
-        );
-    }
-
-    public static async reopenPlayerReportAsync(reportId: string): Promise<IPlayerReportUpdateResponse> {
-        return await this.fetchWithErrorHandling<IPlayerReportUpdateResponse>(
-            `${this.baseUrl}/api/mod/reports/reopen`,
-            {
-                method: 'POST',
-                body: JSON.stringify({ reportId }),
+                method: 'PUT',
+                body: JSON.stringify(update),
             }
         );
     }
