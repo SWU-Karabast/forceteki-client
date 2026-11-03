@@ -97,6 +97,9 @@ export const LobbyFormatConfigs: IFormatModeConfig[] = [
     { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.NextSet, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    ...(process.env.NODE_ENV === 'development'
+        ? [{ format: SwuGameFormat.FauxSuns, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] }]
+        : []),
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [

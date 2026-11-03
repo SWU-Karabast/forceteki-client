@@ -11,12 +11,14 @@ import { ProtectThePodDeckProvider } from '../ProtectThePodDeckProvider';
 import { SithvaultDeckProvider } from '../SithvaultDeckProvider';
 import { SwubaseDeckProvider } from '../SwubaseDeckProvider';
 import { SwucardhubDeckProvider } from '../SwucardhubDeckProvider';
+import { SwuCompetitiveHubDeckProvider } from '../SwuCompetitiveHubDeckProvider';
 import { SwudbDeckProvider } from '../SwudbDeckProvider';
 import { SwuforgeDeckProvider } from '../SwuforgeDeckProvider';
 import { SwumetastatsDeckProvider } from '../SwumetastatsDeckProvider';
 import { SwUnlimitedDbDeckProvider } from '../SwUnlimitedDbDeckProvider';
 import { SwustatsDeckProvider } from '../SwustatsDeckProvider';
 import { SwupediaDeckProvider } from '../SwupediaDeckProvider';
+import { SwuteamDeckProvider } from '../SwuteamDeckProvider';
 import { buildTagStyle } from './tagStyle';
 import { DeckFetchError, DeckFetchErrorReason } from './types';
 
@@ -49,6 +51,8 @@ const providers: readonly DeckProviderBase[] = [
     new HoloscanDeckProvider(),
     new SwupediaDeckProvider(),
     new SithvaultDeckProvider(),
+    new SwuteamDeckProvider(),
+    new SwuCompetitiveHubDeckProvider(),
 ];
 
 /**

@@ -118,7 +118,11 @@ const Board: React.FC<IBoardProps> = ({
             alignItems: 'center',
             height: '100%',
             flexDirection: 'column',
-            padding: '2rem 0',
+            padding: '1rem 0',
+
+            [theme.breakpoints.up('lg')]: {
+                padding: '2rem 0' // Additional padding to bump leader cards over decorative lines
+            }
         },
         leaderBaseContainer: {
             ...debugBorder('yellow'),
@@ -127,11 +131,7 @@ const Board: React.FC<IBoardProps> = ({
             alignItems: 'center',
             width: '100%',
             gap: 'clamp(1px, 1.0vh, 10px)',
-            padding: isPortrait ? '0 .1rem' : '0 .5rem',
-
-            [theme.breakpoints.up('lg')]: {
-                padding: isPortrait ? '0 .1rem' : '0 1rem',
-            },
+            padding: isPortrait ? '0 .1rem' : '0 1rem',
         },
         leaderBaseWrapper: {
             width: '100%',

@@ -21,7 +21,6 @@ import Image from 'next/image';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { ICosmeticEntity, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import { v4 as uuidv4 } from 'uuid';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { ServerApiService } from '@/app/_services/ServerApiService';
@@ -75,7 +74,7 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
     const [imageDimensions, setImageDimensions] = useState<ImageDimensions | null>(null);
     const [cosmeticType, setCosmeticType] = useState<RegisteredCosmeticType>(RegisteredCosmeticType.Cardback);
     const [cosmeticTitle, setCosmeticTitle] = useState('');
-    const [cosmeticId, setCosmeticId] = useState(() => uuidv4());
+    const [cosmeticId, setCosmeticId] = useState(() => crypto.randomUUID());
 
     // Validation rules for different cosmetic types
     const validationRules: ValidationRules = {
@@ -167,7 +166,7 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
         };
         reader.readAsDataURL(file);
 
-        setCosmeticId(uuidv4());
+        setCosmeticId(crypto.randomUUID());
     };
 
     const scaleAndCropImage = (file: File, targetWidth: number, targetHeight: number): Promise<File> => {
@@ -293,7 +292,7 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
 
             const formData = new FormData();
             formData.append('file', fileToUpload);
-            formData.append('cosmeticId', uuidv4());
+            formData.append('cosmeticId', crypto.randomUUID());
             formData.append('cosmeticTitle', cosmeticTitle);
             formData.append('cosmeticType', cosmeticType);
 
@@ -329,7 +328,7 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
         setImageDimensions(null);
         setCosmeticType(RegisteredCosmeticType.Cardback);
         setCosmeticTitle('');
-        setCosmeticId(uuidv4());
+        setCosmeticId(crypto.randomUUID());
         setUploadError(null);
         setUploadSuccess(false);
     };
