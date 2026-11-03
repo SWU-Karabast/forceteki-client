@@ -23,6 +23,7 @@ import {
     updateDeckFavoriteInLocalStorage,
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { useSession } from 'next-auth/react';
 
 interface IDeckSummaryCardTileProps {
@@ -69,6 +70,7 @@ const DeckPage: React.FC = () => {
     const router = useRouter();
     const { data: session } = useSession(); // Get session from next-auth
     const { user } = useUser();
+    const { showErrorScreen } = useErrorScreen();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     // Load decks from localStorage on component mount
@@ -82,7 +84,17 @@ const DeckPage: React.FC = () => {
             // Call the loadDecks function and await the result
             await retrieveDecksForUser(session?.user, user,{ format:'display', setDecks: setDecks });
         } catch (error) {
-            alert('Server error when fetching decks');
+            showErrorScreen({
+                title: 'Couldn\'t load your decks',
+                message: 'The server didn\'t respond when we asked for your saved decks.',
+                actions: (dismiss) => [
+                    { label: 'Try again', variant: 'concede', onClick: () => {
+                        dismiss();
+                        fetchDecks();
+                    } },
+                    { label: 'Dismiss', onClick: dismiss },
+                ],
+            });
             console.error('Error fetching decks:', error);
         }
     };
@@ -219,7 +231,10 @@ const DeckPage: React.FC = () => {
 
             setDecks(sortedDecks);
         }catch(error){
-            alert('There was an error when toggling favorite.');
+            showErrorScreen({
+                title: 'Couldn\'t update favorite',
+                message: 'We couldn\'t change the favorite status of that deck. Your decks are unchanged.',
+            });
             console.log(error)
         }
     };

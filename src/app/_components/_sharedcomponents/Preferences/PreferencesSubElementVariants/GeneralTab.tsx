@@ -198,7 +198,7 @@ function GeneralTab() {
         }
     }, [user]);
 
-    const isSubmitDisabled = !!user?.mustRequestUsernameChange || !usernameChangeable || !canSubmitClientSide || username.trim() === (user?.username || '').trim();
+    const isSubmitDisabled = !!user?.usernameChangesBlocked || !usernameChangeable || !canSubmitClientSide || username.trim() === (user?.username || '').trim();
 
 
     const styles = {
@@ -224,6 +224,10 @@ function GeneralTab() {
             width:'20rem',
             '& .MuiInputBase-input': {
                 color: '#fff',
+            },
+            '& .MuiInputBase-input.Mui-disabled': {
+                color: '#B0B0B0',
+                WebkitTextFillColor: '#B0B0B0',
             },
             '& .MuiInputBase-input::placeholder': {
                 color: '#fff',
@@ -314,6 +318,7 @@ function GeneralTab() {
                                     <TextField
                                         placeholder={user?.username || 'Enter new username'}
                                         value={username}
+                                        disabled={!!user?.usernameChangesBlocked}
                                         onChange={handleUsernameInputChange}
                                         sx={styles.textFieldStyle}
                                         error={!!userErrorSummary && !successfulUsernameChange} // Show error state on field
@@ -327,7 +332,7 @@ function GeneralTab() {
                                         Change Username
                                     </Button>
                                 </Box>
-                                {!user?.mustRequestUsernameChange && (
+                                {!user?.usernameChangesBlocked && (
                                     <>
                                         <Box sx={styles.messageContainer}>
                                             {userErrorSummary && !successfulUsernameChange ? (
@@ -358,7 +363,7 @@ function GeneralTab() {
                                         </Typography>
                                     </>
                                 )}
-                                {user?.mustRequestUsernameChange && (
+                                {user?.usernameChangesBlocked && (
                                     <Typography variant="body2" sx={{ mt: 1, color: '#F87171', fontSize: '0.95rem', maxWidth: 'calc(20rem + 130px)' }}>
                                         Your account has been restricted from changing your username. To request a new username, please open a ticket on our{' '}
                                         <Link

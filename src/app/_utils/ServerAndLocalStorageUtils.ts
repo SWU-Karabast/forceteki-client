@@ -5,7 +5,6 @@ import {
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
-import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
@@ -248,12 +247,12 @@ export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean
     }
 }
 
-export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): Promise<boolean> => {
+export const setUsernameChangesBlockedSeenAsync = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
             user
         }
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-must-request-username-change-seen`,
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-username-changes-blocked-seen`,
             {
                 method: 'POST',
                 headers: {
@@ -267,7 +266,7 @@ export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): 
         if (!response.ok) {
             throw new Error(result.message);
         }
-        return result
+        return !!result.success
     }catch (error) {
         console.error(error);
         throw error;
@@ -293,7 +292,7 @@ export const setReportingDisabledSeenAsync = async(user: IUser | null): Promise<
         if (!response.ok) {
             throw new Error(result.message);
         }
-        return result
+        return !!result.success
     }catch (error) {
         console.error(error);
         throw error;
@@ -337,7 +336,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
         const payload = {
             user,
             deck: {
-                id: deckData.deckID || uuid(), // Use existing ID or generate new one
+                id: deckData.deckID || crypto.randomUUID(), // Use existing ID or generate new one
                 userId: user?.id,
                 deck: {
                     leader: { id: deckData.leader.id },

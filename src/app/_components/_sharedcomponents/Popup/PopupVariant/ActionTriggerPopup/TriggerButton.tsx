@@ -1,5 +1,5 @@
 import { PopupSourceCard } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Tooltip } from '@mui/material';
 import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 import ViewCardButton from '@/app/_components/_sharedcomponents/Popup/PopupVariant/ActionTriggerPopup/ViewCardButton';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
@@ -13,8 +13,43 @@ type SourceCardImageData = Parameters<typeof s3CardImageURL>[0];
 export const STACK_OFFSET_PX = 10;
 export const STACK_SCALE = 0.92; // scale factor for each stacked card; smaller = more obvious stack
 
-// the card's width, exported so sibling controls (e.g. a Pass button beneath) can match it exactly
+// the card's width, exported so sibling controls (e.g. the "Or" fence beneath) can match it exactly
 export const CARD_WIDTH = 'clamp(116px, 16vw, 10rem)';
+
+// the Pass button is inset from the card width (narrower on both sides) so the card reads as the
+// primary option and gets more visual prominence
+export const PASS_BUTTON_WIDTH = `calc(${CARD_WIDTH} - 2rem)`;
+
+// text sizing tiers for the card caption, picked by the caption's displayed length so long ability text
+// shrinks to fit instead of overflowing the card. `lines` clamps the caption (with an ellipsis) as a last
+// resort, sized to what fits on the card at each breakpoint.
+const CAPTION_TIERS = [
+    { maxLength: 30, sx: { fontSize: { xs: '13px', lg: '18px' }, lineHeight: 1.4 }, lines: { xs: 5, lg: 5 } },
+    { maxLength: 80, sx: { fontSize: { xs: '11px', lg: '15px' }, lineHeight: 1.4 }, lines: { xs: 6, lg: 8 } },
+    { maxLength: 120, sx: { fontSize: { xs: '10px', lg: '13px' }, lineHeight: 1.4 }, lines: { xs: 7, lg: 9 } },
+    { maxLength: Infinity, sx: { fontSize: { xs: '9px', lg: '11.5px' }, lineHeight: 1.25 }, lines: { xs: 8, lg: 11 } },
+];
+
+// approximates the rendered length of a caption, counting icon tokens as a couple of characters and
+// keyword/trait tokens as their word
+const captionDisplayLength = (text: string): number =>
+    text
+        .replace(/\{(?:keyword|trait):([a-z'-]+)(?::\d+)?\}/gi, '$1')
+        .replace(/\{resource:\d+\}|:[a-z]+:/gi, 'XX')
+        .length;
+
+const getCaptionTier = (text: string) => {
+    const length = captionDisplayLength(text);
+    return CAPTION_TIERS.find((tier) => length <= tier.maxLength) ?? CAPTION_TIERS[CAPTION_TIERS.length - 1];
+};
+
+const captionStyle = (tier: typeof CAPTION_TIERS[number]) => ({
+    ...tier.sx,
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: tier.lines,
+    overflow: 'hidden',
+});
 
 const styles = {
     // the flex item. It is always exactly one card in size (same as an ungrouped trigger) so the row
@@ -104,11 +139,18 @@ const styles = {
             transform: 'translateY(-1px)'
         },
     },
-    noEffectIndicator: {
+    // stacks the card's status tags (e.g. "No effect", "Gained") in its top-left corner
+    tagStack: {
         position: 'absolute',
         top: '0.35rem',
         left: '0.35rem',
         zIndex: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: '0.25rem',
+    },
+    tag: {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -126,6 +168,10 @@ const styles = {
         lineHeight: 1,
         textTransform: 'uppercase',
         userSelect: 'none',
+    },
+    gainedTag: {
+        backgroundColor: 'rgba(33, 65, 74, 0.88)',
+        border: '1px solid rgba(102, 229, 255, 0.85)',
     },
     // sits at the top-left of the frontmost card, straddling its top edge. Tweak `top`/`left` to taste.
     countBadge: {
@@ -194,11 +240,14 @@ export const isBaseSourceCard = (sourceCard?: PopupSourceCard): boolean => {
     return sourceType?.toLowerCase() === CardType.Base;
 };
 
-export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects, count }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean, count?: number }) {
+export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects, gained, count }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean, gained?: boolean, count?: number }) {
     const backgroundImage = useCardImageURL(sourceCard);
     const isLandscapePreview = isBaseSourceCard(sourceCard);
     const isNoEffect = !hasLegalEffects;
     const isGrouped = (count ?? 0) > 1;
+    const captionTier = getCaptionTier(text);
+    // the longest captions may still be clamped on small cards, so offer the full text on hover
+    const showCaptionTooltip = captionTier === CAPTION_TIERS[CAPTION_TIERS.length - 1];
     // show at most a 3-card stack regardless of how many triggers are grouped
     const behindLayers = isGrouped ? Math.min(count ?? 1, 3) - 1 : 0;
 
@@ -210,25 +259,46 @@ export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffec
                 return <Box key={`stack-${depth}`} sx={styles.stackLayer(depth)} />;
             })}
             <Box sx={[styles.container, isNoEffect && styles.noEffectContainer]}>
-                <Button
-                    sx={[
-                        styles.button,
-                        backgroundImage
-                            ? cardArtBackground(backgroundImage, isNoEffect)
-                            : { backgroundColor: '#1E2D32' }
-                    ]}
-                    onClick={onClick}
+                <Tooltip
+                    title={showCaptionTooltip ? <RichText text={text} /> : ''}
+                    placement="top"
+                    enterDelay={400}
+                    disableInteractive
                 >
-                    <RichText text={text} />
-                </Button>
-                {isNoEffect && (
-                    <Box
-                        component="span"
-                        aria-label="This choice has no effect"
+                    <Button
+                        sx={[
+                            styles.button,
+                            backgroundImage
+                                ? cardArtBackground(backgroundImage, isNoEffect)
+                                : { backgroundColor: '#1E2D32' }
+                        ]}
                         onClick={onClick}
-                        sx={styles.noEffectIndicator}
                     >
-                        No effect
+                        <RichText text={text} sx={captionStyle(captionTier)} />
+                    </Button>
+                </Tooltip>
+                {(isNoEffect || gained) && (
+                    <Box sx={styles.tagStack}>
+                        {isNoEffect && (
+                            <Box
+                                component="span"
+                                aria-label="This choice has no effect"
+                                onClick={onClick}
+                                sx={styles.tag}
+                            >
+                                No effect
+                            </Box>
+                        )}
+                        {gained && (
+                            <Box
+                                component="span"
+                                aria-label="This ability is gained from this card"
+                                onClick={onClick}
+                                sx={[styles.tag, styles.gainedTag]}
+                            >
+                                Gained
+                            </Box>
+                        )}
                     </Box>
                 )}
                 {backgroundImage && <ViewCardButton imageUrl={backgroundImage} isLandscape={isLandscapePreview} />}

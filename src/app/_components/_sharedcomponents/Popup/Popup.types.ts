@@ -21,12 +21,21 @@ export type PopupButton = {
     arg: string;
     sourceCard?: PopupSourceCard;
     hasLegalEffects?: boolean;
+    // true when the ability was gained from `sourceCard` rather than printed on the clicked card
+    gained?: boolean;
     selected?: boolean;
     disabled?: boolean;
     // display label rendered in place of `text` by richer prompt UIs (e.g. the ability name on an optional-trigger card button)
     label?: string;
     // number of similar triggers this button represents when several are grouped into one choice
     count?: number;
+    // true when this trigger is optional and can be declined inline via `passArg` (no interstitial prompt);
+    // clicking the card itself triggers the ability
+    optional?: boolean;
+    // command arg to send when declining an inline-optional trigger; only set when `optional` is true
+    passArg?: string;
+    // label for the inline decline button (respects an ability's custom pass text); only set when `optional` is true
+    passText?: string;
 };
 
 export type PerCardButton = {
@@ -50,6 +59,8 @@ export type ActionTriggerPopup = {
     title: string;
     description?: string;
     buttons: PopupButton[];
+    // plain text buttons (e.g. Cancel) rendered below the card row
+    footerButtons?: PopupButton[];
     source: PopupSource;
 };
 

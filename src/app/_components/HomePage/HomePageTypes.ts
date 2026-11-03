@@ -51,6 +51,7 @@ export type IArticle = {
     date: string;
     image: string;
     imageAlt: string;
+    imagePosition?: string;
     link?: string;
 };
 

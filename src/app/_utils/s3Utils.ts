@@ -54,6 +54,52 @@ export const CARD_IMAGE_LOCALE_LABELS: Record<CardImageLocale, string> = {
     [CardImageLocale.Italian]: 'Italiano',
 };
 
+const SUPPORTED_LOCALE_VALUES = new Set<string>(SUPPORTED_CARD_IMAGE_LOCALES);
+
+/**
+ * Card image locales we can suggest a user switch to. English is excluded
+ * because it's the default and is never suggested.
+ */
+export type SuggestableCardLocale = Exclude<CardImageLocale, CardImageLocale.English>;
+
+/**
+ * Inspects the browser's language preferences and returns the card image
+ * locale we should suggest the user switch to, or `undefined` when no
+ * suggestion is warranted.
+ *
+ * The browser exposes BCP-47 tags (e.g. `fr-FR`, `pt-BR`, `ja`); we only
+ * compare the primary subtag against our supported locales. We walk the
+ * ordered `navigator.languages` list and:
+ *   - return the first supported non-English locale we encounter (e.g.
+ *     `['ja', 'fr']` -> French, since we can't offer Japanese but can offer
+ *     French);
+ *   - stop and return `undefined` as soon as we hit English, since a user
+ *     whose top preference is English shouldn't be nudged away from it.
+ * Unsupported languages are skipped. SSR-safe (returns `undefined` when
+ * `navigator` is unavailable).
+ */
+export function getSuggestedCardLocaleFromBrowser(): SuggestableCardLocale | undefined {
+    if (typeof navigator === 'undefined') {
+        return undefined;
+    }
+    const browserLanguages = navigator.languages?.length
+        ? navigator.languages
+        : [navigator.language];
+    for (const tag of browserLanguages) {
+        if (!tag) {
+            continue;
+        }
+        const primarySubtag = tag.toLowerCase().split('-')[0];
+        if (primarySubtag === CardImageLocale.English) {
+            return undefined;
+        }
+        if (SUPPORTED_LOCALE_VALUES.has(primarySubtag)) {
+            return primarySubtag as SuggestableCardLocale;
+        }
+    }
+    return undefined;
+}
+
 export function s3CardImageURL(
     card: ICardData | ISetCode | IServerCardData | IPreviewCard,
     locale: CardImageLocale,

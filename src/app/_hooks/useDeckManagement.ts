@@ -8,6 +8,7 @@ import {
     ISwuStatsDeckItem 
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { useUser } from '@/app/_contexts/User.context';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { useSession } from 'next-auth/react';
 
 export interface IDeckPreferences {
@@ -48,6 +49,7 @@ export interface IDeckManagementState {
 export const useDeckManagement = (): IDeckManagementState => {
     const { user } = useUser();
     const { data: session } = useSession();
+    const { showErrorScreen } = useErrorScreen();
     
     // Deck Preferences State
     const [showSavedDecks, setShowSavedDecks] = useState<boolean>(() => {
@@ -292,11 +294,22 @@ export const useDeckManagement = (): IDeckManagementState => {
             });
         } catch (error) {
             console.error('Error fetching decks:', error);
-            alert('Server error when fetching decks');
+            showErrorScreen({
+                title: 'Couldn\'t load your decks',
+                message: 'The server didn\'t respond when we asked for your saved decks.',
+                actions: (dismiss) => [
+                    { label: 'Try again', variant: 'concede', onClick: () => {
+                        dismiss();
+                        fetchDecks();
+                    } },
+                    { label: 'Dismiss', onClick: dismiss },
+                ],
+            });
         } finally {
             setIsLoadingSavedDecks(false);
         }
-    }, [session?.user, user, handleInitializeDeckSelection]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [session?.user, user, handleInitializeDeckSelection, showErrorScreen]);
 
     const handleShowSavedDecksChange = useCallback((value: boolean) => {
         setShowSavedDecks(value);

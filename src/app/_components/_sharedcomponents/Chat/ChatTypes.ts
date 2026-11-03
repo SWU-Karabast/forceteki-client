@@ -50,4 +50,8 @@ export interface IChatProps {
     handleChatOnChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     handleChatSubmit: () => void;
     pauseAutoScroll?: boolean;
+    isVisible?: boolean;
+    unreadMessageIndices?: ReadonlySet<number>;
+    unreadDividerIndex?: number | null;
+    onMessagesRead?: (indices: number[]) => void;
 }

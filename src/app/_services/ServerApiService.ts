@@ -164,6 +164,7 @@ export class ServerApiService {
         actionType: string,
         note: string,
         durationDays?: number,
+        usernameOptions?: { newUsername?: string },
     ): Promise<{ success: boolean; message: string; }> {
         return await this.fetchWithErrorHandling<{
             success: boolean;
@@ -172,7 +173,7 @@ export class ServerApiService {
             `${this.baseUrl}/api/mod/submit-action`,
             {
                 method: 'POST',
-                body: JSON.stringify({ playerId, actionType, note, durationDays }),
+                body: JSON.stringify({ playerId, actionType, note, durationDays, ...usernameOptions }),
             }
         );
     }

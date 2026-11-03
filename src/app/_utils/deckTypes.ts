@@ -34,6 +34,8 @@ export enum DeckSource {
     Niamos = 'Niamos',
     SWUPedia = 'SWUPedia',
     SithVault = 'SithVault',
+    SWUTeam = 'SWUTeam',
+    SWUCompetitiveHub = 'SWUCompetitiveHub',
     SWURec = 'SWURec'
 }
 
