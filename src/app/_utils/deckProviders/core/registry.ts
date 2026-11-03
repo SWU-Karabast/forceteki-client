@@ -13,6 +13,7 @@ import { SwubaseDeckProvider } from '../SwubaseDeckProvider';
 import { SwucardhubDeckProvider } from '../SwucardhubDeckProvider';
 import { SwuCompetitiveHubDeckProvider } from '../SwuCompetitiveHubDeckProvider';
 import { SwudbDeckProvider } from '../SwudbDeckProvider';
+import { SwurecDeckProvider } from '../SwurecDeckProvider';
 import { SwuforgeDeckProvider } from '../SwuforgeDeckProvider';
 import { SwumetastatsDeckProvider } from '../SwumetastatsDeckProvider';
 import { SwUnlimitedDbDeckProvider } from '../SwUnlimitedDbDeckProvider';
@@ -53,6 +54,7 @@ const providers: readonly DeckProviderBase[] = [
     new SithvaultDeckProvider(),
     new SwuteamDeckProvider(),
     new SwuCompetitiveHubDeckProvider(),
+    new SwurecDeckProvider(),
 ];
 
 /**
