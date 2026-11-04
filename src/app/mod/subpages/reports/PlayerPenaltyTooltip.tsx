@@ -1,38 +1,13 @@
 import React, { useState } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 import { IModActionResponse, ModActionType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import { ServerApiService } from '@/app/_services/ServerApiService';
+import { loadPlayerModerationAsync } from '@/app/_utils/playerModerationCache';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate } from '@/app/_utils/ModerationUtils';
 import { describeModAction } from '@/app/_utils/playerReportUtils';
 
 /** Newest penalties listed in the tooltip; the full history is in the ticket and in Find User */
 const MAX_LISTED = 5;
-
-/**
- * Mod actions per player, loaded the first time someone hovers over them. Shared by every row, since the same
- * players show up in many reports; {@link forgetPlayerPenalties} drops an entry after an action against them.
- */
-const penaltyCache = new Map<string, Promise<IModActionResponse[]>>();
-
-export const forgetPlayerPenalties = (playerId: string): void => {
-    penaltyCache.delete(playerId);
-};
-
-const loadPenaltiesAsync = (playerId: string): Promise<IModActionResponse[]> => {
-    let cached = penaltyCache.get(playerId);
-    if (!cached) {
-        cached = ServerApiService.getModActionsForPlayerAsync(playerId)
-            .then((result) => (result.modActions ?? []).filter((action) => action.playerId === playerId))
-            .catch((error) => {
-                // Not cached, so the next hover tries again
-                penaltyCache.delete(playerId);
-                throw error;
-            });
-        penaltyCache.set(playerId, cached);
-    }
-    return cached;
-};
 
 const isActive = (action: IModActionResponse): boolean => {
     if (action.cancelledAt) {
@@ -60,7 +35,7 @@ const PlayerPenaltyTooltip: React.FC<IPlayerPenaltyTooltipProps> = ({ playerId, 
     const handleOpen = async () => {
         setState((current) => ({ ...current, status: current.status === 'loaded' ? 'loaded' : 'loading' }));
         try {
-            const actions = await loadPenaltiesAsync(playerId);
+            const { modActions: actions } = await loadPlayerModerationAsync(playerId);
             setState({ status: 'loaded', actions: [...actions].sort((a, b) => b.createdAt.localeCompare(a.createdAt)) });
         } catch {
             setState({ status: 'failed', actions: [] });

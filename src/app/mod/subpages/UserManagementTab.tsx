@@ -16,7 +16,7 @@ import ModActionForm from '@/app/_components/_sharedcomponents/ModActions/ModAct
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
-import { IModActionResult, modActionTargetFromPlayer } from '@/app/_utils/modActionSubmission';
+import { cancelModActionAsync, IModActionResult, modActionTargetFromPlayer } from '@/app/_utils/modActionSubmission';
 
 interface IUserManagementTabProps {
 
@@ -147,7 +147,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
                 setConfirmDialog((prev) => ({ ...prev, open: false }));
                 setSubmitLoading(true);
                 try {
-                    await ServerApiService.cancelModActionAsync(selectedPlayer.id, action.id);
+                    await cancelModActionAsync(selectedPlayer.id, action.id);
                     await refreshSelectedPlayerAsync(selectedPlayer.id);
                     setSuccessMessage('Mod action cancelled successfully');
                 } catch (error) {

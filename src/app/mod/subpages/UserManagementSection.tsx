@@ -10,9 +10,8 @@ import { REPORT_PAGE_SIZE } from '@/app/_utils/playerReportUtils';
 import UserManagementTab from './UserManagementTab';
 import ReportList from './reports/ReportList';
 import ReportDetailDialog from './reports/ReportDetailDialog';
-import { ALL_OFFENSES, IReportListFilters } from './reports/reportTypes';
+import { ALL_OFFENSES, effectiveReportSort, IReportListFilters } from './reports/reportTypes';
 import ReportQuickActionDialog, { ReportQuickAction } from './reports/ReportQuickActionDialog';
-import { forgetPlayerPenalties } from './reports/PlayerPenaltyTooltip';
 import { IReportActionOutcome } from '@/app/_utils/reportActionSubmission';
 
 enum UserManagementSubTab {
@@ -23,7 +22,7 @@ enum UserManagementSubTab {
 /** Typing in the search waits this long before the list reloads */
 const SEARCH_DEBOUNCE_MS = 300;
 
-const INITIAL_FILTERS: IReportListFilters = { openOnly: true, search: '', offense: ALL_OFFENSES };
+const INITIAL_FILTERS: IReportListFilters = { openOnly: true, search: '', offense: ALL_OFFENSES, sort: null };
 
 interface IUserManagementSectionProps {
     openReportCount: number | null;
@@ -68,6 +67,7 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
                 search: debouncedSearch || undefined,
                 offense: filters.offense === ALL_OFFENSES ? undefined : filters.offense,
                 limit: REPORT_PAGE_SIZE,
+                sort: effectiveReportSort({ openOnly: filters.openOnly, sort: filters.sort }),
                 cursor: cursor ?? undefined,
             });
             if (requestId !== latestListRequestRef.current) {
@@ -91,7 +91,7 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
                 setLoading(false);
             }
         }
-    }, [filters.openOnly, filters.offense, debouncedSearch]);
+    }, [filters.openOnly, filters.offense, filters.sort, debouncedSearch]);
 
     useEffect(() => {
         if (activeTab === UserManagementSubTab.Reports) {
@@ -121,11 +121,7 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
     };
 
     const handleQuickActionDone = (outcome: IReportActionOutcome) => {
-        const report = quickAction?.report;
         setQuickAction(null);
-        if (report) {
-            forgetPlayerPenalties(report.reportedPlayerId);
-        }
         setNotice({ severity: outcome.isWarning ? 'error' : 'success', message: outcome.message });
         if (outcome.actionApplied) {
             handleReportChanged();

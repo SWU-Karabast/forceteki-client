@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Box, CircularProgress, FormControlLabel, IconButton, Menu, MenuItem, Switch, Tooltip, Typography } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { REPORT_TYPES } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import {
     IPlayerReport,
     ModActionType,
+    PlayerReportListSort,
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
@@ -19,7 +22,7 @@ import {
     OPEN_TICKET_COLOR,
     OPEN_TICKET_ROW_BACKGROUND,
 } from '@/app/_utils/playerReportUtils';
-import { ALL_OFFENSES, IReportListProps } from './reportTypes';
+import { ALL_OFFENSES, effectiveReportSort, IReportListProps } from './reportTypes';
 import PlayerPenaltyTooltip from './PlayerPenaltyTooltip';
 import { REPORT_QUICK_ACTION_LABELS } from './ReportQuickActionDialog';
 
@@ -53,6 +56,12 @@ const ReportList: React.FC<IReportListProps> = ({
         }
     };
 
+    const newestFirst = effectiveReportSort(filters) === PlayerReportListSort.NewestFirst;
+    const toggleSort = () => onFiltersChange({
+        ...filters,
+        sort: newestFirst ? PlayerReportListSort.OldestFirst : PlayerReportListSort.NewestFirst,
+    });
+
     // ----------------Styles----------------//
     const styles = {
         toolbar: {
@@ -71,6 +80,23 @@ const ReportList: React.FC<IReportListProps> = ({
         switchLabel: {
             color: 'white',
             '& .MuiFormControlLabel-label': { fontSize: '0.875rem' },
+        },
+        // The default track is nearly invisible on the dark background, so the off state needs its own color
+        switch: {
+            '& .MuiSwitch-switchBase + .MuiSwitch-track': { backgroundColor: '#6b7280', opacity: 1 },
+            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#2F7DB6', opacity: 1 },
+        },
+        sortHeader: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.15rem',
+            cursor: 'pointer',
+            userSelect: 'none' as const,
+            color: '#cfcfcf',
+            '&:hover': { color: 'white' },
+        },
+        sortIcon: {
+            fontSize: '0.95rem',
         },
         count: {
             color: '#9e9e9e',
@@ -200,7 +226,7 @@ const ReportList: React.FC<IReportListProps> = ({
                 </StyledTextField>
                 <FormControlLabel
                     sx={styles.switchLabel}
-                    control={<Switch checked={filters.openOnly} onChange={(e) => onFiltersChange({ ...filters, openOnly: e.target.checked })} />}
+                    control={<Switch sx={styles.switch} checked={filters.openOnly} onChange={(e) => onFiltersChange({ ...filters, openOnly: e.target.checked })} />}
                     label="Open Tickets Only"
                 />
                 {loading && <CircularProgress size={20} />}
@@ -208,7 +234,24 @@ const ReportList: React.FC<IReportListProps> = ({
             </Box>
 
             <Box sx={styles.headerRow}>
-                <span>Received</span>
+                <Tooltip title={newestFirst ? 'Newest first, click for oldest first' : 'Oldest first, click for newest first'}>
+                    <Box
+                        component="span"
+                        role="button"
+                        tabIndex={0}
+                        sx={styles.sortHeader}
+                        onClick={toggleSort}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                toggleSort();
+                            }
+                        }}
+                    >
+                        Received
+                        {newestFirst ? <ArrowDownwardIcon sx={styles.sortIcon} /> : <ArrowUpwardIcon sx={styles.sortIcon} />}
+                    </Box>
+                </Tooltip>
                 <span>Status</span>
                 <span>Offense</span>
                 <span>Reporter</span>

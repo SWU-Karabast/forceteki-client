@@ -369,6 +369,7 @@ const ReportDetailDialog: React.FC<IReportDetailDialogProps> = ({ reportId, onCl
                                     key={selectedContext.playerId}
                                     reportId={report.id}
                                     target={selectedContext}
+                                    targetIsReporter={selectedContext.playerId === detail.reporter.playerId}
                                     onActionApplied={handleActionApplied}
                                     onTicketClosed={handleTicketClosedByAction}
                                     onError={handlePanelError}

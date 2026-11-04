@@ -211,7 +211,7 @@ export class ServerApiService {
     // Player report API methods
     public static async listPlayerReportsAsync(query: IPlayerReportListQuery): Promise<IPlayerReportListResponse> {
         const params = new URLSearchParams({ limit: String(query.limit) });
-        for (const key of ['status', 'search', 'offense', 'cursor'] as const) {
+        for (const key of ['status', 'search', 'offense', 'sort', 'cursor'] as const) {
             if (query[key]) {
                 params.set(key, query[key]);
             }

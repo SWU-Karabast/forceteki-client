@@ -2,6 +2,7 @@ import {
     IPlayerReport,
     IPlayerReportLog,
     IPlayerReportPlayerContext,
+    PlayerReportListSort,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import type { ReportQuickAction } from './ReportQuickActionDialog';
 
@@ -16,7 +17,14 @@ export interface IReportListFilters {
 
     /** A PlayerReportType, or ALL_OFFENSES */
     offense: string;
+
+    /** Chosen by clicking the Received column; null for the default of the current filter (see effectiveReportSort) */
+    sort: PlayerReportListSort | null;
 }
+
+/** The open queue is worked through oldest first; the full history reads newest first */
+export const effectiveReportSort = (filters: Pick<IReportListFilters, 'openOnly' | 'sort'>): PlayerReportListSort =>
+    filters.sort ?? (filters.openOnly ? PlayerReportListSort.OldestFirst : PlayerReportListSort.NewestFirst);
 
 export interface IReportListProps {
 
@@ -82,6 +90,9 @@ export interface IReportActionPanelProps {
 
     /** The selected player; anonymous players (no profile) cannot be targeted by mod actions */
     target: IPlayerReportPlayerContext;
+
+    /** The target filed the report; closing then defaults to False Report instead of Action Taken */
+    targetIsReporter: boolean;
 
     /** Called with the server message after an action was issued; `isWarning` when a follow-up step failed */
     onActionApplied: (message: string, isWarning?: boolean) => Promise<void> | void;

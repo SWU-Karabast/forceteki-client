@@ -133,8 +133,8 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             {previousNames.length > 0 && <Typography sx={styles.stat}>Previous names: {shownPreviousNames}</Typography>}
             {muteText && <Typography sx={styles.statusMuted}>{muteText}</Typography>}
             {context.activeRename && <Typography sx={styles.statusRename}>Pending Force Rename</Typography>}
-            {context.activeReportingDisabledId && <Typography sx={styles.statusRename}>Reporting disabled</Typography>}
-            {context.activeUsernameChangesBlockedId && <Typography sx={styles.statusRename}>Username changes blocked</Typography>}
+            {context.activeReportingDisabledId && <Typography sx={styles.statusRename}>Reporting Disabled</Typography>}
+            {context.activeUsernameChangesBlockedId && <Typography sx={styles.statusRename}>Username Changes Blocked</Typography>}
         </Box>
     );
 };

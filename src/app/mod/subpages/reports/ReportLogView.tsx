@@ -155,8 +155,6 @@ const ReportLogView: React.FC<IReportLogViewProps> = ({ report, chatLog, gameLog
         ['Format', getGameFormatLabel(report.gameFormat)],
         ['Match Type', getMatchTypeLabel(report.matchType)],
         ['Game Steps Since Last Undo', report.gameStepsSinceLastUndo],
-        ['Screen Resolution', report.screenResolution ? `${report.screenResolution.width}x${report.screenResolution.height}` : undefined],
-        ['Viewport', report.viewport ? `${report.viewport.width}x${report.viewport.height}` : undefined],
     ];
 
     return (

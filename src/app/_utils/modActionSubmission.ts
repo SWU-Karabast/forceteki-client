@@ -7,6 +7,7 @@ import {
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
 import { generateResetUsername, isResetUsername } from '@/app/_utils/ModerationUtils';
+import { forgetPlayerModeration } from '@/app/_utils/playerModerationCache';
 
 export const MOD_ACTION_HELP_TEXT: Partial<Record<ModActionType, string>> = {
     [ModActionType.Rename]: 'The player must choose a new username themselves the next time they log in.',
@@ -183,9 +184,27 @@ export interface IModActionResult {
 
 /**
  * Submits a mod action. A requested username reset is a separate ChangeUsername action submitted only
- * after the main action succeeded; the result message covers both.
+ * after the main action succeeded; the result message covers both. Whatever the result, the player's cached
+ * penalties are dropped, so every view of the report queue loads them again.
  */
 export const submitModActionAsync = async (request: IModActionRequest): Promise<IModActionResult> => {
+    try {
+        return await applyModActionAsync(request);
+    } finally {
+        forgetPlayerModeration(request.playerId);
+    }
+};
+
+/** Cancels a mod action and drops the player's cached penalties */
+export const cancelModActionAsync = async (playerId: string, modActionId: string): Promise<void> => {
+    try {
+        await ServerApiService.cancelModActionAsync(playerId, modActionId);
+    } finally {
+        forgetPlayerModeration(playerId);
+    }
+};
+
+const applyModActionAsync = async (request: IModActionRequest): Promise<IModActionResult> => {
     const definition = modActionDefinitions[request.actionType];
     const result = await ServerApiService.submitModActionAsync(
         request.playerId,

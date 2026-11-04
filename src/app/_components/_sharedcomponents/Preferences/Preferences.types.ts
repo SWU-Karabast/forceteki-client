@@ -279,8 +279,6 @@ export interface IPlayerReport {
     gameFormat: string;
     matchType: string;
     gameStepsSinceLastUndo?: number;
-    screenResolution?: { width: number; height: number };
-    viewport?: { width: number; height: number };
     reportedPlayerPriorReportCount: number;
 
     /** False reports the reporter filed in the 30 days before this one */
@@ -344,6 +342,12 @@ export interface IPlayerReportDetailResponse {
     ticketActions: IModActionResponse[];
 }
 
+/** Order of the report list by received date; mirrors the server's PlayerReportListSort */
+export enum PlayerReportListSort {
+    NewestFirst = 'newest',
+    OldestFirst = 'oldest',
+}
+
 export interface IPlayerReportListQuery {
 
     /** Omitted for open and closed reports together */
@@ -354,14 +358,17 @@ export interface IPlayerReportListQuery {
     offense?: string;
     limit: number;
 
-    /** `nextCursor` of the previous page */
+    /** Omitted: the server lists open reports oldest first and everything else newest first */
+    sort?: PlayerReportListSort;
+
+    /** `nextCursor` of the previous page, which must have used the same sort */
     cursor?: string;
 }
 
 export interface IPlayerReportListResponse {
     success: boolean;
 
-    /** Newest first */
+    /** In the requested sort order */
     reports: IPlayerReport[];
 
     /** Pass as `cursor` to load the next page; null on the last page */
