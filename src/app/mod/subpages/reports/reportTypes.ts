@@ -91,9 +91,6 @@ export interface IReportActionPanelProps {
     /** The selected player; anonymous players (no profile) cannot be targeted by mod actions */
     target: IPlayerReportPlayerContext;
 
-    /** The target filed the report; closing then defaults to False Report instead of Action Taken */
-    targetIsReporter: boolean;
-
     /** Called with the server message after an action was issued; `isWarning` when a follow-up step failed */
     onActionApplied: (message: string, isWarning?: boolean) => Promise<void> | void;
 

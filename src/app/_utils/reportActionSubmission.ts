@@ -26,13 +26,9 @@ export interface IReportActionOutcome {
 }
 
 /**
- * The outcome a ticket is closed with after a mod action from it. An action against the reporter (e.g. Disable
- * Reporting) means the report itself was the problem, so it counts towards their recent false reports.
+ * Outcomes a ticket can be closed with together with a mod action. Action Taken is the default; False Report is
+ * for an action against the reporter whose report was the problem, so it counts towards their recent false reports.
  */
-export const defaultOutcomeForActionTarget = (targetIsReporter: boolean): PlayerReportOutcome =>
-    (targetIsReporter ? PlayerReportOutcome.FalseReport : PlayerReportOutcome.ActionTaken);
-
-/** Outcomes a ticket can be closed with together with a mod action */
 export const ACTION_CLOSE_OUTCOMES: PlayerReportOutcome[] = [PlayerReportOutcome.ActionTaken, PlayerReportOutcome.FalseReport];
 
 /**

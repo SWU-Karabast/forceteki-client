@@ -3,7 +3,7 @@ import { Box, Checkbox, FormControlLabel, Radio, RadioGroup, Typography } from '
 import ModActionForm from '@/app/_components/_sharedcomponents/ModActions/ModActionForm';
 import { PlayerReportOutcome } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { IModActionRequest, IModActionResult, modActionTargetFromReportContext } from '@/app/_utils/modActionSubmission';
-import { ACTION_CLOSE_OUTCOMES, defaultOutcomeForActionTarget, finishReportActionAsync } from '@/app/_utils/reportActionSubmission';
+import { ACTION_CLOSE_OUTCOMES, finishReportActionAsync } from '@/app/_utils/reportActionSubmission';
 import { getOutcomeOption } from '@/app/_utils/playerReportUtils';
 import { IReportActionPanelProps } from './reportTypes';
 
@@ -13,11 +13,11 @@ const CONFIRMATION_Z_INDEX = 1500;
 /**
  * Mod actions against the selected player of a report, with the same form as the player view. Most tickets are
  * resolved by a single action, so the ticket is closed with it unless the moderator keeps it open, e.g. to also
- * act against the other player. An action against the reporter closes it as False Report by default.
+ * act against the other player. It closes as Action Taken unless the moderator picks False Report.
  */
-const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target, targetIsReporter, onActionApplied, onTicketClosed, onError }) => {
+const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target, onActionApplied, onTicketClosed, onError }) => {
     const [closeTicket, setCloseTicket] = useState(true);
-    const [closeOutcome, setCloseOutcome] = useState<PlayerReportOutcome>(() => defaultOutcomeForActionTarget(targetIsReporter));
+    const [closeOutcome, setCloseOutcome] = useState<PlayerReportOutcome>(PlayerReportOutcome.ActionTaken);
     const closeOutcomeLabel = getOutcomeOption(closeOutcome)?.label ?? closeOutcome;
 
     const handleSubmitted = async (result: IModActionResult, request: IModActionRequest) => {
