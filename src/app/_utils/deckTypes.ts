@@ -33,7 +33,10 @@ export enum DeckSource {
     Melee = 'Melee',
     Niamos = 'Niamos',
     SWUPedia = 'SWUPedia',
-    SithVault = 'SithVault'
+    SithVault = 'SithVault',
+    SWUTeam = 'SWUTeam',
+    SWUCompetitiveHub = 'SWUCompetitiveHub',
+    SWURec = 'SWURec'
 }
 
 export interface IDeckData {

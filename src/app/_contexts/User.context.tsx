@@ -10,7 +10,6 @@ import React, {
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
-import { v4 as uuid } from 'uuid';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 
 const UserContext = createContext<IUserContextType>({
@@ -93,7 +92,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             if (!session?.user) {
                 let anonymousId = localStorage.getItem('anonymousUserId');
                 if (!anonymousId) {
-                    anonymousId = uuid();
+                    anonymousId = crypto.randomUUID();
                     localStorage.setItem('anonymousUserId', anonymousId);
                 }
                 setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId));

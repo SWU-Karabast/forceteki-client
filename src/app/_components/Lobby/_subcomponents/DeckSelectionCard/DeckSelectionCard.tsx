@@ -592,7 +592,7 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
 
             {lobbyState && (
                 <>
-                    <Divider sx={{ mt: 1, borderColor: '#666' }} />
+                    <Divider sx={{ my: 2, borderColor: '#666' }} />
                     <FormControl component="fieldset" fullWidth sx={styles.formControlStyle}>
                         <SegmentedControl
                             name="deckSource"
