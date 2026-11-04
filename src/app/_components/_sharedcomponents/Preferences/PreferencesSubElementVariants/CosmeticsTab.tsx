@@ -227,7 +227,7 @@ function CosmeticsTab() {
                             borderRadius: '3px',
                         },
                     }}>
-                        <Typography>Looking for something different? Submit a card sleeve request on our <Link href='https://discord.com/channels/1220057752961814568/1444390668331126874' sx={{ color: '#00D4FF', pb: 1 }}>Discord Server</Link>.</Typography>
+                        <Typography>Submit a card sleeve request for your team on our <Link href='https://discord.com/channels/1220057752961814568/1444390668331126874' sx={{ color: '#00D4FF', pb: 1 }}>Discord Server</Link>.</Typography>
                         <Grid sx={styles.functionContainer}>
                             {
                                 cosmetics.cardbacks.length > 0 && sortCosmeticsByTitle(filterSelectableCosmetics(cosmetics.cardbacks)).map((cardback) => (
