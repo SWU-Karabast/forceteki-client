@@ -146,7 +146,6 @@ declare module 'next-auth' {
             email?: string;
             image?: string;
             provider: string;
-            userId?: string;
         };
     }
 }
@@ -159,7 +158,6 @@ declare module 'next-auth/jwt'{
         picture?: string;
         provider?: string;
         providerId?: string;
-        userId?: string;
         exp: number;
     }
 }
