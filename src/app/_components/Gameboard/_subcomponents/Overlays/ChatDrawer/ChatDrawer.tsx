@@ -375,7 +375,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const isReportingDisabled = !!user?.reportingDisabled;
 
     const getChatDisabledInfo = (): IChatDisabledInfo => {
-        if (isPrivateLobby && !doesUserHaveChatMuted) {
+        if (isPrivateLobby) {
             return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
         }
 
