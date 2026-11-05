@@ -1,8 +1,6 @@
 import {
-    ModActionType,
     PlayerReportOutcome,
     PlayerReportStatus,
-    PlayerReportType,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import { IModActionResult } from '@/app/_utils/modActionSubmission';
@@ -10,9 +8,6 @@ import { getOutcomeOption } from '@/app/_utils/playerReportUtils';
 
 /** Mirrors the server's limit for closing notes; the action note is reused for it */
 const MAX_CLOSING_NOTE_LENGTH = 2000;
-
-/** Days for the "Mute 1 Week" quick action */
-export const QUICK_MUTE_DAYS = 7;
 
 export interface IReportActionOutcome {
 
@@ -33,7 +28,7 @@ export const ACTION_CLOSE_OUTCOMES: PlayerReportOutcome[] = [PlayerReportOutcome
 
 /**
  * After a mod action was submitted from a report: closes the ticket with the given outcome if asked to, and
- * describes the result in one message. Used by the ticket view and the quick actions of the report list.
+ * describes the result in one message.
  */
 export const finishReportActionAsync = async (
     reportId: string,
@@ -59,19 +54,5 @@ export const finishReportActionAsync = async (
     } catch (error) {
         const failure = error instanceof Error ? error.message : 'unknown error';
         return { actionApplied: true, ticketClosed: false, isWarning: true, message: `${result.message} The ticket could not be closed: ${failure}` };
-    }
-};
-
-/** A starting note for a quick action, from what the player was reported for; the moderator can change it */
-export const getQuickActionNote = (actionType: ModActionType, offense: string): string => {
-    switch (offense) {
-        case PlayerReportType.ChatHarrasment:
-            return 'Insulting the opponent in chat.';
-        case PlayerReportType.OffensiveUsername:
-            return actionType === ModActionType.Warning ? 'Offensive username.' : '';
-        case PlayerReportType.AbusingMechanics:
-            return 'Abusing Karabast features (undo or turn timer).';
-        default:
-            return '';
     }
 };

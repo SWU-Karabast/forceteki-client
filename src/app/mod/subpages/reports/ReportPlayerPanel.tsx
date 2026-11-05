@@ -7,7 +7,7 @@ import { IReportPlayerPanelProps } from './reportTypes';
 
 /**
  * One side of a report (reporter or reported player). Clicking the card selects the player as the
- * target for quick actions and for the history column.
+ * target for mod actions and for the history column.
  */
 /** How many earlier usernames the card lists; the full list is in the history column */
 const MAX_PREVIOUS_NAMES_SHOWN = 3;

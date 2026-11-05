@@ -20,11 +20,7 @@ export const forgetPlayerModeration = (playerId: string): void => {
     cache.delete(playerId);
 };
 
-/** @param fresh skips a cached entry, for decisions that must not rely on an older load (e.g. which actions to offer) */
-export const loadPlayerModerationAsync = (playerId: string, fresh = false): Promise<IPlayerModeration> => {
-    if (fresh) {
-        cache.delete(playerId);
-    }
+export const loadPlayerModerationAsync = (playerId: string): Promise<IPlayerModeration> => {
     let cached = cache.get(playerId);
     if (!cached) {
         cached = ServerApiService.getModActionsForPlayerAsync(playerId)

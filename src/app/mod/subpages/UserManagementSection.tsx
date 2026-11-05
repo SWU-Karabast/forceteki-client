@@ -11,8 +11,6 @@ import UserManagementTab from './UserManagementTab';
 import ReportList from './reports/ReportList';
 import ReportDetailDialog from './reports/ReportDetailDialog';
 import { ALL_OFFENSES, effectiveReportSort, IReportListFilters } from './reports/reportTypes';
-import ReportQuickActionDialog, { ReportQuickAction } from './reports/ReportQuickActionDialog';
-import { IReportActionOutcome } from '@/app/_utils/reportActionSubmission';
 
 enum UserManagementSubTab {
     Reports = 0,
@@ -46,7 +44,6 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
     const [error, setError] = useState<string | null>(null);
     const [notice, setNotice] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
     const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-    const [quickAction, setQuickAction] = useState<{ report: IPlayerReport; actionType: ReportQuickAction } | null>(null);
     const [searchRequest, setSearchRequest] = useState<{ query: string; requestId: number } | null>(null);
 
     useEffect(() => {
@@ -120,14 +117,6 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
         handleReportChanged();
     };
 
-    const handleQuickActionDone = (outcome: IReportActionOutcome) => {
-        setQuickAction(null);
-        setNotice({ severity: outcome.isWarning ? 'error' : 'success', message: outcome.message });
-        if (outcome.actionApplied) {
-            handleReportChanged();
-        }
-    };
-
     const handleTabChange = (tab: UserManagementSubTab) => {
         // Set together with the tab, so the list never renders a moment of "no reports" before loading
         if (tab === UserManagementSubTab.Reports) {
@@ -195,16 +184,10 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
                         onFiltersChange={setFilters}
                         onOpenReport={(report) => setSelectedReportId(report.id)}
                         onQuickClose={handleQuickClose}
-                        onQuickAction={(report, actionType) => {
-                            setNotice(null);
-                            setQuickAction({ report, actionType });
-                        }}
                         onLoadMore={() => loadPageAsync(nextCursor)}
                     />
                 </>
             )}
-
-            <ReportQuickActionDialog request={quickAction} onCancel={() => setQuickAction(null)} onDone={handleQuickActionDone} />
 
             <ReportDetailDialog
                 reportId={selectedReportId}

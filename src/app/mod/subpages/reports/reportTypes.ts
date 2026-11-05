@@ -4,7 +4,6 @@ import {
     IPlayerReportPlayerContext,
     PlayerReportListSort,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import type { ReportQuickAction } from './ReportQuickActionDialog';
 
 /** Offense filter value for every offense */
 export const ALL_OFFENSES = 'all';
@@ -43,8 +42,6 @@ export interface IReportListProps {
     /** Closes an open report as No Action without opening it */
     onQuickClose: (report: IPlayerReport) => void;
 
-    /** Starts a Warning or a one-week Mute against the reported player of an open report */
-    onQuickAction: (report: IPlayerReport, actionType: ReportQuickAction) => void;
     onLoadMore: () => void;
 }
 

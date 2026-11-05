@@ -8,7 +8,6 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { REPORT_TYPES } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import {
     IPlayerReport,
-    ModActionType,
     PlayerReportListSort,
     PlayerReportStatus,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
@@ -24,7 +23,6 @@ import {
 } from '@/app/_utils/playerReportUtils';
 import { ALL_OFFENSES, effectiveReportSort, IReportListProps } from './reportTypes';
 import PlayerPenaltyTooltip from './PlayerPenaltyTooltip';
-import { REPORT_QUICK_ACTION_LABELS } from './ReportQuickActionDialog';
 
 const COLUMNS = '80px 110px 1fr 1fr 1fr 2fr 1fr 40px';
 
@@ -42,7 +40,6 @@ const ReportList: React.FC<IReportListProps> = ({
     onFiltersChange,
     onOpenReport,
     onQuickClose,
-    onQuickAction,
     onLoadMore,
 }) => {
     const dateFormat = useDateFormat();
@@ -299,15 +296,9 @@ const ReportList: React.FC<IReportListProps> = ({
 
             <Menu anchorEl={menu?.anchor} open={!!menu} onClose={() => setMenu(null)}>
                 <MenuItem onClick={() => closeMenuAnd(onOpenReport)}>View Ticket</MenuItem>
-                {menu?.report.status === PlayerReportStatus.Open && [
-                    <MenuItem key="warning" onClick={() => closeMenuAnd((report) => onQuickAction(report, ModActionType.Warning))}>
-                        {REPORT_QUICK_ACTION_LABELS[ModActionType.Warning]}: {menu.report.reportedPlayerUsername}
-                    </MenuItem>,
-                    <MenuItem key="mute" onClick={() => closeMenuAnd((report) => onQuickAction(report, ModActionType.Mute))}>
-                        {REPORT_QUICK_ACTION_LABELS[ModActionType.Mute]}: {menu.report.reportedPlayerUsername}
-                    </MenuItem>,
-                    <MenuItem key="close" onClick={() => closeMenuAnd(onQuickClose)}>Close with No Action</MenuItem>,
-                ]}
+                {menu?.report.status === PlayerReportStatus.Open && (
+                    <MenuItem onClick={() => closeMenuAnd(onQuickClose)}>Close with No Action</MenuItem>
+                )}
             </Menu>
 
             {hasMore && (
