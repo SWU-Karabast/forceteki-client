@@ -9,6 +9,7 @@ import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
 import { CardImageLocale } from '@/app/_utils/s3Utils';
+import { formatLongDate, getDateFormat } from '@/app/_utils/dateFormatUtils';
 import { ServerApiService } from '@/app/_services/ServerApiService';
 
 /* Secondary functions */
@@ -160,12 +161,7 @@ export const getUsernameChangeInfoFromServer = async(user: IUser): Promise<{
         // Format a detailed message with the date if available
         let formattedMessage = data.result.message || '';
         if (data.result.nextChangeAllowedAt) {
-            const date = new Date(data.result.nextChangeAllowedAt);
-            const formattedDate = date.toLocaleDateString(undefined, {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+            const formattedDate = formatLongDate(data.result.nextChangeAllowedAt, getDateFormat(user.preferences));
             formattedMessage += ` (on ${formattedDate})`;
         }
 
@@ -777,6 +773,7 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
                     muteChat: preferences.gameOptions?.muteChat ?? false,
                     cardLanguage: preferences.gameOptions?.cardLanguage ?? CardImageLocale.English,
                     timerVisibility: preferences.gameOptions?.timerVisibility,
+                    dateFormat: preferences.gameOptions?.dateFormat,
                     autoResolve: {
                         singleTarget: preferences.gameOptions?.autoResolve?.singleTarget ?? false,
                     },
