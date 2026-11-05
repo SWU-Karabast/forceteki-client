@@ -298,7 +298,7 @@ const ReportList: React.FC<IReportListProps> = ({
             ))}
 
             <Menu anchorEl={menu?.anchor} open={!!menu} onClose={() => setMenu(null)}>
-                <MenuItem onClick={() => closeMenuAnd(onOpenReport)}>Open Ticket</MenuItem>
+                <MenuItem onClick={() => closeMenuAnd(onOpenReport)}>View Ticket</MenuItem>
                 {menu?.report.status === PlayerReportStatus.Open && [
                     <MenuItem key="warning" onClick={() => closeMenuAnd((report) => onQuickAction(report, ModActionType.Warning))}>
                         {REPORT_QUICK_ACTION_LABELS[ModActionType.Warning]}: {menu.report.reportedPlayerUsername}
