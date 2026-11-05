@@ -11,6 +11,7 @@ import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDate } from '@/app/_utils/ModerationUtils';
 import { getOutcomeOption, REPORT_OUTCOME_OPTIONS } from '@/app/_utils/playerReportUtils';
 import { IReportClosePanelProps } from './reportTypes';
+import OutcomeLabel from './OutcomeLabel';
 
 /** Mirrors the server's limit for closing notes */
 const MAX_CLOSING_NOTE_LENGTH = 2000;
@@ -67,14 +68,6 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
             color: '#fff',
             '&.Mui-checked': { color: '#fff' },
         },
-        radioLabel: (color: string) => ({
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            color,
-            fontSize: '0.875rem',
-            fontWeight: 600,
-        }),
         footer: {
             display: 'flex',
             justifyContent: 'flex-end',
@@ -121,11 +114,7 @@ const ReportClosePanel: React.FC<IReportClosePanelProps> = ({ report, onClosed, 
                         key={option.value}
                         value={option.value}
                         control={<Radio size="small" sx={styles.radio} />}
-                        label={(
-                            <Box component="span" sx={styles.radioLabel(option.color)}>
-                                {option.label}
-                            </Box>
-                        )}
+                        label={<OutcomeLabel option={option} />}
                     />
                 ))}
             </RadioGroup>

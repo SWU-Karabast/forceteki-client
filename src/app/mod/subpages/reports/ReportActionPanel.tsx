@@ -6,6 +6,7 @@ import { IModActionRequest, IModActionResult, modActionTargetFromReportContext }
 import { ACTION_CLOSE_OUTCOMES, finishReportActionAsync } from '@/app/_utils/reportActionSubmission';
 import { getOutcomeOption } from '@/app/_utils/playerReportUtils';
 import { IReportActionPanelProps } from './reportTypes';
+import OutcomeLabel from './OutcomeLabel';
 
 /** Above the report detail dialog */
 const CONFIRMATION_Z_INDEX = 1500;
@@ -59,10 +60,9 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
             p: '0.25rem',
             '&.Mui-checked': { color: '#fff' },
         },
-        radioLabel: (color: string) => ({
+        radioLabel: {
             mr: '0.75rem',
-            '& .MuiFormControlLabel-label': { color, fontSize: '0.875rem', fontWeight: 600 },
-        }),
+        },
     };
 
     return (
@@ -84,13 +84,13 @@ const ReportActionPanel: React.FC<IReportActionPanelProps> = ({ reportId, target
                             <RadioGroup row value={closeOutcome} onChange={(e) => setCloseOutcome(e.target.value as PlayerReportOutcome)}>
                                 {ACTION_CLOSE_OUTCOMES.map((value) => {
                                     const option = getOutcomeOption(value);
-                                    return (
+                                    return option && (
                                         <FormControlLabel
                                             key={value}
                                             value={value}
-                                            sx={styles.radioLabel(option?.color ?? 'white')}
+                                            sx={styles.radioLabel}
                                             control={<Radio size="small" sx={styles.radio} />}
-                                            label={option?.label ?? value}
+                                            label={<OutcomeLabel option={option} />}
                                         />
                                     );
                                 })}

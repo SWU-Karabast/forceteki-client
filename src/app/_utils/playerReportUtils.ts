@@ -38,6 +38,9 @@ export interface IReportOutcomeOption {
     value: PlayerReportOutcome;
     label: string;
     color: string;
+
+    /** When to use this outcome, shown on hover where moderators pick one */
+    hint?: string;
 }
 
 /**
@@ -51,8 +54,8 @@ export const OPEN_TICKET_ROW_BACKGROUND = 'rgba(196, 0, 0, 0.12)';
 export const REPORT_OUTCOME_OPTIONS: IReportOutcomeOption[] = [
     { value: PlayerReportOutcome.ActionTaken, label: 'Action Taken', color: '#81c784' },
     { value: PlayerReportOutcome.NoAction, label: 'No Action', color: '#BDBDBD' },
-    { value: PlayerReportOutcome.FalseReport, label: 'False Report', color: '#ffb74d' },
-    { value: PlayerReportOutcome.TimerAbuse, label: 'Timer Abuse', color: '#4fc3f7' },
+    { value: PlayerReportOutcome.FalseReport, label: 'False Report', color: '#ffb74d', hint: 'Only when the report claims something that didn\'t happen, not for things we just wouldn\'t penalize.' },
+    { value: PlayerReportOutcome.TimerAbuse, label: 'Timer Abuse', color: '#4fc3f7', hint: 'Tracked to spot repeat offenders; no penalty is applied.' },
 ];
 
 export const getOutcomeOption = (outcome?: string): IReportOutcomeOption | undefined =>
