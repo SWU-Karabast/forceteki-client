@@ -8,7 +8,6 @@ import { TimerVisibilityProvider } from '@/app/_contexts/TimerVisibility.context
 import { UserProvider } from '@/app/_contexts/User.context';
 import { ErrorScreenProvider } from '@/app/_contexts/ErrorScreen.context';
 import { SessionProvider } from 'next-auth/react';
-import { OngoingEffectHighlightProvider } from '@/app/_contexts/OngoingEffectHighlight.context';
 import { ServerSettingsProvider } from '@/app/_contexts/ServerSettings.context';
 
 interface IClientProvidersProps {
@@ -23,13 +22,11 @@ const ClientProviders: React.FC<IClientProvidersProps> = ({ children }) => {
                     <CardImageLocaleProvider>
                         <TimerVisibilityProvider>
                             <PopupProvider>
-                                <OngoingEffectHighlightProvider>
-                                    <CosmeticsProvider>
-                                        <ThemeContextProvider>
-                                            <ErrorScreenProvider>{children}</ErrorScreenProvider>
-                                        </ThemeContextProvider>
-                                    </CosmeticsProvider>
-                                </OngoingEffectHighlightProvider>
+                                <CosmeticsProvider>
+                                    <ThemeContextProvider>
+                                        <ErrorScreenProvider>{children}</ErrorScreenProvider>
+                                    </ThemeContextProvider>
+                                </CosmeticsProvider>
                             </PopupProvider>
                         </TimerVisibilityProvider>
                     </CardImageLocaleProvider>

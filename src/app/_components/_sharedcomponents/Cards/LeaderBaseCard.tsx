@@ -10,7 +10,7 @@ import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOver
 import CardValueAdjuster from './CardValueAdjuster';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledcomponents/damageCounterToken';
-import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { useOngoingEffectHighlightSx } from '@/app/_hooks/useOngoingEffectHighlights';
 import UpgradeStrip from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
 import { PopoverConfig, usePreviewCardPopover } from '@/app/_components/_sharedcomponents/Cards/GameCard/cardHooks';
 
