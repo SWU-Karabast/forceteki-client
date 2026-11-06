@@ -10,6 +10,7 @@ import { Session } from 'next-auth';
 import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
 import { CardImageLocale } from '@/app/_utils/s3Utils';
 import { ServerApiService } from '@/app/_services/ServerApiService';
+import { EmailNotVerifiedError } from '@/app/_utils/SignInRefusal';
 
 /* Secondary functions */
 /**
@@ -116,6 +117,9 @@ export const getUserFromServer = async(): Promise<IGetUser> =>{
         if (response.status === 401 && result.code === 'ACCOUNT_NOT_FOUND') {
             await ServerApiService.createUserAsync();
             ({ response, result } = await requestUser());
+        }
+        if (response.status === 401 && result.code === 'EMAIL_NOT_VERIFIED') {
+            throw new EmailNotVerifiedError();
         }
         if (!response.ok) {
             const errors = result.errors || {};

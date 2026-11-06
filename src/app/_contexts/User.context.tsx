@@ -11,6 +11,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { EmailNotVerifiedError, emailNotVerifiedRedirectUrl } from '@/app/_utils/SignInRefusal';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -49,6 +50,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             }
             // If user is logged in with session but needs to sync with server
             let needsLogout = false;
+            let logoutCallbackUrl = '/';
             if (session?.user) {
                 try {
                     const serverUser = await getUserFromServer();
@@ -77,12 +79,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                     console.error('Error syncing user with server:', error);
                     // we need to logout the user when an error with getting the user happens
                     needsLogout = true;
+                    // the home page explains this refusal once the user is signed out
+                    if (error instanceof EmailNotVerifiedError) {
+                        logoutCallbackUrl = emailNotVerifiedRedirectUrl(session.user.provider);
+                    }
                 }
             } else {
                 setIsMod(false);
             }
             if(needsLogout){
-                logout();
+                logout(logoutCallbackUrl);
             }
         };
 
@@ -219,8 +225,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     };
 
 
-    const logout = () => {
-        signOut({ callbackUrl: '/' });
+    const logout = (callbackUrl = '/') => {
+        signOut({ callbackUrl });
         setUser(null);
     };
 
