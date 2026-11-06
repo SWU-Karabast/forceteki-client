@@ -23,7 +23,7 @@ const TokenStack: React.FC<{ cards: ICardData[] }> = ({ cards }) => {
                     borderRadius: '0.5rem',
                     backgroundImage: `url(${s3CardImageURL(top, locale, CardStyle.InPlay)})`,
                     backgroundSize: 'cover',
-                    filter: 'brightness(0.8)',
+                    filter: top.exhausted ? 'brightness(0.25)' : 'brightness(0.8)',
                     transform: `translate(10%, -10%)${top.exhausted ? ' rotate(4deg)' : ''}`,
                 }}
             />
