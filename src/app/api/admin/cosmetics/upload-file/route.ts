@@ -4,7 +4,7 @@ import { getS3ServiceAsync } from '@/app/_services/S3Service';
 import { ICosmeticEntity, RegisteredCosmeticType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { withAdminAuth } from '@/app/_utils/AdminAuth';
 import { AdminRole } from '@/app/_contexts/UserTypes';
-import { ServerApiService } from '@/app/_services/ServerApiService';
+import { ServerApiError, ServerApiService } from '@/app/_services/ServerApiService';
 
 /** The largest image the route accepts. */
 const MaxCosmeticFileBytes = 10 * 1024 * 1024;
@@ -125,16 +125,24 @@ export const POST = withAdminAuth(AdminRole.Moderator, async (request: NextReque
             path: s3Url,
         };
 
-        // Save to server via API with cookies forwarded; if it is refused, the uploaded image is removed again
+        // Save to server via API with cookies forwarded. Only a refusal (a 4xx answer) means nothing was registered, so
+        // only then is the uploaded image removed again: after a server error or a lost answer the cosmetic may well
+        // exist, and an image left over costs less than a listed cosmetic with no image.
         try {
             await ServerApiService.saveCosmeticAsync(cosmeticData, cookies);
         } catch (error) {
+            if (!(error instanceof ServerApiError) || error.status < 400 || error.status >= 500) {
+                throw error;
+            }
+
             try {
                 await s3Service.deleteFile(s3Key);
             } catch (deleteError) {
                 console.error(`Could not remove the image of an unregistered cosmetic (${s3Key}):`, deleteError);
             }
-            throw error;
+
+            // pass the game node's reason on, so the mod page can show why
+            return NextResponse.json({ error: error.message }, { status: error.status });
         }
 
         return NextResponse.json(
