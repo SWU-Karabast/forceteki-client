@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
     Box,
     Button,
@@ -20,6 +20,7 @@ import {
 import { useGame } from '@/app/_contexts/Game.context';
 import ChatCard from './ChatCard';
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
+import { useChatMessageVisibility } from '@/app/_hooks/useChatMessageVisibility';
 import { useUser } from '@/app/_contexts/User.context';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
@@ -33,9 +34,14 @@ const Chat: React.FC<IChatProps> = ({
     handleChatOnChange,
     handleChatSubmit,
     pauseAutoScroll = false,
+    isVisible = true,
+    unreadMessageIndices,
+    unreadDividerIndex = null,
+    onMessagesRead,
 }) => {
     const { lobbyState, connectedPlayer, isSpectator, getOpponent, isAnonymousPlayer, hasChatDisabled } = useGame();
     const chatBoxRef = useRef<HTMLDivElement | null>(null);
+    const hasScrolledInitiallyRef = useRef(false);
     const lastScrollTopRef = useRef(0);
     const previousMessagesRef = useRef<IChatEntry[]>([]);
     const [isScrollPaused, setIsScrollPaused] = useState(false);
@@ -238,7 +244,7 @@ const Chat: React.FC<IChatProps> = ({
         const playerColor = getPlayerColor(playerMessage.id, connectedPlayer);
 
         return (
-            <Box key={index} sx={{ ...styles.chatEntryBox, backgroundColor: `color-mix(in srgb, ${playerColor} 13%, transparent)` }}>
+            <Box key={index} data-chat-message-index={index} sx={{ ...styles.chatEntryBox, backgroundColor: `color-mix(in srgb, ${playerColor} 13%, transparent)` }}>
                 <Typography sx={styles.messageText}>
                     <span style={{ 
                         color: playerColor,
@@ -334,10 +340,13 @@ const Chat: React.FC<IChatProps> = ({
     const unreadMessageCount = unreadStartIndex === null
         ? 0
         : Math.max(0, chatHistory.length - unreadStartIndex);
+    const newMessagesDividerIndex = unreadDividerIndex ?? (unreadMessageCount > 0 ? unreadStartIndex : null);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!isScrollPaused) {
-            scrollToLatest();
+            // Position newly mounted chats before paint, including when the mobile drawer reopens.
+            scrollToLatest(hasScrolledInitiallyRef.current ? 'smooth' : 'instant');
+            hasScrolledInitiallyRef.current = true;
         }
     }, [chatHistory, isScrollPaused]);
 
@@ -347,6 +356,14 @@ const Chat: React.FC<IChatProps> = ({
             setUnreadStartIndex(null);
         }
     }, [chatHistory.length, unreadStartIndex]);
+
+    useChatMessageVisibility({
+        chatBoxRef,
+        chatHistory,
+        isVisible,
+        unreadMessageIndices,
+        onMessagesRead,
+    });
     // ------------------------STYLES------------------------//
 
     const styles = {
@@ -398,11 +415,11 @@ const Chat: React.FC<IChatProps> = ({
         },
         newMessagesDivider: {
             my: '0.25rem',
-            color: '#FFFE50',
+            color: '#f44336',
             fontSize: '0.7rem',
+            fontWeight: 700,
             '&::before, &::after': {
-                borderColor: '#FFFE50',
-                opacity: 0.7,
+                borderColor: '#f44336',
             },
         },
         chatMessageStack: {
@@ -528,7 +545,7 @@ const Chat: React.FC<IChatProps> = ({
                     <Box sx={styles.chatMessageStack}>
                         {chatHistory && chatHistory.map((chatEntry: IChatEntry, index: number) => (
                             <React.Fragment key={`${chatEntry.date}-${index}`}>
-                                {unreadStartIndex === index && unreadMessageCount > 0 && (
+                                {newMessagesDividerIndex === index && (
                                     <Divider sx={styles.newMessagesDivider}>New messages</Divider>
                                 )}
                                 {formatMessage(chatEntry?.message, index)}

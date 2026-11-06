@@ -102,7 +102,7 @@ const HomePagePlayMode: React.FC = () => {
 
     const { gamesEnabled, maintenanceMessage, hasLoaded } = useServerSettings();
 
-    const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
+    const showTestGames = process.env.NODE_ENV === 'development' && user?.provider === 'dev-user';
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
 
     // Tutorial popup handlers (undo + timer chained)
@@ -213,6 +213,7 @@ const HomePagePlayMode: React.FC = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ filename: filename }),
+                    credentials: 'include',
                 }
             );
 

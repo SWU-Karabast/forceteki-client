@@ -557,6 +557,8 @@ const DeckDetails: React.FC = () => {
                             onMouseEnter={handlePreviewOpen}
                             onMouseLeave={handlePreviewClose}
                             data-card-type="leader"
+                            data-card-not-deployed="true"
+                            data-card-side="0"
                             data-card-url={leaderImageUrl}
                         >
                             {deckData && (

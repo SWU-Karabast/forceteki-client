@@ -306,10 +306,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const isSpectatorMode = spectatorParam === 'true';
         setIsSpectator(isSpectatorMode);
         const token = session?.jwtToken;
+        // a signed-in session (the local dev users included) is identified by its token alone; only anonymous users send an id
+        const identityHint = token
+            ? null
+            : user
+                ? { id: user.id, username: user.username }
+                : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId };
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
             query: {
-                user: JSON.stringify(user ? user : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId }),
+                ...(identityHint ? { user: JSON.stringify(identityHint) } : {}),
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null }),
                 spectator: isSpectatorMode ? 'true' : 'false'
             },
