@@ -53,3 +53,6 @@ storybook-static
 
 # claude code — personal overrides stay local, shared config is committed
 .claude/settings.local.json
+
+# game state snapshots downloaded from forceteki by `npm run states`
+src/__fixtures__/gamestates/

@@ -18,11 +18,14 @@ npm run lint         # tsc --noemit && next lint   <- what CI runs; run this bef
 npm run lint:fix     # same, with --fix
 npm run build        # next build (does NOT lint: eslint.ignoreDuringBuilds is true in next.config.mjs)
 npm run storybook    # component workbench on :6006
+npm run test:run     # vitest, once (`npm test` watches); see "Gameboard tests" below
+npm run states -- --ref pr/<number>   # test against a backend PR's game states instead of backend main
 docker compose up    # Adobe S3Mock on :9090, only needed for local cosmetics upload work
 ```
 
-Node 22.x. There is **no test framework** in this repo — verification is `npm run lint`, `npm run build`,
-and manual play against a local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build only.
+Node 22.x. Verification is `npm run lint`, `npm run build`, `npm run test:run`, and manual play against a
+local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build; `.github/workflows/gameboard-tests.yml`
+runs the tests.
 
 ## Architecture
 
@@ -103,6 +106,31 @@ no-op in development.
 `ServerSettings.context` polls the backend every 20s. `gamesEnabled` defaults to **false**, so an
 unreachable backend reads as maintenance; gate maintenance UI on `hasLoaded` too, or every page load
 flashes it. The client-side gate is presentation only — the server 503s anyway.
+
+### Gameboard tests
+
+The tests render the board from the game states forceteki really sends. forceteki commits them as snapshots
+in its `test/stateSnapshots/`; this repo does not keep a copy. `npm run states` downloads them into
+`src/__fixtures__/gamestates/` (gitignored), and the first test run does that on its own, from backend main.
+`manifest.json` there says which backend ref and commit they came from.
+
+- **Render** snapshots (`render/<name>.<participant>.json`) are one board, for checking it is drawn correctly.
+- **Control** snapshots (`controls/<name>.json`) are a chain of states for one participant; each step's `send`
+  is the messages that participant sent to reach the next, exactly as `sendGameMessage` emits them.
+- `src/testing/gameState.tsx` has the helpers: `loadRenderSnapshot`, `loadControlChain`, and `renderGameState`,
+  which renders a component as a participant sees a state, records what it sends (`sent`), and delivers the next
+  state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`). The game and
+  user contexts are mocked in `src/testing/setup.ts`; the rest of the providers are the real ones.
+  `Gameboard/Board/Board.test.tsx` is the example.
+- `npm run states -- --ref main|<branch>|pr/<number>` picks which backend states to test against. A `pr/<number>`
+  ref is GitHub's merge of that backend PR into current main. `--local [path]` copies a forceteki working tree
+  (default `../forceteki`) to try changes before pushing.
+- **Paired PRs:** a client PR that needs a backend PR's states puts `Backend: forceteki#<number>` in its
+  description, and the `Gameboard tests` check runs against that PR's states (editing the description re-runs it).
+  The merge queue tests against backend main, so merge the backend PR first. A PR that links nothing is tested
+  against backend main.
+- A snapshot a test needs that the backend does not capture yet belongs in the backend PR (see forceteki's
+  CLAUDE.md, "State snapshots"); never hand-write a game state here.
 
 ## Conventions
 
