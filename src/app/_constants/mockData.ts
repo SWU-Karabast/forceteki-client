@@ -86,7 +86,7 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'Homeworlds Meta Card Suspensions',
+        title: 'Homeworlds Suspensions: A Brightening Reality',
         content: `
         <p>In line with the recent suspension announcement, the following cards are suspended in the <strong>Premier</strong> format, effective immediately:</p>
 
