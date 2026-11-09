@@ -115,18 +115,22 @@ flashes it. The client-side gate is presentation only — the server 503s anyway
 ### Gameboard tests
 
 The tests render the board from the game states forceteki really sends. forceteki commits them as snapshots
-in its `test/stateSnapshots/`; this repo does not keep a copy. `npm run states` downloads them into
-`src/__fixtures__/gamestates/` (gitignored), and the first test run does that on its own, from backend main.
+in its `test/stateSnapshots/`; this repo does not keep a copy. `npm run states` downloads them into this repo's
+`test/stateSnapshots/` (gitignored), and the first test run does that on its own, from backend main.
 `manifest.json` there says which backend ref and commit they came from.
+
+Everything for testing lives in the root `test/` directory, never beside the code under `src/`: tests in
+`test/<area>/<Name>.test.tsx` (the board's in `test/gameboard/`), helpers and setup in `test/helpers/`. Import app
+code with the `@/` alias.
 
 - **Render** snapshots (`render/<name>.<participant>.json`) are one board, for checking it is drawn correctly.
 - **Control** snapshots (`controls/<name>.json`) are a chain of states for one participant; each step's `send`
   is the messages that participant sent to reach the next, exactly as `sendGameMessage` emits them.
-- `src/testing/gameState.tsx` has the helpers: `loadRenderSnapshot`, `loadControlChain`, and `renderGameState`,
+- `test/helpers/gameState.tsx` has the helpers: `loadRenderSnapshot`, `loadControlChain`, and `renderGameState`,
   which renders a component as a participant sees a state, records what it sends (`sent`), and delivers the next
   state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`). Nothing is
   mocked: it renders the real `GameStateProvider` and the other providers the board needs, so it is the one
-  place to update when a context moves to a store. `Gameboard/Board/Board.test.tsx` is the example.
+  place to update when a context moves to a store. `test/gameboard/Board.test.tsx` is the example.
 - `npm run states -- --ref main|<branch>|pr/<number>` picks which backend states to test against. A `pr/<number>`
   ref is GitHub's merge of that backend PR into current main. `--local [path]` copies a forceteki working tree
   (default `../forceteki`) to try changes before pushing.

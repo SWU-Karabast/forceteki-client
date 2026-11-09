@@ -55,4 +55,4 @@ storybook-static
 .claude/settings.local.json
 
 # game state snapshots downloaded from forceteki by `npm run states`
-src/__fixtures__/gamestates/
+/test/stateSnapshots/

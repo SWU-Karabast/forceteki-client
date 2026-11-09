@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Rendering the board from the game states forceteki sends. `npm run states` downloads the
-// backend's snapshots into src/__fixtures__/gamestates/ (the test run does it once on its own):
+// backend's snapshots into test/stateSnapshots/ (the test run does it once on its own):
 //
 // - render/<name>.<participant>.json: one board, for checking it is drawn correctly.
 // - controls/<name>.json: a chain of states for one participant, each with the messages that
@@ -25,7 +25,7 @@ export interface IControlStep {
     send: unknown[][];
 }
 
-const SnapshotDir = 'src/__fixtures__/gamestates';
+const SnapshotDir = 'test/stateSnapshots';
 
 const readSnapshot = (path: string) => {
     const file = join(SnapshotDir, path);

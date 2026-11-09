@@ -1,5 +1,5 @@
 // `npm run states -- --ref main|<branch>|pr/<number>` downloads the game state snapshots forceteki
-// commits (test/stateSnapshots/) into src/__fixtures__/gamestates/ (gitignored), and records where
+// commits (test/stateSnapshots/) into test/stateSnapshots/ (gitignored), and records where
 // they came from in manifest.json. The gameboard tests run against whatever is there.
 //
 // `--local [path]` copies from a forceteki checkout's working tree instead (default ../forceteki),

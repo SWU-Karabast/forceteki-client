@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { describe, expect, it } from 'vitest';
-import Board from './Board';
-import { clickCard, findCard, loadControlChain, loadRenderSnapshot, renderGameState, type Participant } from '@/testing/gameState';
+import Board from '@/app/_components/Gameboard/Board/Board';
+import { clickCard, findCard, loadControlChain, loadRenderSnapshot, renderGameState, type Participant } from '../helpers/gameState';
 
 /** The units in both arenas. Upgrades are drawn on the unit they are attached to, not as cards of their own. */
 const unitsInPlay = (state: any): any[] => Object.values(state.players).flatMap((player: any) => [

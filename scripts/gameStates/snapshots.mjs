@@ -7,7 +7,7 @@ import { join, relative } from 'node:path';
 
 export const BackendRepo = 'SWU-Karabast/forceteki';
 export const SnapshotDir = 'test/stateSnapshots';
-export const FixtureDir = 'src/__fixtures__/gamestates';
+export const FixtureDir = 'test/stateSnapshots';
 export const ManifestFile = 'manifest.json';
 
 const githubToken = (() => {

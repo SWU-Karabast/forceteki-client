@@ -19,10 +19,10 @@ export default defineConfig({
         alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
     },
     test: {
-        include: ['src/**/*.test.{ts,tsx}'],
+        include: ['test/**/*.test.{ts,tsx}'],
         environment: 'jsdom',
-        globalSetup: ['src/testing/downloadGameStates.ts'],
-        setupFiles: ['src/testing/setup.ts'],
+        globalSetup: ['test/helpers/downloadGameStates.ts'],
+        setupFiles: ['test/helpers/setup.ts'],
         clearMocks: true,
         restoreMocks: true,
     },
