@@ -47,6 +47,11 @@ nearly every component carries `'use client'`. Nesting order (outermost first): 
 place server state enters the app. It re-creates the socket whenever user/session identity changes.
 Everything on a game page reads `useGame()`.
 
+It is two layers. `GameProvider` is the connection: the socket, the session, sounds, and turning incoming
+prompt states into popups. It renders `GameStateProvider`, which builds what `useGame()` returns from a game
+state (`connectedPlayer`, `getOpponent`, `getConnectedPlayerPrompt`, the distribution prompt, …) and has no
+socket. Tests render `GameStateProvider` directly. Keep socket and session code out of it.
+
 Three outbound channels:
 
 - `sendGameMessage([command, ...args])` → `socket.emit('game', ...)` — in-game actions. Commands are
@@ -119,9 +124,9 @@ in its `test/stateSnapshots/`; this repo does not keep a copy. `npm run states` 
   is the messages that participant sent to reach the next, exactly as `sendGameMessage` emits them.
 - `src/testing/gameState.tsx` has the helpers: `loadRenderSnapshot`, `loadControlChain`, and `renderGameState`,
   which renders a component as a participant sees a state, records what it sends (`sent`), and delivers the next
-  state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`). The game and
-  user contexts are mocked in `src/testing/setup.ts`; the rest of the providers are the real ones.
-  `Gameboard/Board/Board.test.tsx` is the example.
+  state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`). Nothing is
+  mocked: it renders the real `GameStateProvider` and the other providers the board needs, so it is the one
+  place to update when a context moves to a store. `Gameboard/Board/Board.test.tsx` is the example.
 - `npm run states -- --ref main|<branch>|pr/<number>` picks which backend states to test against. A `pr/<number>`
   ref is GitHub's merge of that backend PR into current main. `--local [path]` copies a forceteki working tree
   (default `../forceteki`) to try changes before pushing.
