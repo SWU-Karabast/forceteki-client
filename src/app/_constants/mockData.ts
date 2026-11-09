@@ -86,7 +86,7 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: 'Card Suspensions in Effect',
+        title: 'Homeworlds Meta Card Suspensions',
         content: `
         <p>In line with the recent suspension announcement, the following cards are suspended in the <strong>Premier</strong> format, effective immediately:</p>
 
@@ -97,7 +97,7 @@ export const articles: IArticle[] = [
             <li>Aggressive Negotiations</li>
         </ul>
 
-        <p style="margin-bottom:0;">Decks that include a suspended card can no longer be used in Premier. The suspension applies to Premier only. Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> with any questions.</p><p></p>
+        <p style="margin-bottom:0;">Decks that include a suspended card can no longer be used in Premier. Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> with any questions. Have fun in the new meta!</p><p></p>
 	  `,
         date: '11/9/26',
         image: '/homeworlds-suspension.webp',
