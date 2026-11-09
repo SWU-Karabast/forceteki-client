@@ -1,29 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 import Board from '@/app/_components/Gameboard/Board/Board';
-import { clickCard, findCard, loadControlChain, loadRenderSnapshot, renderGameState, type Participant } from '../helpers/gameState';
+import { clickCard, findCard, loadControlChain, renderGameState } from '../../helpers/gameState';
 
-/** The units in both arenas. Upgrades are drawn on the unit they are attached to, not as cards of their own. */
-const unitsInPlay = (state: any): any[] => Object.values(state.players).flatMap((player: any) => [
-    ...player.cardPiles.groundArena,
-    ...player.cardPiles.spaceArena,
-]).filter((card) => !card.parentCardId);
-
-describe('Board', () => {
-    describe.each<Participant>(['player1', 'spectator'])('the mirrored board, seen by %s', (participant) => {
-        it('draws every unit in both arenas', () => {
-            const state = loadRenderSnapshot('board', participant);
-            renderGameState(<Board sidebarOpen={false} />, state, participant);
-
-            const units = unitsInPlay(state);
-            expect(units.length).toBeGreaterThan(0);
-            for (const unit of units) {
-                expect(findCard(unit.uuid), `${unit.name} (${unit.uuid})`).not.toBeNull();
-            }
-        });
-    });
-
+describe('Attack', () => {
     it('sends each click of an attack and draws the result', () => {
         const [chooseAttacker, chooseTarget, result] = loadControlChain('attack');
         const { sent, receive } = renderGameState(<Board sidebarOpen={false} />, chooseAttacker.state, chooseAttacker.participant);

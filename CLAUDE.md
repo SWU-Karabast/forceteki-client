@@ -119,18 +119,20 @@ in its `test/stateSnapshots/`; this repo does not keep a copy. `npm run states` 
 `test/stateSnapshots/` (gitignored), and the first test run does that on its own, from backend main.
 `manifest.json` there says which backend ref and commit they came from.
 
-Everything for testing lives in the root `test/` directory, never beside the code under `src/`: tests in
-`test/<area>/<Name>.test.tsx` (the board's in `test/gameboard/`), helpers and setup in `test/helpers/`. Import app
-code with the `@/` alias.
+Everything for testing lives in the root `test/` directory, never beside the code under `src/`. Helpers and setup
+are in `test/helpers/`; import app code with the `@/` alias. Board tests are split the way the backend splits its
+snapshots, one file per snapshot, named after it:
 
-- **Render** snapshots (`render/<name>.<participant>.json`) are one board, for checking it is drawn correctly.
-- **Control** snapshots (`controls/<name>.json`) are a chain of states for one participant; each step's `send`
-  is the messages that participant sent to reach the next, exactly as `sendGameMessage` emits them.
+- **Render** tests (`test/gameboard/render/<Name>.<participant>.test.tsx`) check one board is drawn correctly,
+  from the snapshot `render/<name>.<participant>.json`, e.g. `Board.player1.test.tsx` and `Board.spectator.test.tsx`.
+- **Control** tests (`test/gameboard/controls/<Name>.test.tsx`) walk a chain from `controls/<name>.json`: a series
+  of states for one participant, each step's `send` being the messages they sent to reach the next, exactly as
+  `sendGameMessage` emits them. `Attack.test.tsx` checks each click sends the recorded message.
 - `test/helpers/gameState.tsx` has the helpers: `loadRenderSnapshot`, `loadControlChain`, and `renderGameState`,
   which renders a component as a participant sees a state, records what it sends (`sent`), and delivers the next
-  state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`). Nothing is
-  mocked: it renders the real `GameStateProvider` and the other providers the board needs, so it is the one
-  place to update when a context moves to a store. `test/gameboard/Board.test.tsx` is the example.
+  state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`), and `unitsInPlay`
+  lists the units a state has in both arenas. Nothing is mocked: it renders the real `GameStateProvider` and the
+  other providers the board needs, so it is the one place to update when a context moves to a store.
 - `npm run states -- --ref main|<branch>|pr/<number>` picks which backend states to test against. A `pr/<number>`
   ref is GitHub's merge of that backend PR into current main. `--local [path]` copies a forceteki working tree
   (default `../forceteki`) to try changes before pushing.

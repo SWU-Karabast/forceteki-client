@@ -44,6 +44,12 @@ export const loadRenderSnapshot = (name: string, participant: Participant): any 
 export const loadControlChain = (name: string): IControlStep[] =>
     readSnapshot(`controls/${name}.json`).steps;
 
+/** The units in both arenas. Upgrades are drawn on the unit they are attached to, not as cards of their own. */
+export const unitsInPlay = (state: any): any[] => Object.values(state.players).flatMap((player: any) => [
+    ...player.cardPiles.groundArena,
+    ...player.cardPiles.spaceArena,
+]).filter((card) => !card.parentCardId);
+
 /** Which player's seat a participant's state is read from, as GameProvider decides it. */
 const seatOf = (state: any, participant: Participant) => {
     const playerIds = Object.keys(state.players);
