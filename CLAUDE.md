@@ -18,13 +18,13 @@ npm run lint         # tsc --noemit && next lint   <- what CI runs; run this bef
 npm run lint:fix     # same, with --fix
 npm run build        # next build (does NOT lint: eslint.ignoreDuringBuilds is true in next.config.mjs)
 npm run storybook    # component workbench on :6006
-npm run test:run     # vitest, once (`npm test` watches); see "Gameboard tests" below
+npm run test:run     # vitest, once (`npm test` watches); see "Tests" below
 npm run states -- --ref pr/<number>   # test against a backend PR's game states instead of backend main
 docker compose up    # Adobe S3Mock on :9090, only needed for local cosmetics upload work
 ```
 
 Node 22.x. Verification is `npm run lint`, `npm run build`, `npm run test:run`, and manual play against a
-local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build; `.github/workflows/gameboard-tests.yml`
+local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build; `.github/workflows/tests.yml`
 runs the tests.
 
 ## Architecture
@@ -112,7 +112,7 @@ no-op in development.
 unreachable backend reads as maintenance; gate maintenance UI on `hasLoaded` too, or every page load
 flashes it. The client-side gate is presentation only — the server 503s anyway.
 
-### Gameboard tests
+### Tests
 
 The tests render the board from the game states forceteki really sends. forceteki commits them as snapshots
 in its `test/stateSnapshots/`; this repo does not keep a copy. `npm run states` downloads them into this repo's
@@ -137,7 +137,7 @@ snapshots, one file per snapshot, named after it:
   ref is GitHub's merge of that backend PR into current main. `--local [path]` copies a forceteki working tree
   (default `../forceteki`) to try changes before pushing.
 - **Paired PRs:** a client PR that needs a backend PR's states makes the first line of its description
-  `Backend PR: https://github.com/SWU-Karabast/forceteki/pull/<number>`, and the `Gameboard tests` check runs against
+  `Backend PR: https://github.com/SWU-Karabast/forceteki/pull/<number>`, and the `test` check runs against
   that PR's states (editing the description re-runs it). It must be the first line and a link: the check fails on a
   `Backend PR:` line anywhere else or one without the link, rather than quietly testing against main. The merge queue
   tests against backend main, so merge the backend PR first. A PR that links nothing is tested against backend main.

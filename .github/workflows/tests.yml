@@ -1,4 +1,4 @@
-name: Gameboard tests
+name: Tests
 # Runs the tests against the game states forceteki sends: those of the backend PR linked on the
 # first line of this PR's description (`Backend PR: https://github.com/SWU-Karabast/forceteki/pull/123`),
 # or backend main when it links none.
@@ -17,7 +17,6 @@ permissions:
   contents: read
 jobs:
   test:
-    name: Gameboard tests
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
