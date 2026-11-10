@@ -137,9 +137,9 @@ snapshots, one file per snapshot, named after it:
   ref is GitHub's merge of that backend PR into current main. `--local [path]` copies a forceteki working tree
   (default `../forceteki`) to try changes before pushing.
 - **Paired PRs:** a client PR that needs a backend PR's states makes the first line of its description
-  `Backend: https://github.com/SWU-Karabast/forceteki/pull/<number>`, and the `Gameboard tests` check runs against
+  `Backend PR: https://github.com/SWU-Karabast/forceteki/pull/<number>`, and the `Gameboard tests` check runs against
   that PR's states (editing the description re-runs it). It must be the first line and a link: the check fails on a
-  `Backend:` line anywhere else or one without the link, rather than quietly testing against main. The merge queue
+  `Backend PR:` line anywhere else or one without the link, rather than quietly testing against main. The merge queue
   tests against backend main, so merge the backend PR first. A PR that links nothing is tested against backend main.
 - A snapshot a test needs that the backend does not capture yet belongs in the backend PR (see forceteki's
   CLAUDE.md, "State snapshots"); never hand-write a game state here.
