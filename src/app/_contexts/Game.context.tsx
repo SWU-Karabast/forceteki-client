@@ -345,25 +345,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
-        newSocket.on('inactiveDisconnect', () => {
-            // The server removes the user from the lobby on an inactivity disconnect,
-            // so there is nothing to rejoin - returning home is the only way forward.
-            showErrorScreen({
-                title: 'Disconnected due to inactivity',
-                message: 'You were removed from the game because there was no activity for a while. The game has gone on without you.',
-                actions: (dismiss) => [{
-                    label: 'Return to main menu',
-                    variant: 'concede',
-                    onClick: () => {
-                        dismiss();
-                        resetStates();
-                        router.push('/');
-                    },
-                }],
-            });
-            newSocket.disconnect();
-        });
-
         newSocket.on('disconnect', () => {
             setQueueMatchmakingStatus(null);
         });

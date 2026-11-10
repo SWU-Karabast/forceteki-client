@@ -6,6 +6,14 @@ import {
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
 
+/** An error answer from the game node: its message, and the HTTP status it came with. */
+export class ServerApiError extends Error {
+    constructor(message: string, public readonly status: number) {
+        super(message);
+        this.name = 'ServerApiError';
+    }
+}
+
 /**
  * Static helper class for communicating with the forceteki server API
  */
@@ -28,7 +36,8 @@ export class ServerApiService {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                // the game node words most refusals as `message`, and some as `error`
+                throw new ServerApiError(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`, response.status);
             }
 
             return await response.json();

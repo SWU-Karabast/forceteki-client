@@ -55,8 +55,8 @@ const Chat: React.FC<IChatProps> = ({
     });
 
     const getChatDisabledInfo = (): IChatDisabledInfo => {
-        // Always allow chat for private lobbies except if the user has chat disabled in preferences
-        if (isPrivateLobby && !doesUserHaveChatMuted) {
+        // Always allow chat for private lobbies
+        if (isPrivateLobby) {
             return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
         }
 

@@ -55,7 +55,7 @@ Three outbound channels:
 
 Inbound: `gamestate`, `lobbystate`, `queueHeartbeat`, `retransmitResponse`, `bugReportResult`,
 `playerReportResult`, `statsSubmitNotification`, `requestScreenResolution`, `connection_error`,
-`matchmakingFailed`, `inactiveDisconnect`.
+`matchmakingFailed`.
 
 `gameState` / `lobbyState` are intentionally typed `any` (the file disables `no-explicit-any`) — they are
 whatever the backend sends. Chat is delta-encoded: `useGameMessages` detects gaps and asks for a

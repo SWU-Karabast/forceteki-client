@@ -95,17 +95,11 @@ function CurrentGameTab() {
     // Handler for opening the bug report dialog
     const handleOpenBugReport = () => {
         setBugReportOpen(true);
-
-        // reset the action timer when opening the bug report dialog to give people breathing room to type
-        sendGameMessage(['resetActionTimer']);
     };
 
-    // Handler for opening the bug report dialog
+    // Handler for opening the player report dialog
     const handleOpenPlayerReport = () => {
         setPlayerReportOpen(true);
-
-        // reset the action timer when opening the bug report dialog to give people breathing room to type
-        sendGameMessage(['resetActionTimer']);
     };
 
     // Handler for closing the bug report dialog
@@ -113,7 +107,7 @@ function CurrentGameTab() {
         setBugReportOpen(false);
     };
 
-    // Handler for closing the bug report dialog
+    // Handler for closing the player report dialog
     const handleClosePlayerReport = () => {
         setPlayerReportOpen(false);
     };
