@@ -154,7 +154,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     uuid: promptUuid,
                     title: menuTitle,
                     description: promptDescription,
-                    buttons,
+                    buttons: buttons.filter((button: PopupButton) => button.sourceCard),
+                    footerButtons: buttons.filter((button: PopupButton) => !button.sourceCard),
                     source: PopupSource.PromptState
                 });
             }
