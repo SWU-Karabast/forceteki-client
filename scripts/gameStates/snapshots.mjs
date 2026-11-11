@@ -62,11 +62,37 @@ export const resolveRef = async (ref) => {
             throw new Error(`forceteki#${number} conflicts with main; resolve that first`);
         }
         if (pr.mergeable === true && pr.merge_commit_sha) {
-            return { ref, commit: pr.merge_commit_sha };
+            return { ref, commit: pr.merge_commit_sha, warning: await snapshotCheckWarning(number, pr.head.sha) };
         }
         await sleep(2000);
     }
     throw new Error(`GitHub has not computed a merge for forceteki#${number} yet; try again in a minute`);
+};
+
+/**
+ * Why a backend PR's snapshots may not be what its engine sends, or undefined when its
+ * `state-snapshots` check passed. That check fails when the committed snapshots are stale, and a
+ * client tested against stale snapshots tests states the engine no longer sends.
+ */
+const snapshotCheckWarning = async (number, headSha) => {
+    let runs;
+    try {
+        ({ check_runs: runs } = await github(`/repos/${BackendRepo}/commits/${headSha}/check-runs?check_name=state-snapshots`));
+    } catch (error) {
+        const status = /answered (\d+)/.exec(error.message)?.[1];
+        return `couldn't read forceteki#${number}'s state-snapshots check (${status ? `GitHub answered ${status}` : error.message}), so its snapshots aren't confirmed`;
+    }
+    const latest = runs.sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at))[0];
+    if (!latest) {
+        return `forceteki#${number} has no state-snapshots check, so nothing confirms its snapshots match its engine`;
+    }
+    if (latest.status !== 'completed') {
+        return `forceteki#${number}'s state-snapshots check is still running, so its snapshots aren't confirmed yet; re-run once it passes`;
+    }
+    if (latest.conclusion !== 'success') {
+        return `forceteki#${number}'s state-snapshots check ${latest.conclusion === 'failure' ? 'failed' : `ended as ${latest.conclusion}`}: its snapshots don't match what its engine sends, so these tests may pass or fail against states the server won't send`;
+    }
+    return undefined;
 };
 
 /** Every snapshot at a backend commit, as a map of path (relative to the snapshot dir) to contents. */

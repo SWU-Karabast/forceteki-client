@@ -54,6 +54,10 @@ if (local) {
     if (resolved.note) {
         console.log(resolved.note);
     }
+    if (resolved.warning) {
+        // in CI, also an annotation on the run so it shows on the PR
+        console.warn(process.env.GITHUB_ACTIONS ? `::warning::${resolved.warning}` : `Warning: ${resolved.warning}`);
+    }
     snapshots = await readSnapshotsAt(resolved.commit);
     manifest = { backend: BackendRepo, ref, commit: resolved.commit };
 }
