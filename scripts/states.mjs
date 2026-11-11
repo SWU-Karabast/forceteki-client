@@ -4,10 +4,11 @@
 //
 // `--local [path]` copies from a forceteki checkout's working tree instead (default ../forceteki),
 // for trying out backend changes before they are pushed.
-// `--if-missing` does nothing when snapshots are already downloaded (the test run uses this).
+// `--if-missing` keeps snapshots that are already downloaded and only says which ones they are (the
+// test run uses this, so a local run never quietly tests against an old backend).
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
     BackendRepo, FixtureDir, ManifestFile, SnapshotDir, readDirectory, readSnapshotsAt, resolveRef,
@@ -20,6 +21,16 @@ const option = (name) => {
 };
 
 if (option('--if-missing') && existsSync(join(FixtureDir, ManifestFile))) {
+    const existing = JSON.parse(readFileSync(join(FixtureDir, ManifestFile), 'utf8'));
+    const verb = existing.ref.startsWith('local:') ? 'copied' : 'downloaded';
+    let downloaded = `${verb} date unknown`;
+    if (existing.downloadedAt) {
+        const days = Math.floor((Date.now() - Date.parse(existing.downloadedAt)) / 86_400_000);
+        downloaded = `${verb} ${existing.downloadedAt.slice(0, 10)} (${days === 0 ? 'today' : days === 1 ? '1 day ago' : `${days} days ago`})`;
+    }
+    const uncommitted = existing.uncommittedChanges ? ', with uncommitted changes' : '';
+    console.log(`Game states: ${existing.backend} ${existing.ref} @ ${existing.commit.slice(0, 9)}${uncommitted}, ${downloaded}.`);
+    console.log('Run `npm run states` to refresh, or `npm run states -- --ref pr/<number>` for a backend PR.');
     process.exit(0);
 }
 
@@ -58,6 +69,6 @@ for (const [path, contents] of snapshots) {
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, contents);
 }
-writeFileSync(join(FixtureDir, ManifestFile), JSON.stringify({ ...manifest, files: snapshots.size }, null, 4) + '\n');
+writeFileSync(join(FixtureDir, ManifestFile), JSON.stringify({ ...manifest, files: snapshots.size, downloadedAt: new Date().toISOString() }, null, 4) + '\n');
 
 console.log(`Downloaded ${snapshots.size} game states from ${BackendRepo} ${manifest.ref} (${manifest.commit.slice(0, 9)}) into ${FixtureDir}.`);

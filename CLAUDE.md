@@ -117,7 +117,8 @@ flashes it. The client-side gate is presentation only — the server 503s anyway
 The tests render the board from the game states forceteki really sends. forceteki commits them as snapshots
 in its `test/stateSnapshots/`; this repo does not keep a copy. `npm run states` downloads them into this repo's
 `test/stateSnapshots/` (gitignored), and the first test run does that on its own, from backend main.
-`manifest.json` there says which backend ref and commit they came from.
+`manifest.json` there says which backend ref and commit they came from and when they were downloaded, and
+every test run prints it.
 
 Everything for testing lives in the root `test/` directory, never beside the code under `src/`. Helpers and setup
 are in `test/helpers/`; import app code with the `@/` alias. Board tests are split the way the backend splits its
