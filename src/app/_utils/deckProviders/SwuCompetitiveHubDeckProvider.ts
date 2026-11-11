@@ -25,8 +25,8 @@ export class SwuCompetitiveHubDeckProvider extends DeckProviderBase {
     // - the deck page: https://www.swu-competitivehub.com/decklist/${deckId}/
     // - an event page with the deck drawer open: https://www.swu-competitivehub.com/event/${eventSlug}/?deck=${deckId}
     protected override parseDeckId(deckLink: string): string | null {
-        const m = deckLink.match(/swu-competitivehub\.com\/decklist\/(\d+)(?=[/?#]|$)/)
-            ?? deckLink.match(/swu-competitivehub\.com\/event\/[^?#]*\?(?:[^#]*&)?deck=(\d+)(?=[&#]|$)/);
+        const m = deckLink.match(/swu-competitivehub\.com\/decklist\/([^/?#]+)(?=[/?#]|$)/)
+            ?? deckLink.match(/swu-competitivehub\.com\/event\/[^?#]*\?(?:[^#]*&)?deck=([^&#]+)(?=[&#]|$)/);
         return m ? m[1] : null;
     }
 
