@@ -10,6 +10,8 @@ import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import OngoingEffectsPanel from '@/app/_components/Gameboard/_subcomponents/PlayerTray/OngoingEffectsPanel';
 import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 import { useTheme } from '@mui/material/styles';
+import ClaimCounterIndicators from '@/app/_components/Gameboard/_subcomponents/ClaimCounterIndicators';
+import { SwuGameFormat } from '@/app/_constants/constants';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
@@ -30,6 +32,7 @@ const Board: React.FC<IBoardProps> = ({
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
     const initiativeClaimed = gameState.initiativeClaimed;
+    const isFauxSuns = gameState.format === SwuGameFormat.FauxSuns;
 
     const playerCapturedCards = gameState?.players[connectedPlayer].cardPiles['capturedZone'];
     const opponentCapturedCards = gameState?.players[opponentId].cardPiles['capturedZone'];
@@ -366,9 +369,13 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={styles.rightColumnBorderLeft} />
                     <Box sx={styles.rightColumnBorderCenter} />
                     <Box sx={styles.rightColumnBorderRight} />
-                    <Box sx={styles.initiativeWrapper}>
-                        <Typography variant={'h4'}>Initiative</Typography>
-                    </Box>
+                    {isFauxSuns ? (
+                        <ClaimCounterIndicators playerId={connectedPlayer} opponentId={opponentId} />
+                    ) : (
+                        <Box sx={styles.initiativeWrapper}>
+                            <Typography variant={'h4'}>Initiative</Typography>
+                        </Box>
+                    )}
                 </Box>
                 <Box sx={styles.unitsLayer}>
                     <UnitsBoard
