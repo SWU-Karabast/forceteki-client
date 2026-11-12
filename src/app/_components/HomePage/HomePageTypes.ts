@@ -14,8 +14,10 @@ export interface IPublicGameInProgressProps {
         id: string;
         isPrivate: boolean;
         player1Leader: ICardData;
+        player1SecondLeader?: ICardData;
         player1Base: ICardData;
         player2Leader: ICardData;
+        player2SecondLeader?: ICardData;
         player2Base: ICardData;
     };
 }
@@ -29,6 +31,7 @@ export interface ILobbyCardData {
 
 export interface ILobbyHost {
     leader: ILobbyCardData;
+    secondLeader?: ILobbyCardData;
     base: ILobbyCardData;
 }
 
