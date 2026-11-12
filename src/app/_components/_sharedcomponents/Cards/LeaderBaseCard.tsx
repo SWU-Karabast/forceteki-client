@@ -13,6 +13,7 @@ import { DamageCounterToken } from '@/app/_components/_sharedcomponents/_styledc
 import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
 import UpgradeStrip from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
 import { PopoverConfig, usePreviewCardPopover } from '@/app/_components/_sharedcomponents/Cards/GameCard/cardHooks';
+import { useCardAnimationAnchor } from '@/app/_components/Gameboard/_subcomponents/CardAnimations/cardAnchorRegistry';
 
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
@@ -59,6 +60,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     // are called in a stable order.
     const mainCardImageUrl = card ? s3CardImageURL(card, locale, cardStyle) : '';
     const { status: mainCardImageStatus, imgProps: mainCardImgProps } = useImageLoadStatus(mainCardImageUrl);
+
+    // Lets the board's animation layer play damage over this base.
+    const animationAnchorRef = useCardAnimationAnchor(card?.uuid, { imageUrl: mainCardImageUrl, shape: 'base' }, cardStyle === LeaderBaseCardStyle.Base);
 
     if (!card) {
         return null
@@ -451,6 +455,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             </Box>
 
             <Box
+                ref={animationAnchorRef}
                 sx={isDeployed ? styles.deployedPlaceholder : [styles.card, highlightSx]}
                 onClick={handleClick}
                 aria-owns={previewOpen ? 'mouse-over-popover' : undefined}

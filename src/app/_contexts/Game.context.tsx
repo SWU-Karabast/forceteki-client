@@ -26,6 +26,10 @@ import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
+import type { AnimationRecord, IAnimationFeedEntry } from '@/app/_components/Gameboard/_subcomponents/CardAnimations/cardAnimationTypes';
+
+/** How many animation records the feed keeps. The layer consumes them as they arrive, so this only bounds memory. */
+const MAX_ANIMATION_FEED_LENGTH = 64;
 
 interface IGameContextType {
     gameState: any;
@@ -51,6 +55,7 @@ interface IGameContextType {
     createNewSocket: () => Socket | undefined;
     gameIsEnded: () => boolean;
     ongoingEffects: IOngoingEffectSummary[];
+    animationFeed: IAnimationFeedEntry[];
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -63,6 +68,8 @@ const GameContext = createContext<IGameContextType | undefined>(undefined);
 export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [gameState, setGameState] = useState<any>(null);
     const lastGameIdRef = useRef<string | null>(null);
+    const [animationFeed, setAnimationFeed] = useState<IAnimationFeedEntry[]>([]);
+    const nextAnimationKeyRef = useRef(0);
     const [lobbyState, setLobbyState] = useState<any>(null);
     const [bugReportState, setBugReportState] = useState<any>(null);
     const [playerReportState, setPlayerReportState] = useState<any>(null);
@@ -345,8 +352,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
+        // The first gamestate on a connection is a baseline. After a reconnect it can carry every
+        // record the player missed while away, and replaying those would animate a board they
+        // never saw change.
+        let isBaselineGameState = true;
+        newSocket.on('connect', () => {
+            isBaselineGameState = true;
+        });
+
         newSocket.on('disconnect', () => {
             setQueueMatchmakingStatus(null);
+            isBaselineGameState = true;
         });
 
         newSocket.on('gamestate', (gameState: any) => {
@@ -357,7 +373,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             if (gameState?.id && gameState.id !== lastGameIdRef.current) {
                 clearPopups();
                 resetMessages();
+                setAnimationFeed([]);
+                isBaselineGameState = true;
                 lastGameIdRef.current = gameState.id;
+            }
+
+            // Animation records are appended with a functional update rather than read off
+            // gameState at render time: two gamestates arriving before React renders would
+            // otherwise collapse into one, and the first one's records would be lost.
+            const newAnimations: AnimationRecord[] = Array.isArray(gameState?.newAnimations) ? gameState.newAnimations : [];
+            const skipAnimations = isBaselineGameState || gameState?.animationsTruncated || document.hidden;
+            isBaselineGameState = false;
+            if (newAnimations.length > 0 && !skipAnimations) {
+                const entries = newAnimations.map((record) => ({ key: nextAnimationKeyRef.current++, record }));
+                setAnimationFeed((prev) => [...prev, ...entries].slice(-MAX_ANIMATION_FEED_LENGTH));
             }
             
             // Handle message delta if present in gameState
@@ -541,6 +570,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 createNewSocket,
                 gameIsEnded,
                 ongoingEffects,
+                animationFeed,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,
