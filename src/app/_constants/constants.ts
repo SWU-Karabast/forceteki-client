@@ -97,9 +97,7 @@ export const LobbyFormatConfigs: IFormatModeConfig[] = [
     { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.NextSet, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    ...(process.env.NODE_ENV === 'development'
-        ? [{ format: SwuGameFormat.FauxSuns, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] }]
-        : []),
+    { format: SwuGameFormat.FauxSuns, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne] },
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [
@@ -115,6 +113,12 @@ export const getFormatsFromConfig = (configs: IFormatModeConfig[]): SwuGameForma
 // Helper to look up config for a specific format
 export const getFormatConfig = (configs: IFormatModeConfig[], format: SwuGameFormat): IFormatModeConfig | undefined =>
     configs.find((c) => c.format === format);
+
+// Whether a lobby in this format may be played (or converted to) best-of-three. Unknown formats are treated as allowing it.
+export const isBo3AllowedInLobbyFormat = (format: SwuGameFormat | undefined): boolean => {
+    const config = format ? getFormatConfig(LobbyFormatConfigs, format) : undefined;
+    return config ? config.gamesToWinModes.includes(GamesToWinMode.BestOfThree) : true;
+};
 
 export const GamesToWinModeLabels: Record<GamesToWinMode, string> = {
     [GamesToWinMode.BestOfOne]: 'Best-of-One',
