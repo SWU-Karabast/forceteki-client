@@ -510,9 +510,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                             </Typography>
                         </Box>
                         <Box sx={styles.epicActionIcon}></Box>
-                        <Box sx={styles.leaderBlankIcon}/>
                     </>
                 )}
+                {/* not tied to the nameplate: with two leaders, a leader card can have no title */}
+                {cardStyle === LeaderBaseCardStyle.Leader && <Box sx={styles.leaderBlankIcon}/>}
                 { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             </Box>
         </Box>
