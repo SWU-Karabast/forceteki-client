@@ -7,9 +7,11 @@ import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { ICardData, LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import useIsCompactBoard from '@/app/_utils/useIsCompactBoard';
 import OngoingEffectsPanel from '@/app/_components/Gameboard/_subcomponents/PlayerTray/OngoingEffectsPanel';
 import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 import { useTheme } from '@mui/material/styles';
+import BoardLeaders from '@/app/_components/Gameboard/_subcomponents/BoardLeaders';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
@@ -23,10 +25,14 @@ const Board: React.FC<IBoardProps> = ({
     const titleOpponent = gameState.players[opponentId].user.username;
     const titleCurrentPlayer = gameState.players[connectedPlayer].user.username;
 
-    const playerLeader = gameState?.players[connectedPlayer].leaders?.[0];
+    const playerLeaders: ICardData[] = gameState?.players[connectedPlayer].leaders ?? [];
     let playerBase = gameState?.players[connectedPlayer].base;
-    const opponentLeader = gameState?.players[opponentId].leaders?.[0];
+    const opponentLeaders: ICardData[] = gameState?.players[opponentId].leaders ?? [];
     let opponentBase = gameState?.players[opponentId].base;
+    // on a large screen two leaders sit side by side at full size, so the middle column gets twice as wide; a compact
+    // board fits them into the space of one card instead (see BoardLeaders)
+    const isCompactBoard = useIsCompactBoard();
+    const isWideMiddleColumn = !isCompactBoard && (playerLeaders.length > 1 || opponentLeaders.length > 1);
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
     const initiativeClaimed = gameState.initiativeClaimed;
@@ -104,7 +110,9 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: isPortrait ? '20%' :
+            // two leaders side by side: twice the usual width, but capped by the viewport height so that on short
+            // landscape screens, where the cards are height-limited, the column (with the names below the pairs) still fits
+            width: isPortrait ? '20%' : isWideMiddleColumn ? 'min(calc(2 * clamp(8rem, 20vh, 14rem)), calc(34vh + 2rem))' :
                 'clamp(8rem, 20vh, 14rem)',
             margin: 0,
 
@@ -133,8 +141,8 @@ const Board: React.FC<IBoardProps> = ({
             gap: 'clamp(1px, 1.0vh, 10px)',
             padding: isPortrait ? '0 .1rem' : '0 1rem',
         },
-        leaderBaseWrapper: {
-            width: '100%',
+        baseWrapper: {
+            width: isWideMiddleColumn ? '50%' : '100%',
             display: 'flex',
             justifyContent: 'center',
         },
@@ -318,15 +326,12 @@ const Board: React.FC<IBoardProps> = ({
                 <Box sx={styles.middleColumnBorderRight} />
                 <Box sx={styles.middleColumnContent}>
                     <Box sx={styles.leaderBaseContainer}>
-                        <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard
-                                card={opponentLeader}
-                                cardStyle={LeaderBaseCardStyle.Leader}
-                                title={isSpectator ? 'Player2' : titleOpponent}
-                                isLeader={true}
-                            />
-                        </Box>
-                        <Box sx={styles.leaderBaseWrapper}>
+                        <BoardLeaders
+                            leaders={opponentLeaders}
+                            title={isSpectator ? 'Player2' : titleOpponent}
+                            isCompact={isCompactBoard}
+                        />
+                        <Box sx={styles.baseWrapper}>
                             <LeaderBaseCard
                                 cardStyle={LeaderBaseCardStyle.Base}
                                 card={opponentBase}
@@ -342,7 +347,7 @@ const Board: React.FC<IBoardProps> = ({
                         </Box>
                     </Box>
                     <Box sx={styles.leaderBaseContainer}>
-                        <Box sx={styles.leaderBaseWrapper}>
+                        <Box sx={styles.baseWrapper}>
                             <LeaderBaseCard
                                 cardStyle={LeaderBaseCardStyle.Base}
                                 card={playerBase}
@@ -350,14 +355,11 @@ const Board: React.FC<IBoardProps> = ({
                                 upgrades={playerBase.upgrades || []}
                             />
                         </Box>
-                        <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard
-                                card={playerLeader}
-                                cardStyle={LeaderBaseCardStyle.Leader}
-                                title={isSpectator ? 'Player1' : titleCurrentPlayer}
-                                isLeader={true}
-                            />
-                        </Box>
+                        <BoardLeaders
+                            leaders={playerLeaders}
+                            title={isSpectator ? 'Player1' : titleCurrentPlayer}
+                            isCompact={isCompactBoard}
+                        />
                     </Box>
                 </Box>
             </Box>
