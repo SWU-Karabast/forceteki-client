@@ -10,7 +10,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
-import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType, RematchMode } from '@/app/_constants/constants';
+import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, isBo3AllowedInLobbyFormat, MatchmakingType, RematchMode } from '@/app/_constants/constants';
 import { useServerSettings } from '@/app/_contexts/ServerSettings.context';
 
 interface IProps {
@@ -53,6 +53,8 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
     // Determine if we're in Bo3 mode and if the set is complete
     const isBo3Mode = gamesToWinMode === GamesToWinMode.BestOfThree;
     const isBo3SetComplete = isBo3Mode && !!setEndResult;
+    // Formats that are Bo1 only (e.g. Faux Suns) can't be converted to a Bo3 match
+    const canConvertToBo3 = isBo3AllowedInLobbyFormat(lobbyState?.gameFormat);
 
     useEffect(() => {
         if (statsSubmitNotification) {
@@ -475,21 +477,23 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                         </Box>
 
                         {/* Convert to Best of 3 */}
-                        <Box sx={styles.contentContainer}>
-                            <PreferenceButton
-                                variant={'standard'}
-                                text={convertToBo3ButtonText}
-                                buttonFnc={handleConvertToBo3RequestOrConfirm}
-                                disabled={convertToBo3ButtonDisabled}
-                            />
-                            <Typography sx={styles.typeographyStyle}>
-                                {rematchRequest && rematchRequest.mode === RematchMode.Bo1ConvertToBo3
-                                    ? isRequestInitiator
-                                        ? 'Waiting for your opponent to confirm conversion to Bo3.'
-                                        : 'Confirm you wish to convert this match to a best of 3.'
-                                    : 'Convert this match to a best of 3, counting this game as game 1.'}
-                            </Typography>
-                        </Box>
+                        {canConvertToBo3 && (
+                            <Box sx={styles.contentContainer}>
+                                <PreferenceButton
+                                    variant={'standard'}
+                                    text={convertToBo3ButtonText}
+                                    buttonFnc={handleConvertToBo3RequestOrConfirm}
+                                    disabled={convertToBo3ButtonDisabled}
+                                />
+                                <Typography sx={styles.typeographyStyle}>
+                                    {rematchRequest && rematchRequest.mode === RematchMode.Bo1ConvertToBo3
+                                        ? isRequestInitiator
+                                            ? 'Waiting for your opponent to confirm conversion to Bo3.'
+                                            : 'Confirm you wish to convert this match to a best of 3.'
+                                        : 'Convert this match to a best of 3, counting this game as game 1.'}
+                                </Typography>
+                            </Box>
+                        )}
 
                         {/* Report Bug */}
                         <Box sx={styles.contentContainer}>
