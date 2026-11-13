@@ -7,6 +7,7 @@ import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import BreakpointOverlay from './BreakpointOverlay';
+import { useUnitsWithHeldSlots, type UnitSlot } from './CardAnimations/useUnitsWithHeldSlots';
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -98,6 +99,11 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     const playerUnits = attachCapturedCards(playerUnitsWithUpgrades, allCapturedCards);
     const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
 
+    // A defeated unit keeps its slot while its ghost plays over it, so the units beside it do not
+    // slide in underneath; see CardAnimationLayer.
+    const opponentSlots = useUnitsWithHeldSlots(opponentUnits);
+    const playerSlots = useUnitsWithHeldSlots(playerUnits);
+
     // Portrait mode grid configuration -- far less here as we are dealing with
     // one set of breakpoints (we don't have landscape ones.. yet)
     const portraitGridTemplateColumns = {
@@ -174,7 +180,26 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             // The space arena grids are RTL only to fill from the right; card contents stay LTR.
             direction: 'ltr',
         },
+        heldSlot: {
+            visibility: 'hidden',
+            pointerEvents: 'none',
+        },
+        heldSlotFallbackSize: {
+            width: '100%',
+            aspectRatio: '1',
+        },
     };
+
+    // The data-unit-slot attribute marks the cell that slides when a gap beside it closes.
+    const renderSlot = (slot: UnitSlot<ICardData>) => slot.kind === 'unit' ? (
+        <Box key={slot.uuid} data-unit-slot="" sx={styles.unitStyle}>
+            <GameCard key={slot.uuid} card={slot.card} subcards={slot.card.subcards} capturedCards={slot.card.capturedCards} cardStyle={CardStyle.InPlay}/>
+        </Box>
+    ) : (
+        <Box key={slot.uuid} sx={[styles.unitStyle, styles.heldSlot, slot.slotRect ? { height: slot.slotRect.height } : {}]}>
+            {!slot.slotRect && <Box sx={styles.heldSlotFallbackSize}/>}
+        </Box>
+    );
 
 
     return (
@@ -182,21 +207,13 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             <Grid direction="column" sx={styles.containerStyle}>
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
-                    {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={styles.unitStyle}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
-                        </Box>
-                    ))}
+                    {opponentSlots.map(renderSlot)}
                 </Box>
                 {/* Enforce some minimum spacing between the two player's grids */}
                 <Box sx={{ flex: '1 1 10px', minHeight: '10px', width: '100%' }} />
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
-                    {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={styles.unitStyle}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
-                        </Box>
-                    ))}
+                    {playerSlots.map(renderSlot)}
                 </Box>
             </Grid>
             {/* Show BreakpointOverlay when enabled in environment variables */}
