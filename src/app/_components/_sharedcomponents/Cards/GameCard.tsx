@@ -497,7 +497,7 @@ const GameCard: React.FC<IGameCardProps> = ({
         },
     }
     return (
-        <Box sx={[styles.cardContainer, highlightSx]}>
+        <Box sx={[styles.cardContainer, highlightSx]} data-card-uuid={cardStyle === CardStyle.InPlay ? card.uuid : undefined}>
             {cardStyle === CardStyle.InPlay && card.clonedCardId && (
                 <Box
                     sx={styles.cloneIcon}

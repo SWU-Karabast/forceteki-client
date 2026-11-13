@@ -27,7 +27,7 @@ import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
-interface IGameContextType {
+export interface IGameContextType {
     gameState: any;
     gameMessages: IChatEntry[];
     lobbyState: any;
@@ -71,14 +71,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
     const [queueMatchmakingStatus, setQueueMatchmakingStatus] = useState<IQueueMatchmakingStatus | null>(null);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
-    const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
     const { showErrorScreen } = useErrorScreen();
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
+    // owned here because each prompt state starts or clears it as it arrives; GameStateProvider reads and fills it in
+    const distributionPrompt = useDistributionPrompt();
+    const { clearDistributionPrompt, initDistributionPrompt } = distributionPrompt;
     const { data: session, status } = useSession();
     const { messages: gameMessages, processMessageDeltas, processMessageRetransmit, resetMessages } = useGameMessages();
 
@@ -112,12 +113,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
         return zones
     }
-
-    const ongoingEffects: IOngoingEffectSummary[] = React.useMemo(
-        () => gameState?.ongoingEffects ?? [],
-        [gameState?.ongoingEffects],
-    );
-
 
     const handleGameStatePopups = (gameState: any, connectedPlayerId: string, isSpectatorMode: boolean) => {
         if (!connectedPlayerId || isSpectatorMode) return;
@@ -451,12 +446,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         socket?.emit(message, ...args);
     };
 
-    const sendGameMessage = (args: any[]) => {
-        if (args[0] === 'statefulPromptResults') {
-            args = [args[0], distributionPromptData, args[2]]
-            clearDistributionPrompt();
-        }
-
+    // GameStateProvider fills in a stateful prompt's distribution before this sends it
+    const emitGameMessage = (args: any[]) => {
         const typeOfMessage = args[0];
         // We let the sound handler decide if this is a valid sound action
         try {
@@ -471,6 +462,107 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const sendLobbyMessage = (args: any[]) => {
         socket?.emit('lobby', ...args);
     }
+
+    const resetStates = () => {
+        setLobbyState(null);
+        setGameState(null);
+        setQueueMatchmakingStatus(null);
+        resetMessages();
+    }
+
+    return (
+        <GameStateProvider
+            gameState={gameState}
+            lobbyState={lobbyState}
+            gameMessages={gameMessages}
+            connectedPlayer={connectedPlayer}
+            isSpectator={isSpectator}
+            emitGameMessage={emitGameMessage}
+            distributionPrompt={distributionPrompt}
+            connection={{
+                bugReportState,
+                playerReportState,
+                statsSubmitNotification,
+                sendMessage,
+                sendLobbyMessage,
+                resetStates,
+                lastQueueHeartbeat,
+                queueMatchmakingStatus,
+                createNewSocket,
+            }}
+        >
+            {children}
+        </GameStateProvider>
+    );
+};
+
+/** What only a live connection to the server provides. */
+type IGameConnection = Pick<IGameContextType,
+    'bugReportState' | 'playerReportState' | 'statsSubmitNotification' | 'sendMessage' | 'sendLobbyMessage'
+    | 'resetStates' | 'lastQueueHeartbeat' | 'queueMatchmakingStatus' | 'createNewSocket'>;
+
+const NoConnection: IGameConnection = {
+    bugReportState: null,
+    playerReportState: null,
+    statsSubmitNotification: null,
+    sendMessage: () => {},
+    sendLobbyMessage: () => {},
+    resetStates: () => {},
+    lastQueueHeartbeat: 0,
+    queueMatchmakingStatus: null,
+    createNewSocket: () => undefined,
+};
+
+interface IGameStateProviderProps {
+    gameState: any;
+    lobbyState?: any;
+    gameMessages?: IChatEntry[];
+    connectedPlayer: string;
+    isSpectator?: boolean;
+
+    /** Sends a message on the `game` socket event, as is: the distribution is already filled in. */
+    emitGameMessage: (args: any[]) => void;
+
+    /** GameProvider's, which incoming prompt states start and clear; without one, the provider keeps its own. */
+    distributionPrompt?: ReturnType<typeof useDistributionPrompt>;
+
+    /** Without a connection, its parts do nothing (see {@link NoConnection}). */
+    connection?: Partial<IGameConnection>;
+    children: ReactNode;
+}
+
+/**
+ * Provides the game context for a given game state, with no socket: what the board reads and how
+ * its clicks are sent. GameProvider renders it with the live state; tests and tools render it with
+ * a state of their own.
+ */
+export const GameStateProvider = ({
+    gameState,
+    lobbyState = null,
+    gameMessages = [],
+    connectedPlayer,
+    isSpectator = false,
+    emitGameMessage,
+    distributionPrompt,
+    connection,
+    children,
+}: IGameStateProviderProps) => {
+    const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
+    const ownDistributionPrompt = useDistributionPrompt();
+    const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt } = distributionPrompt ?? ownDistributionPrompt;
+
+    const ongoingEffects: IOngoingEffectSummary[] = React.useMemo(
+        () => gameState?.ongoingEffects ?? [],
+        [gameState?.ongoingEffects],
+    );
+
+    const sendGameMessage = (args: any[]) => {
+        if (args[0] === 'statefulPromptResults') {
+            args = [args[0], distributionPromptData, args[2]]
+            clearDistributionPrompt();
+        }
+        emitGameMessage(args);
+    };
 
     const getOpponent = (player: string) => {
         if (gameState) {
@@ -497,13 +589,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return false; // Default to false if we can't determine
     }
 
-    const resetStates = () => {
-        setLobbyState(null);
-        setGameState(null);
-        setQueueMatchmakingStatus(null);
-        resetMessages();
-    }
-
     const getConnectedPlayerPrompt = () => {
         if (!gameState) return '';
         return gameState.players[connectedPlayer]?.promptState;
@@ -519,27 +604,20 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return (
         <GameContext.Provider
             value={{
+                ...NoConnection,
+                ...connection,
                 gameState,
                 gameMessages,
                 lobbyState,
-                bugReportState,
-                playerReportState,
-                statsSubmitNotification,
                 sendGameMessage,
-                sendMessage,
                 connectedPlayer,
                 getOpponent,
-                sendLobbyMessage,
-                resetStates,
                 getConnectedPlayerPrompt,
                 updateDistributionPrompt,
                 distributionPromptData,
                 isSpectator,
-                lastQueueHeartbeat,
-                queueMatchmakingStatus,
                 isAnonymousPlayer,
                 hasChatDisabled,
-                createNewSocket,
                 gameIsEnded,
                 ongoingEffects,
                 hoveredChatCard: {
@@ -557,7 +635,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 export const useGame = () => {
     const context = useContext(GameContext);
     if (!context) {
-        throw new Error('useGame must be used within a GameProvider');
+        throw new Error('useGame must be used within a GameProvider or GameStateProvider');
     }
     return context;
 };
