@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Popover, Typography } from '@mui/material';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useGame } from '@/app/_contexts/Game.context';
-import { useOngoingEffectHighlight } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { useOngoingEffectHighlightStore } from '@/app/_stores/ongoingEffectHighlight.store';
 import { useOverflow } from '@/app/_hooks/useOverflow';
 import { useLongPress } from '@/app/_hooks/useLongPress';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
@@ -21,7 +21,8 @@ interface IOngoingEffectsPanelProps {
 
 const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }) => {
     const { connectedPlayer, ongoingEffects } = useGame();
-    const { setHighlightedEffects } = useOngoingEffectHighlight();
+    const setHighlightedEffects = useOngoingEffectHighlightStore((state) => state.setHighlightedEffects)
+    const clearHighlightedEffects = useOngoingEffectHighlightStore((state) => state.clearHighlightedEffects)
 
     const locale = useCardImageLocale();
     const effects: IOngoingEffectSummary[] = React.useMemo(
@@ -91,7 +92,7 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
         clearTimeout(hoverTimeout.current);
         setAnchorElement(null);
         setHoveredGroup(null);
-        setHighlightedEffects([]);
+        clearHighlightedEffects();
     };
 
     const fadeMask = React.useMemo(() => {
@@ -106,9 +107,9 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
     React.useEffect(() => {
         return () => {
             clearTimeout(hoverTimeout.current);
-            setHighlightedEffects([]);
+            clearHighlightedEffects();
         };
-    }, [setHighlightedEffects]);
+    }, [setHighlightedEffects, clearHighlightedEffects]);
 
     // Like card previews, keep touch previews open until the next interaction.
     React.useEffect(() => {
@@ -117,11 +118,11 @@ const OngoingEffectsPanel: React.FC<IOngoingEffectsPanelProps> = ({ trayPlayer }
             clearTimeout(hoverTimeout.current);
             setAnchorElement(null);
             setHoveredGroup(null);
-            setHighlightedEffects([]);
+            clearHighlightedEffects();
         };
         document.addEventListener('pointerdown', onPointerDown);
         return () => document.removeEventListener('pointerdown', onPointerDown);
-    }, [anchorElement, isTouchPreview, setHighlightedEffects]);
+    }, [anchorElement, isTouchPreview, clearHighlightedEffects]);
     const countVisibleTargets = (group: IOngoingEffectSummary[]) => new Set(group.flatMap((e) => e.targets)).size;
     const hoveredTargetsCount = hoveredGroup ? countVisibleTargets(hoveredGroup) : 0;
 

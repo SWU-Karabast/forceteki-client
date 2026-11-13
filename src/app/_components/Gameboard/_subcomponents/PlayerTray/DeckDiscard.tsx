@@ -8,7 +8,7 @@ import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import { useDiscardPileHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { useDiscardPileHighlightSx } from '@/app/_hooks/useOngoingEffectHighlights';
 
 
 const DeckDiscard: React.FC<IDeckDiscardProps> = ({ trayPlayer, cardback }) => {
