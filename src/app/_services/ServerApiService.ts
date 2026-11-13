@@ -4,6 +4,14 @@ import {
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
 
+/** An error answer from the game node: its message, and the HTTP status it came with. */
+export class ServerApiError extends Error {
+    constructor(message: string, public readonly status: number) {
+        super(message);
+        this.name = 'ServerApiError';
+    }
+}
+
 /**
  * Static helper class for communicating with the forceteki server API
  */
@@ -26,7 +34,8 @@ export class ServerApiService {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                // the game node words most refusals as `message`, and some as `error`
+                throw new ServerApiError(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`, response.status);
             }
 
             return await response.json();
@@ -34,6 +43,19 @@ export class ServerApiService {
             console.error(`ServerApiService error for ${url}:`, error);
             throw error;
         }
+    }
+
+    /**
+     * Makes the account for the current sign-in session if it does not have one yet. Safe to call for a
+     * session that already has an account.
+     */
+    public static async createUserAsync(): Promise<{ id: string; username: string }> {
+        const response = await this.fetchWithErrorHandling<{
+            success: boolean;
+            user: { id: string; username: string };
+        }>(`${this.baseUrl}/api/create-user`, { method: 'POST', body: JSON.stringify({}) });
+
+        return response.user;
     }
 
     // Cosmetics API methods

@@ -74,7 +74,6 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
     const [imageDimensions, setImageDimensions] = useState<ImageDimensions | null>(null);
     const [cosmeticType, setCosmeticType] = useState<RegisteredCosmeticType>(RegisteredCosmeticType.Cardback);
     const [cosmeticTitle, setCosmeticTitle] = useState('');
-    const [cosmeticId, setCosmeticId] = useState(() => crypto.randomUUID());
 
     // Validation rules for different cosmetic types
     const validationRules: ValidationRules = {
@@ -165,8 +164,6 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
             img.src = imgUrl;
         };
         reader.readAsDataURL(file);
-
-        setCosmeticId(crypto.randomUUID());
     };
 
     const scaleAndCropImage = (file: File, targetWidth: number, targetHeight: number): Promise<File> => {
@@ -260,7 +257,7 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
     };
 
     const handleUpload = async () => {
-        if (!selectedFile || !cosmeticTitle.trim() || !cosmeticId.trim()) {
+        if (!selectedFile || !cosmeticTitle.trim()) {
             setUploadError('Please fill in all fields and select an image');
             return;
         }
@@ -292,7 +289,6 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
 
             const formData = new FormData();
             formData.append('file', fileToUpload);
-            formData.append('cosmeticId', crypto.randomUUID());
             formData.append('cosmeticTitle', cosmeticTitle);
             formData.append('cosmeticType', cosmeticType);
 
@@ -328,7 +324,6 @@ const CosmeticsManagerTab: React.FC<ICosmeticsManagerTabProps> = ({ isAdmin }) =
         setImageDimensions(null);
         setCosmeticType(RegisteredCosmeticType.Cardback);
         setCosmeticTitle('');
-        setCosmeticId(crypto.randomUUID());
         setUploadError(null);
         setUploadSuccess(false);
     };

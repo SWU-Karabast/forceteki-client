@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { OngoingEffectHighlightState } from './ongoingEffectHighlight.store'
-import { selectHighlightRole, selectActive } from './ongoingEffectHighlight.selectors';
-import { IOngoingEffectSummary } from '../_components/_sharedcomponents/Cards/CardTypes';
+import type { OngoingEffectHighlightState } from '@/app/_stores/ongoingEffectHighlight.store'
+import { selectHighlightRole, selectActive } from '@/app/_stores/ongoingEffectHighlight.selectors';
+import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 describe('ongoingEffectHighlight Selectors', () => {
     let state: OngoingEffectHighlightState;

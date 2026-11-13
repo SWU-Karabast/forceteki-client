@@ -140,7 +140,6 @@ declare module 'next-auth' {
             email?: string;
             image?: string;
             provider: string;
-            userId?: string;
         };
     }
 }
@@ -153,7 +152,9 @@ declare module 'next-auth/jwt'{
         picture?: string;
         provider?: string;
         providerId?: string;
-        userId?: string;
+
+        /** Whether the provider had verified `email` at sign-in; the game node refuses a session without it. */
+        emailVerified?: boolean;
         exp: number;
     }
 }

@@ -86,6 +86,25 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'Homeworlds Suspensions: A Brightening Reality',
+        content: `
+        <p>In line with the recent suspension announcement, the following cards are suspended in the <strong>Premier</strong> format, effective immediately:</p>
+
+        <ul>
+            <li>Chimaera, A Frightening Reality</li>
+            <li>Koska Reeves, Warrior of Mandalore</li>
+            <li>Neel, The Cutest Boy</li>
+            <li>Aggressive Negotiations</li>
+        </ul>
+
+        <p style="margin-bottom:0;">Decks that include a suspended card can no longer be used in Premier. Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> with any questions. Have fun in the new meta!</p><p></p>
+	  `,
+        date: '11/9/26',
+        image: '/homeworlds-suspension.webp',
+        imageAlt: 'Suspended immediately: Chimaera, Koska Reeves, Neel and Aggressive Negotiations',
+        imagePosition: 'center top',
+    },
+    {
         title: 'Homeworlds is Released',
         content: `
         <p>Homeworlds (Set 9) cards are fully implemented and available in all game modes. Now that the set is released, these cards are part of the "Current" card pool.</p>

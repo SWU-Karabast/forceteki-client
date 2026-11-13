@@ -1,12 +1,49 @@
-import { AuthOptions } from 'next-auth';
+import { AuthOptions, Profile } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import DiscordProvider from 'next-auth/providers/discord';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import type { JWT } from 'next-auth/jwt';
 import jwt from 'jsonwebtoken';
-import { ServerApiService } from '../_services/ServerApiService';
+import { emailNotVerifiedRedirectUrl } from './SignInRefusal';
 
 
 const TwoMonthsInSeconds = 60 * 24 * 60 * 60; // 60 days
+
+/**
+ * Whether the provider has verified the email address this sign-in gives. The game node finds and links accounts by
+ * email, so it only accepts a session whose token records that the email is verified (the `emailVerified` claim).
+ * A sign-in with no email, or from a provider this does not know, counts as unverified.
+ */
+function hasVerifiedEmail(provider: string, profile: Profile | undefined): boolean {
+    const raw = profile as Record<string, unknown> | undefined;
+    if (typeof raw?.email !== 'string' || raw.email.length === 0) {
+        return false;
+    }
+
+    switch (provider) {
+        case 'discord':
+            return raw.verified === true;
+        case 'google':
+            return raw.email_verified === true;
+        default:
+            return false;
+    }
+}
+const developmentUsers = {
+    Order66: {
+        id: 'order66',
+        name: 'Order66',
+        email: 'order66@local.karabast',
+        provider: 'dev-user',
+    },
+    ThisIsTheWay: {
+        id: 'this-is-the-way',
+        name: 'ThisIsTheWay',
+        email: 'this-is-the-way@local.karabast',
+        provider: 'dev-user',
+    },
+} as const;
+
 export const authOptions: AuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
@@ -21,6 +58,19 @@ export const authOptions: AuthOptions = {
             // can only validate if the provider declares the expected issuer
             issuer: 'https://discord.com',
         }),
+        ...(process.env.NODE_ENV === 'development'
+            ? [CredentialsProvider({
+                id: 'dev-user',
+                name: 'Development user',
+                credentials: {
+                    user: { label: 'User', type: 'text' },
+                },
+                async authorize(credentials) {
+                    const userKey = credentials?.user as keyof typeof developmentUsers;
+                    return userKey === 'Order66' || userKey === 'ThisIsTheWay' ? developmentUsers[userKey] : null;
+                },
+            })]
+            : []),
     ],
     session: {
         strategy: 'jwt',
@@ -83,10 +133,14 @@ export const authOptions: AuthOptions = {
         },
     },
     callbacks: {
-        async jwt({ token, account, user, trigger, session }) {
-            if (trigger === 'update' && session?.userId) {
-                token.userId = session.userId;
+        async signIn({ account, profile }) {
+            // refused before a session exists; the home page explains why
+            if (account && account.type !== 'credentials' && !hasVerifiedEmail(account.provider, profile)) {
+                return emailNotVerifiedRedirectUrl(account.provider);
             }
+            return true;
+        },
+        async jwt({ token, account, user, profile }) {
             if (account) {
                 token.id = `${account.provider}_${user?.id}`;  // Add the properly formatted ID
                 token.provider = account.provider;
@@ -95,6 +149,8 @@ export const authOptions: AuthOptions = {
                 token.name = user?.name || token.name;
                 token.email = user?.email || token.email;
                 token.picture = user?.image || token.picture;
+                // the development test users have no provider to verify an email; the game node exempts them
+                token.emailVerified = account.type === 'credentials' || hasVerifiedEmail(account.provider, profile);
             }
 
             // On every JWT callback (including updates) extend expiration
@@ -110,7 +166,6 @@ export const authOptions: AuthOptions = {
                 email: token.email || session.user?.email,
                 image: token.picture || session.user?.image,
                 provider: token.provider as string || 'unknown',
-                userId: token.userId
             };
             return session;
         },

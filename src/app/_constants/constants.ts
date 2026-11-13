@@ -30,6 +30,12 @@ export const CARD_IMAGE_CACHE_VERSION = 4;
 /** Invite link to the Karabast Discord. */
 export const DiscordInviteUrl = 'https://discord.gg/hKRaqHND4v';
 
+/** The player ticketing channel on the Karabast Discord. */
+export const PlayerTicketingChannelUrl = 'https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348';
+
+/** Discord's help article on verifying the email address of a Discord account. */
+export const DiscordVerifyEmailHelpUrl = 'https://support.discord.com/hc/en-us/articles/213219267-Resending-Verification-Email';
+
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
     BestOfThree = 'bestOfThree',
@@ -103,8 +109,8 @@ export const LobbyFormatConfigs: IFormatModeConfig[] = [
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Limited, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne] },
 ];
 

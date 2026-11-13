@@ -4,7 +4,7 @@ import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { savePreferencesGeneric } from '@/app/_utils/genericPreferenceFunctions';
 import CosmeticItem from '@/app/_components/_sharedcomponents/Preferences/_subComponents/CosmeticItem';
-import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, FormControlLabel, Checkbox, Link } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useCosmetics } from '@/app/_contexts/CosmeticsContext';
 
@@ -227,6 +227,7 @@ function CosmeticsTab() {
                             borderRadius: '3px',
                         },
                     }}>
+                        <Typography>Submit a card sleeve request for your team on our <Link href='https://discord.com/channels/1220057752961814568/1444390668331126874' sx={{ color: '#00D4FF', pb: 1 }}>Discord Server</Link>.</Typography>
                         <Grid sx={styles.functionContainer}>
                             {
                                 cosmetics.cardbacks.length > 0 && sortCosmeticsByTitle(filterSelectableCosmetics(cosmetics.cardbacks)).map((cardback) => (

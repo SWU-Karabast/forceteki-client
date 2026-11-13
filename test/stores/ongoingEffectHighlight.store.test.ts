@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useOngoingEffectHighlightStore } from './ongoingEffectHighlight.store'
-import { IOngoingEffectSummary } from '../_components/_sharedcomponents/Cards/CardTypes';
+import { useOngoingEffectHighlightStore } from '@/app/_stores/ongoingEffectHighlight.store'
+import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
 const createOngoingEffect = (
     sourceCardUuid = 'source-1',

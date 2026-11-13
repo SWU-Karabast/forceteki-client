@@ -8,8 +8,10 @@ interface GameCardData {
     id: string;
     isPrivate: boolean;
     player1Leader: ICardData;
+    player1SecondLeader?: ICardData;
     player1Base: ICardData;
     player2Leader: ICardData;
+    player2SecondLeader?: ICardData;
     player2Base: ICardData;
     format: SwuGameFormat;
     cardPool: CardPool;
@@ -34,6 +36,15 @@ interface FormatOptionData {
     label: string;
     ongoingGamesCount: number;
 }
+
+// Every distinct leader in the game, including second leaders in two-leader formats.
+// A leader played by both players is listed once, so it counts the game once.
+const getGameLeaderIds = (game: GameCardData): string[] => {
+    const leaderIds = [game.player1Leader, game.player1SecondLeader, game.player2Leader, game.player2SecondLeader]
+        .map((leader) => leader?.id)
+        .filter((id): id is string => !!id);
+    return Array.from(new Set(leaderIds));
+};
 
 const getFormatOptionKey = (option: Pick<FormatOptionData, 'value' | 'cardPool'>) =>
     `${option.value}|${option.cardPool}`;
@@ -91,12 +102,8 @@ const updateLeaderData = (
 
     if (games) {
         for (const game of games.ongoingGames) {
-            if (game.player1Leader.id) {
-                addLeaderCount(game.player1Leader.id);
-            }
-
-            if (game.player2Leader.id && game.player2Leader.id !== game.player1Leader.id) {
-                addLeaderCount(game.player2Leader.id);
+            for (const leaderId of getGameLeaderIds(game)) {
+                addLeaderCount(leaderId);
             }
         }
     }
@@ -151,7 +158,7 @@ const GamesInProgress: React.FC = () => {
 
     const filterByLeader = (match: GameCardData): boolean => {
         if (!leaderData || !sortByLeader) return true;
-        const leaderIds = [match.player1Leader.id, match.player2Leader.id];
+        const leaderIds = getGameLeaderIds(match);
         return leaderIds.some(id => leaderData.some(leader => leader.id === id && leader.id === sortByLeader));
     };
 
@@ -168,11 +175,8 @@ const GamesInProgress: React.FC = () => {
             : (gamesData?.ongoingGames ?? []);
         const leaderCount = new Map<string, number>();
         for (const game of games) {
-            if (game.player1Leader.id) {
-                leaderCount.set(game.player1Leader.id, (leaderCount.get(game.player1Leader.id) ?? 0) + 1);
-            }
-            if (game.player2Leader.id && game.player2Leader.id !== game.player1Leader.id) {
-                leaderCount.set(game.player2Leader.id, (leaderCount.get(game.player2Leader.id) ?? 0) + 1);
+            for (const leaderId of getGameLeaderIds(game)) {
+                leaderCount.set(leaderId, (leaderCount.get(leaderId) ?? 0) + 1);
             }
         }
         return leaderData.map((leader) => ({
@@ -184,9 +188,7 @@ const GamesInProgress: React.FC = () => {
     // Format counts: only games that also involve the active leader filter
     const formatOptions = useMemo((): FormatOptionData[] => {
         const games = sortByLeader
-            ? (gamesData?.ongoingGames ?? []).filter(
-                (g) => g.player1Leader.id === sortByLeader || g.player2Leader.id === sortByLeader
-            )
+            ? (gamesData?.ongoingGames ?? []).filter((g) => getGameLeaderIds(g).includes(sortByLeader))
             : (gamesData?.ongoingGames ?? []);
         const formatPoolCount = new Map<string, number>();
         for (const game of games) {
@@ -202,7 +204,7 @@ const GamesInProgress: React.FC = () => {
             options.push({
                 value: fmt,
                 cardPool: pool,
-                label: `${FormatLabels[fmt]}${suffix}`,
+                label: `${FormatLabels[fmt] ?? fmt}${suffix}`,
                 ongoingGamesCount: count,
             });
         }
