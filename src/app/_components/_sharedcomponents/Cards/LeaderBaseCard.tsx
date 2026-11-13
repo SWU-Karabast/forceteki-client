@@ -14,6 +14,33 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import UpgradeStrip from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
 import { PopoverConfig, usePreviewCardPopover } from '@/app/_components/_sharedcomponents/Cards/GameCard/cardHooks';
 
+// The art box of a leader's front side, as fractions of the card: it fills the left part of the card, between the
+// "Leader" header and the traits bar, with the name and ability text to its right.
+const LEADER_ART_BOX = { left: 0.045, top: 0.075, width: 0.38, height: 0.76 };
+const LEADER_CARD_ASPECT_RATIO = 1.39;
+// width / height of the art box (about half a leader card), the shape of an art-only leader card
+const LEADER_ART_ASPECT_RATIO = (LEADER_ART_BOX.width * LEADER_CARD_ASPECT_RATIO / LEADER_ART_BOX.height).toFixed(3);
+
+// clips the card image to the art-only card's rounded box
+const leaderArtClipSx = {
+    position: 'absolute',
+    inset: 0,
+    overflow: 'hidden',
+    borderRadius: 'inherit',
+    pointerEvents: 'none',
+} as const;
+
+// the whole card image, scaled and shifted so that only its art box shows through the clip
+const leaderArtImageSx = {
+    position: 'absolute',
+    width: `${100 / LEADER_ART_BOX.width}%`,
+    height: `${100 / LEADER_ART_BOX.height}%`,
+    left: `${-100 * LEADER_ART_BOX.left / LEADER_ART_BOX.width}%`,
+    top: `${-100 * LEADER_ART_BOX.top / LEADER_ART_BOX.height}%`,
+    maxWidth: 'none',
+    userSelect: 'none',
+} as const;
+
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
     title,
@@ -22,6 +49,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     upgrades = [],
     disabled = false,
     isLeader = false,
+    artOnly = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, hoveredChatCard } = useGame();
     const locale = useCardImageLocale();
@@ -176,7 +204,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundColor: 'black',
             borderRadius: '0.5rem',
             width: '100%',
-            aspectRatio: '1.39',
+            aspectRatio: artOnly ? LEADER_ART_ASPECT_RATIO : '1.39',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -195,7 +223,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             borderRadius: '0.5rem',
             width: '100%',
             maxHeight: '100%',
-            aspectRatio: '1.39',
+            aspectRatio: artOnly ? LEADER_ART_ASPECT_RATIO : '1.39',
             cursor: 'default',
             position: 'relative',
             border: '2px solid #FFFFFF55',
@@ -463,7 +491,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     cardNotDeployed: !isDeployed,
                 })}
             >
-                {!isDeployed && (
+                {!isDeployed && !artOnly && (
                     <Box
                         component="img"
                         src={mainCardImageUrl}
@@ -472,6 +500,18 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         {...mainCardImgProps}
                         sx={cardImageFillSx}
                     />
+                )}
+                {!isDeployed && artOnly && (
+                    <Box sx={leaderArtClipSx}>
+                        <Box
+                            component="img"
+                            src={mainCardImageUrl}
+                            alt=""
+                            draggable={false}
+                            {...mainCardImgProps}
+                            sx={leaderArtImageSx}
+                        />
+                    </Box>
                 )}
                 {mainCardImageStatus === 'error' && !isDeployed && (
                     <CardImageMissingOverlay label={cardImageLabel(card, locale)} />

@@ -7,9 +7,8 @@ interface IBoardLeadersProps {
     leaders: ICardData[];
     // player name shown with the leader(s)
     title: string;
-    // which end of the board's middle column this player's leaders sit at
-    position: 'top' | 'bottom';
-    isPortrait: boolean;
+    // a compact board (see useIsCompactBoard) fits two leaders into the space of one card
+    isCompact: boolean;
 }
 
 const styles = {
@@ -32,6 +31,13 @@ const styles = {
         // wide enough that a card's epic action / blank icon (which sticks out 4px on the right) never touches its neighbor
         gap: 'clamp(6px, 0.8vh, 8px)',
     },
+    compactPair: {
+        position: 'relative',
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 'clamp(6px, 0.8vh, 8px)',
+    },
     pairCard: {
         flex: 1,
         minWidth: 0,
@@ -40,6 +46,20 @@ const styles = {
         maxWidth: '100%',
         borderRadius: '0.5rem',
         p: { xs: '0 6px', md: '2px 10px' },
+        backgroundColor: 'black',
+    },
+    // the same nameplate a single leader card carries, over the bottom of the pair
+    compactNameplate: {
+        position: 'absolute',
+        bottom: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        // above the cards' image and overlay; clicks and hovers still reach the cards around it
+        zIndex: 1,
+        pointerEvents: 'none',
+        maxWidth: '100%',
+        borderRadius: '0.5rem',
+        p: { xs: '2px 5px', md: '5px 10px' },
         backgroundColor: 'black',
     },
     pairNameplateText: {
@@ -56,17 +76,19 @@ const styles = {
 /**
  * One player's leader(s) in the board's middle column.
  *
- * A single leader renders as it always has, with the player's name on the card. Two leaders (Faux Suns) stack in
- * portrait, the first leader at the outer edge with the name on it, and sit side by side in landscape (the board widens
- * the middle column for this), with the name centered below the pair rather than across the gap between them.
+ * A single leader renders as it always has, with the player's name on the card. Two leaders (Faux Suns) sit side by
+ * side: on a large screen at full size (the board widens the middle column for this), with the name centered below the
+ * pair; on a compact board cut down to their art so that both fit in the space of one card, with the name on them as on
+ * a single leader. Hovering a leader still previews the whole card.
  */
-const BoardLeaders: React.FC<IBoardLeadersProps> = ({ leaders, title, position, isPortrait }) => {
-    const leaderCard = (card: ICardData, cardTitle?: string) => (
+const BoardLeaders: React.FC<IBoardLeadersProps> = ({ leaders, title, isCompact }) => {
+    const leaderCard = (card: ICardData, cardTitle?: string, artOnly = false) => (
         <LeaderBaseCard
             card={card}
             cardStyle={LeaderBaseCardStyle.Leader}
             title={cardTitle}
             isLeader={true}
+            artOnly={artOnly}
         />
     );
 
@@ -79,17 +101,15 @@ const BoardLeaders: React.FC<IBoardLeadersProps> = ({ leaders, title, position, 
         return <Box sx={styles.leaderWrapper}>{leaderCard(firstLeader, title)}</Box>;
     }
 
-    if (isPortrait) {
-        const outerToInner = [firstLeader, secondLeader];
-        const topToBottom = position === 'top' ? outerToInner : [...outerToInner].reverse();
+    if (isCompact) {
         return (
-            <>
-                {topToBottom.map((card) => (
-                    <Box key={card.uuid} sx={styles.leaderWrapper}>
-                        {leaderCard(card, card === firstLeader ? title : undefined)}
-                    </Box>
-                ))}
-            </>
+            <Box sx={styles.compactPair}>
+                <Box sx={styles.pairCard}>{leaderCard(firstLeader, undefined, true)}</Box>
+                <Box sx={styles.pairCard}>{leaderCard(secondLeader, undefined, true)}</Box>
+                <Box sx={styles.compactNameplate}>
+                    <Typography variant="body2" sx={styles.pairNameplateText}>{title}</Typography>
+                </Box>
+            </Box>
         );
     }
 
