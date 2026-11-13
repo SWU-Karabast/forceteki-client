@@ -1,33 +1,35 @@
 'use client';
-import React, { useMemo, useState } from 'react';
-import { Alert, Box, Checkbox, FormControlLabel, MenuItem, Typography } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, Box, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import {
-    DurationUnit,
     IModActionResponse,
     IPlayerSearchResult,
     IUsernameChangeResponse,
     modActionDefinitions,
-    ModActionType,
-    RESET_USERNAME_PREFIX,
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import ModActionForm from '@/app/_components/_sharedcomponents/ModActions/ModActionForm';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
-import { validateDiscordUsername } from '@/app/_validators/UsernameValidation/UserValidation';
-import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, generateResetUsername, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel, isResetUsername } from '@/app/_utils/ModerationUtils';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
+import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
+import { cancelModActionAsync, IModActionResult, modActionTargetFromPlayer } from '@/app/_utils/modActionSubmission';
 
-const actionHelpText: Partial<Record<ModActionType, string>> = {
-    [ModActionType.Rename]: 'The player must choose a new username themselves the next time they log in.',
-    [ModActionType.ChangeUsername]: 'Sets the username directly. Resolves a pending Force Rename and does not lift Block Username Changes.',
-    [ModActionType.UsernameChangesBlocked]: 'The player can no longer change their own username and must request changes from moderators.',
-};
+interface IUserManagementTabProps {
 
-const forceRenameBlockedMessage = 'Force Rename is unavailable while username changes are blocked. Use Change Username instead.';
+    /** Search to run on mount or whenever it changes, e.g. when a report opens a player's profile */
+    searchRequest?: { query: string; requestId: number } | null;
 
-const UserManagementTab: React.FC = () => {
+    /** Called once the search request ran, so returning to this tab later does not repeat it */
+    onSearchRequestHandled?: () => void;
+}
+
+const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, onSearchRequestHandled }) => {
+    const dateFormat = useDateFormat();
+
     // Search state
     const [searchQuery, setSearchQuery] = useState('');
     const [searchLoading, setSearchLoading] = useState(false);
@@ -39,14 +41,6 @@ const UserManagementTab: React.FC = () => {
     const [modActions, setModActions] = useState<IModActionResponse[]>([]);
     const [usernameChanges, setUsernameChanges] = useState<IUsernameChangeResponse[]>([]);
 
-    // Action form state
-    const [actionType, setActionType] = useState<ModActionType>(ModActionType.Mute);
-    const [durationValue, setDurationValue] = useState<string>('');
-    const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Weeks);
-    const [note, setNote] = useState('');
-    const [isNoteError, setIsNoteError] = useState<boolean>(false);
-    const [newUsername, setNewUsername] = useState('');
-    const [resetUsername, setResetUsername] = useState(false);
     // Action history expanded state
     const [expandedActionId, setExpandedActionId] = useState<string | null>(null);
 
@@ -63,16 +57,11 @@ const UserManagementTab: React.FC = () => {
     const [submitLoading, setSubmitLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    const trimmedNewUsername = newUsername.trim();
-    const newUsernameError = !modActionDefinitions[actionType].requiresNewUsername || !trimmedNewUsername
-        ? null
-        : validateDiscordUsername(trimmedNewUsername)
-            ?? (trimmedNewUsername === selectedPlayer?.username ? 'The player already has this username.' : null);
-    const isForceRenameBlocked = actionType === ModActionType.Rename && !!selectedPlayer?.activeUsernameChangesBlockedId;
-
     // ==================== Handlers ====================
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) return;
+    const handleSearch = () => runSearch(searchQuery);
+
+    const runSearch = async (query: string) => {
+        if (!query.trim()) return;
 
         setSearchLoading(true);
         setSearchError(null);
@@ -83,7 +72,7 @@ const UserManagementTab: React.FC = () => {
         setSuccessMessage(null);
 
         try {
-            const result = await ServerApiService.findUserAsync(searchQuery.trim());
+            const result = await ServerApiService.findUserAsync(query.trim());
             setPlayers(result.players);
             setModActions(result.modActions || []);
             setUsernameChanges(result.usernameChanges || []);
@@ -115,114 +104,35 @@ const UserManagementTab: React.FC = () => {
         }
     };
 
-    const getDurationInDays = (): number => {
-        const value = parseInt(durationValue);
-        if (!value || value <= 0) return 0;
-        return durationUnit === DurationUnit.Weeks ? value * 7 : value;
+    useEffect(() => {
+        if (searchRequest?.query) {
+            setSearchQuery(searchRequest.query);
+            runSearch(searchRequest.query);
+            onSearchRequestHandled?.();
+        }
+        // runSearch is recreated every render; only a new request should trigger a search
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchRequest?.requestId]);
+
+    const refreshSelectedPlayerAsync = async (playerId: string) => {
+        const refreshed = await ServerApiService.getModActionsForPlayerAsync(playerId);
+        setModActions(refreshed.modActions || []);
+        setUsernameChanges(refreshed.usernameChanges || []);
+        // since we have a selected player the refreshed player will always be one.
+        setSelectedPlayer(refreshed.players[0]);
     };
 
-    const handleSubmitAction = () => {
+    const handleActionSubmitted = async (result: IModActionResult) => {
         if (!selectedPlayer) return;
 
-        if (isForceRenameBlocked) {
-            setSearchError(forceRenameBlockedMessage);
-            return;
+        setSuccessMessage(result.success ? result.message : null);
+        setSearchError(result.success ? null : result.message);
+        try {
+            await refreshSelectedPlayerAsync(selectedPlayer.id);
+        } catch (error) {
+            const failure = error instanceof Error ? error.message : 'unknown error';
+            setSearchError(`${result.message} Failed to refresh the player: ${failure}`);
         }
-
-        const definition = modActionDefinitions[actionType];
-        const durationDays = getDurationInDays();
-        if (definition.requiresDuration && !durationDays) return;
-        if (definition.requiresNewUsername && (!trimmedNewUsername || newUsernameError)) return;
-        if (definition.requiresNote && !note.trim()){
-            setIsNoteError(true);
-            return;
-        }
-
-        const resetRequested = definition.supportsUsernameReset && resetUsername;
-        // A player who already has a reset name keeps it instead of being given a second one
-        const resetName = resetRequested && !isResetUsername(selectedPlayer.username) ? generateResetUsername() : undefined;
-
-        const actionMessages: Record<ModActionType, string> = {
-            [ModActionType.Mute]: `This will mute player ${selectedPlayer.username} for ${durationValue} ${durationUnit.toLowerCase()}. Are you sure?`,
-            [ModActionType.Warning]: `This will issue a warning to player ${selectedPlayer.username}. Are you sure?`,
-            [ModActionType.Rename]: `This will force player ${selectedPlayer.username} to rename. Are you sure?`,
-            [ModActionType.ReportingDisabled]: `This will disable reporting for player ${selectedPlayer.username}. Are you sure?`,
-            [ModActionType.UsernameChangesBlocked]: `This will block player ${selectedPlayer.username} from changing their username${resetName ? ` and reset it to ${resetName}` : ''}. Are you sure?`,
-            [ModActionType.ChangeUsername]: `This will change the username of player ${selectedPlayer.username} to ${trimmedNewUsername}. Are you sure?`,
-        };
-
-        setConfirmDialog({
-            open: true,
-            title: 'Mod Action',
-            message: actionMessages[actionType],
-            confirmText: 'Confirm Action',
-            onConfirm: async () => {
-                setConfirmDialog((prev) => ({ ...prev, open: false }));
-                setSubmitLoading(true);
-                setSuccessMessage(null);
-                setSearchError(null);
-                let submissionMessage: string | undefined;
-                try {
-                    const result = await ServerApiService.submitModActionAsync(
-                        selectedPlayer.id,
-                        actionType,
-                        note.trim(),
-                        definition.requiresDuration ? durationDays : undefined,
-                        {
-                            newUsername: definition.requiresNewUsername ? trimmedNewUsername : undefined,
-                        },
-                    );
-                    let submissionSucceeded = result.success;
-                    submissionMessage = result.message;
-                    if (result.success && resetRequested) {
-                        if (!resetName) {
-                            submissionMessage += ` The username is already '${selectedPlayer.username}', so no username update was needed.`;
-                        } else {
-                            try {
-                                const resetResult = await ServerApiService.submitModActionAsync(
-                                    selectedPlayer.id,
-                                    ModActionType.ChangeUsername,
-                                    note.trim(),
-                                    undefined,
-                                    { newUsername: resetName },
-                                );
-                                submissionSucceeded = resetResult.success;
-                                submissionMessage += ` ${resetResult.message}`;
-                                if (!resetResult.success) {
-                                    submissionMessage += ' The username-change restriction remains in place. Use Change Username to retry if needed.';
-                                }
-                            } catch (error) {
-                                submissionSucceeded = false;
-                                const failure = error instanceof Error ? error.message : 'Failed to update the username';
-                                submissionMessage += ` The username update failed: ${failure}. The username-change restriction remains in place. Use Change Username to retry.`;
-                            }
-                        }
-                    }
-                    if (submissionSucceeded) {
-                        setSuccessMessage(submissionMessage);
-                    } else {
-                        setSearchError(submissionMessage);
-                    }
-                    const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
-                    setModActions(refreshed.modActions || []);
-                    setUsernameChanges(refreshed.usernameChanges || []);
-                    // since we have a selected player the refreshed player will always be one.
-                    setSelectedPlayer(refreshed.players[0])
-                    setNote('');
-                    setNewUsername('');
-                    setResetUsername(false);
-                    setDurationValue('');
-                    setDurationUnit(DurationUnit.Days);
-                } catch (error) {
-                    const failure = error instanceof Error ? error.message : 'Failed to submit action';
-                    setSearchError(submissionMessage
-                        ? `${submissionMessage} Failed to refresh the player: ${failure}`
-                        : failure);
-                } finally {
-                    setSubmitLoading(false);
-                }
-            },
-        });
     };
 
     const handleCancelAction = (action: IModActionResponse) => {
@@ -237,13 +147,8 @@ const UserManagementTab: React.FC = () => {
                 setConfirmDialog((prev) => ({ ...prev, open: false }));
                 setSubmitLoading(true);
                 try {
-                    await ServerApiService.cancelModActionAsync(selectedPlayer.id, action.id);
-                    // Refresh mod actions
-                    const refreshed = await ServerApiService.getModActionsForPlayerAsync(selectedPlayer.id);
-                    setModActions(refreshed.modActions || []);
-                    setUsernameChanges(refreshed.usernameChanges || []);
-                    // since we have a selected player the refreshed player will always be one.
-                    setSelectedPlayer(refreshed.players[0])
+                    await cancelModActionAsync(selectedPlayer.id, action.id);
+                    await refreshSelectedPlayerAsync(selectedPlayer.id);
                     setSuccessMessage('Mod action cancelled successfully');
                 } catch (error) {
                     setSearchError(error instanceof Error ? error.message : 'Failed to cancel action');
@@ -257,11 +162,6 @@ const UserManagementTab: React.FC = () => {
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') handleSearch();
     };
-
-    const canSubmit = selectedPlayer
-        && !isForceRenameBlocked
-        && (!modActionDefinitions[actionType].requiresDuration || getDurationInDays() > 0)
-        && (!modActionDefinitions[actionType].requiresNewUsername || (!!trimmedNewUsername && !newUsernameError));
 
     // ==================== Styles ====================
     const styles = {
@@ -310,11 +210,6 @@ const UserManagementTab: React.FC = () => {
         userDetailValue: {
             color: 'white',
             fontSize: '0.875rem',
-        },
-        actionFormRow: {
-            display: 'flex',
-            gap: '0.75rem',
-            alignItems: 'center',
         },
         actionHistoryItem: {
             border: '1px solid #4A5568',
@@ -380,12 +275,6 @@ const UserManagementTab: React.FC = () => {
             color: 'red',
             fontSize: '0.775rem',
         },
-        textFieldsSpecial: {
-            '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                display: 'none'
-            },
-            width: '160px'
-        }
 
     };
     // ==================== Render ====================
@@ -463,7 +352,7 @@ const UserManagementTab: React.FC = () => {
                                                 Last active:
                                             </Typography>
                                             <Typography sx={{ color: 'white', fontSize: '0.875rem' }}>
-                                                {formatDate(player.lastLogin)}
+                                                {formatDate(player.lastLogin, dateFormat)}
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -495,13 +384,13 @@ const UserManagementTab: React.FC = () => {
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Last login:</Typography>
                                     <Typography sx={styles.userDetailValue}>
-                                        {formatDate(selectedPlayer.lastLogin)}
+                                        {formatDate(selectedPlayer.lastLogin, dateFormat)}
                                     </Typography>
                                 </Box>
                                 <Box sx={styles.userDetailRow}>
                                     <Typography sx={styles.userDetailLabel}>Created:</Typography>
                                     <Typography sx={styles.userDetailValue}>
-                                        {formatDate(selectedPlayer.createdAt)}
+                                        {formatDate(selectedPlayer.createdAt, dateFormat)}
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -548,126 +437,12 @@ const UserManagementTab: React.FC = () => {
                     {/* Action Form */}
                     {selectedPlayer && (
                         <Box>
-                            <Typography sx={styles.sectionTitle}>Submit mod action</Typography>
-
-                            {/* Action type selector */}
-                            <Box sx={{ ...styles.actionFormRow, mb: '0.75rem' }}>
-                                <StyledTextField
-                                    select
-                                    label="Action type"
-                                    value={actionType}
-                                    onChange={(e) => {
-                                        setActionType(e.target.value as ModActionType);
-                                        setNewUsername('');
-                                        setResetUsername(false);
-                                    }}
-                                    size="small"
-                                    sx={{ minWidth: '160px' }}
-                                >
-                                    <MenuItem value={ModActionType.Warning}>{modActionDefinitions[ModActionType.Warning].label}</MenuItem>
-                                    <MenuItem value={ModActionType.Rename}>
-                                        {modActionDefinitions[ModActionType.Rename].label}
-                                    </MenuItem>
-                                    <MenuItem value={ModActionType.ChangeUsername}>{modActionDefinitions[ModActionType.ChangeUsername].label}</MenuItem>
-                                    <MenuItem value={ModActionType.UsernameChangesBlocked}>{modActionDefinitions[ModActionType.UsernameChangesBlocked].label}</MenuItem>
-                                    <MenuItem value={ModActionType.Mute}>{modActionDefinitions[ModActionType.Mute].label}</MenuItem>
-                                    <MenuItem value={ModActionType.ReportingDisabled}>{modActionDefinitions[ModActionType.ReportingDisabled].label}</MenuItem>
-                                </StyledTextField>
-
-                                {modActionDefinitions[actionType].requiresDuration && (
-                                    <>
-                                        <StyledTextField
-                                            type="number"
-                                            placeholder="Duration"
-                                            value={durationValue}
-                                            onChange={(e) => setDurationValue(e.target.value)}
-                                            size="small"
-                                            sx={styles.textFieldsSpecial}
-                                            inputProps={{ min: 1, step: 1 }}
-                                        />
-                                        <StyledTextField
-                                            select
-                                            value={durationUnit}
-                                            onChange={(e) => {
-                                                setDurationUnit(e.target.value as DurationUnit);
-                                            }}
-                                            size="small"
-                                            sx={{ minWidth: '100px', maxWidth:'130px' }}
-                                        >
-                                            <MenuItem value={DurationUnit.Weeks}>Weeks</MenuItem>
-                                            <MenuItem value={DurationUnit.Days}>Days</MenuItem>
-                                        </StyledTextField>
-                                    </>
-                                )}
-
-                                <PreferenceButton
-                                    variant="concede"
-                                    text={submitLoading ? '' : modActionDefinitions[actionType].label}
-                                    buttonFnc={handleSubmitAction}
-                                    disabled={!canSubmit || submitLoading}
-                                />
-                            </Box>
-
-                            {modActionDefinitions[actionType].requiresNewUsername && (
-                                <Box sx={{ mb: '0.75rem' }}>
-                                    <StyledTextField
-                                        placeholder="New username"
-                                        value={newUsername}
-                                        onChange={(e) => setNewUsername(e.target.value)}
-                                        size="small"
-                                        errorMessage={newUsernameError ?? ''}
-                                    />
-                                </Box>
-                            )}
-
-                            {modActionDefinitions[actionType].supportsUsernameReset && (
-                                <FormControlLabel
-                                    sx={{ color: 'white', mb: '0.5rem', '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
-                                    control={
-                                        <Checkbox
-                                            checked={resetUsername}
-                                            onChange={(e) => setResetUsername(e.target.checked)}
-                                            size="small"
-                                            sx={{ color: '#B0B0B0', '&.Mui-checked': { color: '#2F7DB6' } }}
-                                        />
-                                    }
-                                    label={`Also reset username to ${RESET_USERNAME_PREFIX}XXXX (random number)`}
-                                />
-                            )}
-
-                            {actionHelpText[actionType] && (
-                                <Typography sx={{
-                                    color: isForceRenameBlocked ? '#ffd54f' : '#B0B0B0',
-                                    fontWeight: isForceRenameBlocked ? 700 : 400,
-                                    fontSize: '0.75rem',
-                                    mb: '0.5rem',
-                                }}>
-                                    {isForceRenameBlocked ? forceRenameBlockedMessage : actionHelpText[actionType]}
-                                </Typography>
-                            )}
-
-                            {/* Notes */}
-                            <Typography sx={{ ...styles.sectionTitle, mt: '0.75rem' }}>Moderator notes for action</Typography>
-                            <StyledTextField
-                                placeholder={modActionDefinitions[actionType].requiresNote ? 'Notes about the action (required)' : 'Notes about the action (optional)'}
-                                value={note}
-                                disabled={isForceRenameBlocked}
-                                sx={{
-                                    '& .MuiInputBase-input.Mui-disabled': {
-                                        color: '#B0B0B0',
-                                        WebkitTextFillColor: '#B0B0B0',
-                                    },
-                                }}
-                                onChange={(e) => {
-                                    setNote(e.target.value);
-                                    setIsNoteError(false);
-                                }}
-                                multiline
-                                rows={3}
-                                size="small"
-                                errorMessage={
-                                    isNoteError ? 'A note is required for this action type' : ''
-                                }
+                            <Typography sx={styles.sectionTitle}>Submit Mod Action</Typography>
+                            <ModActionForm
+                                key={selectedPlayer.id}
+                                target={modActionTargetFromPlayer(selectedPlayer)}
+                                onSubmitted={handleActionSubmitted}
+                                onError={setSearchError}
                             />
                         </Box>
                     )}
@@ -710,7 +485,7 @@ const UserManagementTab: React.FC = () => {
                                                             }}
                                                         />
                                                         <Typography sx={{ color: isModDrivenChange ? '#ffd54f' : 'white', fontSize: '0.85rem', mb:'0px' }}>
-                                                            {getUsernameChangeLabel(change)}
+                                                            {getUsernameChangeLabel(change, dateFormat)}
                                                         </Typography>
                                                     </Box>
                                                 </Box>
@@ -768,7 +543,7 @@ const UserManagementTab: React.FC = () => {
                                                         }}
                                                     />
                                                     <Typography sx={{ color: '#ffd54f', fontSize: '0.85rem', mb:'0px', minWidth: 0, overflowWrap: 'anywhere' }}>
-                                                        {getModActionEntryLabel(entry, selectedPlayer)}
+                                                        {getModActionEntryLabel(entry, selectedPlayer, dateFormat)}
                                                     </Typography>
                                                     {status.label && (
                                                         <Typography sx={styles.statusBadge(status.color)}>
@@ -779,7 +554,7 @@ const UserManagementTab: React.FC = () => {
 
                                                 {isCancellable && (
                                                     <Typography
-                                                        sx={styles.cancelButton}
+                                                        sx={{ ...styles.cancelButton, ...(submitLoading ? { opacity: 0.5, pointerEvents: 'none' } : {}) }}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleCancelAction(action);
@@ -828,7 +603,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Started
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.startedAt)}
+                                                                    {formatDate(action.startedAt, dateFormat)}
                                                                 </Typography>
                                                             </Box>
                                                         )}
@@ -838,7 +613,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Expires
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.expiresAt)}
+                                                                    {formatDate(action.expiresAt, dateFormat)}
                                                                 </Typography>
                                                             </Box>
                                                         )}
@@ -860,7 +635,7 @@ const UserManagementTab: React.FC = () => {
                                                                     Cancelled
                                                                 </Typography>
                                                                 <Typography sx={{ color: '#B0B0B0', fontSize: '0.75rem' }}>
-                                                                    {formatDate(action.cancelledAt)} by {action.cancelledByUsername}
+                                                                    {formatDate(action.cancelledAt, dateFormat)} by {action.cancelledByUsername}
                                                                 </Typography>
                                                             </Box>
                                                         )}
