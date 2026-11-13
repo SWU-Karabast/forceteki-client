@@ -10,7 +10,10 @@
 		"lint": "npx tsc --noemit && next lint",
 		"lint:fix": "npx tsc --noemit && next lint --fix",
 		"storybook": "storybook dev -p 6006 --no-version-updates",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"states": "node scripts/states.mjs",
+		"test": "vitest",
+		"test:run": "vitest run"
 	},
 	"dependencies": {
 		"@aws-sdk/client-dynamodb": "^3.917.0",
@@ -40,14 +43,19 @@
 		"@storybook/addon-onboarding": "^10.4.1",
 		"@storybook/nextjs": "^10.4.1",
 		"@stylistic/eslint-plugin": "^2.12.1",
+		"@testing-library/dom": "^10.4.2",
+		"@testing-library/react": "^16.3.3",
 		"@types/jsonwebtoken": "^9.0.9",
 		"@types/node": "^22.20.5",
 		"@types/react": "^18",
 		"@types/react-dom": "^18",
+		"@vitejs/plugin-react": "^6.3.0",
 		"eslint": "^8",
 		"eslint-config-next": "14.2.14",
+		"jsdom": "^29.1.1",
 		"storybook": "^10.4.1",
-		"typescript": "~5.9"
+		"typescript": "~5.9",
+		"vitest": "^5.1.0"
 	},
 	"overrides": {
 		"react-is": "^18.3.1"
