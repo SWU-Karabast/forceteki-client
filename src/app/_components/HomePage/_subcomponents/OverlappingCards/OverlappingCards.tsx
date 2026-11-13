@@ -31,12 +31,17 @@ const styles = {
         left:'-11.5%',
         top:'25%',
         width: '100%',
+        // a hovered leader comes to the front, so the one behind can be seen in full
+        '&:hover': {
+            zIndex: 1,
+        },
     },
     // Two leaders: both shrink and fan out down-right, staying inside the single-leader footprint
     // (left edge -11.5%, bottom edge at 125% of the base's height) so rows keep their size.
+    // The leader behind starts low enough to leave the base's name box uncovered.
     firstOfTwoLeaders: {
         width: '75%',
-        top: '15%',
+        top: '22%',
     },
     secondOfTwoLeaders: {
         left: '25%',
