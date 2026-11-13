@@ -114,22 +114,22 @@ flashes it. The client-side gate is presentation only — the server 503s anyway
 
 ### Tests
 
-The tests render the board from the game states forceteki really sends. forceteki commits them as snapshots
-in its `test/stateSnapshots/`; this repo does not keep a copy. `npm run states` downloads them into this repo's
-`test/stateSnapshots/` (gitignored), and the first test run does that on its own, from backend main.
+The tests render the board from the game states forceteki really sends. forceteki captures and commits them
+in its `test/stateCaptures/`; this repo does not keep a copy. `npm run states` downloads them into this repo's
+`test/stateCaptures/` (gitignored), and the first test run does that on its own, from backend main.
 `manifest.json` there says which backend ref and commit they came from and when they were downloaded, and
 every test run prints it.
 
 Everything for testing lives in the root `test/` directory, never beside the code under `src/`. Helpers and setup
 are in `test/helpers/`; import app code with the `@/` alias. Board tests are split the way the backend splits its
-snapshots, one file per snapshot, named after it:
+captured states, one file per capture, named after it:
 
 - **Render** tests (`test/gameboard/render/<Name>.<participant>.test.tsx`) check one board is drawn correctly,
-  from the snapshot `render/<name>.<participant>.json`, e.g. `Board.player1.test.tsx` and `Board.spectator.test.tsx`.
+  from the capture `render/<name>.<participant>.json`, e.g. `Board.player1.test.tsx` and `Board.spectator.test.tsx`.
 - **Control** tests (`test/gameboard/controls/<Name>.test.tsx`) walk a chain from `controls/<name>.json`: a series
   of states for one participant, each step's `send` being the messages they sent to reach the next, exactly as
   `sendGameMessage` emits them. `Attack.test.tsx` checks each click sends the recorded message.
-- `test/helpers/gameState.tsx` has the helpers: `loadRenderSnapshot`, `loadControlChain`, and `renderGameState`,
+- `test/helpers/gameState.tsx` has the helpers: `loadRenderCapture`, `loadControlChain`, and `renderGameState`,
   which renders a component as a participant sees a state, records what it sends (`sent`), and delivers the next
   state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`), and `unitsInPlay`
   lists the units a state has in both arenas. Nothing is mocked: it renders the real `GameStateProvider` and the
@@ -142,8 +142,8 @@ snapshots, one file per snapshot, named after it:
   that PR's states (editing the description re-runs it). It must be the first line and a link: the check fails on a
   `Backend PR:` line anywhere else or one without the link, rather than quietly testing against main. The merge queue
   tests against backend main, so merge the backend PR first. A PR that links nothing is tested against backend main.
-- A snapshot a test needs that the backend does not capture yet belongs in the backend PR (see forceteki's
-  CLAUDE.md, "State snapshots"); never hand-write a game state here.
+- A game state a test needs that the backend does not capture yet belongs in the backend PR (see forceteki's
+  CLAUDE.md, "Captured states"); never hand-write a game state here.
 
 ## Conventions
 

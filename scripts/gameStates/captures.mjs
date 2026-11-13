@@ -1,4 +1,4 @@
-// Reading the game state snapshots forceteki commits in test/stateSnapshots/, from GitHub or from
+// Reading the game states forceteki captures and commits in test/stateCaptures/, from GitHub or from
 // a local forceteki checkout. Used by `npm run states`.
 
 import { execFileSync } from 'node:child_process';
@@ -6,8 +6,11 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 export const BackendRepo = 'SWU-Karabast/forceteki';
-export const SnapshotDir = 'test/stateSnapshots';
-export const FixtureDir = 'test/stateSnapshots';
+/** Where forceteki commits its captured states. */
+export const BackendCaptureDir = 'test/stateCaptures';
+
+/** Where `npm run states` puts them in this repo. */
+export const CaptureDir = 'test/stateCaptures';
 export const ManifestFile = 'manifest.json';
 
 const githubToken = (() => {
@@ -62,7 +65,7 @@ export const resolveRef = async (ref) => {
             throw new Error(`forceteki#${number} conflicts with main; resolve that first`);
         }
         if (pr.mergeable === true && pr.merge_commit_sha) {
-            return { ref, commit: pr.merge_commit_sha, warning: await snapshotCheckWarning(number, pr.head.sha) };
+            return { ref, commit: pr.merge_commit_sha, ...await captureCheck(number, pr.head.sha) };
         }
         await sleep(2000);
     }
@@ -70,47 +73,49 @@ export const resolveRef = async (ref) => {
 };
 
 /**
- * Why a backend PR's snapshots may not be what its engine sends, or undefined when its
- * `state-snapshots` check passed. That check fails when the committed snapshots are stale, and a
- * client tested against stale snapshots tests states the engine no longer sends.
+ * What a backend PR's `state-captures` check says about its captured states. That check fails when
+ * the committed captures are stale, and a client tested against stale captures tests states the
+ * engine no longer sends: so a `warning` unless it passed, and otherwise a `note` saying when, since
+ * it ran against main as it was then while `pr/<number>` downloads GitHub's current merge.
  */
-const snapshotCheckWarning = async (number, headSha) => {
+const captureCheck = async (number, headSha) => {
     let runs;
     try {
-        ({ check_runs: runs } = await github(`/repos/${BackendRepo}/commits/${headSha}/check-runs?check_name=state-snapshots`));
+        ({ check_runs: runs } = await github(`/repos/${BackendRepo}/commits/${headSha}/check-runs?check_name=state-captures`));
     } catch (error) {
         const status = /answered (\d+)/.exec(error.message)?.[1];
-        return `couldn't read forceteki#${number}'s state-snapshots check (${status ? `GitHub answered ${status}` : error.message}), so its snapshots aren't confirmed`;
+        return { warning: `couldn't read forceteki#${number}'s state-captures check (${status ? `GitHub answered ${status}` : error.message}), so its captured states aren't confirmed` };
     }
     const latest = runs.sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at))[0];
     if (!latest) {
-        return `forceteki#${number} has no state-snapshots check, so nothing confirms its snapshots match its engine`;
+        return { warning: `forceteki#${number} has no state-captures check, so nothing confirms its captured states match its engine` };
     }
     if (latest.status !== 'completed') {
-        return `forceteki#${number}'s state-snapshots check is still running, so its snapshots aren't confirmed yet; re-run once it passes`;
+        return { warning: `forceteki#${number}'s state-captures check is still running, so its captured states aren't confirmed yet; re-run once it passes` };
     }
     if (latest.conclusion !== 'success') {
-        return `forceteki#${number}'s state-snapshots check ${latest.conclusion === 'failure' ? 'failed' : `ended as ${latest.conclusion}`}: its snapshots don't match what its engine sends, so these tests may pass or fail against states the server won't send`;
+        return { warning: `forceteki#${number}'s state-captures check ${latest.conclusion === 'failure' ? 'failed' : `ended as ${latest.conclusion}`}: its captured states don't match what its engine sends, so these tests may pass or fail against states the server won't send` };
     }
-    return undefined;
+    const passed = latest.completed_at.slice(0, 16).replace('T', ' ');
+    return { note: `forceteki#${number}'s state-captures check passed at ${passed} UTC, against main as it was then` };
 };
 
-/** Every snapshot at a backend commit, as a map of path (relative to the snapshot dir) to contents. */
-export const readSnapshotsAt = async (commit) => {
+/** Every captured state at a backend commit, as a map of path (relative to the capture dir) to contents. */
+export const readCapturesAt = async (commit) => {
     const tree = await github(`/repos/${BackendRepo}/git/trees/${commit}?recursive=1`);
     if (tree.truncated) {
         throw new Error(`the forceteki tree at ${commit} is too large to list in one request`);
     }
     const entries = tree.tree.filter((entry) => entry.type === 'blob'
-        && entry.path.startsWith(SnapshotDir + '/')
+        && entry.path.startsWith(BackendCaptureDir + '/')
         && entry.path.endsWith('.json'));
 
-    const snapshots = new Map();
+    const captures = new Map();
     await Promise.all(entries.map(async (entry) => {
         const blob = await github(`/repos/${BackendRepo}/git/blobs/${entry.sha}`);
-        snapshots.set(entry.path.slice(SnapshotDir.length + 1), Buffer.from(blob.content, 'base64').toString('utf8'));
+        captures.set(entry.path.slice(BackendCaptureDir.length + 1), Buffer.from(blob.content, 'base64').toString('utf8'));
     }));
-    return snapshots;
+    return captures;
 };
 
 /** Every `.json` file under a directory, as a map of relative path to contents. */

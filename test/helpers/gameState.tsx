@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Rendering the board from the game states forceteki sends. `npm run states` downloads the
-// backend's snapshots into test/stateSnapshots/ (the test run does it once on its own):
+// backend's captured states into test/stateCaptures/ (the test run does it once on its own):
 //
 // - render/<name>.<participant>.json: one board, for checking it is drawn correctly.
 // - controls/<name>.json: a chain of states for one participant, each with the messages that
@@ -25,12 +25,12 @@ export interface IControlStep {
     send: unknown[][];
 }
 
-const SnapshotDir = 'test/stateSnapshots';
+const CaptureDir = 'test/stateCaptures';
 
-const readSnapshot = (path: string) => {
-    const file = join(SnapshotDir, path);
+const readCapture = (path: string) => {
+    const file = join(CaptureDir, path);
     if (!existsSync(file)) {
-        const manifest = join(SnapshotDir, 'manifest.json');
+        const manifest = join(CaptureDir, 'manifest.json');
         const from = existsSync(manifest) ? JSON.parse(readFileSync(manifest, 'utf8')).ref : 'nowhere yet';
         throw new Error(`${path} is not in the game states downloaded from forceteki ${from}. `
             + 'If a backend PR adds it, run `npm run states -- --ref pr/<number>`.');
@@ -38,11 +38,11 @@ const readSnapshot = (path: string) => {
     return JSON.parse(readFileSync(file, 'utf8'));
 };
 
-export const loadRenderSnapshot = (name: string, participant: Participant): any =>
-    readSnapshot(`render/${name}.${participant}.json`);
+export const loadRenderCapture = (name: string, participant: Participant): any =>
+    readCapture(`render/${name}.${participant}.json`);
 
 export const loadControlChain = (name: string): IControlStep[] =>
-    readSnapshot(`controls/${name}.json`).steps;
+    readCapture(`controls/${name}.json`).steps;
 
 /** The units in both arenas. Upgrades are drawn on the unit they are attached to, not as cards of their own. */
 export const unitsInPlay = (state: any): any[] => Object.values(state.players).flatMap((player: any) => [
