@@ -10,8 +10,8 @@ import ModPreferencesTab from './subpages/ModPreferencesTab';
 import { useRouter } from 'next/navigation';
 
 enum ModToolsTab {
-    CosmeticsManager = 0,
-    UserManagement = 1,
+    UserManagement = 0,
+    CosmeticsManager = 1,
     ModPreferences = 2,
     ServerControls = 3,
 }
@@ -24,7 +24,7 @@ interface IModPageClientProps {
 
 const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<ModToolsTab>(ModToolsTab.CosmeticsManager);
+    const [activeTab, setActiveTab] = useState<ModToolsTab>(ModToolsTab.UserManagement);
     const { openCount, refresh: refreshOpenCount } = useOpenReportCount();
 
     const handleBackClick = () => {
@@ -130,7 +130,6 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                     TabIndicatorProps={{ style: { display: 'none' } }}
                     sx={styles.tabContainer}
                 >
-                    <Tab value={ModToolsTab.CosmeticsManager} label="Cosmetics Manager" sx={styles.tab} />
                     <Tab
                         value={ModToolsTab.UserManagement}
                         label={(
@@ -140,16 +139,17 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                         )}
                         sx={styles.tab}
                     />
+                    <Tab value={ModToolsTab.CosmeticsManager} label="Cosmetics Manager" sx={styles.tab} />
                     <Tab value={ModToolsTab.ModPreferences} label="Mod Preferences" sx={styles.tab} />
                     {isAdmin && <Tab value={ModToolsTab.ServerControls} label="Server Controls" sx={styles.tab} />}
                 </Tabs>
 
                 {/* Tab Content */}
                 <Box sx={styles.tabPanel}>
-                    {activeTab === ModToolsTab.CosmeticsManager && <CosmeticsManagerTab isAdmin={isAdmin} />}
                     {activeTab === ModToolsTab.UserManagement && (
                         <UserManagementSection openReportCount={openCount} onReportsChanged={refreshOpenCount} />
                     )}
+                    {activeTab === ModToolsTab.CosmeticsManager && <CosmeticsManagerTab isAdmin={isAdmin} />}
                     {activeTab === ModToolsTab.ModPreferences && <ModPreferencesTab />}
                     {isAdmin && activeTab === ModToolsTab.ServerControls && <ServerControlsTab />}
                 </Box>

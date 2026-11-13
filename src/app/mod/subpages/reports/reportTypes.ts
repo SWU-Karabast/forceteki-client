@@ -43,6 +43,9 @@ export interface IReportListProps {
     onQuickClose: (report: IPlayerReport) => void;
 
     onLoadMore: () => void;
+
+    /** Reloads the first page and the open-report count, for tickets filed since the list was loaded */
+    onRefresh: () => void;
 }
 
 export interface IReportDetailDialogProps {

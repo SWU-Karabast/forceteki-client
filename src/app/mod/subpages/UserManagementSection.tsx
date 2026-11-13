@@ -185,6 +185,7 @@ const UserManagementSection: React.FC<IUserManagementSectionProps> = ({ openRepo
                         onOpenReport={(report) => setSelectedReportId(report.id)}
                         onQuickClose={handleQuickClose}
                         onLoadMore={() => loadPageAsync(nextCursor)}
+                        onRefresh={handleReportChanged}
                     />
                 </>
             )}

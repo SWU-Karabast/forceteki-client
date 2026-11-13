@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, CircularProgress, FormControlLabel, IconButton, Menu, MenuItem, Switch, Tooltip, Typography } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
@@ -41,6 +42,7 @@ const ReportList: React.FC<IReportListProps> = ({
     onOpenReport,
     onQuickClose,
     onLoadMore,
+    onRefresh,
 }) => {
     const dateFormat = useDateFormat();
     const [menu, setMenu] = useState<{ anchor: HTMLElement; report: IPlayerReport } | null>(null);
@@ -172,10 +174,16 @@ const ReportList: React.FC<IReportListProps> = ({
             color: '#ef5350',
             padding: '1rem 0.75rem',
         },
+        // The bottom padding keeps the button and its shadow inside the scrolling tab panel, which clips them otherwise
         loadMoreRow: {
             display: 'flex',
             justifyContent: 'center',
             mt: '1rem',
+            pb: '1rem',
+        },
+        refreshButton: {
+            color: '#cfcfcf',
+            '&:hover': { color: 'white' },
         },
     };
 
@@ -226,6 +234,13 @@ const ReportList: React.FC<IReportListProps> = ({
                     control={<Switch sx={styles.switch} checked={filters.openOnly} onChange={(e) => onFiltersChange({ ...filters, openOnly: e.target.checked })} />}
                     label="Open Tickets Only"
                 />
+                <Tooltip title="Refresh">
+                    <span>
+                        <IconButton aria-label="Refresh the reports" sx={styles.refreshButton} onClick={onRefresh} disabled={loading}>
+                            <RefreshIcon fontSize="small" />
+                        </IconButton>
+                    </span>
+                </Tooltip>
                 {loading && <CircularProgress size={20} />}
                 {!error && <Typography sx={styles.count}>{reports.length} of {total}</Typography>}
             </Box>
