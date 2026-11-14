@@ -83,7 +83,13 @@ export default function ActionTriggerPopupModal({ data }: ButtonProps) {
                                 hasLegalEffects={button.hasLegalEffects}
                                 gained={button.gained}
                                 count={button.count}
-                                onTrigger={() => sendGameMessage([button.command, button.arg, button.uuid])}
+                                disabled={button.disabled}
+                                unavailableReason={button.unavailableReason}
+                                onTrigger={() => {
+                                    if (!button.disabled) {
+                                        sendGameMessage([button.command, button.arg, button.uuid]);
+                                    }
+                                }}
                                 // reserve the fence + Pass row on every column when any trigger is optional
                                 // so the cards stay bottom-aligned, even on non-optional columns
                                 reservePassSpace={anyOptional}
