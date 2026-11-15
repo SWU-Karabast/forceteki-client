@@ -31,6 +31,22 @@ const styles = {
         left:'-11.5%',
         top:'25%',
         width: '100%',
+        // a hovered leader comes to the front, so the one behind can be seen in full
+        '&:hover': {
+            zIndex: 1,
+        },
+    },
+    // Two leaders: both shrink and fan out down-right, staying inside the single-leader footprint
+    // (left edge -11.5%, bottom edge at 125% of the base's height) so rows keep their size.
+    // The leader behind starts low enough to leave the base's name box uncovered.
+    firstOfTwoLeaders: {
+        width: '75%',
+        top: '22%',
+    },
+    secondOfTwoLeaders: {
+        left: '25%',
+        top: '50%',
+        width: '75%',
     },
     cardsContainer: {
         position: 'relative',
@@ -45,12 +61,16 @@ const styles = {
     }
 };
 
-export type OverlappingCardProps = BoxProps & { baseCard: ICardData | ISetCode, leaderCard: ICardData | ISetCode };
+export type OverlappingCardProps = BoxProps & {
+    baseCard: ICardData | ISetCode,
+    leaderCard: ICardData | ISetCode,
+    secondLeaderCard?: ICardData | ISetCode,
+};
 
 /**
  * Parent must provide with width to be able to occupy the available space (but maintaining the aspect ratio of the card)
  */
-export default function OverlappingCards({ baseCard, leaderCard, ...boxProps }: OverlappingCardProps) {
+export default function OverlappingCards({ baseCard, leaderCard, secondLeaderCard, ...boxProps }: OverlappingCardProps) {
     const { sx = {}, ...otherBoxProps } = boxProps || {};
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -85,11 +105,19 @@ export default function OverlappingCards({ baseCard, leaderCard, ...boxProps }: 
                     data-card-url={s3CardImageURL(baseCard, locale)}
                 />
                 <Box
-                    sx={[styles.leaderStyleCard, styles.leaderContainer, { backgroundImage:`url(${s3CardImageURL(leaderCard, locale, LeaderBaseCardStyle.PlainLeader)})` }]}
+                    sx={[styles.leaderStyleCard, styles.leaderContainer, !!secondLeaderCard && styles.firstOfTwoLeaders, { backgroundImage:`url(${s3CardImageURL(leaderCard, locale, LeaderBaseCardStyle.PlainLeader)})` }]}
                     onMouseEnter={handlePreviewOpen}
                     onMouseLeave={handlePreviewClose}
                     data-card-url={s3CardImageURL(leaderCard, locale, LeaderBaseCardStyle.PlainLeader)}
                 />
+                {secondLeaderCard && (
+                    <Box
+                        sx={[styles.leaderStyleCard, styles.leaderContainer, styles.secondOfTwoLeaders, { backgroundImage:`url(${s3CardImageURL(secondLeaderCard, locale, LeaderBaseCardStyle.PlainLeader)})` }]}
+                        onMouseEnter={handlePreviewOpen}
+                        onMouseLeave={handlePreviewClose}
+                        data-card-url={s3CardImageURL(secondLeaderCard, locale, LeaderBaseCardStyle.PlainLeader)}
+                    />
+                )}
             </Box>
 
             <Popover

@@ -75,6 +75,7 @@ export interface IGameOptions {
     muteChat?: boolean;
     cardLanguage?: CardImageLocale;
     timerVisibility?: TimerVisibility;
+    dateFormat?: DateFormat;
 
     // Prompt-reduction settings grouped so future automations can live alongside singleTarget.
     autoResolve?: {
@@ -86,6 +87,11 @@ export enum TimerVisibility {
     Standard = 'standard',
     HideTurnTimer = 'hideTurnTimer',
     HideAll = 'hideAll',
+}
+
+export enum DateFormat {
+    MMDDYYYY = 'MMDDYYYY',
+    DDMMYYYY = 'DDMMYYYY',
 }
 
 export enum PlayerTimeRemainingStatus {
@@ -152,6 +158,9 @@ declare module 'next-auth/jwt'{
         picture?: string;
         provider?: string;
         providerId?: string;
+
+        /** Whether the provider had verified `email` at sign-in; the game node refuses a session without it. */
+        emailVerified?: boolean;
         exp: number;
     }
 }

@@ -18,11 +18,14 @@ npm run lint         # tsc --noemit && next lint   <- what CI runs; run this bef
 npm run lint:fix     # same, with --fix
 npm run build        # next build (does NOT lint: eslint.ignoreDuringBuilds is true in next.config.mjs)
 npm run storybook    # component workbench on :6006
+npm run test:run     # vitest, once (`npm test` watches); see "Tests" below
+npm run states -- --ref pr/<number>   # test against a backend PR's game states instead of backend main
 docker compose up    # Adobe S3Mock on :9090, only needed for local cosmetics upload work
 ```
 
-Node 22.x. There is **no test framework** in this repo — verification is `npm run lint`, `npm run build`,
-and manual play against a local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build only.
+Node 22.x. Verification is `npm run lint`, `npm run build`, `npm run test:run`, and manual play against a
+local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build; `.github/workflows/tests.yml`
+runs the tests.
 
 ## Architecture
 
@@ -43,6 +46,11 @@ nearly every component carries `'use client'`. Nesting order (outermost first): 
 `src/app/_contexts/Game.context.tsx` owns the single socket.io connection (`path: '/ws'`) and is the only
 place server state enters the app. It re-creates the socket whenever user/session identity changes.
 Everything on a game page reads `useGame()`.
+
+It is two layers. `GameProvider` is the connection: the socket, the session, sounds, and turning incoming
+prompt states into popups. It renders `GameStateProvider`, which builds what `useGame()` returns from a game
+state (`connectedPlayer`, `getOpponent`, `getConnectedPlayerPrompt`, the distribution prompt, …) and has no
+socket. Tests render `GameStateProvider` directly. Keep socket and session code out of it.
 
 Three outbound channels:
 
@@ -103,6 +111,39 @@ no-op in development.
 `ServerSettings.context` polls the backend every 20s. `gamesEnabled` defaults to **false**, so an
 unreachable backend reads as maintenance; gate maintenance UI on `hasLoaded` too, or every page load
 flashes it. The client-side gate is presentation only — the server 503s anyway.
+
+### Tests
+
+The tests render the board from the game states forceteki really sends. forceteki captures and commits them
+in its `test/stateCaptures/`; this repo does not keep a copy. `npm run states` downloads them into this repo's
+`test/stateCaptures/` (gitignored), and the first test run does that on its own, from backend main.
+`manifest.json` there says which backend ref and commit they came from and when they were downloaded, and
+every test run prints it.
+
+Everything for testing lives in the root `test/` directory, never beside the code under `src/`. Helpers and setup
+are in `test/helpers/`; import app code with the `@/` alias. Board tests are split the way the backend splits its
+captured states, one file per capture, named after it:
+
+- **Render** tests (`test/gameboard/render/<Name>.<participant>.test.tsx`) check one board is drawn correctly,
+  from the capture `render/<name>.<participant>.json`, e.g. `Board.player1.test.tsx` and `Board.spectator.test.tsx`.
+- **Control** tests (`test/gameboard/controls/<Name>.test.tsx`) walk a chain from `controls/<name>.json`: a series
+  of states for one participant, each step's `send` being the messages they sent to reach the next, exactly as
+  `sendGameMessage` emits them. `Attack.test.tsx` checks each click sends the recorded message.
+- `test/helpers/gameState.tsx` has the helpers: `loadRenderCapture`, `loadControlChain`, and `renderGameState`,
+  which renders a component as a participant sees a state, records what it sends (`sent`), and delivers the next
+  state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`), and `unitsInPlay`
+  lists the units a state has in both arenas. Nothing is mocked: it renders the real `GameStateProvider` and the
+  other providers the board needs, so it is the one place to update when a context moves to a store.
+- `npm run states -- --ref main|<branch>|pr/<number>` picks which backend states to test against. A `pr/<number>`
+  ref is GitHub's merge of that backend PR into current main. `--local [path]` copies a forceteki working tree
+  (default `../forceteki`) to try changes before pushing.
+- **Paired PRs:** a client PR that needs a backend PR's states makes the first line of its description
+  `Backend PR: https://github.com/SWU-Karabast/forceteki/pull/<number>`, and the `test` check runs against
+  that PR's states (editing the description re-runs it). It must be the first line and a link: the check fails on a
+  `Backend PR:` line anywhere else or one without the link, rather than quietly testing against main. The merge queue
+  tests against backend main, so merge the backend PR first. A PR that links nothing is tested against backend main.
+- A game state a test needs that the backend does not capture yet belongs in the backend PR (see forceteki's
+  CLAUDE.md, "Captured states"); never hand-write a game state here.
 
 ## Conventions
 

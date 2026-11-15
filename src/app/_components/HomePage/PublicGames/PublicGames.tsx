@@ -5,6 +5,22 @@ import GamesInProgress from '../_subcomponents/GamesInProgress/GamesInProgress';
 import { ILobby } from '../HomePageTypes';
 import { SwuGameFormat } from '@/app/_constants/constants';
 
+// Lobbies are grouped by format: these first, in this order, then every other format in enum order.
+// Lobbies whose format the client doesn't know yet still show, at the end.
+const leadingFormats = [SwuGameFormat.Premier, SwuGameFormat.Eternal, SwuGameFormat.Open, SwuGameFormat.Limited];
+const formatDisplayOrder: string[] = [
+    ...leadingFormats,
+    ...Object.values(SwuGameFormat).filter((format) => !leadingFormats.includes(format)),
+];
+
+const getFormatSortIndex = (format: string) => {
+    const index = formatDisplayOrder.indexOf(format);
+    return index === -1 ? formatDisplayOrder.length : index;
+};
+
+const sortLobbiesByFormat = (lobbies: ILobby[]): ILobby[] =>
+    [...lobbies].sort((a, b) => getFormatSortIndex(a.format) - getFormatSortIndex(b.format));
+
 const fetchLobbies = async (setLobbies: (lobbies: ILobby[]) => void) => {
     try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/available-lobbies`);
@@ -71,16 +87,7 @@ const PublicGames: React.FC = () => {
                 {lobbies.length === 0 && (
                     <Typography variant="body1" sx={{ textAlign: 'center' }}>No available lobbies at the moment.</Typography>
                 )}
-                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Premier).map((lobby) => (
-                    <JoinableGame key={lobby.id} lobby={lobby} />
-                ))}
-                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Eternal).map((lobby) => (
-                    <JoinableGame key={lobby.id} lobby={lobby} />
-                ))}
-                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Open).map((lobby) => (
-                    <JoinableGame key={lobby.id} lobby={lobby} />
-                ))}
-                {lobbies.filter((lobby) => lobby.format === SwuGameFormat.Limited).map((lobby) => (
+                {sortLobbiesByFormat(lobbies).map((lobby) => (
                     <JoinableGame key={lobby.id} lobby={lobby} />
                 ))}
                 <GamesInProgress />

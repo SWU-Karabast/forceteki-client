@@ -14,6 +14,8 @@ import UsernameChangeRestrictedPopup
 import ReportingDisabledPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/ReportingDisabledPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
+import EmailVerificationRequiredPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/EmailVerificationRequiredPopup';
+import { AuthErrorProviderQueryParam, AuthErrorQueryParam, EmailNotVerifiedAuthError } from '@/app/_utils/SignInRefusal';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 import { 
     setModerationSeenAsync, 
@@ -49,6 +51,8 @@ const HomePagePlayMode: React.FC = () => {
     const [showAnnouncementPopup, setShowAnnouncementPopup] = useState<boolean>(false);
     const [pendingFormSubmission, setPendingFormSubmission] = useState<(() => void) | null>(null);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
+    // the provider of a sign-in refused because its email is not verified, while the explanation is showing
+    const [emailNotVerifiedProvider, setEmailNotVerifiedProvider] = useState<string | null>(null);
     const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateTimerPopupSeenDate, updateUsernameChangesBlockedSeen, updateReportingDisabledSeen } = useUser();
 
     // Use shared deck management hook
@@ -75,6 +79,22 @@ const HomePagePlayMode: React.FC = () => {
     useEffect(() => {
         fetchDecks();
     }, [fetchDecks]);
+
+    // A refused sign-in lands here with the reason in the query string (see SignInRefusal). It is read once and then
+    // removed from the address, so a reload does not show the explanation again. (useSearchParams would need a
+    // Suspense boundary around this statically rendered page.)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get(AuthErrorQueryParam) !== EmailNotVerifiedAuthError) {
+            return;
+        }
+
+        setEmailNotVerifiedProvider(params.get(AuthErrorProviderQueryParam) ?? '');
+        params.delete(AuthErrorQueryParam);
+        params.delete(AuthErrorProviderQueryParam);
+        const remaining = params.toString();
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${remaining ? `?${remaining}` : ''}`);
+    }, []);
 
     const handleDeckManagement = useCallback(() => {
         router.push('/DeckPage');
@@ -401,7 +421,12 @@ const HomePagePlayMode: React.FC = () => {
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
             <UndoTutorialPopup open={showUndoTutorialPopup} onClose={handleUndoTutorialClose} />
             <TimerTutorialPopup open={showTimerTutorialPopup} onClose={handleTimerTutorialClose} />
-            <WhatsNewPopupAnnouncement open={showAnnouncementPopup} onClose={closeAnnouncementPopup} />
+            <WhatsNewPopupAnnouncement open={showAnnouncementPopup && emailNotVerifiedProvider === null} onClose={closeAnnouncementPopup} />
+            <EmailVerificationRequiredPopup
+                open={emailNotVerifiedProvider !== null}
+                provider={emailNotVerifiedProvider}
+                onClose={() => setEmailNotVerifiedProvider(null)}
+            />
         </>
     );
 };

@@ -5,8 +5,11 @@ import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/Con
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import { useServerSettings } from '@/app/_contexts/ServerSettings.context';
 import { IServerSettings } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { useDateFormat } from '@/app/_hooks/useDateFormat';
+import { formatDateTime } from '@/app/_utils/dateFormatUtils';
 
 const ServerControlsTab: React.FC = () => {
+    const dateFormat = useDateFormat();
     const { refreshServerSettings } = useServerSettings();
 
     const [settings, setSettings] = useState<IServerSettings | null>(null);
@@ -125,7 +128,7 @@ const ServerControlsTab: React.FC = () => {
                 {settings?.updatedBy && (
                     <Typography sx={styles.auditLine}>
                         Last changed by {settings.updatedBy}
-                        {settings.updatedAt ? ` on ${new Date(settings.updatedAt).toLocaleString()}` : ''}
+                        {settings.updatedAt ? ` on ${formatDateTime(settings.updatedAt, dateFormat)}` : ''}
                     </Typography>
                 )}
             </Box>

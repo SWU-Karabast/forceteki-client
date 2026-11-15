@@ -1,16 +1,19 @@
 'use client';
 import React, { useState } from 'react';
-import { Box, Typography, Tab, Tabs } from '@mui/material';
+import { Badge, Box, Typography, Tab, Tabs } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import CosmeticsManagerTab from './subpages/CosmeticsManagerTab';
-import UserManagementTab from './subpages/UserManagementTab';
+import UserManagementSection from './subpages/UserManagementSection';
+import { useOpenReportCount } from '@/app/_hooks/useOpenReportCount';
 import ServerControlsTab from './subpages/ServerControlsTab';
+import ModPreferencesTab from './subpages/ModPreferencesTab';
 import { useRouter } from 'next/navigation';
 
 enum ModToolsTab {
-    CosmeticsManager = 0,
-    UserManagement = 1,
-    ServerControls = 2,
+    UserManagement = 0,
+    CosmeticsManager = 1,
+    ModPreferences = 2,
+    ServerControls = 3,
 }
 
 interface IModPageClientProps {
@@ -21,7 +24,8 @@ interface IModPageClientProps {
 
 const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<ModToolsTab>(ModToolsTab.CosmeticsManager);
+    const [activeTab, setActiveTab] = useState<ModToolsTab>(ModToolsTab.UserManagement);
+    const { openCount, refresh: refreshOpenCount } = useOpenReportCount();
 
     const handleBackClick = () => {
         router.push('/');
@@ -82,6 +86,14 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                 color: 'white',
             },
         },
+        badge: {
+            '& .MuiBadge-badge': {
+                right: '-18px',
+                top: '50%',
+                backgroundColor: '#C40000',
+                color: 'white',
+            },
+        },
         tabPanel: {
             flex: 1,
             paddingLeft: '2rem',
@@ -118,15 +130,27 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                     TabIndicatorProps={{ style: { display: 'none' } }}
                     sx={styles.tabContainer}
                 >
-                    <Tab label="Cosmetics Manager" sx={styles.tab} />
-                    <Tab label="User Management" sx={styles.tab} />
-                    {isAdmin && <Tab label="Server Controls" sx={styles.tab} />}
+                    <Tab
+                        value={ModToolsTab.UserManagement}
+                        label={(
+                            <Badge badgeContent={openCount ?? 0} max={99} sx={styles.badge}>
+                                User Management
+                            </Badge>
+                        )}
+                        sx={styles.tab}
+                    />
+                    <Tab value={ModToolsTab.CosmeticsManager} label="Cosmetics Manager" sx={styles.tab} />
+                    <Tab value={ModToolsTab.ModPreferences} label="Mod Preferences" sx={styles.tab} />
+                    {isAdmin && <Tab value={ModToolsTab.ServerControls} label="Server Controls" sx={styles.tab} />}
                 </Tabs>
 
                 {/* Tab Content */}
                 <Box sx={styles.tabPanel}>
+                    {activeTab === ModToolsTab.UserManagement && (
+                        <UserManagementSection openReportCount={openCount} onReportsChanged={refreshOpenCount} />
+                    )}
                     {activeTab === ModToolsTab.CosmeticsManager && <CosmeticsManagerTab isAdmin={isAdmin} />}
-                    {activeTab === ModToolsTab.UserManagement && <UserManagementTab />}
+                    {activeTab === ModToolsTab.ModPreferences && <ModPreferencesTab />}
                     {isAdmin && activeTab === ModToolsTab.ServerControls && <ServerControlsTab />}
                 </Box>
             </Box>

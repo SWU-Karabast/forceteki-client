@@ -1,0 +1,60 @@
+name: Tests
+# Runs the tests against the game states forceteki sends: those of the backend PR linked on the
+# first line of this PR's description (`Backend PR: https://github.com/SWU-Karabast/forceteki/pull/123`),
+# or backend main when it links none.
+# Its own workflow so editing the description (to link a backend PR) re-runs only this.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+    branches:
+      - main
+  # the merge queue tests against backend main, so a paired backend PR has to merge first
+  merge_group:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        id: setup-node
+        with:
+          node-version: "22.x"
+          cache: "npm"
+      - name: cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - if: ${{ steps.cache-node-modules.outputs.cache-hit != 'true' }}
+        run: npm ci
+      - name: download the backend's game states
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # a Backend PR: line has to be the description's first line and link the PR; anything else that
+          # looks like one fails, rather than quietly testing against main
+          looks_like='^[[:space:]]*backend([[:space:]]+pr)?[[:space:]]*:'
+          body=$(printf '%s\n' "$PR_BODY" | tr -d '\r')
+          first=$(printf '%s\n' "$body" | grep -m 1 -v '^[[:space:]]*$' || true)
+          if printf '%s\n' "$first" | grep -qiE "$looks_like"; then
+            backend_pr=$(printf '%s\n' "$first" | grep -iE '^[[:space:]]*backend[[:space:]]+pr:' | grep -oiE 'https://github\.com/SWU-Karabast/forceteki/pull/[0-9]+' | grep -oE '[0-9]+$' | head -n 1 || true)
+            if [ -z "$backend_pr" ]; then
+              echo "::error::The description's first line must link the backend PR, e.g. Backend PR: https://github.com/SWU-Karabast/forceteki/pull/123 (found: $first)"
+              exit 1
+            fi
+          elif printf '%s\n' "$body" | grep -qiE "$looks_like"; then
+            echo "::error::Backend PR: must be the first line of the description, or the tests would run against backend main"
+            exit 1
+          fi
+          ref=${backend_pr:+pr/$backend_pr}
+          npm run states -- --ref "${ref:-main}"
+          echo "Tested against the game states of forceteki ${backend_pr:+#$backend_pr merged into }main." >> "$GITHUB_STEP_SUMMARY"
+      - run: npm run test:run
