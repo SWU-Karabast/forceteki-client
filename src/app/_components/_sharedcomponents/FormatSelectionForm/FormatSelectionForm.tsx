@@ -46,6 +46,10 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
     const cardPools = currentConfig?.cardPools ?? [CardPool.Current];
     const gamesToWinModes = currentConfig?.gamesToWinModes ?? [GamesToWinMode.BestOfOne];
     const showCardPoolPicker = cardPools.length > 1;
+    // A format with a single match type keeps the control (so the choice stays visible) and explains why there is nothing else
+    const singleMatchTypeNote = gamesToWinModes.length === 1
+        ? `Only ${GamesToWinModeLabels[gamesToWinModes[0]]} is available for ${FormatLabels[format]}.`
+        : undefined;
 
     const labelRowStyle = {
         display: 'flex',
@@ -129,6 +133,11 @@ const FormatSelectionForm: React.FC<IFormatSelectionFormProps> = ({
                     description: mode === GamesToWinMode.BestOfThree && !isBo3Allowed ? '(must be logged in)' : undefined,
                 }))}
             />
+            {singleMatchTypeNote && (
+                <Typography variant="body2" sx={{ mt: '0.25rem', color: 'rgba(170, 170, 170, 0.85)' }}>
+                    {singleMatchTypeNote}
+                </Typography>
+            )}
         </FormControl>
         <FormatInfoPopup open={formatInfoOpen} onClose={() => setFormatInfoOpen(false)} topic="formats" formatConfigs={formatConfigs} />
         <FormatInfoPopup open={cardPoolInfoOpen} onClose={() => setCardPoolInfoOpen(false)} topic="cardPool" formatConfigs={formatConfigs} />

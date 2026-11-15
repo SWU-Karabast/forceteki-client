@@ -21,8 +21,8 @@ export type GameAnnouncement =
  * Only one announcement is shown at a time — overwrite this value when rolling out the next one.
  */
 export const CurrentGameAnnouncement: GameAnnouncement | undefined = {
-    kind: 'custom',
-    message: 'Homeworlds is now legal in Premier!'
+    kind: 'newFormat',
+    format: SwuGameFormat.FauxSuns,
 };
 
 interface IGameAnnouncementBannerProps {
