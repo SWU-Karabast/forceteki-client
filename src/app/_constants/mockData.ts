@@ -1,5 +1,4 @@
 import { IAnnouncement, IArticle } from '@/app/_components/HomePage/HomePageTypes';
-import { s3ImageURL } from '../_utils/s3Utils';
 
 export const playerMatches = [
     {
@@ -86,6 +85,18 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'Icons Preview is Complete',
+        content: `
+        <p>All Icons 2027 Edition cards are now fully implemented and available in the <strong>Next Set Preview</strong> card pool. These cards will join Premier when the set releases on November 20th.</p>
+
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> with any questions or feedback.</p><p></p>
+	  `,
+        date: '11/15/26',
+        image: '/icons-preview.webp',
+        imageAlt: 'Icons 2027 Edition key art: Kylo Ren and Rey dueling with lightsabers',
+        imagePosition: 'center 40%',
+    },
+    {
         title: 'Homeworlds Suspensions: A Brightening Reality',
         content: `
         <p>In line with the recent suspension announcement, the following cards are suspended in the <strong>Premier</strong> format, effective immediately:</p>
@@ -103,18 +114,6 @@ export const articles: IArticle[] = [
         image: '/homeworlds-suspension.webp',
         imageAlt: 'Suspended immediately: Chimaera, Koska Reeves, Neel and Aggressive Negotiations',
         imagePosition: 'center top',
-    },
-    {
-        title: 'Homeworlds is Released',
-        content: `
-        <p>Homeworlds (Set 9) cards are fully implemented and available in all game modes. Now that the set is released, these cards are part of the "Current" card pool.</p>
-
-        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we're always looking for new contributors.</p><p></p>
-	  `,
-        date: '10/7/26',
-        image: s3ImageURL('ui/homeworlds-preview-banner.webp'),
-        imageAlt: 'News Announcement',
-        imagePosition: 'center 35%',
     },
 ];
 
