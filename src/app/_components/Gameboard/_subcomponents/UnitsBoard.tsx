@@ -4,11 +4,44 @@ import { debugBorder, isBreakpointOverlayEnabled } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
 import { ICardData, CardStyle, IOngoingEffectSummary } from '../../_sharedcomponents/Cards/CardTypes';
-import { groupUnits } from '../../_sharedcomponents/Cards/unitStacking';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import BreakpointOverlay from './BreakpointOverlay';
 import TokenStack from '../../_sharedcomponents/Cards/TokenStack';
+import { cannotBeAttacked, hasSentinel, isBlanked, isStolen } from '../../_sharedcomponents/Cards/cardUtils';
+
+/**
+ * Groups identical token units into stacks; a group sits where its first card was. Everything else
+ * (non-token units, clones, units holding captured cards) is a group of one.
+ *
+ * Tokens share a stack when everything a player can see or act on matches: state, stats, status icons,
+ * selection, upgrades, ongoing effects from other cards (e.g. Scramble Fighters' "can't attack bases"),
+ * and the amount assigned to them in a distribution prompt.
+ */
+const groupUnits = (cards: ICardData[], effects: IOngoingEffectSummary[], assigned: ReadonlyMap<string, number>): ICardData[][] => {
+    const groups = new Map<string, ICardData[]>();
+    for (const card of cards) {
+        let key = card.uuid;
+        if (card.printedType === 'tokenUnit' && !card.clonedCardId && !card.capturedCards?.length) {
+            const subcards = card.subcards ?? [];
+            const ownUuids = new Set([card.uuid, ...subcards.map((s) => s.uuid)]);
+            key = JSON.stringify([
+                card.setId, card.exhausted, card.damage, card.power, card.hp,
+                card.selectable, card.selected, card.isAttacker, card.isDefender,
+                hasSentinel(card, CardStyle.InPlay), cannotBeAttacked(card, CardStyle.InPlay),
+                isBlanked(card, CardStyle.InPlay), isStolen(card, CardStyle.InPlay),
+                subcards.map((s) => JSON.stringify([s.setId, s.selectable, s.selected])).sort(),
+                effects
+                    .filter((e) => e.targets.includes(card.uuid) && !ownUuids.has(e.sourceCardUuid))
+                    .map((e) => `${e.sourceCardUuid}:${e.source.effectDescription ?? ''}`)
+                    .sort(),
+                assigned.get(card.uuid) ?? 0,
+            ]);
+        }
+        groups.set(key, [...(groups.get(key) ?? []), card]);
+    }
+    return [...groups.values()];
+};
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -32,7 +65,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 upgradesByParentId[card.parentCardId].push(card);
             }
         });
-        return upgradesByParentId
+        return upgradesByParentId;
     }
 
     /**

@@ -1,14 +1,16 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import GameCard from '../../_sharedcomponents/Cards/GameCard';
-import { CardStyle, ICardData } from '../../_sharedcomponents/Cards/CardTypes';
+import GameCard from './GameCard';
+import { CardStyle, ICardData } from './CardTypes';
 import { s3CardImageURL } from '@/app/_utils/s3Utils';
 import { useCardImageLocale } from '@/app/_contexts/CardImageLocale.context';
+import { useGame } from '@/app/_contexts/Game.context';
 
 const TokenStack: React.FC<{ cards: ICardData[] }> = ({ cards }) => {
     const locale = useCardImageLocale();
+    const { hoveredChatCard } = useGame();
     // The clickable top card is the last one added
-    const top = cards[cards.length - 1];
+    const top = cards.find((card) => card.uuid === hoveredChatCard?.id) ?? cards[cards.length - 1];
 
     return (
         <Box sx={{ position: 'relative', mt: '8%', mr: '8%' }}>
