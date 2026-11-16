@@ -22,6 +22,8 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children }) => {
 
     const hasSetId = chatObject.setId?.set && chatObject.setId.number;
     const isBaseCard = chatObject.printedType === CardType.Base;
+    const isToken = !!chatObject.printedType?.includes('token');
+    const canPreview = hasSetId || (isToken && !!chatObject.id);
 
     const {
         aspectRatio,
@@ -36,14 +38,14 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children }) => {
     });
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {
-        if (!hasSetId) return;
+        if (!canPreview) return;
 
         const target = event.currentTarget;
         
         setAnchorElement(target);
         const imageUrl = s3CardImageURL({
             setId: chatObject.setId!,
-            type: isBaseCard ? 'base' : 'unit',
+            type: isBaseCard ? 'base' : isToken ? chatObject.printedType! : 'unit',
             id: chatObject.id
         }, locale, CardStyle.Plain);
         setPreviewImage(`url(${imageUrl})`);
@@ -59,7 +61,7 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children }) => {
     const styles = {
         chatCardWrapper: {
             display: 'inline',
-            cursor: hasSetId ? 'pointer' : 'default',
+            cursor: canPreview ? 'pointer' : 'default',
         },
         cardPreview: {
             borderRadius: '.38em',
@@ -74,15 +76,15 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children }) => {
         <>
             <span
                 style={styles.chatCardWrapper}
-                onMouseEnter={hasSetId ? handlePreviewOpen : undefined}
-                onMouseLeave={hasSetId ? handlePreviewClose : undefined}
-                data-card-id={hasSetId ? `${chatObject.setId!.set}_${chatObject.setId!.number}` : undefined}
+                onMouseEnter={canPreview ? handlePreviewOpen : undefined}
+                onMouseLeave={canPreview ? handlePreviewClose : undefined}
+                data-card-id={hasSetId ? `${chatObject.setId!.set}_${chatObject.setId!.number}` : isToken ? chatObject.id : undefined}
                 data-card-type={isBaseCard ? 'base' : 'unit'}
             >
                 {children}
             </span>
             
-            {hasSetId && (
+            {canPreview && (
                 <Popover
                     id="chat-card-popover"
                     sx={{ pointerEvents: 'none',
