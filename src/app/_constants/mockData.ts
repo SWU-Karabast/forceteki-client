@@ -87,7 +87,7 @@ export const articles: IArticle[] = [
     {
         title: 'Icons Preview is Complete',
         content: `
-        <p>All Icons 2027 Edition cards are now fully implemented and available in the <strong>Next Set Preview</strong> card pool. These cards will join Premier when the set releases on November 20th.</p>
+        <p>All Icons 2027 Edition cards are now fully implemented and available in the <strong>Next Set Preview</strong> card pool. These cards will join Premier on Karabast the week of November 23rd.</p>
 
         <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> with any questions or feedback.</p><p></p>
 	  `,
