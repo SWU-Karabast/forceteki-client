@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Grid } from '@mui/material';
+import { Box } from '@mui/material';
 import { debugBorder, isBreakpointOverlayEnabled } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
@@ -179,7 +179,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
 
     return (
         <Box sx={styles.mainBoxStyle}>
-            <Grid direction="column" sx={styles.containerStyle}>
+            <Box sx={styles.containerStyle}>
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
@@ -198,7 +198,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                         </Box>
                     ))}
                 </Box>
-            </Grid>
+            </Box>
             {/* Show BreakpointOverlay when enabled in environment variables */}
             {isBreakpointOverlayEnabled() && <BreakpointOverlay />}
         </Box>
