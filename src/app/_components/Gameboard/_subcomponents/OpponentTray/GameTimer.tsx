@@ -8,8 +8,12 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { PlayerTimeRemainingStatus, TimerVisibility } from '@/app/_contexts/UserTypes';
 import { useTimerVisibilityContext } from '@/app/_contexts/TimerVisibility.context';
 import TimerWarningIcon from './TimerWarningIcon';
+import { useMainTimeGrantAnimation } from '@/app/_components/_sharedcomponents/Timer/useMainTimeGrantAnimation';
 
 const TIMER_STEP = 100;
+
+// TODO(timer-increase): prototype switch for comparing the grant animations; keep one and remove this before review
+const GRANT_ANIMATION_STYLE = 'both' as 'label' | 'ring' | 'both';
 
 const Divider = () => <div style={{ height: '1px', width: '100%', background: 'white', opacity: 0.3, marginTop: '2px' }} />;
 
@@ -88,6 +92,12 @@ const GameTimer: React.FC = ({ ...props }) => {
         return () => clearInterval(interval);
     }, [opponentIsActive, opponentIsTurnTime, playerIsActive]);
 
+    // the main time each player was just given back at the end of a round, while it is being shown
+    const playerGrant = useMainTimeGrantAnimation(playerState);
+    const opponentGrant = useMainTimeGrantAnimation(opponentState);
+    const showGrantOnLabels = GRANT_ANIMATION_STYLE !== 'ring';
+    const showGrantOnRing = GRANT_ANIMATION_STYLE !== 'label';
+
     const activeTurn = playerIsActive ? 'player' : opponentIsActive ? 'opponent' : undefined;
     // Show opponent's main time in the circle when they are active on main time and player is not active
     const showOpponentMainTime = !playerIsActive && opponentIsActive && !isTurnTime;
@@ -121,6 +131,7 @@ const GameTimer: React.FC = ({ ...props }) => {
     return (
         <Timer
             activeTurn={activeTurn}
+            grantOverlay={showGrantOnRing ? playerGrant : null}
             hideProgressIndicator={timerVisibility === TimerVisibility.HideTurnTimer}
             isTurnTime={isTurnTime}
             isRunning={isTurnTime ? (playerIsActive || opponentIsActive) : (playerIsActive || showOpponentMainTime)}
@@ -140,6 +151,9 @@ const GameTimer: React.FC = ({ ...props }) => {
                 opponentIsTurnTime={opponentIsTurnTime}
                 playerTimeRemaining={playerMainTimeRemainingMs}
                 opponentTimeRemaining={opponentMainTimeRemainingMs}
+                // with the ring hidden, the labels are the only place left to show a grant
+                playerGrant={showGrantOnLabels || timerVisibility === TimerVisibility.HideTurnTimer ? playerGrant : null}
+                opponentGrant={showGrantOnLabels || timerVisibility === TimerVisibility.HideTurnTimer ? opponentGrant : null}
             />
         </Timer>
     );
