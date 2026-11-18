@@ -17,12 +17,9 @@ import { PopoverConfig, usePreviewCardPopover } from '@/app/_components/_sharedc
 // The art box of a leader's front side, as fractions of the card: it fills the left part of the card, between the
 // "Leader" header and the traits bar, with the name and ability text to its right.
 const LEADER_ART_BOX = { left: 0.045, top: 0.075, width: 0.38, height: 0.76 };
-// width / height of a landscape card (leaders and bases)
 const LANDSCAPE_CARD_RATIO = 1.39;
-// width / height of the art box (about half a leader card), the shape of an art-only leader card
 const LEADER_ART_ASPECT_RATIO = (LEADER_ART_BOX.width * LANDSCAPE_CARD_RATIO / LEADER_ART_BOX.height).toFixed(3);
 
-// clips the card image to the art-only card's rounded box
 const leaderArtClipSx = {
     position: 'absolute',
     inset: 0,
@@ -31,7 +28,6 @@ const leaderArtClipSx = {
     pointerEvents: 'none',
 } as const;
 
-// the whole card image, scaled and shifted so that only its art box shows through the clip
 const leaderArtImageSx = {
     position: 'absolute',
     width: `${100 / LEADER_ART_BOX.width}%`,
@@ -553,7 +549,6 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         <Box sx={styles.epicActionIcon}></Box>
                     </>
                 )}
-                {/* not tied to the nameplate: with two leaders, a leader card can have no title */}
                 {cardStyle === LeaderBaseCardStyle.Leader && <Box sx={styles.leaderBlankIcon}/>}
                 { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             </Box>

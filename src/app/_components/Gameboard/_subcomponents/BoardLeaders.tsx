@@ -5,7 +5,6 @@ import { ICardData, LeaderBaseCardStyle } from '@/app/_components/_sharedcompone
 
 interface IBoardLeadersProps {
     leaders: ICardData[];
-    // player name shown with the leader(s)
     title: string;
     // two leaders share the space of one card, cut down to their art (in portrait, and on screens narrower than desktopHD)
     isCompact: boolean;
@@ -48,7 +47,6 @@ const styles = {
         p: { xs: '0 6px', md: '2px 10px' },
         backgroundColor: 'black',
     },
-    // the same nameplate a single leader card carries, over the bottom of the pair
     compactNameplate: {
         position: 'absolute',
         bottom: 0,
