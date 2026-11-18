@@ -1,14 +1,12 @@
 import React from 'react';
-import { Box, Popover, Tooltip } from '@mui/material';
+import { Box, Popover, useMediaQuery, useTheme } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useGame } from '@/app/_contexts/Game.context';
 import { debugBorder } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import useIsCompactBoard from '@/app/_utils/useIsCompactBoard';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
 import { hasSelectedCards } from '@/app/_utils/gameStateHelpers';
 import PulseButton from '@/app/components/Button/PulseButton';
-import { SwuGameFormat } from '@/app/_constants/constants';
 
 const createStyles = (isPortrait: boolean) => ({
     actionContainer: {
@@ -38,13 +36,6 @@ const createStyles = (isPortrait: boolean) => ({
     },
     promptButtonText: {
         fontSize: { xs: '0.75rem', sm: '0.9rem', md: '1.05rem' },
-    },
-    disabledButtonTooltipWrapper: {
-        display: 'flex',
-        flex: '1 1 auto',
-        minWidth: { xs: '6rem', md: '2.5rem' },
-        maxWidth: { xs: '6rem', sm: '7rem', md: '9rem' },
-        cursor: 'not-allowed',
     },
     claimMenuPaper: {
         backgroundColor: 'transparent',
@@ -81,22 +72,15 @@ const hasCooldown = (buttonType: string, promptType: string) => (buttonType === 
 const CLAIM_MENU_TEXT = 'Claim';
 const claimOptionText = (button: IButtonsProps) => button.text.replace(/^Claim /, '');
 
-const PASS_BLOCKED_BY_COUNTER_TOOLTIP = 'You can\'t pass while a counter is still unclaimed. Claim one instead.';
-
 type TrayItem = { kind: 'button'; button: IButtonsProps } | { kind: 'claimMenu'; buttons: IButtonsProps[] };
 
 const CardActionTray: React.FC = () => {
     const { isPortrait } = useScreenOrientation();
     const { sendGameMessage, gameState, connectedPlayer, distributionPromptData } = useGame();
     const playerState = gameState.players[connectedPlayer];
-    const isCompactBoard = useIsCompactBoard();
+    const theme = useTheme();
+    const shouldCollapseClaims = useMediaQuery(`(orientation: portrait), (max-width: ${theme.breakpoints.values.desktopHD - 0.05}px)`);
     const styles = createStyles(isPortrait);
-
-    // In Faux Suns the server disables Pass while a counter is still unclaimed. A claim button that is still enabled
-    // tells that apart from Pass being disabled because a card action must be taken (that disables the claims too).
-    const passBlockedByUnclaimedCounter = gameState.format === SwuGameFormat.FauxSuns &&
-        playerState.promptState.promptType === 'actionWindow' &&
-        playerState.promptState.buttons?.some((button: IButtonsProps) => CLAIM_COUNTER_ARGS.includes(button.arg) && !button.disabled);
 
     const showTrayButtons = () => {
         if (playerState.promptState.promptType === 'displayCards') {
@@ -128,13 +112,13 @@ const CardActionTray: React.FC = () => {
         return !!button.disabled;
     };
 
-    // On a compact board the claim buttons (up to three in Faux Suns) share one place in the tray: while more than one
-    // counter is unclaimed they collapse into a single Claim button that opens a menu of them, and the last one left is
-    // shown on its own in that place. Large screens show every button in a row.
+    // In portrait or below desktopHD the claim buttons (up to three in Faux Suns) share one place in the tray: while more
+    // than one counter is unclaimed they collapse into a single Claim button that opens a menu of them, and the last one
+    // left is shown on its own in that place. Large screens show every button in a row.
     const promptType: string = playerState.promptState.promptType;
     const buttons: IButtonsProps[] = playerState.promptState.buttons ?? [];
     const claimButtons = buttons.filter((button) => CLAIM_COUNTER_ARGS.includes(button.arg));
-    const collapseClaims = isCompactBoard && promptType === 'actionWindow' && claimButtons.length > 1;
+    const collapseClaims = shouldCollapseClaims && promptType === 'actionWindow' && claimButtons.length > 1;
     const trayItems: TrayItem[] = [];
     for (const button of buttons) {
         if (!collapseClaims || !CLAIM_COUNTER_ARGS.includes(button.arg)) {
@@ -173,7 +157,6 @@ const CardActionTray: React.FC = () => {
                             cooldown={hasCooldown(button.arg, promptType)}
                             sendGameMessage={sendGameMessage}
                             disabled={buttonDisabled(button)}
-                            disabledReason={button.arg === 'pass' && passBlockedByUnclaimedCounter ? PASS_BLOCKED_BY_COUNTER_TOOLTIP : undefined}
                         />
                     );
                 })}
@@ -187,8 +170,6 @@ interface IPromptButtonProps {
     sendGameMessage: (args: [string, string, string]) => void;
     disabled?: boolean;
     cooldown?: boolean;
-    // shown as a tooltip while the button is disabled
-    disabledReason?: string;
 }
 
 const getPulseButtonVariant = (button: IButtonsProps) => {
@@ -212,12 +193,12 @@ const getPulseButtonVariant = (button: IButtonsProps) => {
 }
 
 const PromptButton: React.FC<IPromptButtonProps> = (props) => {
-    const { button, sendGameMessage, cooldown, disabled = false, disabledReason } = props;
+    const { button, sendGameMessage, cooldown, disabled = false } = props;
     const { isPortrait } = useScreenOrientation();
     const styles = createStyles(isPortrait);
     const variant = disabled ? 'default' : getPulseButtonVariant(button);
 
-    const pulseButton = (
+    return (
         <PulseButton
             variant={variant}
             sx={styles.promptButton}
@@ -229,19 +210,6 @@ const PromptButton: React.FC<IPromptButtonProps> = (props) => {
             cooldown={cooldown}
         />
     );
-
-    if (!disabled || !disabledReason) {
-        return pulseButton;
-    }
-
-    // a disabled button fires no pointer events, so the tooltip listens on a wrapper that takes the button's place in the tray
-    return (
-        <Tooltip title={disabledReason} arrow enterTouchDelay={0} leaveTouchDelay={4000}>
-            <Box component="span" sx={styles.disabledButtonTooltipWrapper} aria-label={disabledReason}>
-                {pulseButton}
-            </Box>
-        </Tooltip>
-    );
 };
 
 interface IClaimMenuProps {
@@ -252,8 +220,8 @@ interface IClaimMenuProps {
 }
 
 /**
- * The claim buttons collapsed into one Claim button, for a compact board. Clicking it opens the unclaimed counters as a
- * menu above it (beside it in portrait, where the tray is a column), and picking one claims it.
+ * The claim buttons collapsed into one Claim button, in portrait or below desktopHD. Clicking it opens the unclaimed
+ * counters as a menu above it (beside it in portrait, where the tray is a column), and picking one claims it.
  */
 const ClaimMenu: React.FC<IClaimMenuProps> = ({ buttons, sendGameMessage, cooldown }) => {
     const { isPortrait } = useScreenOrientation();
