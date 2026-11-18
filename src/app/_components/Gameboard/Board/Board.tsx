@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, useMediaQuery } from '@mui/material';
 import { debugBorder } from '@/app/_utils/debug';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
@@ -7,7 +7,6 @@ import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { ICardData, LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
-import useIsCompactBoard from '@/app/_utils/useIsCompactBoard';
 import OngoingEffectsPanel from '@/app/_components/Gameboard/_subcomponents/PlayerTray/OngoingEffectsPanel';
 import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 import { useTheme } from '@mui/material/styles';
@@ -29,10 +28,11 @@ const Board: React.FC<IBoardProps> = ({
     let playerBase = gameState?.players[connectedPlayer].base;
     const opponentLeaders: ICardData[] = gameState?.players[opponentId].leaders ?? [];
     let opponentBase = gameState?.players[opponentId].base;
-    // on a large screen two leaders sit side by side at full size, so the middle column gets twice as wide; a compact
-    // board fits them into the space of one card instead (see BoardLeaders)
-    const isCompactBoard = useIsCompactBoard();
-    const isWideMiddleColumn = !isCompactBoard && (playerLeaders.length > 1 || opponentLeaders.length > 1);
+    // Two full-size leaders double the middle column's width, which comes out of the arenas, so below desktopHD (and in
+    // portrait, where the column is a fixed 20%) the two leaders share the space of one card instead (see BoardLeaders).
+    const isNarrowLandscape = useMediaQuery(theme.breakpoints.down('desktopHD'));
+    const isCompactLeaders = isPortrait || isNarrowLandscape;
+    const isWideMiddleColumn = !isCompactLeaders && (playerLeaders.length > 1 || opponentLeaders.length > 1);
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
     const initiativeClaimed = gameState.initiativeClaimed;
@@ -110,9 +110,10 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            // two leaders side by side: twice the usual width, but capped by the viewport height so that on short
-            // landscape screens, where the cards are height-limited, the column (with the names below the pairs) still fits
-            width: isPortrait ? '20%' : isWideMiddleColumn ? 'min(calc(2 * clamp(8rem, 20vh, 14rem)), calc(34vh + 2rem))' :
+            // two leaders side by side: twice the usual width, but capped by the viewport height. A pair with the name below
+            // it is taller than one leader, so without the cap the leaders and bases run into the prompt between the bases
+            // on short screens (from about 950px tall).
+            width: isPortrait ? '20%' : isWideMiddleColumn ? 'min(calc(2 * clamp(8rem, 20vh, 14rem)), calc(30vh + 2rem))' :
                 'clamp(8rem, 20vh, 14rem)',
             margin: 0,
 
@@ -329,7 +330,7 @@ const Board: React.FC<IBoardProps> = ({
                         <BoardLeaders
                             leaders={opponentLeaders}
                             title={isSpectator ? 'Player2' : titleOpponent}
-                            isCompact={isCompactBoard}
+                            isCompact={isCompactLeaders}
                         />
                         <Box sx={styles.baseWrapper}>
                             <LeaderBaseCard
@@ -358,7 +359,7 @@ const Board: React.FC<IBoardProps> = ({
                         <BoardLeaders
                             leaders={playerLeaders}
                             title={isSpectator ? 'Player1' : titleCurrentPlayer}
-                            isCompact={isCompactBoard}
+                            isCompact={isCompactLeaders}
                         />
                     </Box>
                 </Box>

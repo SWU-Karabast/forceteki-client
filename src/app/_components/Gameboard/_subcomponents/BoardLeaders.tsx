@@ -7,7 +7,7 @@ interface IBoardLeadersProps {
     leaders: ICardData[];
     // player name shown with the leader(s)
     title: string;
-    // a compact board (see useIsCompactBoard) fits two leaders into the space of one card
+    // two leaders share the space of one card, cut down to their art (in portrait, and on screens narrower than desktopHD)
     isCompact: boolean;
 }
 
@@ -78,8 +78,8 @@ const styles = {
  *
  * A single leader renders as it always has, with the player's name on the card. Two leaders (Faux Suns) sit side by
  * side: on a large screen at full size (the board widens the middle column for this), with the name centered below the
- * pair; on a compact board cut down to their art so that both fit in the space of one card, with the name on them as on
- * a single leader. Hovering a leader still previews the whole card.
+ * pair; in portrait or below desktopHD cut down to their art so that both fit in the space of one card, with the name
+ * on them as on a single leader. Hovering a leader still previews the whole card.
  */
 const BoardLeaders: React.FC<IBoardLeadersProps> = ({ leaders, title, isCompact }) => {
     const leaderCard = (card: ICardData, cardTitle?: string, artOnly = false) => (
