@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { useGame } from '@/app/_contexts/Game.context';
 
@@ -20,44 +20,8 @@ interface IClaimCounterIndicatorsProps {
 const INDICATOR_STEP = '2.4rem';
 // gap between an indicator and the board's right edge
 const INDICATOR_RIGHT = '5px';
-// Unclaimed indicators sit just left of the chat drawer toggle, centred on it. In landscape the board ends left of the
-// toggle, but in portrait the board runs under it, so there they move left by the toggle's visible width plus a gap.
+// in portrait the board runs under the chat drawer toggle, so unclaimed indicators (centred in the column) move left of it
 const UNCLAIMED_RIGHT_PORTRAIT = '34px';
-
-/**
- * The chat drawer toggle is fixed to the viewport's vertical middle, which is a little below the board's middle.
- * Returns how far (in px) the viewport's middle is below the middle of the element the indicators are positioned in,
- * so unclaimed indicators can centre on the toggle. Clamped so they never leave the middle half of the board.
- */
-const useViewportCenterOffset = (container: HTMLElement | null) => {
-    const [offset, setOffset] = useState(0);
-
-    useEffect(() => {
-        if (!container) {
-            return;
-        }
-
-        const update = () => {
-            const rect = container.getBoundingClientRect();
-            const limit = rect.height / 4;
-            const centerOffset = window.innerHeight / 2 - (rect.top + rect.height / 2);
-            setOffset(Math.round(Math.max(-limit, Math.min(limit, centerOffset))));
-        };
-
-        update();
-        const resizeObserver = new ResizeObserver(update);
-        resizeObserver.observe(container);
-        window.addEventListener('resize', update);
-        window.addEventListener('scroll', update, true);
-        return () => {
-            resizeObserver.disconnect();
-            window.removeEventListener('resize', update);
-            window.removeEventListener('scroll', update, true);
-        };
-    }, [container]);
-
-    return offset;
-};
 
 const sideColor: Record<CounterSide, string> = {
     player: 'var(--initiative-blue)',
@@ -79,10 +43,6 @@ const getClaimedSide = (playerClaimed: boolean, opponentClaimed: boolean): Count
  */
 const ClaimCounterIndicators: React.FC<IClaimCounterIndicatorsProps> = ({ playerId, opponentId }) => {
     const { gameState } = useGame();
-    // the element all indicators are positioned in, found through the first indicator once it is in the DOM
-    const [container, setContainer] = useState<HTMLElement | null>(null);
-    const anchorRef = useCallback((element: HTMLDivElement | null) => setContainer(element?.parentElement ?? null), []);
-    const viewportCenterOffset = useViewportCenterOffset(container);
     const player = gameState.players[playerId];
     const opponent = gameState.players[opponentId];
 
@@ -107,11 +67,7 @@ const ClaimCounterIndicators: React.FC<IClaimCounterIndicatorsProps> = ({ player
             case 'opponent':
                 return { top: '5px', transform: `translateY(calc(${slot} * ${INDICATOR_STEP}))` };
             default:
-                // stacked around the chat drawer toggle's middle, just left of it (see UNCLAIMED_RIGHT_PORTRAIT)
-                return {
-                    top: '50%',
-                    transform: `translateY(calc(-50% + ${viewportCenterOffset}px + ${slot - (unclaimedCount - 1) / 2} * ${INDICATOR_STEP}))`,
-                };
+                return { top: '50%', transform: `translateY(calc(-50% + ${slot - (unclaimedCount - 1) / 2} * ${INDICATOR_STEP}))` };
         }
     };
 
@@ -160,7 +116,6 @@ const ClaimCounterIndicators: React.FC<IClaimCounterIndicatorsProps> = ({ player
             {counters.map((counter, index) => (
                 <Box
                     key={counter.label}
-                    ref={index === 0 ? anchorRef : undefined}
                     sx={getIndicatorStyle(counter, index)}
                     role="status"
                     aria-label={getDescription(counter)}
