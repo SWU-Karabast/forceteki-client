@@ -442,7 +442,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         </Box>
     )
     return (
-        <Box sx={{ position: 'relative', width: '100%', display: 'flex', flexDirection: isConnectedPlayer ? 'column' : 'column-reverse' }}>
+        <Box
+            sx={{ position: 'relative', width: '100%', display: 'flex', flexDirection: isConnectedPlayer ? 'column' : 'column-reverse' }}
+            data-leader-uuid={isLeader ? card.uuid : undefined}
+        >
             <Box sx={{
                 position: 'relative',
                 flex: 1,
