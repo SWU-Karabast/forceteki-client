@@ -21,11 +21,13 @@ npm run storybook    # component workbench on :6006
 npm run test:run     # vitest, once (`npm test` watches); see "Tests" below
 npm run states -- --ref pr/<number>   # test against a backend PR's game states instead of backend main
 docker compose up    # Adobe S3Mock on :9090, only needed for local cosmetics upload work
+node scripts/playwright/smoke.mjs all   # plays the standard flows as two players against the local servers
 ```
 
-Node 22.x. Verification is `npm run lint`, `npm run build`, `npm run test:run`, and manual play against a
-local backend. CI (`.github/workflows/pullrequest.yml`) runs lint and build; `.github/workflows/tests.yml`
-runs the tests.
+Node 22.x. Verification is `npm run lint`, `npm run build`, `npm run test:run`, and play against a local
+backend: the `local-browser-testing` skill (`.claude/skills/`) runs both servers and drives the site with
+Playwright, one browser context per player, using the helpers in `scripts/playwright/`. CI
+(`.github/workflows/pullrequest.yml`) runs lint and build; `.github/workflows/tests.yml` runs the tests.
 
 ## Architecture
 

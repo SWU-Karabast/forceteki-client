@@ -13,6 +13,7 @@ import {
     Typography
 } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
+import TestDeckButton from '../TestDeckButton/TestDeckButton';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
@@ -174,6 +175,15 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         }
         clearErrors()
         setIsJsonDeck(false);
+    }
+
+    const handleDeckLinkChange = (value: string) => {
+        clearErrors()
+        if (value.trim().length > 0) {
+            setDeckLinkTouched(false);
+        }
+        setDeckLink(value);
+        handleJsonDeck(value);
     }
 
     // Handle Create Game Submission
@@ -559,20 +569,19 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                                 type="text"
                                 value={deckLink}
                                 onBlur={() => setDeckLinkTouched(true)}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                    clearErrors()
-                                    if (e.target.value.trim().length > 0) {
-                                        setDeckLinkTouched(false);
-                                    }
-                                    setDeckLink(e.target.value);
-                                    handleJsonDeck(e.target.value);
-                                }}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => handleDeckLinkChange(e.target.value)}
                             />
                             {showDeckLinkRequiredError && (
                                 <Typography variant="body1" sx={styles.errorMessageStyle}>
                                     Enter a deck link or paste deck JSON.
                                 </Typography>
                             )}
+                            <TestDeckButton
+                                format={queueConfig.format}
+                                cardPool={queueConfig.cardPool}
+                                onDeck={handleDeckLinkChange}
+                                disabled={queueState}
+                            />
                         </FormControl>
 
                         {/* Save Deck To Favourites Checkbox */}
