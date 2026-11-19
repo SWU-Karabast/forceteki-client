@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // TEMPORARY: checks that the server runtime can load a remote config value. Delete once confirmed.
 // The id is fixed on purpose and must never come from the request.
 const CONFIG_REGION = 'us-west-2';
-const CONFIG_ID = 'karabast_client_config_check';
+const CONFIG_ID = 'KARABAST_CLIENT_CONFIG_CHECK';
 const EXPECTED_VALUE = 'config-check-ok';
 
 const client = new SecretsManagerClient({ region: CONFIG_REGION });
