@@ -18,27 +18,23 @@ import { useMediaQuery, useTheme } from '@mui/material';
 
 const TIMER_STEP = 100; // shorter intervals provide a smoother progress animation
 
+// The main time takes over the ring at once, with no fade in. The game state that brings the grant also restarts the
+// turn time, which jumps the ring to full, so fading over from it would show the full ring for a moment. A player who
+// was spending main time sees the arc carry on where it was. At the end the ring fades back to the turn time.
 const grantOverlayShow = keyframes`
-    0% { opacity: 0; }
-    10% { opacity: 1; }
-    85% { opacity: 1; }
+    0%, 85% { opacity: 1; }
     100% { opacity: 0; }
 `;
 
 const grantRingHide = keyframes`
-    0% { opacity: 1; }
-    10% { opacity: 0; }
-    85% { opacity: 0; }
+    0%, 85% { opacity: 0; }
     100% { opacity: 1; }
 `;
 
-const grantSegmentFlash = keyframes`
+// the segment appears once, just after the ring shows the main time, and stays until the ring fades back
+const grantSegmentAppear = keyframes`
     0%, 14% { opacity: 0; }
-    22% { opacity: 1; }
-    30% { opacity: 0.25; }
-    38% { opacity: 1; }
-    46% { opacity: 0.25; }
-    54%, 100% { opacity: 1; }
+    28%, 100% { opacity: 1; }
 `;
 
 interface TimerProps extends CircularProgressProps {
@@ -47,7 +43,7 @@ interface TimerProps extends CircularProgressProps {
 
     /**
      * A grant of main time to show on the ring: for as long as it lasts the ring shows the player's main time instead,
-     * with the time given back flashing into place at the end of the arc.
+     * with the time given back appearing in place at the end of the arc.
      */
     grantOverlay?: IMainTimeGrantAnimation | null;
     hideProgressIndicator?: boolean;
@@ -66,7 +62,7 @@ const styles = {
     }
 }
 
-/** The player's main time on the ring, with the time a grant gave back flashing in at the end of the arc. */
+/** The player's main time on the ring, with the time a grant gave back appearing at the end of the arc. */
 const GrantRing: React.FC<{ grant: IMainTimeGrantAnimation, size: number }> = ({ grant, size }) => {
     const fromPercent = (grant.fromMs / MAX_MAIN_TIME) * 100;
     const segmentPercent = ((grant.toMs - grant.fromMs) / MAX_MAIN_TIME) * 100;
@@ -99,7 +95,7 @@ const GrantRing: React.FC<{ grant: IMainTimeGrantAnimation, size: number }> = ({
                         inset: 0,
                         color: MAIN_TIME_GRANT_COLOR,
                         filter: `drop-shadow(0 0 3px ${MAIN_TIME_GRANT_COLOR})`,
-                        animation: `${grantSegmentFlash} ${MAIN_TIME_GRANT_ANIMATION_MS}ms linear`,
+                        animation: `${grantSegmentAppear} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-out`,
                     }}
                 />
             </Box>
