@@ -1,7 +1,9 @@
 import React from 'react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import Board from '@/app/_components/Gameboard/Board/Board';
-import { findCard, loadRenderCapture, renderGameState, unitsInPlay } from '../../helpers/gameState';
+import SpectatorIndicator from '@/app/_components/Gameboard/_subcomponents/Overlays/ChatDrawer/SpectatorIndicator';
+import { findCard, loadRenderCapture, renderGameState, unitsInPlay, withSpectatorSummary } from '../../helpers/gameState';
 
 describe('The mirrored board, seen by a spectator', () => {
     it('draws every unit in both arenas', () => {
@@ -13,5 +15,27 @@ describe('The mirrored board, seen by a spectator', () => {
         for (const unit of units) {
             expect(findCard(unit.uuid), `${unit.name} (${unit.uuid})`).not.toBeNull();
         }
+    });
+
+    describe('the spectator indicator', () => {
+        it('shows how many people are watching, counting the spectator', () => {
+            const state = withSpectatorSummary(loadRenderCapture('board', 'spectator'), 3);
+            renderGameState(<SpectatorIndicator />, state, 'spectator');
+
+            expect(screen.getByLabelText('3 people are watching, including you.').querySelector('[data-spectator-count]')?.textContent).toBe('3');
+        });
+
+        it('tells a lone spectator they are the only one watching', () => {
+            const state = withSpectatorSummary(loadRenderCapture('board', 'spectator'), 1);
+            renderGameState(<SpectatorIndicator />, state, 'spectator');
+
+            expect(screen.getByLabelText('You are the only one watching.').querySelector('[data-spectator-count]')?.textContent).toBe('1');
+        });
+
+        it('is hidden when the server sends no spectator summary', () => {
+            renderGameState(<SpectatorIndicator />, loadRenderCapture('board', 'spectator'), 'spectator');
+
+            expect(screen.queryByLabelText(/watching/)).toBeNull();
+        });
     });
 });
