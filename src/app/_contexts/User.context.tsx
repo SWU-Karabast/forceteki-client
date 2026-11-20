@@ -13,6 +13,9 @@ import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { EmailNotVerifiedError, emailNotVerifiedRedirectUrl } from '@/app/_utils/SignInRefusal';
 
+// a sign-out the page starts by itself (not from a log out button) only logs a failure, since no one asked for it
+const logSignOutError = (error: unknown) => console.error('Error signing out:', error);
+
 const UserContext = createContext<IUserContextType>({
     user: null,
     anonymousUserId: null,
@@ -20,7 +23,7 @@ const UserContext = createContext<IUserContextType>({
     isMod: false,
     login: () => {},
     devLogin: () => {},
-    logout: () => {},
+    logoutAsync: async () => {},
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
@@ -88,7 +91,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 setIsMod(false);
             }
             if(needsLogout){
-                signOutTo(logoutCallbackUrl);
+                signOutToAsync(logoutCallbackUrl).catch(logSignOutError);
             }
         };
 
@@ -111,7 +114,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             setupAnonymousUserIfNeeded();
         };
         if(hideLogin && session?.user){
-            signOutTo('/');
+            signOutToAsync('/').catch(logSignOutError);
         }
         initializeUser();
     }, [session, pathname]);
@@ -225,15 +228,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     };
 
 
-    const signOutTo = (callbackUrl: string) => {
-        signOut({ callbackUrl });
+    // The user is cleared only once NextAuth has accepted the sign-out. If it refuses, the session cookie is still set,
+    // so the page goes on showing them signed in, and this rejects with NextAuth's error.
+    const signOutToAsync = async (callbackUrl: string) => {
+        await signOut({ callbackUrl });
         setUser(null);
     };
 
-    // Takes no arguments: the log out buttons pass this straight to onClick, which calls it with the click event.
+    // Takes no arguments: a log out button may pass this straight to onClick, which calls it with the click event.
     // A parameter here would receive that event as the callback URL, and NextAuth rejects the sign-out without
     // clearing the session cookie.
-    const logout = () => signOutTo('/');
+    const logoutAsync = () => signOutToAsync('/');
 
     const clearAnonUser = () => {
         localStorage.removeItem('anonymousUserId');
@@ -248,7 +253,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             isMod,
             login,
             devLogin,
-            logout,
+            logoutAsync,
             updateUsername,
             updateWelcomeMessage,
             updateUndoPopupSeenDate,

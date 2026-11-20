@@ -18,7 +18,7 @@ import UnimplementedIcon from '@/assets/custom-icons/unimplemented-icon.svg';
 import PreferencesIcon from '@/assets/custom-icons/preferences-icon.svg';
 import TermsIcon from '@/assets/custom-icons/terms-icon.svg';
 import { AVAILABLE_MENU_ACTIONS, HIDE_LOGIN, MenuAction } from '../ControlHub';
-import { useUser } from '@/app/_contexts/User.context';
+import { useLogout } from '@/app/_hooks/useLogout';
 import NextLink from 'next/link';
 import { SxProps } from '@mui/system';
 import { Theme } from '@mui/material/styles';
@@ -128,7 +128,7 @@ type AdditionalMobileMenuProps = {
 };
 
 export default function Drawer({ actions }: { actions: MenuAction[] }) {
-    const { logout } = useUser();
+    const logout = useLogout();
     const [mobileOpen, setMobileOpen] = useState(false);
     const handleDrawerToggle = () => {
         setMobileOpen((prevState) => !prevState);

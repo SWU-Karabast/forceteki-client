@@ -12,7 +12,7 @@ import SoundOptionsTab from '@/app/_components/_sharedcomponents/Preferences/Pre
 import { IVerticalTabsProps } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import EndGameTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/EndGameTab';
 import BlockListTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/BlockListTab';
-import { useUser } from '@/app/_contexts/User.context';
+import { useLogout } from '@/app/_hooks/useLogout';
 import GeneralTab from '@/app/_components/_sharedcomponents/Preferences/PreferencesSubElementVariants/GeneralTab';
 import UnsavedChangesDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/UnsavedChangesDialog';
 import CosmeticsTab from '../PreferencesSubElementVariants/CosmeticsTab';
@@ -55,7 +55,7 @@ function VerticalTabs({
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
     const [pendingTabIndex, setPendingTabIndex] = useState<number | null>(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const { logout } = useUser();
+    const logout = useLogout();
     const isSmallScreen = useMediaQuery('(max-width: 899px)');
 
     useEffect(() => {

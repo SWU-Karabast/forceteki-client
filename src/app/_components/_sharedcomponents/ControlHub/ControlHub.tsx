@@ -5,6 +5,7 @@ import { FaDiscord } from 'react-icons/fa6';
 import NextLinkMui, { CombinedLinkProps } from './_subcomponents/NextLinkMui/NextLinkMui';
 import Drawer from './_subcomponents/Drawer';
 import { useUser } from '@/app/_contexts/User.context';
+import { useLogout } from '@/app/_hooks/useLogout';
 
 const styles = {
     wrapperContainer:{
@@ -117,7 +118,8 @@ function filterNulls<T>(arr: Array<T | null>): Array<T> {
 }
 
 const ControlHub: React.FC = () => {
-    const { user, logout, isMod } = useUser();
+    const { user, isMod } = useUser();
+    const logout = useLogout();
 
     // Links to be rendered on the desktop control hub
     const menuActions: Array<MenuAction> = filterNulls([

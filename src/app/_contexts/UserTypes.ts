@@ -113,7 +113,12 @@ export interface IUserContextType {
     isMod: boolean;
     login: (provider: 'google' | 'discord') => void;
     devLogin: (user: 'Order66' | 'ThisIsTheWay') => void;
-    logout: () => void;
+
+    /**
+     * Signs out and goes to the home page. If the sign-out fails it rejects, and the user stays signed in. A log out
+     * button should use the `useLogout()` hook instead, which tells the user when that happens.
+     */
+    logoutAsync: () => Promise<void>;
     updateUsername: (username: string) => void;
     updateWelcomeMessage: () => void;
     updateNeedsUsernameChange: () => void;
