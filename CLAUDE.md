@@ -132,8 +132,16 @@ captured states, one file per capture, named after it:
 - `test/helpers/gameState.tsx` has the helpers: `loadRenderCapture`, `loadControlChain`, and `renderGameState`,
   which renders a component as a participant sees a state, records what it sends (`sent`), and delivers the next
   state (`receive`). `findCard` / `clickCard` find a card in play by its uuid (`data-card-uuid`), and `unitsInPlay`
-  lists the units a state has in both arenas. Nothing is mocked: it renders the real `GameStateProvider` and the
-  other providers the board needs, so it is the one place to update when a context moves to a store.
+  lists the units a state has in both arenas. It renders the real `GameStateProvider` and the other providers the
+  board needs, so it is the one place to update when a context moves to a store.
+- **App** tests (`test/app/<Flow>.test.tsx`) run the whole client: `renderMockApp({ url })` (`test/helpers/mockApp.tsx`)
+  renders the real `ClientLayout`, providers and page for a URL, so they cover the connection and moving between pages.
+  `test/helpers/setup.ts` points what the app reaches outside itself through at mocks, for every test, and resets
+  them after each one: `socket.io-client` and `fetch` at `mockServer` (the game node: `waitForConnection()`,
+  `socket.receive(event, ...)`, `socket.sent`, `respond(path, body)`), `next/navigation` at `mockRouter` and
+  `next-auth/react` at `mockSession` (not signed in until a test calls `set`). The mocks must not import app code,
+  which imports them back. Add a page to `mockApp.tsx`'s `pages` when a test needs it. What the server sends still
+  comes from the backend's snapshots.
 - `npm run states -- --ref main|<branch>|pr/<number>` picks which backend states to test against. A `pr/<number>`
   ref is GitHub's merge of that backend PR into current main. `--local [path]` copies a forceteki working tree
   (default `../forceteki`) to try changes before pushing.
