@@ -139,6 +139,24 @@ const styles = {
             transform: 'translateY(-1px)'
         },
     },
+    // a choice that is shown but can't be chosen (e.g. already chosen): dimmed, no glow or hover lift
+    unavailableContainer: {
+        borderColor: 'rgba(160, 160, 160, 0.45)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.38)',
+        '&:hover': {
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.38)',
+            transform: 'none',
+        },
+    },
+    // not MUI's `disabled`, which would also block the caption tooltip
+    unavailableButton: {
+        cursor: 'default',
+        opacity: 0.45,
+        '&:hover': {
+            filter: 'none',
+            backgroundColor: '#1E2D32',
+        },
+    },
     // stacks the card's status tags (e.g. "No effect", "Gained") in its top-left corner
     tagStack: {
         position: 'absolute',
@@ -173,6 +191,11 @@ const styles = {
         backgroundColor: 'rgba(33, 65, 74, 0.88)',
         border: '1px solid rgba(102, 229, 255, 0.85)',
     },
+    unavailableTag: {
+        cursor: 'default',
+        backgroundColor: 'rgba(38, 38, 38, 0.92)',
+        border: '1px solid rgba(190, 190, 190, 0.7)',
+    },
     // sits at the top-left of the frontmost card, straddling its top edge. Tweak `top`/`left` to taste.
     countBadge: {
         position: 'absolute',
@@ -200,7 +223,8 @@ const styles = {
     },
 }
 
-const cardArtBackground = (backgroundImage: string, isNoEffect: boolean) => ({
+// how strongly to desaturate the card art: no-effect choices partly, unavailable ones fully
+const cardArtBackground = (backgroundImage: string, grayscale: number) => ({
     '&::before': {
         content: '""',
         position: 'absolute',
@@ -209,7 +233,7 @@ const cardArtBackground = (backgroundImage: string, isNoEffect: boolean) => ({
         backgroundImage: `url(${backgroundImage})`,
         backgroundPosition: 'center top',
         backgroundSize: 'cover',
-        filter: isNoEffect ? 'grayscale(0.8)' : 'none',
+        filter: grayscale > 0 ? `grayscale(${grayscale})` : 'none',
     },
     '&::after': {
         content: '""',
@@ -240,10 +264,13 @@ export const isBaseSourceCard = (sourceCard?: PopupSourceCard): boolean => {
     return sourceType?.toLowerCase() === CardType.Base;
 };
 
-export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects, gained, count }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean, gained?: boolean, count?: number }) {
+export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffects, gained, count, disabled, unavailableReason }: { onClick(): void; sourceCard?: PopupSourceCard, text: string, hasLegalEffects?: boolean, gained?: boolean, count?: number, disabled?: boolean, unavailableReason?: string }) {
     const backgroundImage = useCardImageURL(sourceCard);
     const isLandscapePreview = isBaseSourceCard(sourceCard);
-    const isNoEffect = !hasLegalEffects;
+    const isUnavailable = !!disabled;
+    // an unavailable choice shows only why it's unavailable, not whether it would have an effect
+    const isNoEffect = !hasLegalEffects && !isUnavailable;
+    const handleClick = isUnavailable ? undefined : onClick;
     const isGrouped = (count ?? 0) > 1;
     const captionTier = getCaptionTier(text);
     // the longest captions may still be clamped on small cards, so offer the full text on hover
@@ -258,7 +285,7 @@ export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffec
                 const depth = behindLayers - i;
                 return <Box key={`stack-${depth}`} sx={styles.stackLayer(depth)} />;
             })}
-            <Box sx={[styles.container, isNoEffect && styles.noEffectContainer]}>
+            <Box sx={[styles.container, isNoEffect && styles.noEffectContainer, isUnavailable && styles.unavailableContainer]}>
                 <Tooltip
                     title={showCaptionTooltip ? <RichText text={text} /> : ''}
                     placement="top"
@@ -269,21 +296,33 @@ export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffec
                         sx={[
                             styles.button,
                             backgroundImage
-                                ? cardArtBackground(backgroundImage, isNoEffect)
-                                : { backgroundColor: '#1E2D32' }
+                                ? cardArtBackground(backgroundImage, isUnavailable ? 1 : isNoEffect ? 0.8 : 0)
+                                : { backgroundColor: '#1E2D32' },
+                            isUnavailable && styles.unavailableButton,
                         ]}
-                        onClick={onClick}
+                        aria-disabled={isUnavailable || undefined}
+                        disableRipple={isUnavailable}
+                        onClick={handleClick}
                     >
                         <RichText text={text} sx={captionStyle(captionTier)} />
                     </Button>
                 </Tooltip>
-                {(isNoEffect || gained) && (
+                {(isNoEffect || gained || unavailableReason) && (
                     <Box sx={styles.tagStack}>
+                        {unavailableReason && (
+                            <Box
+                                component="span"
+                                aria-label={`This choice can't be chosen: ${unavailableReason}`}
+                                sx={[styles.tag, styles.unavailableTag]}
+                            >
+                                {unavailableReason}
+                            </Box>
+                        )}
                         {isNoEffect && (
                             <Box
                                 component="span"
                                 aria-label="This choice has no effect"
-                                onClick={onClick}
+                                onClick={handleClick}
                                 sx={styles.tag}
                             >
                                 No effect
@@ -293,8 +332,8 @@ export default function TriggerButton({ onClick, sourceCard, text, hasLegalEffec
                             <Box
                                 component="span"
                                 aria-label="This ability is gained from this card"
-                                onClick={onClick}
-                                sx={[styles.tag, styles.gainedTag]}
+                                onClick={handleClick}
+                                sx={[styles.tag, styles.gainedTag, isUnavailable && { cursor: 'default' }]}
                             >
                                 Gained
                             </Box>

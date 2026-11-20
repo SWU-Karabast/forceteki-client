@@ -18,6 +18,9 @@ interface ITriggerOptionProps {
     // true when the ability was gained from the source card rather than printed on the clicked card
     gained?: boolean;
     count?: number;
+    // shown but can't be chosen; `unavailableReason` is the badge text
+    disabled?: boolean;
+    unavailableReason?: string;
     // when present, the card's ability is optional: render the "Or" fence and an inset Pass button
     // beneath the card as the alternative choice for the same ability
     pass?: IPassOption;
@@ -58,6 +61,8 @@ export default function TriggerOption({
     hasLegalEffects,
     gained,
     count,
+    disabled,
+    unavailableReason,
     pass,
     reservePassSpace,
 }: ITriggerOptionProps) {
@@ -69,6 +74,8 @@ export default function TriggerOption({
                 hasLegalEffects={hasLegalEffects}
                 gained={gained}
                 count={count}
+                disabled={disabled}
+                unavailableReason={unavailableReason}
                 onClick={onTrigger}
             />
             {(pass || reservePassSpace) && (
