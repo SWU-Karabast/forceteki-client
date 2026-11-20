@@ -20,6 +20,7 @@ import { TokenBadgeStack } from './GameCard/TokenBadgeStack';
 import StatusIcon from '@/app/_components/_sharedcomponents/Cards/GameCard/StatusIcon';
 import { HealthBadge, PowerBadge } from './GameCard/StatBadge';
 import UpgradeStrip from './UpgradeStrip';
+import { useCardAnimationAliases, useCardAnimationAnchor } from '@/app/_components/Gameboard/_subcomponents/CardAnimations/cardAnchorRegistry';
 
 // Maps a unit's selectable/selected upgrade subcards into cards for the select popup.
 const buildUpgradeSelectCards = (subcards: ICardData[]): ICardData[] =>
@@ -122,6 +123,13 @@ const GameCard: React.FC<IGameCardProps> = ({
         )
         : '';
     const { status: cardImageStatus, imgProps: cardImgProps } = useImageLoadStatus(styledCardUrl);
+
+    // Lets the board's animation layer find this unit to play damage over it, and redraw it
+    // where it stood once it is defeated. Only units on the board take part.
+    const isOnBoard = cardStyle === CardStyle.InPlay;
+    const animationAnchorRef = useCardAnimationAnchor(card?.uuid, { imageUrl: styledCardUrl, shape: 'unit' }, isOnBoard);
+    const shieldUuids = isOnBoard ? subcards.filter((subcard) => subcard.name === 'Shield').map((subcard) => subcard.uuid) : [];
+    useCardAnimationAliases(card?.uuid, shieldUuids, 'shield', isOnBoard);
 
     // Multi-select upgrade popup: keep it in sync with live board state and auto-close it when the
     // prompt ends or nothing stays selectable. Declared before the early return so hook order stays stable.
@@ -512,6 +520,7 @@ const GameCard: React.FC<IGameCardProps> = ({
             )}
 
             <Box
+                ref={animationAnchorRef}
                 sx={styles.card}
                 onClick={handleClick}
             >

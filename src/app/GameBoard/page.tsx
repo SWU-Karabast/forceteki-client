@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType } from '@/app/_constants/constants';
 import { s3ImageURL } from '@/app/_utils/s3Utils';
 import { Play } from 'next/font/google';
+import CardAnimationLayer from '../_components/Gameboard/_subcomponents/CardAnimations/CardAnimationLayer';
 
 const GameBoard = () => {
     const { getOpponent, connectedPlayer, gameState, lobbyState, isSpectator } = useGame();
@@ -199,6 +200,8 @@ const GameBoard = () => {
                     />
                 </Box>
             </Box>
+
+            <CardAnimationLayer/>
 
             <ChatDrawer
                 sidebarOpen={sidebarOpen}
