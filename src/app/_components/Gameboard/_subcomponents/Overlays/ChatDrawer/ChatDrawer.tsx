@@ -14,6 +14,7 @@ import {
     useTheme,
 } from '@mui/material';
 import Chat from '@/app/_components/_sharedcomponents/Chat/Chat';
+import ChatStatusBar from './ChatStatusBar';
 import { IChatDrawerProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import UndoIcon from '@mui/icons-material/Undo';
@@ -608,6 +609,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 unreadDividerIndex={unreadDividerIndex}
                 onMessagesRead={markMessagesRead}
             />
+            <ChatStatusBar />
 
         </>
     );
