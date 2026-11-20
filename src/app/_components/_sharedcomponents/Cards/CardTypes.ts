@@ -148,6 +148,9 @@ export interface ILeaderBaseCardProps {
     disabled?: boolean;
     cardStyle?: LeaderBaseCardStyle;
     isLeader?: boolean;
+    // show only the leader's art (the left part of its front), at half a leader card's width: two leaders then fit
+    // side by side in the space of one card. The hover preview still shows the whole card.
+    artOnly?: boolean;
 }
 
 // Used to handle the how the display of the card should be in the different scenarios
