@@ -14,6 +14,30 @@ import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighli
 import UpgradeStrip from '@/app/_components/_sharedcomponents/Cards/UpgradeStrip';
 import { PopoverConfig, usePreviewCardPopover } from '@/app/_components/_sharedcomponents/Cards/GameCard/cardHooks';
 
+// The art box of a leader's front side, as fractions of the card: it fills the left part of the card, between the
+// "Leader" header and the traits bar, with the name and ability text to its right.
+const LEADER_ART_BOX = { left: 0.045, top: 0.075, width: 0.38, height: 0.76 };
+const LANDSCAPE_CARD_RATIO = 1.39;
+const LEADER_ART_ASPECT_RATIO = (LEADER_ART_BOX.width * LANDSCAPE_CARD_RATIO / LEADER_ART_BOX.height).toFixed(3);
+
+const leaderArtClipSx = {
+    position: 'absolute',
+    inset: 0,
+    overflow: 'hidden',
+    borderRadius: 'inherit',
+    pointerEvents: 'none',
+} as const;
+
+const leaderArtImageSx = {
+    position: 'absolute',
+    width: `${100 / LEADER_ART_BOX.width}%`,
+    height: `${100 / LEADER_ART_BOX.height}%`,
+    left: `${-100 * LEADER_ART_BOX.left / LEADER_ART_BOX.width}%`,
+    top: `${-100 * LEADER_ART_BOX.top / LEADER_ART_BOX.height}%`,
+    maxWidth: 'none',
+    userSelect: 'none',
+} as const;
+
 const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     card,
     title,
@@ -22,6 +46,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
     upgrades = [],
     disabled = false,
     isLeader = false,
+    artOnly = false,
 }) => {
     const { sendGameMessage, connectedPlayer, getConnectedPlayerPrompt, distributionPromptData, gameState, hoveredChatCard } = useGame();
     const locale = useCardImageLocale();
@@ -176,7 +201,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             backgroundColor: 'black',
             borderRadius: '0.5rem',
             width: '100%',
-            aspectRatio: '1.39',
+            aspectRatio: artOnly ? LEADER_ART_ASPECT_RATIO : LANDSCAPE_CARD_RATIO,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -186,8 +211,8 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             border: borderColor ? `2px solid ${borderColor}` : '2px solid transparent',
             boxSizing: 'border-box',
             userSelect: 'none',
-            '-webkit-touch-callout': 'none', /* Disables the long-press menu on iOS */
-            '-webkit-user-select': 'none',   /* Prevents image selection */
+            WebkitTouchCallout: 'none', /* Disables the long-press menu on iOS */
+            WebkitUserSelect: 'none',   /* Prevents image selection */
         },
         deployedPlaceholder: {
             flex: 1,
@@ -195,7 +220,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
             borderRadius: '0.5rem',
             width: '100%',
             maxHeight: '100%',
-            aspectRatio: '1.39',
+            aspectRatio: artOnly ? LEADER_ART_ASPECT_RATIO : LANDSCAPE_CARD_RATIO,
             cursor: 'default',
             position: 'relative',
             border: '2px solid #FFFFFF55',
@@ -417,7 +442,10 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
         </Box>
     )
     return (
-        <Box sx={{ position: 'relative', width: '100%', display: 'flex', flexDirection: isConnectedPlayer ? 'column' : 'column-reverse' }}>
+        <Box
+            sx={{ position: 'relative', width: '100%', display: 'flex', flexDirection: isConnectedPlayer ? 'column' : 'column-reverse' }}
+            data-leader-uuid={isLeader ? card.uuid : undefined}
+        >
             <Box sx={{
                 position: 'relative',
                 flex: 1,
@@ -463,7 +491,7 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                     cardNotDeployed: !isDeployed,
                 })}
             >
-                {!isDeployed && (
+                {!isDeployed && !artOnly && (
                     <Box
                         component="img"
                         src={mainCardImageUrl}
@@ -472,6 +500,18 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                         {...mainCardImgProps}
                         sx={cardImageFillSx}
                     />
+                )}
+                {!isDeployed && artOnly && (
+                    <Box sx={leaderArtClipSx}>
+                        <Box
+                            component="img"
+                            src={mainCardImageUrl}
+                            alt=""
+                            draggable={false}
+                            {...mainCardImgProps}
+                            sx={leaderArtImageSx}
+                        />
+                    </Box>
                 )}
                 {mainCardImageStatus === 'error' && !isDeployed && (
                     <CardImageMissingOverlay label={cardImageLabel(card, locale)} />
@@ -510,9 +550,9 @@ const LeaderBaseCard: React.FC<ILeaderBaseCardProps> = ({
                             </Typography>
                         </Box>
                         <Box sx={styles.epicActionIcon}></Box>
-                        <Box sx={styles.leaderBlankIcon}/>
                     </>
                 )}
+                {cardStyle === LeaderBaseCardStyle.Leader && <Box sx={styles.leaderBlankIcon}/>}
                 { showValueAdjuster() && <CardValueAdjuster card={card} /> }
             </Box>
         </Box>

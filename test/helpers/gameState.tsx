@@ -50,6 +50,10 @@ export const unitsInPlay = (state: any): any[] => Object.values(state.players).f
     ...player.cardPiles.spaceArena,
 ]).filter((card) => !card.parentCardId);
 
+/** Each player's leader uuids, as the state lists them. */
+export const leadersByPlayer = (state: any): string[][] => Object.values(state.players)
+    .map((player: any) => player.leaders.map((leader: any) => leader.uuid));
+
 /** Which player's seat a participant's state is read from, as GameProvider decides it. */
 const seatOf = (state: any, participant: Participant) => {
     const playerIds = Object.keys(state.players);
@@ -93,6 +97,10 @@ export const renderGameState = (ui: ReactElement, state: any, participant: Parti
 
 /** The card in play with this uuid, or null when the board does not draw it. */
 export const findCard = (uuid: string) => document.querySelector<HTMLElement>(`[data-card-uuid="${uuid}"]`);
+
+/** The uuids of the leaders drawn in the board's middle column (a deployed leader is also drawn as a unit). */
+export const leadersOnBoard = () => Array.from(document.querySelectorAll<HTMLElement>('[data-leader-uuid]'))
+    .map((element) => element.dataset.leaderUuid);
 
 export const clickCard = (uuid: string) => {
     const image = findCard(uuid)?.querySelector('img');
