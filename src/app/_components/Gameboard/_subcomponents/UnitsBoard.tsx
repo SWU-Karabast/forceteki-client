@@ -26,11 +26,11 @@ const groupUnits = (cards: ICardData[], effects: IOngoingEffectSummary[], assign
             const subcards = card.subcards ?? [];
             const ownUuids = new Set([card.uuid, ...subcards.map((s) => s.uuid)]);
             key = JSON.stringify([
-                card.setId, card.exhausted, card.damage, card.power, card.hp,
+                card.id, card.exhausted, card.damage, card.power, card.hp,
                 card.selectable, card.selected, card.isAttacker, card.isDefender,
                 hasSentinel(card, CardStyle.InPlay), cannotBeAttacked(card, CardStyle.InPlay),
                 isBlanked(card, CardStyle.InPlay), isStolen(card, CardStyle.InPlay),
-                subcards.map((s) => JSON.stringify([s.setId, s.selectable, s.selected])).sort(),
+                subcards.map((s) => JSON.stringify([s.id, s.selectable, s.selected])).sort(),
                 effects
                     .filter((e) => e.targets.includes(card.uuid) && !ownUuids.has(e.sourceCardUuid))
                     .map((e) => `${e.sourceCardUuid}:${e.source.effectDescription ?? ''}`)
