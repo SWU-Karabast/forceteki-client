@@ -285,8 +285,8 @@ function GameOptionsTab({ variant, setHasNewChanges }: { variant?: 'gameBoard' |
                     <Divider sx={{ mb: '20px' }} />
                     <Box sx={{ mb: '10px' }}>
                         <PreferenceOption
-                            option={'Mute Chat'}
-                            optionDescription={'Mute chat in all games.'}
+                            option={'Mute Public Chat'}
+                            optionDescription={'Mute chat in matchmaking and public lobbies.'}
                             iconType="checkbox"
                             onChange={handleMuteChatChange}
                             defaultChecked={muteChatEnabled}

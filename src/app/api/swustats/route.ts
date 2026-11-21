@@ -39,11 +39,11 @@ export async function GET(req: Request) {
     try {
         // This is the only way we can get the user session
         const session = await getServerSession(authOptions);
-        if (!session?.user?.userId) {
+        if (!session?.jwtToken) {
             throw new Error('No valid user session');
         }
         const token = await fetchSwuStatsTokens(code);
-        await linkUserToSwuStats(session.user.userId, token);
+        await linkUserToSwuStats(session.jwtToken, token);
         return NextResponse.redirect(new URL(CONFIG.redirects.success, CONFIG.returnUrl));
     } catch (error) {
         console.error('[SWU Stats] Callback failed:', error instanceof Error ? error.message : error);
@@ -90,11 +90,15 @@ async function fetchSwuStatsTokens(code: string): Promise<ISwuStatsToken> {
     };
 }
 
-async function linkUserToSwuStats(userId: string, token: ISwuStatsToken) {
+// The game server works out which account to link from the user's session token, which is forwarded as the cookie
+async function linkUserToSwuStats(sessionToken: string, token: ISwuStatsToken) {
     const response = await fetch(`${CONFIG.gameServerUrl}/api/link-swustats`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, swuStatsToken: token, internalApiKey: process.env.INTRASERVICE_SECRET }),
+        headers: {
+            'Content-Type': 'application/json',
+            Cookie: `next-auth.session-token=${sessionToken}`,
+        },
+        body: JSON.stringify({ swuStatsToken: token, internalApiKey: process.env.INTRASERVICE_SECRET }),
     });
 
     if (!response.ok) {

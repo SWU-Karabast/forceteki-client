@@ -11,6 +11,7 @@ import { useUser } from '@/app/_contexts/User.context';
 import { useEffect, useState } from 'react';
 import { StatsSource } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { Bo3SetEndedReason, GamesToWinMode, IBo3SetEndResult, MatchmakingType, RematchMode } from '@/app/_constants/constants';
+import { useServerSettings } from '@/app/_contexts/ServerSettings.context';
 
 interface IProps {
     handleOpenBugReport: () => void;
@@ -21,6 +22,7 @@ interface IProps {
 function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType }: IProps) {
     const router = useRouter();
     const { sendLobbyMessage, sendMessage, resetStates, lobbyState, connectedPlayer, isSpectator, statsSubmitNotification, gameState, getOpponent, isAnonymousPlayer } = useGame();
+    const { gamesEnabled, maintenanceMessage, hasLoaded } = useServerSettings();
     const { user } = useUser();
     const [karabastStatsMessage, setKarabastStatsMessage] = useState<{ type: string; message: string } | null>(null);
     const [swuStatsMessage, setSwuStatsMessage] = useState<{ type: string; message: string } | null>(null);
@@ -254,7 +256,7 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
     const hasStatsMessages = karabastStatsMessage || swuStatsMessage || swuBaseStatsMessage;
 
     // Check if maintenance mode is enabled
-    const isMaintenanceMode = process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true';
+    const isMaintenanceMode = hasLoaded && !gamesEnabled;
 
     // ------------------------ Styles ------------------------//
     const styles = {
@@ -419,7 +421,7 @@ function EndGameOptions({ handleOpenBugReport, handleOpenPersonReport, gameType 
                     <Typography sx={styles.typographyContainer} variant={'h3'}>Maintenance</Typography>
                     <Divider sx={{ mb: '20px' }} />
                     <Typography sx={styles.typeographyStyle}>
-                        Rematching has been disabled as we are about to begin a quick maintenance. Be back soon!
+                        Rematching has been disabled. {maintenanceMessage}
                     </Typography>
                 </Box>
             ) : (

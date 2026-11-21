@@ -1,8 +1,18 @@
 import {
     IFindUserResponse, IModActionResponse,
-    ICosmeticEntity
+    ICosmeticEntity, IServerSettings,
+    IPlayerReportDetailResponse, IPlayerReportListQuery, IPlayerReportListResponse, IPlayerReportUpdateResponse,
+    PlayerReportStatusUpdate
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
 
+
+/** An error answer from the game node: its message, and the HTTP status it came with. */
+export class ServerApiError extends Error {
+    constructor(message: string, public readonly status: number) {
+        super(message);
+        this.name = 'ServerApiError';
+    }
+}
 
 /**
  * Static helper class for communicating with the forceteki server API
@@ -26,7 +36,8 @@ export class ServerApiService {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                // the game node words most refusals as `message`, and some as `error`
+                throw new ServerApiError(errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`, response.status);
             }
 
             return await response.json();
@@ -34,6 +45,19 @@ export class ServerApiService {
             console.error(`ServerApiService error for ${url}:`, error);
             throw error;
         }
+    }
+
+    /**
+     * Makes the account for the current sign-in session if it does not have one yet. Safe to call for a
+     * session that already has an account.
+     */
+    public static async createUserAsync(): Promise<{ id: string; username: string }> {
+        const response = await this.fetchWithErrorHandling<{
+            success: boolean;
+            user: { id: string; username: string };
+        }>(`${this.baseUrl}/api/create-user`, { method: 'POST', body: JSON.stringify({}) });
+
+        return response.user;
     }
 
     // Cosmetics API methods
@@ -164,6 +188,7 @@ export class ServerApiService {
         actionType: string,
         note: string,
         durationDays?: number,
+        options?: { newUsername?: string; reportId?: string },
     ): Promise<{ success: boolean; message: string; }> {
         return await this.fetchWithErrorHandling<{
             success: boolean;
@@ -172,7 +197,7 @@ export class ServerApiService {
             `${this.baseUrl}/api/mod/submit-action`,
             {
                 method: 'POST',
-                body: JSON.stringify({ playerId, actionType, note, durationDays }),
+                body: JSON.stringify({ playerId, actionType, note, durationDays, ...options }),
             }
         );
     }
@@ -201,6 +226,64 @@ export class ServerApiService {
             {
                 method: 'POST',
                 body: JSON.stringify({ searchQuery: playerId }),
+            }
+        );
+    }
+
+    // Player report API methods
+    public static async listPlayerReportsAsync(query: IPlayerReportListQuery): Promise<IPlayerReportListResponse> {
+        const params = new URLSearchParams({ limit: String(query.limit) });
+        for (const key of ['status', 'search', 'offense', 'sort', 'cursor'] as const) {
+            if (query[key]) {
+                params.set(key, query[key]);
+            }
+        }
+        return await this.fetchWithErrorHandling<IPlayerReportListResponse>(`${this.baseUrl}/api/mod/reports?${params.toString()}`);
+    }
+
+    public static async getOpenPlayerReportCountAsync(): Promise<number> {
+        const result = await this.fetchWithErrorHandling<{ success: boolean; openCount: number }>(
+            `${this.baseUrl}/api/mod/reports/open-count`
+        );
+        return result.openCount;
+    }
+
+    public static async getPlayerReportAsync(reportId: string): Promise<IPlayerReportDetailResponse> {
+        return await this.fetchWithErrorHandling<IPlayerReportDetailResponse>(
+            `${this.baseUrl}/api/mod/reports/${encodeURIComponent(reportId)}`
+        );
+    }
+
+    /** Closes the report with an outcome, or opens it again */
+    public static async updatePlayerReportStatusAsync(reportId: string, update: PlayerReportStatusUpdate): Promise<IPlayerReportUpdateResponse> {
+        return await this.fetchWithErrorHandling<IPlayerReportUpdateResponse>(
+            `${this.baseUrl}/api/mod/reports/${encodeURIComponent(reportId)}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(update),
+            }
+        );
+    }
+
+    // Server settings API methods
+    public static async getServerSettingsAsync(): Promise<IServerSettings> {
+        return await this.fetchWithErrorHandling<IServerSettings>(
+            `${this.baseUrl}/api/server-settings`,
+            { method: 'GET' }
+        );
+    }
+
+    public static async setServerSettingsAsync(
+        updates: { gamesEnabled?: boolean; maintenanceMessage?: string },
+    ): Promise<{ success: boolean; settings: IServerSettings }> {
+        return await this.fetchWithErrorHandling<{
+            success: boolean;
+            settings: IServerSettings;
+        }>(
+            `${this.baseUrl}/api/mod/server-settings`,
+            {
+                method: 'POST',
+                body: JSON.stringify(updates),
             }
         );
     }

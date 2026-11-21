@@ -27,9 +27,9 @@ import CommentsDisabledIcon from '@mui/icons-material/CommentsDisabled';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import { MatchmakingType, QuickUndoAvailableState } from '@/app/_constants/constants';
 import { useChatTypingState } from '@/app/_hooks/useChatTypingState';
+import { useUnreadChatMessages } from '@/app/_hooks/useUnreadChatMessages';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
-import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { ChatDisabledReason, IChatDisabledInfo } from '@/app/_contexts/UserTypes';
@@ -104,6 +104,27 @@ const styles = {
         },
     },
     drawerToggleClosed: { right: 0, '&::after': { transform: 'rotate(45deg)' } },
+    unreadBadge: {
+        position: 'absolute',
+        top: '-4px',
+        right: '8px',
+        zIndex: 1,
+        minWidth: '22px',
+        height: '22px',
+        px: '5px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '999px',
+        backgroundColor: '#d32f2f',
+        color: '#fff',
+        border: '2px solid #090f18',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+        fontSize: '12px',
+        fontWeight: 700,
+        lineHeight: 1,
+        pointerEvents: 'none',
+    },
     drawerToggleOpen: {
         right: { xs: '200px', md: 'min(20%, 280px)' },
         '@media (orientation: landscape) and (max-width: 932px)': {
@@ -166,6 +187,17 @@ const styles = {
     headerCircularButton: {
         padding: '8px',
     },
+    headerLeaveGameAction: {
+        '@media (orientation: landscape) and (max-width: 875px)': {
+            display: 'none',
+        },
+    },
+    menuLeaveGameAction: {
+        display: 'none',
+        '@media (orientation: landscape) and (max-width: 875px)': {
+            display: 'flex',
+        },
+    },
     quickUndoButtonEnabled: {
         borderColor: 'rgba(255, 255, 255, 0.12)',
     },
@@ -192,15 +224,21 @@ const styles = {
     },
 }
 
-const DrawerToggle = ({ open, onClick }: { open: boolean; onClick: () => void }) => (
+const DrawerToggle = ({ open, onClick, unreadCount }: { open: boolean; onClick: () => void; unreadCount: number }) => (
     <Box
-        aria-label={`${open ? 'Close' : 'Open'} chat drawer`}
+        aria-label={`${open ? 'Close' : 'Open'} chat drawer${unreadCount > 0 ? `, ${unreadCount} unread ${unreadCount === 1 ? 'message' : 'messages'}` : ''}`}
         aria-expanded={open}
         component="button"
         onClick={onClick}
         sx={[styles.drawerToggle, open ? styles.drawerToggleOpen : styles.drawerToggleClosed]}
         type="button"
-    />
+    >
+        {unreadCount > 0 && (
+            <Box component="span" aria-hidden="true" sx={styles.unreadBadge}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+            </Box>
+        )}
+    </Box>
 );
 
 const UndoButton = ({ disabledOverride = false }: { disabledOverride?: boolean }) => {
@@ -295,6 +333,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const isMobileLandscape = useMediaQuery('(orientation: landscape) and (max-width: 932px)');
+    const isLeaveGameMenuItemVisible = useMediaQuery('(orientation: landscape) and (max-width: 875px)');
     const usesTemporaryDrawer = isMobile && !isMobileLandscape;
     const {
         gameState,
@@ -312,6 +351,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     } = useGame();
     const { handleTypingStateOnChange, resetTypingState } = useChatTypingState();
     const [chatMessage, setChatMessage] = useState('')
+    const [drawerEntered, setDrawerEntered] = useState(sidebarOpen);
     const [menuAnchorElement, setMenuAnchorElement] = useState<null | HTMLElement>(null);
     const [showDisableChatConfirmation, setShowDisableChatConfirmation] = useState(false);
     const [showConcedeConfirmation, setShowConcedeConfirmation] = useState(false);
@@ -327,13 +367,20 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
     const didCurrentUserMuteChat = lobbyState?.userWhoMutedChat === connectedPlayer;
     const doesUserHaveChatMuted = user?.preferences?.gameOptions?.muteChat;
     const opponentId = getOpponent(connectedPlayer);
+    const isChatVisible = sidebarOpen && drawerEntered;
+    const { unreadMessageIndices, unreadDividerIndex, markMessagesRead } = useUnreadChatMessages(
+        gameMessages,
+        gameState.id,
+        isSpectator ? '' : opponentId,
+        isChatVisible,
+    );
     const isAnonymousOpponent = isAnonymousPlayer(opponentId);
     const opponentChatDisabled = hasChatDisabled(opponentId);
     const canReportOpponent = !isSpectator && !isAnonymousPlayer(connectedPlayer) && (!!opponentId && !isAnonymousOpponent);
     const isReportingDisabled = !!user?.reportingDisabled;
 
     const getChatDisabledInfo = (): IChatDisabledInfo => {
-        if (isPrivateLobby && !doesUserHaveChatMuted) {
+        if (isPrivateLobby) {
             return { reason: ChatDisabledReason.None, message: '', borderColor: '' };
         }
 
@@ -432,7 +479,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
             router.push('/');
         } else {
             openPopup('leaveGame', {
-                uuid: `${uuidv4()}`,
+                uuid: crypto.randomUUID(),
                 source: PopupSource.User
             });
         }
@@ -488,7 +535,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                         <IconButton
                             aria-label="Leave game"
                             onClick={handleLeaveGameClick}
-                            sx={[styles.drawerActionButton, styles.headerCircularButton]}
+                            sx={[styles.drawerActionButton, styles.headerCircularButton, styles.headerLeaveGameAction]}
                         >
                             <LogoutIcon />
                         </IconButton>
@@ -532,7 +579,15 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                                 <ListItemText>{isReportingDisabled ? 'Reporting disabled' : 'Report Opponent'}</ListItemText>
                             </MenuItem>
                         )}
-                        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                        {(!isSpectator || isLeaveGameMenuItemVisible) && (
+                            <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.14)' }} />
+                        )}
+                        <MenuItem onClick={handleLeaveGameClick} sx={styles.menuLeaveGameAction}>
+                            <ListItemIcon sx={styles.menuIcon}>
+                                <LogoutIcon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText>Leave game</ListItemText>
+                        </MenuItem>
                         {!isSpectator && (
                             <MenuItem onClick={handleConcedeClick}>
                                 <ListItemIcon sx={styles.menuIcon}>
@@ -553,6 +608,10 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
                 handleChatOnChange={handleChatOnChange}
                 handleChatSubmit={handleGameChat}
                 pauseAutoScroll
+                isVisible={isChatVisible}
+                unreadMessageIndices={unreadMessageIndices}
+                unreadDividerIndex={unreadDividerIndex}
+                onMessagesRead={markMessagesRead}
             />
 
         </>
@@ -560,12 +619,19 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
 
     return (
         <>
-            <DrawerToggle open={sidebarOpen} onClick={toggleSidebar} />
+            <DrawerToggle open={sidebarOpen} onClick={toggleSidebar} unreadCount={unreadMessageIndices.size} />
             <Drawer
                 anchor="right"
                 open={sidebarOpen}
                 onClose={handleDrawerClose}
                 variant={usesTemporaryDrawer ? 'temporary' : 'persistent'}
+                slotProps={{
+                    transition: {
+                        onEnter: () => setDrawerEntered(false),
+                        onEntered: () => setDrawerEntered(true),
+                        onExit: () => setDrawerEntered(false),
+                    },
+                }}
                 sx={styles.drawerStyle}
             >
                 {drawerContent}

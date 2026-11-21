@@ -1,5 +1,5 @@
 import { Box, SxProps, Theme } from '@mui/material';
-import { SystemStyleObject } from '@mui/system';
+import { extendSx } from '@/app/_utils/utils';
 
 const styles = {
     container: {
@@ -68,7 +68,7 @@ const styles = {
 }
 
 export default function MatchLoader({ sx = {} }: { sx?: SxProps<Theme> }) {
-    return <Box sx={[styles.container, ...(Array.isArray(sx) ? sx : [sx])]}>
+    return <Box sx={extendSx(styles.container, sx)}>
         <Box sx={[styles.image, styles.heroismImg]}></Box>
         <Box sx={[styles.image, styles.villainyImg]}></Box>
     </Box>

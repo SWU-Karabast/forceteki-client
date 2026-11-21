@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Grid } from '@mui/material';
+import { Box } from '@mui/material';
 import { debugBorder, isBreakpointOverlayEnabled } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
@@ -170,16 +170,20 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
             justifyContent: 'start',
             
         },
+        unitStyle: {
+            // The space arena grids are RTL only to fill from the right; card contents stay LTR.
+            direction: 'ltr',
+        },
     };
 
 
     return (
         <Box sx={styles.mainBoxStyle}>
-            <Grid direction="column" sx={styles.containerStyle}>
+            <Box sx={styles.containerStyle}>
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
                     {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid}>
+                        <Box key={card.uuid} sx={styles.unitStyle}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
@@ -189,12 +193,12 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
                     {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} >
+                        <Box key={card.uuid} sx={styles.unitStyle}>
                             <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
                         </Box>
                     ))}
                 </Box>
-            </Grid>
+            </Box>
             {/* Show BreakpointOverlay when enabled in environment variables */}
             {isBreakpointOverlayEnabled() && <BreakpointOverlay />}
         </Box>

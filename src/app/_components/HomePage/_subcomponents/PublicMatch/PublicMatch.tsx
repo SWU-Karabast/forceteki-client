@@ -41,11 +41,11 @@ const PublicMatch: React.FC<IPublicGameInProgressProps> = ({ match }) => {
         <Box sx={styles.box}>
             <Box sx={styles.matchItems}>
                 <Box sx={{ position:'relative', flex: 1 }}>
-                    <OverlappingCards baseCard={match.player1Base} leaderCard={match.player1Leader} />
+                    <OverlappingCards baseCard={match.player1Base} leaderCard={match.player1Leader} secondLeaderCard={match.player1SecondLeader} />
                 </Box>
                 <Typography variant="body1" sx={styles.matchType}>vs</Typography>
                 <Box sx={{ position:'relative', flex: 1 }}>
-                    <OverlappingCards baseCard={match.player2Base} leaderCard={match.player2Leader} />
+                    <OverlappingCards baseCard={match.player2Base} leaderCard={match.player2Leader} secondLeaderCard={match.player2SecondLeader} />
                 </Box>
             </Box>
             {!match.isPrivate && (

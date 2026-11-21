@@ -6,6 +6,8 @@ const nextConfig = {
     eslint: {
         // TODO: re-enable linting if we can get vscode to do auto-fixes like with the BE repo setup
         ignoreDuringBuilds: true,
+        // `next lint` only covers src/ by default
+        dirs: ['src', 'test'],
     },
     webpack(config) {
         // Add SVGR loader for importing SVGs as React components

@@ -1,5 +1,4 @@
 import { IAnnouncement, IArticle } from '@/app/_components/HomePage/HomePageTypes';
-import { s3ImageURL } from '../_utils/s3Utils';
 
 export const playerMatches = [
     {
@@ -86,28 +85,35 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
-        title: '🛠️ Update: Auto-Target is here',
+        title: 'Icons Preview is Complete',
         content: `
-        <p>Streamline your gameplay! Auto-Target skips the manual selection step whenever an action or ability has exactly one legal target —  no choice to make, no click needed.</p>
+        <p>All Icons 2027 Edition cards are now fully implemented and available in the <strong>Next Set Preview</strong> card pool. These cards will join Premier on Karabast the week of November 23rd.</p>
 
-        <p>Find it in <strong>Preferences → Game Options → Gameplay</strong> from either the Home page or in a game. <em>Off by default</em>.</p>
-
-        <p>This is the first in a series of settings we're rolling out to streamline gameplay for players who know their deck inside and out. So keep an eye on the game preferences pane in future updates!</p>
-        `,
-        date: '7/23/26',
-        image: '/auto-target.jpg',
-        imageAlt: 'Auto-Target Setting',
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> with any questions or feedback.</p><p></p>
+	  `,
+        date: '11/15/26',
+        image: '/icons-preview.webp',
+        imageAlt: 'Icons 2027 Edition key art: Kylo Ren and Rey dueling with lightsabers',
+        imagePosition: 'center 40%',
     },
     {
-        title: 'Ashes of the Empire is now legal in Premier!',
+        title: 'Homeworlds Suspensions: A Brightening Reality',
         content: `
-        <p>Ashes of the Empire (Set 8) is now legal in the Premier format! The "Next Set" card pools have been disabled in all formats until the next preview season.</p>
-    
-        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> for progress updates and announcements! If you have coding experience, we're always looking for new contributors.</p><p></p>
+        <p>In line with the recent suspension announcement, the following cards are suspended in the <strong>Premier</strong> format, effective immediately:</p>
+
+        <ul>
+            <li>Chimaera, A Frightening Reality</li>
+            <li>Koska Reeves, Warrior of Mandalore</li>
+            <li>Neel, The Cutest Boy</li>
+            <li>Aggressive Negotiations</li>
+        </ul>
+
+        <p style="margin-bottom:0;">Decks that include a suspended card can no longer be used in Premier. Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> with any questions. Have fun in the new meta!</p><p></p>
 	  `,
-        date: '7/13/26',
-        image: s3ImageURL('ui/ash-news-banner.webp'),
-        imageAlt: 'News Announcement',
+        date: '11/9/26',
+        image: '/homeworlds-suspension.webp',
+        imageAlt: 'Suspended immediately: Chimaera, Koska Reeves, Neel and Aggressive Negotiations',
+        imagePosition: 'center top',
     },
 ];
 

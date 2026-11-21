@@ -5,6 +5,7 @@ import {
     BatchTriggerPopup,
     DefaultPopup,
     DropdownPopup,
+    OptionalTriggerPopup,
     PilePopup,
     SelectCardsPopup,
     PopupSource, LeaveGamePopup, NumberPopup, WaitDelayPopup
@@ -13,6 +14,7 @@ import {
 export type PopupData =
   | ActionTriggerPopup
   | BatchTriggerPopup
+  | OptionalTriggerPopup
   | DefaultPopup
   | SelectCardsPopup
   | PilePopup

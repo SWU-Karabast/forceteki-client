@@ -35,11 +35,13 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
 
     // set connectedPlayer
     const playerLeader = connectedUser?.deck?.leader;
+    const playerSecondLeader = connectedUser?.deck?.secondLeader;
     const playerBase = connectedUser?.deck?.base;
 
     // set opponent
     const titleOpponent = opponentUser ? opponentUser.username : null;
     const opponentLeader = opponentUser ? opponentUser.deck?.leader : null;
+    const opponentSecondLeader = opponentUser?.deck?.secondLeader;
     const opponentBase = opponentUser ? opponentUser.deck?.base : null;
 
     // check unimplemeneted list for players cards
@@ -90,6 +92,24 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
         justifyContent: 'center',
         alignItems: 'center'
     };
+    const leadersStyle = {
+        display: 'grid',
+        alignItems: 'start',
+        width: '100%',
+    };
+    const overlappingLeadersStyle = {
+        gridTemplateColumns: 'repeat(10, minmax(0, 1fr))',
+        '& > :first-of-type': {
+            gridArea: '1 / 1 / 2 / 8',
+        },
+        '& > :last-of-type': {
+            gridArea: '1 / 4 / 2 / 11',
+            marginTop: '30%',
+        },
+        '& > :hover': {
+            zIndex: 1,
+        },
+    };
     const rowStyle = {
         flexGrow: 1,
         width: '100%',
@@ -128,13 +148,24 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                             >
                                 {connectedUser ? connectedUser.username : connectedPlayer}
                             </Typography>
-                            <LeaderBaseCard
-                                title={connectedUser ? connectedUser.username : connectedPlayer}
-                                card={playerLeader ? { ...playerLeader, unimplemented: isCardNotImplemented(playerLeader?.id) } : playerLeader}
-                                disabled={true}
-                                cardStyle={LeaderBaseCardStyle.PlainLeader}
-                                isLeader={true}
-                            />
+                            <Box sx={[leadersStyle, !!playerSecondLeader && overlappingLeadersStyle]}>
+                                <LeaderBaseCard
+                                    title={connectedUser ? connectedUser.username : connectedPlayer}
+                                    card={playerLeader ? { ...playerLeader, unimplemented: isCardNotImplemented(playerLeader?.id) } : playerLeader}
+                                    disabled={true}
+                                    cardStyle={LeaderBaseCardStyle.PlainLeader}
+                                    isLeader={true}
+                                />
+                                {playerSecondLeader && (
+                                    <LeaderBaseCard
+                                        title={connectedUser ? connectedUser.username : connectedPlayer}
+                                        card={{ ...playerSecondLeader, unimplemented: isCardNotImplemented(playerSecondLeader.id) }}
+                                        disabled={true}
+                                        cardStyle={LeaderBaseCardStyle.PlainLeader}
+                                        isLeader={true}
+                                    />
+                                )}
+                            </Box>
                             <LeaderBaseCard card={playerBase ? { ...playerBase, unimplemented: isCardNotImplemented(playerBase?.id) } : playerBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>
@@ -149,13 +180,24 @@ const Players: React.FC<IPlayersProps> = ({ isLobbyView }) => {
                             >
                                 {opponentUser ? opponentUser.username : 'Opponent'}
                             </Typography>
-                            <LeaderBaseCard
-                                title={titleOpponent}
-                                card={opponentLeader ? { ...opponentLeader, unimplemented: isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
-                                disabled={true}
-                                cardStyle={LeaderBaseCardStyle.PlainLeader}
-                                isLeader={true}
-                            />
+                            <Box sx={[leadersStyle, !!opponentSecondLeader && overlappingLeadersStyle]}>
+                                <LeaderBaseCard
+                                    title={titleOpponent}
+                                    card={opponentLeader ? { ...opponentLeader, unimplemented: isOpponentCardNotImplemented(opponentLeader?.id) } : opponentLeader}
+                                    disabled={true}
+                                    cardStyle={LeaderBaseCardStyle.PlainLeader}
+                                    isLeader={true}
+                                />
+                                {opponentSecondLeader && (
+                                    <LeaderBaseCard
+                                        title={titleOpponent}
+                                        card={{ ...opponentSecondLeader, unimplemented: isOpponentCardNotImplemented(opponentSecondLeader.id) }}
+                                        disabled={true}
+                                        cardStyle={LeaderBaseCardStyle.PlainLeader}
+                                        isLeader={true}
+                                    />
+                                )}
+                            </Box>
                             <LeaderBaseCard card={opponentBase ? { ...opponentBase, unimplemented: isOpponentCardNotImplemented(opponentBase?.id) } : opponentBase} disabled={true}></LeaderBaseCard>
                         </Box>
                     </Grid>

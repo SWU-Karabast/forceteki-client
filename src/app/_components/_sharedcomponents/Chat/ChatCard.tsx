@@ -13,7 +13,7 @@ interface IChatCardProps {
     isPlayerCard: boolean;
 }
 
-const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard }) => {
+const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children }) => {
     const { hoveredChatCard } = useGame();
     const locale = useCardImageLocale();
     const [anchorElement, setAnchorElement] = React.useState<HTMLElement | null>(null);
@@ -33,7 +33,6 @@ const ChatCard: React.FC<IChatCardProps> = ({ chatObject, children, isPlayerCard
         frontCardStyle: CardStyle.Plain,
         backCardStyle: CardStyle.PlainLeader,
         isLeader: false,
-        isDeployed: true,
     });
 
     const handlePreviewOpen = (event: React.MouseEvent<HTMLElement>) => {

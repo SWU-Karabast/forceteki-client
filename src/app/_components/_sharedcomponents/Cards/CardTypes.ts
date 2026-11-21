@@ -1,5 +1,24 @@
 import { DeckSource } from '@/app/_utils/fetchDeckData';
 
+export interface IOngoingEffectSourceSummary {
+    setId: ICardSetId;
+    type?: string;
+    controllerId: string;
+    sourceZone?: string;
+    sourceTitle: string;
+    sourceSubtitle?: string;
+    effectDescription?: string;
+}
+
+export interface IOngoingEffectSummary {
+    sourceCardUuid: string;
+    source: IOngoingEffectSourceSummary;
+    targets: string[];
+    // Only sent for effects the opponent can't see (e.g. sourced from the player's hand); used to reassure
+    // the controller that no hidden information has been leaked to their opponent.
+    hiddenFromOpponent?: boolean;
+}
+
 export enum CardType {
     Base = 'base',
 
@@ -50,6 +69,7 @@ export interface ICardData {
     type: string;
     subcards?: ICardData[];
     capturedCards?: ICardData[];
+    upgrades?: ICardData[];
     aspects?: IAspect[];
     printedType?: string;
     sentinel?: boolean;
@@ -124,9 +144,13 @@ export interface ILeaderBaseCardProps {
     title?: string;
     card: ICardData | null;
     capturedCards?: ICardData[];
+    upgrades?: ICardData[];
     disabled?: boolean;
     cardStyle?: LeaderBaseCardStyle;
     isLeader?: boolean;
+    // show only the leader's art (the left part of its front), at half a leader card's width: two leaders then fit
+    // side by side in the space of one card. The hover preview still shows the whole card.
+    artOnly?: boolean;
 }
 
 // Used to handle the how the display of the card should be in the different scenarios

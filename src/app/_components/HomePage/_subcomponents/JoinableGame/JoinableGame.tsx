@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import { IJoinableGameProps } from '../../HomePageTypes';
 import { ISetCode } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import OverlappingCards from '../OverlappingCards/OverlappingCards';
@@ -11,6 +12,7 @@ import { FormatTagLabels, SwuGameFormat, GamesToWinMode, CardPool, CardPoolLabel
 import PremierIcon from '/public/premier.svg';
 import EternalIcon from '/public/eternal.svg';
 import OpenIcon from '/public/open.svg';
+import FauxSunsIcon from '/public/faux_suns.svg';
 import NextSetIcon from '/public/next_set.svg';
 import Bo1Icon from '/public/bo1.svg';
 import Bo3Icon from '/public/bo3.svg';
@@ -18,6 +20,7 @@ import Bo3Icon from '/public/bo3.svg';
 const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
     const router = useRouter();
     const { user } = useUser();
+    const { showErrorScreen } = useErrorScreen();
 
     const joinLobby = async (lobbyId: string) => {
         try {
@@ -37,7 +40,11 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Error joining lobby:', errorData.message);
-                alert(errorData.message);
+                showErrorScreen({
+                    title: 'Couldn\'t join that game',
+                    message: 'You weren\'t able to join this lobby. It may have filled up or been closed.',
+                    detail: errorData.message,
+                });
                 return;
             }
             router.push('/lobby');
@@ -109,6 +116,11 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                     borderColor: '#ffdd57',
                     color: '#ffdd57',
                     boxShadow: '0 0 5px #ffdd57',
+                },
+                fauxSuns: {
+                    borderColor: '#5c9dff',
+                    color: '#5c9dff',
+                    boxShadow: '0 0 5px #5c9dff',
                 }
             },
             cardPool: {
@@ -148,6 +160,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return styles.tags.format.eternal;
             case SwuGameFormat.Limited:
                 return styles.tags.format.limited;
+            case SwuGameFormat.FauxSuns:
+                return styles.tags.format.fauxSuns;
             default:
                 return {};
         }
@@ -162,6 +176,8 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                 return <EternalIcon style={iconStyle} />;
             case SwuGameFormat.Open:
                 return <OpenIcon style={iconStyle} />;
+            case SwuGameFormat.FauxSuns:
+                return <FauxSunsIcon style={iconStyle} />;
             default:
                 return null;
         }
@@ -246,6 +262,7 @@ const JoinableGame: React.FC<IJoinableGameProps> = ({ lobby }) => {
                         sx={styles.cardsContainer}
                         baseCard={createCardObject(lobby.host.base)}
                         leaderCard={createCardObject(lobby.host.leader)}
+                        secondLeaderCard={lobby.host.secondLeader ? createCardObject(lobby.host.secondLeader) : undefined}
                     />
                 )}
                 <Box sx={{ minWidth: '50%', width: '50%' }}>

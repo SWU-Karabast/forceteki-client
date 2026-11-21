@@ -11,6 +11,7 @@ export enum SwuGameFormat {
     Eternal = 'eternal',
     Limited = 'limited',
     Open = 'open',
+    FauxSuns = 'fauxSuns',
 }
 
 export enum CardPool {
@@ -29,9 +30,46 @@ export const CARD_IMAGE_CACHE_VERSION = 4;
 /** Invite link to the Karabast Discord. */
 export const DiscordInviteUrl = 'https://discord.gg/hKRaqHND4v';
 
+/** The player ticketing channel on the Karabast Discord. */
+export const PlayerTicketingChannelUrl = 'https://discord.com/channels/1220057752961814568/1417680409151410226/1418301240525193348';
+
+/** Discord's help article on verifying the email address of a Discord account. */
+export const DiscordVerifyEmailHelpUrl = 'https://support.discord.com/hc/en-us/articles/213219267-Resending-Verification-Email';
+
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
     BestOfThree = 'bestOfThree',
+}
+
+export enum MatchmakingCompetitivenessPreference {
+    Competitive = 'competitiveTesting',
+    NoPreference = 'noPreference',
+    Casual = 'casualBrewing',
+}
+
+export const MatchmakingPreferenceLabels: Record<MatchmakingCompetitivenessPreference, string> = {
+    [MatchmakingCompetitivenessPreference.Competitive]: 'Competitive',
+    [MatchmakingCompetitivenessPreference.NoPreference]: 'No Preference',
+    [MatchmakingCompetitivenessPreference.Casual]: 'Casual',
+};
+
+export enum MatchmakingCompetitivenessPreferenceSearchStage {
+    SamePreferenceOnly = 'samePreferenceOnly',
+    IncludesNoPreference = 'includesNoPreference',
+    AnyPreference = 'anyPreference',
+}
+
+export interface IMatchmakingCompetitivenessStatus {
+    preference: MatchmakingCompetitivenessPreference;
+    stage: MatchmakingCompetitivenessPreferenceSearchStage;
+    allowedOpponentPreferences: MatchmakingCompetitivenessPreference[];
+    nextExpansionAt: number | null;
+}
+
+export interface IQueueMatchmakingStatus {
+    searchStartedAt: number;
+    serverTime: number;
+    competitiveness: IMatchmakingCompetitivenessStatus;
 }
 
 export enum RematchMode {
@@ -61,15 +99,19 @@ export interface IFormatModeConfig {
 }
 
 export const LobbyFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.NextSet, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    ...(process.env.NODE_ENV === 'development'
+        ? [{ format: SwuGameFormat.FauxSuns, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] }]
+        : []),
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne] },
 ];
 
 // Helper to get the list of formats from a config array
@@ -96,6 +138,7 @@ export const FormatLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Open]: 'Open',
     [SwuGameFormat.Eternal]: 'Eternal',
     [SwuGameFormat.Limited]: 'Limited',
+    [SwuGameFormat.FauxSuns]: 'Faux Suns',
 };
 
 export const FormatTagLabels: Record<SwuGameFormat, string> = {
@@ -103,6 +146,7 @@ export const FormatTagLabels: Record<SwuGameFormat, string> = {
     [SwuGameFormat.Open]: 'Open',
     [SwuGameFormat.Eternal]: 'Eternal',
     [SwuGameFormat.Limited]: 'Limited',
+    [SwuGameFormat.FauxSuns]: 'Faux Suns',
 };
 
 export const SupportedDeckSources: readonly string[] = supportedDeckHosts;

@@ -14,10 +14,12 @@ import UsernameChangeRestrictedPopup
 import ReportingDisabledPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/ReportingDisabledPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
+import EmailVerificationRequiredPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/EmailVerificationRequiredPopup';
+import { AuthErrorProviderQueryParam, AuthErrorQueryParam, EmailNotVerifiedAuthError } from '@/app/_utils/SignInRefusal';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
 import { 
     setModerationSeenAsync, 
-    setMustRequestUsernameChangeSeenAsync,
+    setUsernameChangesBlockedSeenAsync,
     setReportingDisabledSeenAsync,
     hasUserSeenUndoPopup, 
     markUndoPopupAsSeen,
@@ -28,11 +30,11 @@ import {
 } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { announcement } from '@/app/_constants/mockData';
 import { checkIfModerationExpired } from '@/app/_utils/ModerationUtils';
-import { ModerationFieldState } from '@/app/_contexts/UserTypes';
 import UndoTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/UndoTutorialPopup';
 import TimerTutorialPopup from '@/app/_components/_sharedcomponents/HomePagePlayMode/TimerTutorialPopup';
 import { useDeckErrors } from '@/app/_hooks/useDeckErrors';
 import { ErrorModal } from '../_sharedcomponents/Error/ErrorModal';
+import { useServerSettings } from '@/app/_contexts/ServerSettings.context';
 
 const HomePagePlayMode: React.FC = () => {
     const router = useRouter();
@@ -49,7 +51,9 @@ const HomePagePlayMode: React.FC = () => {
     const [showAnnouncementPopup, setShowAnnouncementPopup] = useState<boolean>(false);
     const [pendingFormSubmission, setPendingFormSubmission] = useState<(() => void) | null>(null);
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
-    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateTimerPopupSeenDate, updateMustRequestUsernameChangeSeen, updateReportingDisabledSeen } = useUser();
+    // the provider of a sign-in refused because its email is not verified, while the explanation is showing
+    const [emailNotVerifiedProvider, setEmailNotVerifiedProvider] = useState<string | null>(null);
+    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateTimerPopupSeenDate, updateUsernameChangesBlockedSeen, updateReportingDisabledSeen } = useUser();
 
     // Use shared deck management hook
     const {
@@ -76,6 +80,22 @@ const HomePagePlayMode: React.FC = () => {
         fetchDecks();
     }, [fetchDecks]);
 
+    // A refused sign-in lands here with the reason in the query string (see SignInRefusal). It is read once and then
+    // removed from the address, so a reload does not show the explanation again. (useSearchParams would need a
+    // Suspense boundary around this statically rendered page.)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get(AuthErrorQueryParam) !== EmailNotVerifiedAuthError) {
+            return;
+        }
+
+        setEmailNotVerifiedProvider(params.get(AuthErrorProviderQueryParam) ?? '');
+        params.delete(AuthErrorQueryParam);
+        params.delete(AuthErrorProviderQueryParam);
+        const remaining = params.toString();
+        window.history.replaceState(window.history.state, '', `${window.location.pathname}${remaining ? `?${remaining}` : ''}`);
+    }, []);
+
     const handleDeckManagement = useCallback(() => {
         router.push('/DeckPage');
     }, [router]);
@@ -100,7 +120,9 @@ const HomePagePlayMode: React.FC = () => {
         markAnnouncementAsSeen(announcement);
     };
 
-    const showTestGames = process.env.NODE_ENV === 'development' && (user?.id === 'exe66' || user?.id === 'th3w4y');
+    const { gamesEnabled, maintenanceMessage, hasLoaded } = useServerSettings();
+
+    const showTestGames = process.env.NODE_ENV === 'development' && user?.provider === 'dev-user';
     const showQuickMatch = process.env.NEXT_PUBLIC_DISABLE_LOCAL_QUICK_MATCH !== 'true';
 
     // Tutorial popup handlers (undo + timer chained)
@@ -169,9 +191,9 @@ const HomePagePlayMode: React.FC = () => {
 
     const handleCloseUsernameRestrictedPopup = async () => {
         setShowUsernameRestrictedPopup(false);
-        updateMustRequestUsernameChangeSeen();
+        updateUsernameChangesBlockedSeen();
         try {
-            await setMustRequestUsernameChangeSeenAsync(user);
+            await setUsernameChangesBlockedSeenAsync(user);
         } catch (error) {
             console.log(error);
         }
@@ -211,6 +233,7 @@ const HomePagePlayMode: React.FC = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ filename: filename }),
+                    credentials: 'include',
                 }
             );
 
@@ -231,10 +254,10 @@ const HomePagePlayMode: React.FC = () => {
                 setShowWelcomePopup(true);
             }
             setUsernameMustChangePopup(!!user.needsUsernameChange);
-            if (!user.needsUsernameChange && user.mustRequestUsernameChange === ModerationFieldState.Enabled) {
+            if (!user.needsUsernameChange && user.usernameChangesBlocked && !user.usernameChangesBlocked.hasSeen) {
                 setShowUsernameRestrictedPopup(true);
             }
-            if (!user.needsUsernameChange && user.reportingDisabled === ModerationFieldState.Enabled) {
+            if (!user.needsUsernameChange && user.reportingDisabled && !user.reportingDisabled.hasSeen) {
                 setShowReportingDisabledPopup(true);
             }
             if(user.moderation){
@@ -252,8 +275,8 @@ const HomePagePlayMode: React.FC = () => {
         const blockingPopupActive =
             (user?.showWelcomeMessage ?? false) ||
             !!user?.needsUsernameChange ||
-            user?.mustRequestUsernameChange === ModerationFieldState.Enabled ||
-            user?.reportingDisabled === ModerationFieldState.Enabled ||
+            (!!user?.usernameChangesBlocked && !user.usernameChangesBlocked.hasSeen) ||
+            (!!user?.reportingDisabled && !user.reportingDisabled.hasSeen) ||
             (!!user?.moderation && !user.moderation.hasSeen);
         if (!blockingPopupActive && shouldShowAnnouncement(announcement)) {
             setShowAnnouncementPopup(true);
@@ -298,11 +321,10 @@ const HomePagePlayMode: React.FC = () => {
     return (
         <>
             <Card variant="black" sx={styles.wrapper}>
-                { process.env.NEXT_PUBLIC_DISABLE_CREATE_GAMES === 'true' ?
+                { hasLoaded && !gamesEnabled ?
                     <CardContent>
                         <Typography variant="h2">MAINTENANCE</Typography>
-                        <Typography variant="h3" sx={{ mb: 1 }}>Karabast is currently under maintenance.</Typography>
-                        <Typography variant="h3">Be back soon!</Typography>
+                        <Typography variant="h3">{maintenanceMessage}</Typography>
                     </CardContent>
                     :
                     <CardContent>
@@ -399,7 +421,12 @@ const HomePagePlayMode: React.FC = () => {
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
             <UndoTutorialPopup open={showUndoTutorialPopup} onClose={handleUndoTutorialClose} />
             <TimerTutorialPopup open={showTimerTutorialPopup} onClose={handleTimerTutorialClose} />
-            <WhatsNewPopupAnnouncement open={showAnnouncementPopup} onClose={closeAnnouncementPopup} />
+            <WhatsNewPopupAnnouncement open={showAnnouncementPopup && emailNotVerifiedProvider === null} onClose={closeAnnouncementPopup} />
+            <EmailVerificationRequiredPopup
+                open={emailNotVerifiedProvider !== null}
+                provider={emailNotVerifiedProvider}
+                onClose={() => setEmailNotVerifiedProvider(null)}
+            />
         </>
     );
 };

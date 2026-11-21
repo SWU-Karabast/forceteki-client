@@ -1,9 +1,10 @@
 import { SxProps } from '@mui/material';
 import { Theme } from '@mui/material/styles';
+import { ReactNode } from 'react';
 
 export type IButtonType = {
     variant: 'concede' | 'standard' | 'warning',
-    text?: string,
+    text?: string | ReactNode,
     buttonFnc?: () => void,
     disabled?: boolean,
     sx?: SxProps<Theme>,
@@ -117,7 +118,77 @@ export enum ModActionType {
     Mute = 'Mute',
     Warning = 'Warning',
     Rename = 'Rename',
+    ReportingDisabled = 'ReportingDisabled',
+    UsernameChangesBlocked = 'UsernameChangesBlocked',
+    ChangeUsername = 'ChangeUsername',
 }
+
+/** Reset names are this prefix plus a random four-digit number, e.g. KaraUser0427. */
+export const RESET_USERNAME_PREFIX = 'KaraUser';
+
+/**
+ * Validation properties mirror ModActionDefinitions on the server.
+ * supportsUsernameReset enables a client-only shortcut that submits a separate ChangeUsername action.
+ */
+export interface IModActionDefinition {
+    label: string;
+    requiresNote: boolean;
+    requiresDuration: boolean;
+    cancellable: boolean;
+    requiresNewUsername: boolean;
+    supportsUsernameReset: boolean;
+}
+
+export const modActionDefinitions: Record<ModActionType, IModActionDefinition> = {
+    [ModActionType.Mute]: {
+        label: 'Mute',
+        requiresNote: true,
+        requiresDuration: true,
+        cancellable: true,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
+    },
+    [ModActionType.Warning]: {
+        label: 'Warning',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: false,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
+    },
+    [ModActionType.Rename]: {
+        label: 'Force User to Rename',
+        requiresNote: false,
+        requiresDuration: false,
+        cancellable: false,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
+    },
+    [ModActionType.ReportingDisabled]: {
+        label: 'Disable Reporting',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: true,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
+    },
+    [ModActionType.UsernameChangesBlocked]: {
+        label: 'Block Username Changes',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: true,
+        requiresNewUsername: false,
+        supportsUsernameReset: true,
+    },
+    [ModActionType.ChangeUsername]: {
+        label: 'Change Username',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: false,
+        requiresNewUsername: true,
+        supportsUsernameReset: false,
+    },
+};
 
 export interface IModActionResponse {
     id: string;
@@ -133,6 +204,7 @@ export interface IModActionResponse {
     cancelledAt?: string;
     cancelledById?: string;
     cancelledByUsername?: string;
+    relatedReportId?: string;
 }
 
 export interface IPlayerSearchResult {
@@ -142,6 +214,8 @@ export interface IPlayerSearchResult {
     lastLogin: string;
     isMuted: boolean;
     activeRename?: IActiveModActionCacheEntry;
+    activeReportingDisabledId?: string | null;
+    activeUsernameChangesBlockedId?: string | null;
 }
 
 export interface IActiveModActionCacheEntry {
@@ -158,6 +232,7 @@ export enum UsernameChangeSource {
     Migration = 'Migration',
     UserInitiated = 'UserInitiated',
     ForcedRename = 'ForcedRename',
+    UsernameChangedByModerator = 'UsernameChangedByModerator',
 }
 
 export interface IUsernameChangeResponse {
@@ -170,11 +245,165 @@ export interface IUsernameChangeResponse {
     createdAt: string;
 }
 
+// ==================== Player reports (mod tools) ====================
+
+export enum PlayerReportStatus {
+    Open = 'Open',
+    Closed = 'Closed',
+}
+
+export enum PlayerReportOutcome {
+    ActionTaken = 'ActionTaken',
+    NoAction = 'NoAction',
+    FalseReport = 'FalseReport',
+    TimerAbuse = 'TimerAbuse',
+}
+
+export enum PlayerReportRole {
+    ReportSubmitter = 'ReportSubmitter',
+    ReportedPlayer = 'ReportedPlayer',
+}
+
+export interface IPlayerReport {
+    id: string;
+    createdAt: string;
+    status: PlayerReportStatus;
+    reporterId: string;
+    reporterUsername: string;
+    reportedPlayerId: string;
+    reportedPlayerUsername: string;
+    offense: PlayerReportType | string;
+    description: string;
+    lobbyId: string;
+    gameId?: string;
+    gameFormat: string;
+    matchType: string;
+    gameStepsSinceLastUndo?: number;
+    reportedPlayerPriorReportCount: number;
+
+    /** False reports the reporter filed in the 30 days before this one */
+    reporterRecentFalseReportCount: number;
+    closedAt?: string;
+    closedById?: string;
+    closedByUsername?: string;
+    outcome?: PlayerReportOutcome;
+    closingNote?: string;
+    reopenedAt?: string;
+    reopenedByUsername?: string;
+    logsDeletedAt?: string;
+}
+
+export interface IPlayerReportLogLine {
+    at: string;
+    playerIds: string[];
+    text: string;
+}
+
+export interface IPlayerReportLog {
+    reportId: string;
+    kind: 'Chat' | 'Game';
+    lines: IPlayerReportLogLine[];
+    truncated: boolean;
+}
+
+export interface IPlayerReportIndexEntry {
+    reportId: string;
+    playerId: string;
+    role: PlayerReportRole;
+    createdAt: string;
+    offense: string;
+    status: PlayerReportStatus;
+    outcome?: PlayerReportOutcome;
+}
+
+export interface IPlayerReportPlayerContext {
+    playerId: string;
+    username: string;
+    createdAt?: string;
+    isMuted: boolean;
+    activeRename: IActiveModActionCacheEntry | null;
+    activeReportingDisabledId: string | null;
+    activeUsernameChangesBlockedId: string | null;
+    modActions: IModActionResponse[];
+
+    /** Newest first */
+    usernameChanges: IUsernameChangeResponse[];
+    reportsAgainst: IPlayerReportIndexEntry[];
+    reportsFiled: IPlayerReportIndexEntry[];
+}
+
+export interface IPlayerReportDetailResponse {
+    success: boolean;
+    report: IPlayerReport;
+    chatLog: IPlayerReportLog | null;
+    gameLog: IPlayerReportLog | null;
+    reporter: IPlayerReportPlayerContext;
+    reportedPlayer: IPlayerReportPlayerContext;
+    ticketActions: IModActionResponse[];
+}
+
+/** Order of the report list by received date; mirrors the server's PlayerReportListSort */
+export enum PlayerReportListSort {
+    NewestFirst = 'newest',
+    OldestFirst = 'oldest',
+}
+
+export interface IPlayerReportListQuery {
+
+    /** Omitted for open and closed reports together */
+    status?: PlayerReportStatus;
+
+    /** Part of the reporter's, the reported player's or the closing moderator's username */
+    search?: string;
+    offense?: string;
+    limit: number;
+
+    /** Omitted: the server lists open reports oldest first and everything else newest first */
+    sort?: PlayerReportListSort;
+
+    /** `nextCursor` of the previous page, which must have used the same sort */
+    cursor?: string;
+}
+
+export interface IPlayerReportListResponse {
+    success: boolean;
+
+    /** In the requested sort order */
+    reports: IPlayerReport[];
+
+    /** Pass as `cursor` to load the next page; null on the last page */
+    nextCursor: string | null;
+
+    /** Number of reports matching the filters, over all pages */
+    total: number;
+}
+
+/** The state a moderator puts a report into */
+export type PlayerReportStatusUpdate =
+    | { status: PlayerReportStatus.Closed; outcome: PlayerReportOutcome; closingNote?: string }
+    | { status: PlayerReportStatus.Open };
+
+export interface IPlayerReportUpdateResponse {
+    success: boolean;
+    report?: IPlayerReport;
+    message?: string;
+}
+
 export interface IFindUserResponse {
     success: boolean;
     players: IPlayerSearchResult[];
     modActions: IModActionResponse[];
     usernameChanges: IUsernameChangeResponse[];
+}
+
+/**
+ * Global server settings, owned by the backend and toggleable by moderators at runtime.
+ */
+export interface IServerSettings {
+    gamesEnabled: boolean;
+    maintenanceMessage?: string;
+    updatedBy?: string;
+    updatedAt?: string;
 }
 
 export enum DurationUnit {

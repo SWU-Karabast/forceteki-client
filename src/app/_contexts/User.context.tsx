@@ -8,10 +8,10 @@ import React, {
     useState,
 } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
-import { IUserContextType, IPreferences, IModerationAction, ModerationFieldState } from './UserTypes';
-import { v4 as uuid } from 'uuid';
+import { usePathname } from 'next/navigation';
+import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
+import { EmailNotVerifiedError, emailNotVerifiedRedirectUrl } from '@/app/_utils/SignInRefusal';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -24,7 +24,7 @@ const UserContext = createContext<IUserContextType>({
     updateUsername: () => {},
     updateWelcomeMessage: () => {},
     updateNeedsUsernameChange: () => {},
-    updateMustRequestUsernameChangeSeen: () => {},
+    updateUsernameChangesBlockedSeen: () => {},
     updateReportingDisabledSeen: () => {},
     updateUserPreferences: () => {},
     updateModerationSeenStatus: () => {},
@@ -35,22 +35,14 @@ const UserContext = createContext<IUserContextType>({
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { data: session, update, status } = useSession(); // Get session from next-auth
+    const { data: session, status } = useSession(); // Get session from next-auth
     const [user, setUser] = useState<IUserContextType['user']>(null);
     const [anonymousUserId, setAnonymousUserId] = useState<string | null>(null);
-    const router = useRouter();
     const pathname = usePathname();
     const hideLogin = process.env.NEXT_PUBLIC_HIDE_LOGIN === 'HIDE';
     const [isMod, setIsMod] = useState(false);
 
     useEffect(() => {
-        // check dev user first
-        const storedUser = localStorage.getItem('devUser');
-        if (process.env.NODE_ENV === 'development') {
-            if (storedUser === 'Order66' || storedUser === 'ThisIsTheWay') {
-                handleDevSetUser(storedUser);
-            }
-        }
         const syncUserWithServer = async () => {
             // If user is already logged in with the current session, do nothing
             if (session?.user && user?.providerId === session.user.id) {
@@ -58,6 +50,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             }
             // If user is logged in with session but needs to sync with server
             let needsLogout = false;
+            let logoutCallbackUrl = '/';
             if (session?.user) {
                 try {
                     const serverUser = await getUserFromServer();
@@ -72,13 +65,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         preferences: serverUser.preferences,
                         activeCosmetics: serverUser.activeCosmetics,
                         needsUsernameChange: serverUser.needsUsernameChange,
-                        mustRequestUsernameChange: serverUser.mustRequestUsernameChange,
+                        usernameChangesBlocked: serverUser.usernameChangesBlocked,
                         reportingDisabled: serverUser.reportingDisabled,
                         moderation: serverUser.moderation,
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
                         timerPopupSeenDate: serverUser.timerPopupSeenDate,
                     });
-                    await update({ userId: serverUser.id });
                     // Fetch mod status
                     const modStatus = await import('@/app/_services/ServerApiService').then(m => m.ServerApiService.userIsModAsync());
                     setIsMod(await modStatus);
@@ -87,22 +79,26 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                     console.error('Error syncing user with server:', error);
                     // we need to logout the user when an error with getting the user happens
                     needsLogout = true;
+                    // the home page explains this refusal once the user is signed out
+                    if (error instanceof EmailNotVerifiedError) {
+                        logoutCallbackUrl = emailNotVerifiedRedirectUrl(session.user.provider);
+                    }
                 }
             } else {
                 setIsMod(false);
             }
             if(needsLogout){
-                logout();
+                signOutTo(logoutCallbackUrl);
             }
         };
 
         // Handle setting anonymous user if needed
-        const setupAnonymousUserIfNeeded = (storedUser: string | null) => {
+        const setupAnonymousUserIfNeeded = () => {
             // Only set anonymous user if no session exists
-            if (!session?.user && !storedUser) {
+            if (!session?.user) {
                 let anonymousId = localStorage.getItem('anonymousUserId');
                 if (!anonymousId) {
-                    anonymousId = uuid();
+                    anonymousId = crypto.randomUUID();
                     localStorage.setItem('anonymousUserId', anonymousId);
                 }
                 setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId));
@@ -110,14 +106,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         };
 
         // to prevent race conditions
-        const initializeUser = async (storedUser: string | null) => {
+        const initializeUser = async () => {
             await syncUserWithServer();
-            setupAnonymousUserIfNeeded(storedUser);
+            setupAnonymousUserIfNeeded();
         };
-        if(hideLogin && (session?.user || storedUser)){
-            logout();
+        if(hideLogin && session?.user){
+            signOutTo('/');
         }
-        initializeUser(storedUser);
+        initializeUser();
     }, [session, pathname]);
 
     const login = (provider: 'google' | 'discord') => {
@@ -126,32 +122,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
         clearAnonUser();
     };
-
-    const handleDevSetUser = (user: 'Order66' | 'ThisIsTheWay') => {
-        if (user === 'Order66') {
-            setUser({
-                needsUsernameChange: false,
-                mustRequestUsernameChange: null,
-                reportingDisabled: null,
-                showWelcomeMessage: false,
-                id: 'exe66',
-                username: 'Order66',
-                authenticated: true,
-                preferences: { },
-            });
-        } else if (user === 'ThisIsTheWay') {
-            setUser({
-                needsUsernameChange: false,
-                mustRequestUsernameChange: null,
-                reportingDisabled: null,
-                showWelcomeMessage: false,
-                id: 'th3w4y',
-                username: 'ThisIsTheWay',
-                authenticated: true,
-                preferences: { },
-            });
-        }
-    }
 
     const updateUsername = (newUsername: string) => {
         setUser((prevUser) => {
@@ -203,12 +173,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
-    const updateMustRequestUsernameChangeSeen = () => {
+    const updateUsernameChangesBlockedSeen = () => {
         setUser((prevUser) => {
             if(!prevUser) return null;
+            if(!prevUser.usernameChangesBlocked) return prevUser;
             return {
                 ...prevUser,
-                mustRequestUsernameChange: ModerationFieldState.EnabledAndSeen
+                usernameChangesBlocked: { ...prevUser.usernameChangesBlocked, hasSeen: true }
             }
         })
     }
@@ -216,9 +187,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const updateReportingDisabledSeen = () => {
         setUser((prevUser) => {
             if(!prevUser) return null;
+            if(!prevUser.reportingDisabled) return prevUser;
             return {
                 ...prevUser,
-                reportingDisabled: ModerationFieldState.EnabledAndSeen
+                reportingDisabled: { ...prevUser.reportingDisabled, hasSeen: true }
             }
         })
     }
@@ -244,19 +216,24 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         });
     };
 
-    const devLogin = (user: 'Order66' | 'ThisIsTheWay') => {
-        handleDevSetUser(user);
+    const devLogin = async (user: 'Order66' | 'ThisIsTheWay') => {
         clearAnonUser();
-        localStorage.setItem('devUser', user);
-        router.push('/');
+        await signIn('dev-user', {
+            user,
+            callbackUrl: '/',
+        });
     };
 
 
-    const logout = () => {
-        signOut({ callbackUrl: '/' });
-        localStorage.removeItem('devUser');
+    const signOutTo = (callbackUrl: string) => {
+        signOut({ callbackUrl });
         setUser(null);
     };
+
+    // Takes no arguments: the log out buttons pass this straight to onClick, which calls it with the click event.
+    // A parameter here would receive that event as the callback URL, and NextAuth rejects the sign-out without
+    // clearing the session cookie.
+    const logout = () => signOutTo('/');
 
     const clearAnonUser = () => {
         localStorage.removeItem('anonymousUserId');
@@ -277,7 +254,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             updateUndoPopupSeenDate,
             updateTimerPopupSeenDate,
             updateNeedsUsernameChange,
-            updateMustRequestUsernameChangeSeen,
+            updateUsernameChangesBlockedSeen,
             updateReportingDisabledSeen,
             updateUserPreferences,
             updateModerationSeenStatus

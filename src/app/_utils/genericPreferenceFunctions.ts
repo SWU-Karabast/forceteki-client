@@ -1,4 +1,4 @@
-import { IPreferences, IUser, TimerVisibility } from '@/app/_contexts/UserTypes';
+import { DateFormat, IPreferences, IUser, TimerVisibility } from '@/app/_contexts/UserTypes';
 import {
     loadPreferencesFromLocalStorage,
     savePreferencesToLocalStorage,
@@ -15,7 +15,7 @@ export const savePreferencesGeneric = async (
     updateUserPreferences: (preferences: IPreferences) => void
 ): Promise<{ success: boolean, updatedPreferences: IPreferences }> => {
     if (user) {
-        const success = await savePreferencesToServer(user, partialPreferences);
+        const success = await savePreferencesToServer(partialPreferences);
 
         if (success) {
             // Deep merge for nested objects like sound, cosmetics, keyboardShortcuts, gameOptions
@@ -141,6 +141,7 @@ const getDefaultPreferences = (): IPreferences => ({
         muteChat: false,
         cardLanguage: CardImageLocale.English,
         timerVisibility: TimerVisibility.Standard,
+        dateFormat: DateFormat.MMDDYYYY,
         autoResolve: {
             singleTarget: false,
         },

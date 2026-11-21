@@ -5,6 +5,7 @@ import KarabastBanner from './_components/_sharedcomponents/Banner/Banner';
 import PublicGames from './_components/HomePage/PublicGames/PublicGames';
 import HomePagePlayMode from './_components/HomePage/HomePagePlayMode';
 import NewsColumn from './_components/HomePage/News/News';
+import CardLanguageSuggestionBanner from './_components/CardLanguageSuggestionBanner/CardLanguageSuggestionBanner';
 
 const Home: React.FC = () => {
     const styles = {
@@ -40,6 +41,8 @@ const Home: React.FC = () => {
 
     return (
         <Grid container sx={styles.gridContainer}>
+
+            <CardLanguageSuggestionBanner />
 
             <KarabastBanner />
 

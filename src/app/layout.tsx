@@ -2,20 +2,8 @@
 import type { Metadata, Viewport } from 'next';
 import React from 'react';
 import ClientLayout from './ClientLayout';
-import { Barlow, Barlow_Semi_Condensed } from 'next/font/google';
+import { barlow, barlowSemiCondensed } from './_theme/fonts';
 import './_utils/s3Utils';
-
-const barlow = Barlow({
-    subsets: ['latin'],
-    weight: ['400', '600', '800', '900'],
-    variable: '--font-barlow',
-});
-
-const barlowSemiCondensed = Barlow_Semi_Condensed({
-    subsets: ['latin'],
-    weight: ['800'],
-    variable: '--font-barlow-semi-condensed',
-});
 
 export const metadata: Metadata = {
     title: 'Karabast',

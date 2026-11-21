@@ -5,6 +5,7 @@ import { keyframes } from '@mui/system';
 import { useState } from 'react';
 import useTimeout from '@/app/_utils/useTimeout';
 import { deepmerge } from '@mui/utils';
+import { extendSx } from '@/app/_utils/utils';
 
 export type PulseButtonVariant = 'default' | 'success' | 'info' | 'warning' | 'danger';
 
@@ -176,11 +177,11 @@ export default function PulseButton(props: ButtonProps) {
     return (
         <MuiButton
             variant="contained"
-            sx={[styles.button, variantStyles, ...(Array.isArray(sx) ? sx : [sx])]}
+            sx={extendSx([styles.button, variantStyles], sx)}
             disabled={disabled}
             {...muiSharedProps}
         >
-            <Box sx={[styles.buttonText, ...(Array.isArray(textSx) ? textSx : [textSx])]}>
+            <Box sx={extendSx(styles.buttonText, textSx)}>
                 {text}
             </Box>
         </MuiButton>

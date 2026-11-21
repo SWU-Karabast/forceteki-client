@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, useMediaQuery } from '@mui/material';
 import { debugBorder } from '@/app/_utils/debug';
 import UnitsBoard from '../_subcomponents/UnitsBoard';
 import { IBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
@@ -7,26 +7,38 @@ import { useGame } from '@/app/_contexts/Game.context';
 import LeaderBaseCard from '@/app/_components/_sharedcomponents/Cards/LeaderBaseCard';
 import { ICardData, LeaderBaseCardStyle } from '../../_sharedcomponents/Cards/CardTypes';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import OngoingEffectsPanel from '@/app/_components/Gameboard/_subcomponents/PlayerTray/OngoingEffectsPanel';
 import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
+import { useTheme } from '@mui/material/styles';
+import BoardLeaders from '@/app/_components/Gameboard/_subcomponents/BoardLeaders';
+import ClaimCounterIndicators from '@/app/_components/Gameboard/_subcomponents/ClaimCounterIndicators';
+import { SwuGameFormat } from '@/app/_constants/constants';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
 }) => {
     const { gameState, connectedPlayer, isSpectator } = useGame();
     const { isPortrait } = useScreenOrientation();
+    const theme = useTheme();
     const playerIds = Object.keys(gameState.players);
 
     const opponentId = playerIds.find((id) => id !== connectedPlayer) || '';
     const titleOpponent = gameState.players[opponentId].user.username;
     const titleCurrentPlayer = gameState.players[connectedPlayer].user.username;
 
-    const playerLeader = gameState?.players[connectedPlayer].leader;
+    const playerLeaders: ICardData[] = gameState?.players[connectedPlayer].leaders ?? [];
     let playerBase = gameState?.players[connectedPlayer].base;
-    const opponentLeader = gameState?.players[opponentId].leader;
+    const opponentLeaders: ICardData[] = gameState?.players[opponentId].leaders ?? [];
     let opponentBase = gameState?.players[opponentId].base;
+    // Two full-size leaders double the middle column's width, which comes out of the arenas, so below desktopHD (and in
+    // portrait, where the column is a fixed 20%) the two leaders share the space of one card instead (see BoardLeaders).
+    const isNarrowLandscape = useMediaQuery(theme.breakpoints.down('desktopHD'));
+    const isCompactLeaders = isPortrait || isNarrowLandscape;
+    const isWideMiddleColumn = !isCompactLeaders && (playerLeaders.length > 1 || opponentLeaders.length > 1);
 
     const hasInitiative = gameState.players[connectedPlayer].hasInitiative;
     const initiativeClaimed = gameState.initiativeClaimed;
+    const isFauxSuns = gameState.format === SwuGameFormat.FauxSuns;
 
     const playerCapturedCards = gameState?.players[connectedPlayer].cardPiles['capturedZone'];
     const opponentCapturedCards = gameState?.players[opponentId].cardPiles['capturedZone'];
@@ -101,9 +113,16 @@ const Board: React.FC<IBoardProps> = ({
             justifyContent: 'center',
             alignItems: 'center',
             position: 'relative',
-            width: isPortrait ? '20%' :
+            // two leaders side by side: twice the usual width, but capped by the viewport height. A pair with the name below
+            // it is taller than one leader, so without the cap the leaders and bases run into the prompt between the bases
+            // on short screens (from about 950px tall).
+            width: isPortrait ? '20%' : isWideMiddleColumn ? 'min(calc(2 * clamp(8rem, 20vh, 14rem)), calc(30vh + 2rem))' :
                 'clamp(8rem, 20vh, 14rem)',
-            margin: isPortrait ? '0 .1rem' : '0 1rem',
+            margin: 0,
+
+            [theme.breakpoints.up('lg')]: {
+                margin: isPortrait ? '0 .1rem' : '0 1rem',
+            },
         },
         middleColumnContent: {
             display: 'flex',
@@ -111,7 +130,11 @@ const Board: React.FC<IBoardProps> = ({
             alignItems: 'center',
             height: '100%',
             flexDirection: 'column',
-            padding: '2rem 0',
+            padding: '1rem 0',
+
+            [theme.breakpoints.up('lg')]: {
+                padding: '2rem 0' // Additional padding to bump leader cards over decorative lines
+            }
         },
         leaderBaseContainer: {
             ...debugBorder('yellow'),
@@ -122,8 +145,8 @@ const Board: React.FC<IBoardProps> = ({
             gap: 'clamp(1px, 1.0vh, 10px)',
             padding: isPortrait ? '0 .1rem' : '0 1rem',
         },
-        leaderBaseWrapper: {
-            width: '100%',
+        baseWrapper: {
+            width: isWideMiddleColumn ? '50%' : '100%',
             display: 'flex',
             justifyContent: 'center',
         },
@@ -192,26 +215,36 @@ const Board: React.FC<IBoardProps> = ({
             position: 'relative',
         },
         middleColumnBorderRight: {
-            opacity: 0.3,
-            background: `
-            url('border-lrt.svg') no-repeat right top,
-            url('border-lrb.svg') no-repeat right bottom`,
-            mixBlendMode: 'soft-light',
-            right: '0',
-            width: '20%',
-            height: '100%',
-            position: 'absolute',
+            display: 'none',
+
+            [theme.breakpoints.up('lg')]: {
+                display: 'block',
+                opacity: 0.3,
+                background: `
+                url('border-lrt.svg') no-repeat right top,
+                url('border-lrb.svg') no-repeat right bottom`,
+                mixBlendMode: 'soft-light',
+                right: '0',
+                width: '20%',
+                height: '100%',
+                position: 'absolute',
+            }
         },
         middleColumnBorderLeft: {
-            opacity: 0.3,
-            background: `
-            url('border-rlt.svg') no-repeat left top,
-            url('border-rlb.svg') no-repeat left bottom`,
-            mixBlendMode: 'soft-light',
-            left: '0',
-            width: '80%',
-            height: '100%',
-            position: 'absolute',
+            display: 'none',
+
+            [theme.breakpoints.up('lg')]: {
+                display: 'block',
+                opacity: 0.3,
+                background: `
+                url('border-rlt.svg') no-repeat left top,
+                url('border-rlb.svg') no-repeat left bottom`,
+                mixBlendMode: 'soft-light',
+                left: '0',
+                width: '80%',
+                height: '100%',
+                position: 'absolute',
+            },
         },
         initiativeWrapper: {
             position: 'absolute',
@@ -280,6 +313,8 @@ const Board: React.FC<IBoardProps> = ({
     return (
         // Boxes containing border styles are doubled to increase the intensity of the 'soft light' blend mode.
         <Box sx={styles.boardWrapper} data-testid="gameboard-board-wrapper">
+            <OngoingEffectsPanel trayPlayer={opponentId} />
+            <OngoingEffectsPanel trayPlayer={connectedPlayer} />
             <Box sx={styles.columnStyle}>
                 <Box sx={styles.borderLayer}>
                     <Box sx={styles.leftColumnBorderLeft} />
@@ -295,19 +330,17 @@ const Board: React.FC<IBoardProps> = ({
                 <Box sx={styles.middleColumnBorderRight} />
                 <Box sx={styles.middleColumnContent}>
                     <Box sx={styles.leaderBaseContainer}>
-                        <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard
-                                card={opponentLeader}
-                                cardStyle={LeaderBaseCardStyle.Leader}
-                                title={isSpectator ? 'Player2' : titleOpponent}
-                                isLeader={true}
-                            />
-                        </Box>
-                        <Box sx={styles.leaderBaseWrapper}>
+                        <BoardLeaders
+                            leaders={opponentLeaders}
+                            title={isSpectator ? 'Player2' : titleOpponent}
+                            isCompact={isCompactLeaders}
+                        />
+                        <Box sx={styles.baseWrapper}>
                             <LeaderBaseCard
                                 cardStyle={LeaderBaseCardStyle.Base}
                                 card={opponentBase}
                                 capturedCards={opponentBase.capturedCards || []}
+                                upgrades={opponentBase.upgrades || []}
                             />
                         </Box>
                     </Box>
@@ -318,21 +351,19 @@ const Board: React.FC<IBoardProps> = ({
                         </Box>
                     </Box>
                     <Box sx={styles.leaderBaseContainer}>
-                        <Box sx={styles.leaderBaseWrapper}>
+                        <Box sx={styles.baseWrapper}>
                             <LeaderBaseCard
                                 cardStyle={LeaderBaseCardStyle.Base}
                                 card={playerBase}
                                 capturedCards={playerBase.capturedCards || []}
+                                upgrades={playerBase.upgrades || []}
                             />
                         </Box>
-                        <Box sx={styles.leaderBaseWrapper}>
-                            <LeaderBaseCard
-                                card={playerLeader}
-                                cardStyle={LeaderBaseCardStyle.Leader}
-                                title={isSpectator ? 'Player1' : titleCurrentPlayer}
-                                isLeader={true}
-                            />
-                        </Box>
+                        <BoardLeaders
+                            leaders={playerLeaders}
+                            title={isSpectator ? 'Player1' : titleCurrentPlayer}
+                            isCompact={isCompactLeaders}
+                        />
                     </Box>
                 </Box>
             </Box>
@@ -341,9 +372,13 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={styles.rightColumnBorderLeft} />
                     <Box sx={styles.rightColumnBorderCenter} />
                     <Box sx={styles.rightColumnBorderRight} />
-                    <Box sx={styles.initiativeWrapper}>
-                        <Typography variant={'h4'}>Initiative</Typography>
-                    </Box>
+                    {isFauxSuns ? (
+                        <ClaimCounterIndicators playerId={connectedPlayer} opponentId={opponentId} />
+                    ) : (
+                        <Box sx={styles.initiativeWrapper}>
+                            <Typography variant={'h4'}>Initiative</Typography>
+                        </Box>
+                    )}
                 </Box>
                 <Box sx={styles.unitsLayer}>
                     <UnitsBoard

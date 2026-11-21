@@ -5,11 +5,13 @@ import {
 } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 import { determineDeckSource, IDeckData } from '@/app/_utils/fetchDeckData';
 import { DeckJSON } from '@/app/_utils/checkJson';
-import { v4 as uuid } from 'uuid';
 import { IUser, IPreferences, IGetUser } from '@/app/_contexts/UserTypes';
 import { Session } from 'next-auth';
 import { IAnnouncement } from '@/app/_components/HomePage/HomePageTypes';
 import { CardImageLocale } from '@/app/_utils/s3Utils';
+import { formatLongDate, getDateFormat } from '@/app/_utils/dateFormatUtils';
+import { ServerApiService } from '@/app/_services/ServerApiService';
+import { EmailNotVerifiedError } from '@/app/_utils/SignInRefusal';
 
 /* Secondary functions */
 /**
@@ -17,7 +19,7 @@ import { CardImageLocale } from '@/app/_utils/s3Utils';
  * - For authenticated users: loads from server
  * - For anonymous users: loads from local storage
  *
- * @param SessionUser the session user with userId
+ * @param SessionUser the signed-in session user, if there is one
  * @param user The current user (or null if anonymous)
  * @param options Configuration options for the fetch operation
  * @returns Promise that resolves to an array of decks in the requested format
@@ -35,7 +37,7 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 ) => {
     try {
         // Get decks based on authentication status
-        const decks = SessionUser?.userId && user ? await loadDecks(user) : loadSavedDecks();
+        const decks = SessionUser?.id && user ? await loadDecks(user) : loadSavedDecks();
 
         // Sort decks with favorites first
         const sortedDecks = decks.sort((a, b) => {
@@ -69,13 +71,15 @@ export const retrieveDecksForUser = async <T extends 'stored' | 'display' = 'sto
 };
 
 /**
- * Gets user information for a payload, using anonymous user if none provided
+ * The identity hint to send with a request. A signed-in user is identified by their session cookie, and the
+ * server works out the rest from its own records, so only the id and username are included. These are what
+ * an anonymous user is identified by.
  * @param {Object} user - Optional user object
  * @return {Object} The user object to use in payloads
  */
 export const getUserPayload = (user: IUser | null): object => {
     if (user) {
-        return user;
+        return { id: user.id, username: user.username };
     }
 
     const anonymousId = localStorage.getItem('anonymousUserId');
@@ -95,17 +99,29 @@ export const getUserFromServer = async(): Promise<IGetUser> =>{
             decks: decks,
             // preferences: preferences
         }
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-user`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-                credentials: 'include'
-            }
-        );
-        const result = await response.json();
+        const requestUser = async () => {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-user`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                }
+            );
+            return { response, result: await response.json() };
+        };
+
+        let { response, result } = await requestUser();
+        // a first sign-in has no account yet: the server makes it on request, then the user is read again
+        if (response.status === 401 && result.code === 'ACCOUNT_NOT_FOUND') {
+            await ServerApiService.createUserAsync();
+            ({ response, result } = await requestUser());
+        }
+        if (response.status === 401 && result.code === 'EMAIL_NOT_VERIFIED') {
+            throw new EmailNotVerifiedError();
+        }
         if (!response.ok) {
             const errors = result.errors || {};
             console.log(errors);
@@ -127,7 +143,7 @@ export const getUsernameChangeInfoFromServer = async(user: IUser): Promise<{
 }> => {
     try {
         const payload = {
-            user
+            user: getUserPayload(user)
         };
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-change-username-info`,
             {
@@ -149,12 +165,7 @@ export const getUsernameChangeInfoFromServer = async(user: IUser): Promise<{
         // Format a detailed message with the date if available
         let formattedMessage = data.result.message || '';
         if (data.result.nextChangeAllowedAt) {
-            const date = new Date(data.result.nextChangeAllowedAt);
-            const formattedDate = date.toLocaleDateString(undefined, {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+            const formattedDate = formatLongDate(data.result.nextChangeAllowedAt, getDateFormat(user.preferences));
             formattedMessage += ` (on ${formattedDate})`;
         }
 
@@ -173,7 +184,7 @@ export const setUsernameOnServer = async(user: IUser | null, username: string): 
     try {
         const payload = {
             newUsername: username,
-            user
+            user: getUserPayload(user)
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/change-username`,
             {
@@ -199,7 +210,7 @@ export const setUsernameOnServer = async(user: IUser | null, username: string): 
 export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
-            user
+            user: getUserPayload(user)
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/toggle-welcome-message`,
             {
@@ -225,7 +236,7 @@ export const setWelcomeUpdateMessage = async(user: IUser | null): Promise<boolea
 export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
-            user
+            user: getUserPayload(user)
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-moderation-seen`,
             {
@@ -248,12 +259,12 @@ export const setModerationSeenAsync = async(user: IUser | null): Promise<boolean
     }
 }
 
-export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): Promise<boolean> => {
+export const setUsernameChangesBlockedSeenAsync = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
-            user
+            user: getUserPayload(user)
         }
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-must-request-username-change-seen`,
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-username-changes-blocked-seen`,
             {
                 method: 'POST',
                 headers: {
@@ -267,7 +278,7 @@ export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): 
         if (!response.ok) {
             throw new Error(result.message);
         }
-        return result
+        return !!result.success
     }catch (error) {
         console.error(error);
         throw error;
@@ -277,7 +288,7 @@ export const setMustRequestUsernameChangeSeenAsync = async(user: IUser | null): 
 export const setReportingDisabledSeenAsync = async(user: IUser | null): Promise<boolean> => {
     try {
         const payload = {
-            user
+            user: getUserPayload(user)
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/set-reporting-disabled-seen`,
             {
@@ -293,7 +304,7 @@ export const setReportingDisabledSeenAsync = async(user: IUser | null): Promise<
         if (!response.ok) {
             throw new Error(result.message);
         }
-        return result
+        return !!result.success
     }catch (error) {
         console.error(error);
         throw error;
@@ -309,7 +320,7 @@ export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, us
             },
             body: JSON.stringify({
                 isFavorite,
-                user
+                user: getUserPayload(user)
             }),
             credentials: 'include' // Necessary to include auth cookies
         });
@@ -335,9 +346,9 @@ export const toggleFavouriteDeck = async(deckId: string, isFavorite: boolean, us
 export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink: string, user: IUser | null,) => {
     try {
         const payload = {
-            user,
+            user: getUserPayload(user),
             deck: {
-                id: deckData.deckID || uuid(), // Use existing ID or generate new one
+                id: deckData.deckID || crypto.randomUUID(), // Use existing ID or generate new one
                 userId: user?.id,
                 deck: {
                     leader: { id: deckData.leader.id },
@@ -380,7 +391,7 @@ export const loadDecks = async (user: IUser): Promise<StoredDeck[]> => {
     try {
         const decks = loadSavedDecks(false);
         const payload = {
-            user,
+            user: getUserPayload(user),
             decks: decks
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-decks`,
@@ -414,7 +425,7 @@ export const loadDecks = async (user: IUser): Promise<StoredDeck[]> => {
 export const deleteDecks = async (deckIds: string[], user: IUser): Promise<string[]> => {
     try {
         const payload = {
-            user,
+            user: getUserPayload(user),
             deckIds: deckIds
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/delete-decks`,
@@ -571,7 +582,7 @@ export const getDeckFromServer = async (deckId: string, user:IUser): Promise<IDe
     try {
         // Make sure we have an anonymousUserId if needed
         const payload = {
-            user
+            user: getUserPayload(user)
         }
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/get-deck/${deckId}`, {
             method: 'POST',
@@ -694,7 +705,6 @@ const removeUndefinedValues = <T>(obj: T): T => {
 };
 
 export const savePreferencesToServer = async (
-    user: IUser,
     preferences: IPreferences
 ): Promise<boolean> => {
     try {
@@ -705,7 +715,7 @@ export const savePreferencesToServer = async (
             preferences: cleanedPreferences
         };
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/${user.id}/preferences`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/user/preferences`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -767,6 +777,7 @@ export const loadPreferencesFromLocalStorage = (): IPreferences => {
                     muteChat: preferences.gameOptions?.muteChat ?? false,
                     cardLanguage: preferences.gameOptions?.cardLanguage ?? CardImageLocale.English,
                     timerVisibility: preferences.gameOptions?.timerVisibility,
+                    dateFormat: preferences.gameOptions?.dateFormat,
                     autoResolve: {
                         singleTarget: preferences.gameOptions?.autoResolve?.singleTarget ?? false,
                     },
@@ -827,7 +838,7 @@ export const unlinkSwuStatsAsync = async(
 ): Promise<boolean> => {
     try {
         const payload = {
-            user
+            user: getUserPayload(user)
         };
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/unlink-swustats`, {
@@ -921,7 +932,7 @@ export const unlinkSwubaseAsync = async(
     // TODO: check - verify endpoint
     try {
         const payload = {
-            user
+            user: getUserPayload(user)
         };
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_ROOT_URL}/api/unlink-swubase`, {
@@ -1173,7 +1184,7 @@ export const updateDeckName = async (deckId: string, newName: string, user: IUse
             },
             body: JSON.stringify({
                 newName,
-                user
+                user: getUserPayload(user)
             }),
             credentials: 'include'
         });

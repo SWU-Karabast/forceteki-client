@@ -23,6 +23,21 @@ async function checkModAccess(): Promise<boolean> {
     }
 }
 
+async function checkAdminAccess(): Promise<boolean> {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+        return false;
+    }
+
+    try {
+        return await ServerApiService.userIsAdminAsync(`next-auth.session-token=${session.jwtToken}`);
+    } catch (error) {
+        console.error('Error checking admin access:', error);
+        return false;
+    }
+}
+
 export default async function ModPage() {
     const session = await getServerSession(authOptions);
 
@@ -84,6 +99,10 @@ export default async function ModPage() {
         );
     }
 
-    // User is authenticated and has mod access, render the client component
-    return <ModPageClient />;
+    // Mod access opens the page; admin access decides which of its tools appear. The server
+    // enforces the same split, so this only keeps moderators from being shown controls that
+    // would refuse them.
+    const isAdmin = await checkAdminAccess();
+
+    return <ModPageClient isAdmin={isAdmin} />;
 }

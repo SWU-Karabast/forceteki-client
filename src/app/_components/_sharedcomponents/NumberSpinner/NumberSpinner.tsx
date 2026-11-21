@@ -116,7 +116,8 @@ export default function NumberSpinner({
                             onBlur={props.onBlur}
                             onChange={(event) => {
                                 onInputValueChange?.(event.target.value);
-                                props.onChange?.(event);
+                                // OutlinedInput is never multiline here, so the target is always an <input>
+                                props.onChange?.(event as React.ChangeEvent<HTMLInputElement>);
                             }}
                             onKeyUp={props.onKeyUp}
                             onKeyDown={props.onKeyDown}

@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useUser } from '@/app/_contexts/User.context';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import { IUser } from '@/app/_contexts/UserTypes';
 
@@ -29,6 +30,7 @@ function LinkServiceButton({
 }: Props) {
     const theme = useTheme();
     const { user } = useUser();
+    const { showErrorScreen } = useErrorScreen();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
     const handleClick = async () => {
@@ -45,7 +47,11 @@ function LinkServiceButton({
             onLinkChange(false);
         } catch (error) {
             if (error instanceof Error) {
-                alert(error.message);
+                showErrorScreen({
+                    title: `Couldn't unlink ${serviceName}`,
+                    message: `We couldn't unlink your ${serviceName} account. Your account is unchanged - try again in a moment.`,
+                    detail: error.message,
+                });
             }
             console.error(`Failed to unlink ${serviceName}:`, error);
         } finally {

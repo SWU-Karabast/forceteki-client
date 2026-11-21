@@ -23,11 +23,6 @@ export interface IChatDisabledInfo {
     borderColor: string;
 }
 
-export enum ModerationFieldState {
-    Enabled = 'enabled',
-    EnabledAndSeen = 'enabledAndSeen',
-}
-
 export enum ModerationType {
     Mute = 'Mute',
     Ban = 'Ban',
@@ -39,6 +34,14 @@ export interface IModerationAction {
     moderationType?: ModerationType
 }
 
+export interface IReportingDisabledState {
+    hasSeen: boolean;
+}
+
+export interface IUsernameChangesBlockedState {
+    hasSeen: boolean;
+}
+
 export interface IGetUser {
     id: string;
     username: string;
@@ -46,8 +49,8 @@ export interface IGetUser {
     preferences: IPreferences,
     activeCosmetics?: IActiveCosmetics,
     needsUsernameChange: boolean;
-    mustRequestUsernameChange?: ModerationFieldState | null;
-    reportingDisabled?: ModerationFieldState | null;
+    usernameChangesBlocked?: IUsernameChangesBlockedState | null;
+    reportingDisabled?: IReportingDisabledState | null;
     moderation?: IModerationAction | null,
     undoPopupSeenDate?: Date | null
     timerPopupSeenDate?: Date | null
@@ -81,6 +84,7 @@ export interface IGameOptions {
     muteChat?: boolean;
     cardLanguage?: CardImageLocale;
     timerVisibility?: TimerVisibility;
+    dateFormat?: DateFormat;
 
     // Prompt-reduction settings grouped so future automations can live alongside singleTarget.
     autoResolve?: {
@@ -92,6 +96,11 @@ export enum TimerVisibility {
     Standard = 'standard',
     HideTurnTimer = 'hideTurnTimer',
     HideAll = 'hideAll',
+}
+
+export enum DateFormat {
+    MMDDYYYY = 'MMDDYYYY',
+    DDMMYYYY = 'DDMMYYYY',
 }
 
 export enum PlayerTimeRemainingStatus {
@@ -118,7 +127,7 @@ export interface IUserContextType {
     updateUsername: (username: string) => void;
     updateWelcomeMessage: () => void;
     updateNeedsUsernameChange: () => void;
-    updateMustRequestUsernameChangeSeen: () => void;
+    updateUsernameChangesBlockedSeen: () => void;
     updateReportingDisabledSeen: () => void;
     updateUserPreferences: (preferences: IPreferences) => void;
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
@@ -147,7 +156,6 @@ declare module 'next-auth' {
             email?: string;
             image?: string;
             provider: string;
-            userId?: string;
         };
     }
 }
@@ -160,7 +168,9 @@ declare module 'next-auth/jwt'{
         picture?: string;
         provider?: string;
         providerId?: string;
-        userId?: string;
+
+        /** Whether the provider had verified `email` at sign-in; the game node refuses a session without it. */
+        emailVerified?: boolean;
         exp: number;
     }
 }

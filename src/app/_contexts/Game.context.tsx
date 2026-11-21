@@ -13,8 +13,9 @@ import io, { Socket } from 'socket.io-client';
 import { useUser } from './User.context';
 import { useSearchParams } from 'next/navigation';
 import { usePopup } from './Popup.context';
-import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
+import { PopupButton, PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import { ZoneName } from '../_constants/constants';
+import type { IQueueMatchmakingStatus } from '../_constants/constants';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/useDistributionPrompt';
@@ -23,8 +24,10 @@ import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferen
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
+import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
+import { IOngoingEffectSummary } from '@/app/_components/_sharedcomponents/Cards/CardTypes';
 
-interface IGameContextType {
+export interface IGameContextType {
     gameState: any;
     gameMessages: IChatEntry[];
     lobbyState: any;
@@ -42,10 +45,12 @@ interface IGameContextType {
     distributionPromptData: IDistributionPromptData | null;
     isSpectator: boolean;
     lastQueueHeartbeat: number;
+    queueMatchmakingStatus: IQueueMatchmakingStatus | null;
     isAnonymousPlayer: (player: string) => boolean;
     hasChatDisabled: (player: string) => boolean;
     createNewSocket: () => Socket | undefined;
     gameIsEnded: () => boolean;
+    ongoingEffects: IOngoingEffectSummary[];
     hoveredChatCard: {
         id: string | null;
         hover: (id: string) => void;
@@ -64,14 +69,17 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const [statsSubmitNotification, setStatsSubmitNotification] = useState<IStatsNotification | null>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
     const [lastQueueHeartbeat, setLastQueueHeartbeat] = useState(Date.now());
+    const [queueMatchmakingStatus, setQueueMatchmakingStatus] = useState<IQueueMatchmakingStatus | null>(null);
     const [connectedPlayer, setConnectedPlayer] = useState<string>('');
-    const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
+    const { showErrorScreen } = useErrorScreen();
     const { openPopup, clearPopups, prunePromptStatePopups } = usePopup();
     const { user, anonymousUserId } = useUser();
     const [isSpectator, setIsSpectator] = useState<boolean>(false);
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt, initDistributionPrompt } = useDistributionPrompt();
+    // owned here because each prompt state starts or clears it as it arrives; GameStateProvider reads and fills it in
+    const distributionPrompt = useDistributionPrompt();
+    const { clearDistributionPrompt, initDistributionPrompt } = distributionPrompt;
     const { data: session, status } = useSession();
     const { messages: gameMessages, processMessageDeltas, processMessageRetransmit, resetMessages } = useGameMessages();
 
@@ -87,7 +95,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const opponentId = Object.keys(gamestate.players).find(id => id !== connectedPlayerId) || '';
         const opponent = gamestate.players[opponentId];
         const zones = [];
-        if (playerState?.leader.selectable || playerState?.base.selectable) {
+        if (playerState?.leaders?.some((leader: any) => leader.selectable) || playerState?.base.selectable) {
             zones.push(`player-${ZoneName.Base}`);
         }
         for (const zoneName in playerState?.cardPiles) {
@@ -95,7 +103,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 zones.push(`player-${zoneName}`);
             }
         }
-        if (opponent?.leader.selectable || opponent?.base.selectable) {
+        if (opponent?.leaders?.some((leader: any) => leader.selectable) || opponent?.base.selectable) {
             zones.push(`opponent-${ZoneName.Base}`);
         }
         for (const zoneName in opponent?.cardPiles) {
@@ -116,7 +124,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 playSound('yourTurn');
             }
 
-            const { buttons, menuTitle,promptTitle, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
+            const { buttons, menuTitle, promptTitle, promptDescription, promptUuid, selectCardMode, promptType, dropdownListOptions, perCardButtons, displayCards, selectNumber } = promptState;
 
             prunePromptStatePopups(promptUuid);
             if (promptType === 'actionWindow') {
@@ -126,6 +134,25 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             else if (promptType === 'distributeAmongTargets') {
                 initDistributionPrompt(promptState.distributeAmongTargets);
                 return;
+            }
+            else if (promptType === 'actionSelection' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('actionTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    buttons: buttons.filter((button: PopupButton) => button.sourceCard),
+                    footerButtons: buttons.filter((button: PopupButton) => !button.sourceCard),
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (promptType === 'modalEffectSelection' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('actionTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
+                    description: promptDescription,
+                    buttons: buttons.filter((button: PopupButton) => button.sourceCard),
+                    footerButtons: buttons.filter((button: PopupButton) => !button.sourceCard),
+                    source: PopupSource.PromptState
+                });
             }
             else if (hasSelectedCards(gameState, ['groundArena','spaceArena']) && buttons.length == 2) {
                 return;
@@ -162,6 +189,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                     title: menuTitle,
                     sourceCard: batchData.sourceCard,
                     remainingCount: batchData.remainingCount,
+                    buttons,
+                    source: PopupSource.PromptState
+                });
+            }
+            else if (promptType === 'optionalTrigger' && menuTitle && promptUuid && !selectCardMode) {
+                return openPopup('optionalTrigger', {
+                    uuid: promptUuid,
+                    title: menuTitle,
                     buttons,
                     source: PopupSource.PromptState
                 });
@@ -261,15 +296,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         const connectedPlayerId = user?.id || anonymousUserId || '';
         if (!connectedPlayerId) return;
         setConnectedPlayer(connectedPlayerId);
+        setQueueMatchmakingStatus(null);
         clearPopups();
         const spectatorParam = searchParams.get('spectator');
         const isSpectatorMode = spectatorParam === 'true';
         setIsSpectator(isSpectatorMode);
         const token = session?.jwtToken;
+        // a signed-in session (the local dev users included) is identified by its token alone; only anonymous users send an id
+        const identityHint = token
+            ? null
+            : user
+                ? { id: user.id, username: user.username }
+                : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId };
         const newSocket = io(`${process.env.NEXT_PUBLIC_ROOT_URL}`, {
             path: '/ws',
             query: {
-                user: JSON.stringify(user ? user : { username: 'anonymous '+anonymousUserId?.substring(0,6), id: anonymousUserId }),
+                ...(identityHint ? { user: JSON.stringify(identityHint) } : {}),
                 lobby: JSON.stringify({ lobbyId:lobbyId ? lobbyId : null }),
                 spectator: isSpectatorMode ? 'true' : 'false'
             },
@@ -277,9 +319,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('connection_error', (error: any) => {
+            setQueueMatchmakingStatus(null);
             console.error('Error joining lobby:', error);
-            alert(error);
-            router.push('/');
+            showErrorScreen({
+                title: 'Couldn\'t join the game',
+                message: 'We couldn\'t connect you to this game. It may have already ended or no longer exists.',
+                detail: typeof error === 'string' ? error : error?.message,
+                actions: (dismiss) => [{
+                    label: 'Return to main menu',
+                    variant: 'concede',
+                    onClick: () => {
+                        dismiss();
+                        router.push('/');
+                    },
+                }],
+            });
         });
 
         newSocket.on('matchmakingFailed', (error: any) => {
@@ -287,12 +341,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             resetStates();
         });
 
-        newSocket.on('inactiveDisconnect', () => {            
-            alert('You have been disconnected due to inactivity');
-            newSocket.disconnect();
+        newSocket.on('disconnect', () => {
+            setQueueMatchmakingStatus(null);
         });
 
         newSocket.on('gamestate', (gameState: any) => {
+            setQueueMatchmakingStatus(null);
             if(isSpectatorMode){
                 setConnectedPlayer(Object.keys(gameState.players)[0])
             }
@@ -335,14 +389,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         });
 
         newSocket.on('lobbystate', (lobbyState: any) => {
+            setQueueMatchmakingStatus(null);
             setLobbyState(lobbyState);
             if (process.env.NODE_ENV === 'development') {
                 console.log('Lobby state received:', lobbyState);
             }
         })
         
-        newSocket.on('queueHeartbeat', () => {
+        newSocket.on('queueHeartbeat', (_serverTime: number, matchmakingStatus?: IQueueMatchmakingStatus) => {
             setLastQueueHeartbeat(Date.now());
+            setQueueMatchmakingStatus(matchmakingStatus ?? null);
         });
 
         newSocket.on('bugReportResult', (result: any) => {
@@ -384,15 +440,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }, [user, anonymousUserId, openPopup, clearPopups, prunePromptStatePopups, status, session?.jwtToken]);
 
     const sendMessage = (message: string, args: any[] = []) => {
+        if (message === 'manualDisconnect' || message === 'requeue') {
+            setQueueMatchmakingStatus(null);
+        }
         socket?.emit(message, ...args);
     };
 
-    const sendGameMessage = (args: any[]) => {
-        if (args[0] === 'statefulPromptResults') {
-            args = [args[0], distributionPromptData, args[2]]
-            clearDistributionPrompt();
-        }
-
+    // GameStateProvider fills in a stateful prompt's distribution before this sends it
+    const emitGameMessage = (args: any[]) => {
         const typeOfMessage = args[0];
         // We let the sound handler decide if this is a valid sound action
         try {
@@ -407,6 +462,107 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     const sendLobbyMessage = (args: any[]) => {
         socket?.emit('lobby', ...args);
     }
+
+    const resetStates = () => {
+        setLobbyState(null);
+        setGameState(null);
+        setQueueMatchmakingStatus(null);
+        resetMessages();
+    }
+
+    return (
+        <GameStateProvider
+            gameState={gameState}
+            lobbyState={lobbyState}
+            gameMessages={gameMessages}
+            connectedPlayer={connectedPlayer}
+            isSpectator={isSpectator}
+            emitGameMessage={emitGameMessage}
+            distributionPrompt={distributionPrompt}
+            connection={{
+                bugReportState,
+                playerReportState,
+                statsSubmitNotification,
+                sendMessage,
+                sendLobbyMessage,
+                resetStates,
+                lastQueueHeartbeat,
+                queueMatchmakingStatus,
+                createNewSocket,
+            }}
+        >
+            {children}
+        </GameStateProvider>
+    );
+};
+
+/** What only a live connection to the server provides. */
+type IGameConnection = Pick<IGameContextType,
+    'bugReportState' | 'playerReportState' | 'statsSubmitNotification' | 'sendMessage' | 'sendLobbyMessage'
+    | 'resetStates' | 'lastQueueHeartbeat' | 'queueMatchmakingStatus' | 'createNewSocket'>;
+
+const NoConnection: IGameConnection = {
+    bugReportState: null,
+    playerReportState: null,
+    statsSubmitNotification: null,
+    sendMessage: () => {},
+    sendLobbyMessage: () => {},
+    resetStates: () => {},
+    lastQueueHeartbeat: 0,
+    queueMatchmakingStatus: null,
+    createNewSocket: () => undefined,
+};
+
+interface IGameStateProviderProps {
+    gameState: any;
+    lobbyState?: any;
+    gameMessages?: IChatEntry[];
+    connectedPlayer: string;
+    isSpectator?: boolean;
+
+    /** Sends a message on the `game` socket event, as is: the distribution is already filled in. */
+    emitGameMessage: (args: any[]) => void;
+
+    /** GameProvider's, which incoming prompt states start and clear; without one, the provider keeps its own. */
+    distributionPrompt?: ReturnType<typeof useDistributionPrompt>;
+
+    /** Without a connection, its parts do nothing (see {@link NoConnection}). */
+    connection?: Partial<IGameConnection>;
+    children: ReactNode;
+}
+
+/**
+ * Provides the game context for a given game state, with no socket: what the board reads and how
+ * its clicks are sent. GameProvider renders it with the live state; tests and tools render it with
+ * a state of their own.
+ */
+export const GameStateProvider = ({
+    gameState,
+    lobbyState = null,
+    gameMessages = [],
+    connectedPlayer,
+    isSpectator = false,
+    emitGameMessage,
+    distributionPrompt,
+    connection,
+    children,
+}: IGameStateProviderProps) => {
+    const [hoveredChatCardId, setHoveredCardId] = useState<string | null>(null);
+    const ownDistributionPrompt = useDistributionPrompt();
+    const { distributionPromptData, setDistributionPrompt, clearDistributionPrompt } = distributionPrompt ?? ownDistributionPrompt;
+
+    const ongoingEffects: IOngoingEffectSummary[] = React.useMemo(
+        () => gameState?.ongoingEffects ?? [],
+        [gameState?.ongoingEffects],
+    );
+
+    const sendGameMessage = (args: any[]) => {
+        if (args[0] === 'statefulPromptResults') {
+            args = [args[0], distributionPromptData, args[2]]
+            clearDistributionPrompt();
+        }
+        emitGameMessage(args);
+    };
 
     const getOpponent = (player: string) => {
         if (gameState) {
@@ -433,12 +589,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return false; // Default to false if we can't determine
     }
 
-    const resetStates = () => {
-        setLobbyState(null);
-        setGameState(null);
-        resetMessages();
-    }
-
     const getConnectedPlayerPrompt = () => {
         if (!gameState) return '';
         return gameState.players[connectedPlayer]?.promptState;
@@ -454,27 +604,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return (
         <GameContext.Provider
             value={{
+                ...NoConnection,
+                ...connection,
                 gameState,
                 gameMessages,
                 lobbyState,
-                bugReportState,
-                playerReportState,
-                statsSubmitNotification,
                 sendGameMessage,
-                sendMessage,
                 connectedPlayer,
                 getOpponent,
-                sendLobbyMessage,
-                resetStates,
                 getConnectedPlayerPrompt,
                 updateDistributionPrompt,
                 distributionPromptData,
                 isSpectator,
-                lastQueueHeartbeat,
                 isAnonymousPlayer,
                 hasChatDisabled,
-                createNewSocket,
                 gameIsEnded,
+                ongoingEffects,
                 hoveredChatCard: {
                     id: hoveredChatCardId,
                     hover: setHoveredCardId,
@@ -490,7 +635,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 export const useGame = () => {
     const context = useContext(GameContext);
     if (!context) {
-        throw new Error('useGame must be used within a GameProvider');
+        throw new Error('useGame must be used within a GameProvider or GameStateProvider');
     }
     return context;
 };
