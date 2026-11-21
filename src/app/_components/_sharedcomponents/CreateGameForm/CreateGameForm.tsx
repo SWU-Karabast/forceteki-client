@@ -13,6 +13,7 @@ import {
     Tooltip,
 } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
+import TestDeckButton from '../TestDeckButton/TestDeckButton';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
@@ -150,6 +151,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         }
         clearErrors()
         setIsJsonDeck(false);
+    }
+
+    const handleDeckLinkChange = (value: string) => {
+        clearErrors();
+        if (value.trim().length > 0) {
+            setDeckLinkTouched(false);
+        }
+        setDeckLink(value);
+        handleJsonDeck(value);
     }
 
     const handleChangeDeckSelectionType = (value: string) => {
@@ -573,20 +583,18 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 type="text"
                                 value={deckLink}
                                 onBlur={() => setDeckLinkTouched(true)}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) =>{
-                                    clearErrors();
-                                    if (e.target.value.trim().length > 0) {
-                                        setDeckLinkTouched(false);
-                                    }
-                                    setDeckLink(e.target.value);
-                                    handleJsonDeck(e.target.value);
-                                }}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => handleDeckLinkChange(e.target.value)}
                             />
                             {showDeckLinkRequiredError && (
                                 <Typography variant="body1" sx={styles.errorMessageStyle}>
                                     Enter a deck link or paste deck JSON.
                                 </Typography>
                             )}
+                            <TestDeckButton
+                                format={lobbyConfig.format}
+                                cardPool={lobbyConfig.cardPool}
+                                onDeck={handleDeckLinkChange}
+                            />
                         </FormControl>
                         {errorState.summary && (
                             <Typography variant={'body1'} sx={styles.errorMessageStyle}>

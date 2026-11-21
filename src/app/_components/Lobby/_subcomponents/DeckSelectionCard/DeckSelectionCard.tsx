@@ -20,6 +20,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
+import TestDeckButton from '@/app/_components/_sharedcomponents/TestDeckButton/TestDeckButton';
 import SegmentedControl from '@/app/_components/_sharedcomponents/SegmentedControl/SegmentedControl';
 import { fetchDeckData, determineDeckSource, DeckSource, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
@@ -120,6 +121,23 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         }
         setIsJsonDeck(false);
         clearErrorsFunc();
+    }
+
+    const handleDeckLinkChange = (value: string) => {
+        if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
+            setDisplayError(true);
+
+            if (hasSomeNonSideboardingErrors(connectedUser.deckErrors)) {
+                setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error');
+            } else {
+                setError('Sideboarding restrictions not met');
+            }
+        } else {
+            setDisplayError(false);
+            clearErrorsFunc();
+        }
+        handleJsonDeck(value);
+        setDeckLink(value);
     }
 
     const handleChangeDeckSelectionType = (value: string) => {
@@ -650,22 +668,13 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                     type="text"
                                     disabled={readyStatus}
                                     value={deckLink}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                        if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
-                                            setDisplayError(true);
-
-                                            if (hasSomeNonSideboardingErrors(connectedUser.deckErrors)) {
-                                                setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error');
-                                            } else {
-                                                setError('Sideboarding restrictions not met');
-                                            }
-                                        } else {
-                                            setDisplayError(false);
-                                            clearErrorsFunc();
-                                        }
-                                        handleJsonDeck(e.target.value);
-                                        setDeckLink(e.target.value);
-                                    }}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => handleDeckLinkChange(e.target.value)}
+                                />
+                                <TestDeckButton
+                                    format={matchConfig.format}
+                                    cardPool={matchConfig.cardPool}
+                                    onDeck={handleDeckLinkChange}
+                                    disabled={readyStatus}
                                 />
                             </FormControl>
 
