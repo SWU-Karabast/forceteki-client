@@ -12,7 +12,7 @@ import { usePreviewCardPopover, usePopoverConfig } from './GameCard/cardHooks';
 import { useImageLoadStatus } from '@/app/_hooks/useImageLoadStatus';
 import { CardImageMissingOverlay, cardImageFillSx } from './CardImageMissingOverlay';
 import { DistributionEntry } from '@/app/_hooks/useDistributionPrompt';
-import { useOngoingEffectHighlightSx } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { useOngoingEffectHighlightSx } from '@/app/_hooks/useOngoingEffectHighlights';
 
 import { DamageCounterToken } from '../_styledcomponents/damageCounterToken';
 import { TokenBadge, type TokenBadgeType } from './GameCard/TokenBadge';
