@@ -3,6 +3,7 @@ import { Box, Checkbox, Chip, FormControlLabel, MenuItem, Typography } from '@mu
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
+import PlayerMessageField from '@/app/_components/_sharedcomponents/ModActions/PlayerMessageField';
 import {
     DurationUnit,
     modActionDefinitions,
@@ -23,6 +24,7 @@ import {
     pickResetUsername,
     submitModActionAsync,
 } from '@/app/_utils/modActionSubmission';
+import { MAX_PLAYER_NOTICE_LENGTH } from '@/app/_utils/playerNoticeUtils';
 
 const DAYS_PER_WEEK = 7;
 
@@ -73,6 +75,7 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
     const [resetUsername, setResetUsername] = useState(false);
     const [resetName, setResetName] = useState<string | undefined>(undefined);
     const [note, setNote] = useState('');
+    const [playerMessage, setPlayerMessage] = useState('');
     const [showNoteError, setShowNoteError] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -83,16 +86,19 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
     const newUsernameError = definition.requiresNewUsername ? getNewUsernameError(newUsername, target.username) : null;
     const unavailableReason = getModActionUnavailableReason(actionType, target);
     const templates = MOD_ACTION_NOTE_TEMPLATES[actionType] ?? [];
+    const sendsPlayerMessage = definition.supportsPlayerMessage && !!playerMessage.trim();
 
     const canSubmit = !submitting
         && !unavailableReason
         && (!definition.requiresDuration || durationDays > 0)
-        && (!definition.requiresNewUsername || (!!newUsername.trim() && !newUsernameError));
+        && (!definition.requiresNewUsername || (!!newUsername.trim() && !newUsernameError))
+        && (!definition.supportsPlayerMessage || playerMessage.trim().length <= MAX_PLAYER_NOTICE_LENGTH);
 
     const selectActionType = (value: ModActionType) => {
         setActionType(value);
         setNewUsername('');
         setResetUsername(false);
+        setPlayerMessage('');
         setShowNoteError(false);
     };
 
@@ -113,6 +119,7 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
         setNewUsername('');
         setResetUsername(false);
         setNote('');
+        setPlayerMessage('');
     };
 
     const handleSubmitClick = () => {
@@ -137,6 +144,7 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
             resetRequested: resetUsername,
             resetName,
             reportId,
+            playerMessage: sendsPlayerMessage ? playerMessage.trim() : undefined,
         };
 
         setSubmitting(true);
@@ -153,7 +161,12 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
         }
     };
 
-    const description = describeModActionRequest(actionType, target.username, { durationDays, newUsername, resetName });
+    const description = describeModActionRequest(actionType, target.username, {
+        durationDays,
+        newUsername,
+        resetName,
+        withPlayerMessage: sendsPlayerMessage,
+    });
 
     // ----------------Styles----------------//
     const styles = {
@@ -205,6 +218,9 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
             fontSize: '0.8rem',
             fontWeight: 600,
             mb: '0.5rem',
+        },
+        playerMessage: {
+            mt: '0.75rem',
         },
         footer: {
             display: 'flex',
@@ -309,6 +325,18 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
                     setShowNoteError(false);
                 }}
             />
+
+            {definition.supportsPlayerMessage && (
+                <Box sx={styles.playerMessage}>
+                    <PlayerMessageField
+                        value={playerMessage}
+                        onChange={setPlayerMessage}
+                        placeholder="Message to the player (optional)"
+                        hint="Shown to the player at their next sign-in. The note above is internal and is never shown to them"
+                        disabled={submitting}
+                    />
+                </Box>
+            )}
 
             <Box sx={styles.footer}>
                 <Box>{extraOptions}</Box>

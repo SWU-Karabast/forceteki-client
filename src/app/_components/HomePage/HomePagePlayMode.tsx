@@ -14,6 +14,9 @@ import UsernameChangeRestrictedPopup
 import ReportingDisabledPopup
     from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/ReportingDisabledPopup';
 import UserMutedPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/UserMutedPopup';
+import PlayerNoticePopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/moderationPopups/PlayerNoticePopup';
+import { IPlayerNotice } from '@/app/_contexts/UserTypes';
+import { ServerApiService } from '@/app/_services/ServerApiService';
 import EmailVerificationRequiredPopup from '@/app/_components/_sharedcomponents/HomescreenWelcome/EmailVerificationRequiredPopup';
 import { AuthErrorProviderQueryParam, AuthErrorQueryParam, EmailNotVerifiedAuthError } from '@/app/_utils/SignInRefusal';
 import { useDeckManagement } from '@/app/_hooks/useDeckManagement';
@@ -53,7 +56,20 @@ const HomePagePlayMode: React.FC = () => {
     const [moderationDays, setModerationDays] = useState<number | undefined>(undefined);
     // the provider of a sign-in refused because its email is not verified, while the explanation is showing
     const [emailNotVerifiedProvider, setEmailNotVerifiedProvider] = useState<string | null>(null);
-    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateTimerPopupSeenDate, updateUsernameChangesBlockedSeen, updateReportingDisabledSeen } = useUser();
+    const { user, updateWelcomeMessage, updateModerationSeenStatus, updateUndoPopupSeenDate, updateTimerPopupSeenDate, updateUsernameChangesBlockedSeen, updateReportingDisabledSeen, removeNotice } = useUser();
+
+    // Notices from the Karabast team wait until the welcome and the moderation popups have been dismissed, then show
+    // one at a time, oldest first
+    const earlierPopupPending = !!user && (
+        user.showWelcomeMessage ||
+        showWelcomePopup ||
+        showUpdatePopup ||
+        !!user.needsUsernameChange ||
+        (!!user.usernameChangesBlocked && !user.usernameChangesBlocked.hasSeen) ||
+        (!!user.reportingDisabled && !user.reportingDisabled.hasSeen) ||
+        (!!user.moderation && !user.moderation.hasSeen)
+    );
+    const currentNotice = user && !earlierPopupPending ? user.notices?.[0] ?? null : null;
 
     // Use shared deck management hook
     const {
@@ -209,6 +225,15 @@ const HomePagePlayMode: React.FC = () => {
         }
     };
 
+    const handleAcknowledgeNotice = async (notice: IPlayerNotice) => {
+        removeNotice(notice.id);
+        try {
+            await ServerApiService.markNoticeSeenAsync(notice.id);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     const handleCloseMutedPopup = async() => {
         setShowMutedPopup(false);
         const updatedModeration = { ...user?.moderation, hasSeen: true };
@@ -277,7 +302,8 @@ const HomePagePlayMode: React.FC = () => {
             !!user?.needsUsernameChange ||
             (!!user?.usernameChangesBlocked && !user.usernameChangesBlocked.hasSeen) ||
             (!!user?.reportingDisabled && !user.reportingDisabled.hasSeen) ||
-            (!!user?.moderation && !user.moderation.hasSeen);
+            (!!user?.moderation && !user.moderation.hasSeen) ||
+            !!user?.notices?.length;
         if (!blockingPopupActive && shouldShowAnnouncement(announcement)) {
             setShowAnnouncementPopup(true);
         }
@@ -419,6 +445,7 @@ const HomePagePlayMode: React.FC = () => {
             <UsernameChangeRestrictedPopup open={showUsernameRestrictedPopup} onClose={handleCloseUsernameRestrictedPopup} />
             <ReportingDisabledPopup open={showReportingDisabledPopup} onClose={handleCloseReportingDisabledPopup} />
             <UserMutedPopup durationDays={moderationDays!} open={showMutedPopup} onClose={handleCloseMutedPopup}></UserMutedPopup>
+            <PlayerNoticePopup notice={currentNotice} onAcknowledge={handleAcknowledgeNotice} />
             <UndoTutorialPopup open={showUndoTutorialPopup} onClose={handleUndoTutorialClose} />
             <TimerTutorialPopup open={showTimerTutorialPopup} onClose={handleTimerTutorialClose} />
             <WhatsNewPopupAnnouncement open={showAnnouncementPopup && emailNotVerifiedProvider === null} onClose={closeAnnouncementPopup} />

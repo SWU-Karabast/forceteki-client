@@ -2,8 +2,9 @@ import {
     IFindUserResponse, IModActionResponse,
     ICosmeticEntity, IServerSettings,
     IPlayerReportDetailResponse, IPlayerReportListQuery, IPlayerReportListResponse, IPlayerReportUpdateResponse,
-    PlayerReportStatusUpdate
+    PlayerReportStatusUpdate, IPlayerNoticeHistoryEntry
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import type { PlayerNoticeKind } from '../_contexts/UserTypes';
 
 
 /** An error answer from the game node: its message, and the HTTP status it came with. */
@@ -188,7 +189,7 @@ export class ServerApiService {
         actionType: string,
         note: string,
         durationDays?: number,
-        options?: { newUsername?: string; reportId?: string },
+        options?: { newUsername?: string; reportId?: string; playerMessage?: string },
     ): Promise<{ success: boolean; message: string; }> {
         return await this.fetchWithErrorHandling<{
             success: boolean;
@@ -216,6 +217,30 @@ export class ServerApiService {
                 body: JSON.stringify({ playerId, modActionId }),
             }
         );
+    }
+
+    /** Sends a player a notice they see at their next sign-in. Warnings go with a Warning mod action instead. */
+    public static async sendPlayerNoticeAsync(
+        playerId: string,
+        kind: PlayerNoticeKind,
+        message: string,
+    ): Promise<{ success: boolean; notice: IPlayerNoticeHistoryEntry }> {
+        return await this.fetchWithErrorHandling<{ success: boolean; notice: IPlayerNoticeHistoryEntry }>(
+            `${this.baseUrl}/api/mod/send-notice`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ playerId, kind, message }),
+            }
+        );
+    }
+
+    /** The signed-in player has read a notice, so it is not shown to them again */
+    public static async markNoticeSeenAsync(noticeId: string): Promise<boolean> {
+        const response = await this.fetchWithErrorHandling<{ success: boolean }>(
+            `${this.baseUrl}/api/notices/${encodeURIComponent(noticeId)}/seen`,
+            { method: 'POST', body: JSON.stringify({}) }
+        );
+        return response.success;
     }
 
     public static async getModActionsForPlayerAsync(

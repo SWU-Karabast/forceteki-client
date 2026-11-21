@@ -108,13 +108,13 @@ export const getModActionUnavailableReason = (actionType: ModActionType, target:
 export const describeModActionRequest = (
     actionType: ModActionType,
     username: string,
-    options: { durationDays?: number; newUsername?: string; resetName?: string } = {}
+    options: { durationDays?: number; newUsername?: string; resetName?: string; withPlayerMessage?: boolean } = {}
 ): string => {
     switch (actionType) {
         case ModActionType.Mute:
             return `mute ${username} for ${options.durationDays} day${options.durationDays === 1 ? '' : 's'}`;
         case ModActionType.Warning:
-            return `issue a warning to ${username}`;
+            return `issue a warning to ${username}${options.withPlayerMessage ? ' and show them your message at their next sign-in' : ''}`;
         case ModActionType.Rename:
             return `force ${username} to rename`;
         case ModActionType.ReportingDisabled:
@@ -167,6 +167,9 @@ export interface IModActionRequest {
 
     /** The report ticket the action is issued from, if any */
     reportId?: string;
+
+    /** Shown to the player at their next sign-in (Warning only); the note stays internal */
+    playerMessage?: string;
 }
 
 export interface IModActionResult {
@@ -214,6 +217,7 @@ const applyModActionAsync = async (request: IModActionRequest): Promise<IModActi
         {
             newUsername: definition.requiresNewUsername ? request.newUsername?.trim() : undefined,
             reportId: request.reportId,
+            playerMessage: definition.supportsPlayerMessage ? request.playerMessage?.trim() || undefined : undefined,
         },
     );
 

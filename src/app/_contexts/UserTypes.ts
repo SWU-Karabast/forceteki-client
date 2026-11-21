@@ -42,6 +42,25 @@ export interface IUsernameChangesBlockedState {
     hasSeen: boolean;
 }
 
+/** What a notice from the Karabast team is about; mirrors PlayerNoticeKind on the server */
+export enum PlayerNoticeKind {
+    BugReportFixed = 'BugReportFixed',
+    BugReportNotABug = 'BugReportNotABug',
+    BugReportNeedsInfo = 'BugReportNeedsInfo',
+    Warning = 'Warning',
+    General = 'General',
+}
+
+/** A message from the Karabast team the player has not acknowledged yet */
+export interface IPlayerNotice {
+    id: string;
+    kind: PlayerNoticeKind;
+
+    /** Plain text written by a moderator */
+    message: string;
+    createdAt: string;
+}
+
 export interface IGetUser {
     id: string;
     username: string;
@@ -54,6 +73,9 @@ export interface IGetUser {
     moderation?: IModerationAction | null,
     undoPopupSeenDate?: Date | null
     timerPopupSeenDate?: Date | null
+
+    /** Unacknowledged notices, oldest first */
+    notices?: IPlayerNotice[];
 }
 
 export interface ISoundPreferences {
@@ -123,6 +145,7 @@ export interface IUserContextType {
     updateModerationSeenStatus: (moderation: IModerationAction | null) => void;
     updateUndoPopupSeenDate: () => void;
     updateTimerPopupSeenDate: () => void;
+    removeNotice: (noticeId: string) => void;
 }
 
 export enum AdminRole {
