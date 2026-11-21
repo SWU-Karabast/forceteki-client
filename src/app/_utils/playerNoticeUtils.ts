@@ -20,31 +20,31 @@ interface IPlayerNoticeKindInfo {
 
 export const PLAYER_NOTICE_KINDS: Record<PlayerNoticeKind, IPlayerNoticeKindInfo> = {
     [PlayerNoticeKind.BugReportFixed]: {
-        heading: 'Your bug report: fixed',
+        heading: 'Your Bug Report: Fixed',
         modLabel: 'Bug Report: Fixed',
         accentColor: '#4CAF50',
         defaultMessage: 'Thanks for your bug report! This has been fixed and will be live in the next update.',
     },
     [PlayerNoticeKind.BugReportNotABug]: {
-        heading: 'Your bug report: not a bug',
+        heading: 'Your Bug Report: Not a Bug',
         modLabel: 'Bug Report: Not a Bug',
         accentColor: '#2F7DB6',
         defaultMessage: 'Thanks for your bug report! We looked into it and this is working as intended: ',
     },
     [PlayerNoticeKind.BugReportNeedsInfo]: {
-        heading: 'We need more information',
+        heading: 'We Need More Information',
         modLabel: 'Bug Report: Needs More Information',
         accentColor: '#FFD54F',
         defaultMessage: 'Thanks for your bug report! We could not work out what went wrong from the report alone. '
             + 'If it happens again, please send another report describing what you expected to happen and what happened instead.',
     },
     [PlayerNoticeKind.Warning]: {
-        heading: 'Warning from the moderators',
+        heading: 'Warning from the Moderators',
         modLabel: 'Warning',
         accentColor: '#DC3545',
     },
     [PlayerNoticeKind.General]: {
-        heading: 'Message from the Karabast team',
+        heading: 'Message from the Karabast Team',
         modLabel: 'General',
         accentColor: '#2F7DB6',
         defaultMessage: '',
