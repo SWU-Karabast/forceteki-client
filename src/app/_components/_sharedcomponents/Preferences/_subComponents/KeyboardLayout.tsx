@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { KeyboardLayoutProps } from '@/app/_contexts/UserTypes';
 
 type KeyItem = {
     label: string;
@@ -10,9 +11,18 @@ type KeyItem = {
     subKeys?: KeyItem[];
 };
 
-const KeyboardLayout: React.FC = () => {
-    // Which keys should be highlighted
-    const highlightedKeys = new Set(['W', 'U', 'I', 'A', 'H', 'L', 'C', 'M','SPACE BAR','ESC']);
+// Extend the imported props to include our new click handler
+interface ExtendedKeyboardLayoutProps extends KeyboardLayoutProps {
+    onKeyClick?: (key: string) => void;
+}
+
+const KeyboardLayout: React.FC<ExtendedKeyboardLayoutProps> = ({ keyboardShortcuts = {}, onKeyClick }) => {
+    // Dynamically create highlighted keys set from keyboard shortcuts
+    const highlightedKeys = new Set(
+        Object.values(keyboardShortcuts)
+            .filter((key): key is string => key !== undefined)
+            .map(key => key.toUpperCase())
+    );
 
     // Define each row of keys
     const row0: KeyItem[] = [
@@ -51,7 +61,7 @@ const KeyboardLayout: React.FC = () => {
         { label: 'Ctrl', width: '6%' },
         { label: 'Alt', width: '6%' },
         { label: 'Cmd', width: '6%' },
-        { label: 'Space Bar', width: '40%' },
+        { label: 'SPACE', width: '40%' },
         { label: 'Cmd', width: '6%' },
         { label: 'Alt', width: '6%' },
         { label: 'Fn', width: '6%' },
@@ -89,19 +99,19 @@ const KeyboardLayout: React.FC = () => {
             alignSelf: 'end',
             alignItems: 'center',
             justifyContent: 'center',
-            visibility: label === 'empty' ? 'hidden' : 'visible',
+            visibility: label === '' ? 'hidden' : 'visible',
             width: width || '7%',
             height: height || '2.5rem',
             borderRadius: '4px',
             border: highlighted ? '2px solid black':'2px solid #161a1c',
             background: highlighted ? 'linear-gradient(180deg, #191A20 0%,#222226 100%)' :'linear-gradient(180deg, #22262A 0%,#26292D 100%)',
             boxShadow: highlighted ? '0 0px 6px 0px rgba(22, 192, 231, 0.7)' : 'none',
-            cursor: 'pointer',
+            cursor: label === '' ? 'default' : 'pointer',
             fontFamily: 'sans-serif',
             '&:hover': {
-                border:'2px solid black',
-                background: 'linear-gradient(180deg, #191A20 0%,#222226 100%)',
-                boxShadow: '0 0px 6px 0px rgba(22, 192, 231, 0.7)',
+                border: label === '' ? '2px solid #161a1c' : '2px solid black',
+                background: label === '' ? 'transparent' : 'linear-gradient(180deg, #191A20 0%,#222226 100%)',
+                boxShadow: label === '' ? 'none' : '0 0px 6px 0px rgba(22, 192, 231, 0.7)',
             }
         }),
         // style for subKeys
@@ -115,9 +125,7 @@ const KeyboardLayout: React.FC = () => {
             borderRadius: '4px',
             border: '2px solid #161a1c',
             fontFamily: 'sans-serif',
-            cursor: 'pointer',
             background: 'linear-gradient(180deg, #22262A 0%,#26292D 100%)',
-
         }),
         verticalSubKey: (highlighted: boolean) => ({
             // Each subKey is half the parent's height
@@ -127,6 +135,7 @@ const KeyboardLayout: React.FC = () => {
             justifyContent: 'center',
             height:'1.25rem',
             borderBottom: '1px solid #161a1c',
+            cursor: 'pointer',
             // The last subKey won't need a bottom border, so you can handle that conditionally if you like
             // highlight styles:
             background: highlighted
@@ -161,6 +170,12 @@ const KeyboardLayout: React.FC = () => {
                                             <Box
                                                 key={`${i}-sub-${subIndex}`}
                                                 sx={styles.verticalSubKey(isSubHighlighted)}
+                                                onClick={() => {
+                                                    // Pass the clicked sub-key label back to the parent
+                                                    if (onKeyClick && sub.label !== '') {
+                                                        onKeyClick(sub.label.toUpperCase());
+                                                    }
+                                                }}
                                             >
                                                 <Typography
                                                     variant="body2"
@@ -183,6 +198,12 @@ const KeyboardLayout: React.FC = () => {
                                 <Box
                                     key={`${rowIndex}-${i}`}
                                     sx={styles.key(isHighlighted, keyItem.label, keyItem.width, keyItem.height)}
+                                    onClick={() => {
+                                        // Pass the clicked key label back to the parent
+                                        if (onKeyClick && keyItem.label !== '') {
+                                            onKeyClick(keyItem.label.toUpperCase());
+                                        }
+                                    }}
                                 >
                                     <Typography
                                         variant="body2"
