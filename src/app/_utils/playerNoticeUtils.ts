@@ -21,19 +21,19 @@ interface IPlayerNoticeKindInfo {
 export const PLAYER_NOTICE_KINDS: Record<PlayerNoticeKind, IPlayerNoticeKindInfo> = {
     [PlayerNoticeKind.BugReportFixed]: {
         heading: 'Your bug report: fixed',
-        modLabel: 'Bug report: fixed',
+        modLabel: 'Bug Report: Fixed',
         accentColor: '#4CAF50',
         defaultMessage: 'Thanks for your bug report! This has been fixed and will be live in the next update.',
     },
     [PlayerNoticeKind.BugReportNotABug]: {
         heading: 'Your bug report: not a bug',
-        modLabel: 'Bug report: not a bug',
+        modLabel: 'Bug Report: Not a Bug',
         accentColor: '#2F7DB6',
         defaultMessage: 'Thanks for your bug report! We looked into it and this is working as intended: ',
     },
     [PlayerNoticeKind.BugReportNeedsInfo]: {
         heading: 'We need more information',
-        modLabel: 'Bug report: needs more information',
+        modLabel: 'Bug Report: Needs More Information',
         accentColor: '#FFD54F',
         defaultMessage: 'Thanks for your bug report! We could not work out what went wrong from the report alone. '
             + 'If it happens again, please send another report describing what you expected to happen and what happened instead.',

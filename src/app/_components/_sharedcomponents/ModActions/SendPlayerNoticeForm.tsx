@@ -17,6 +17,9 @@ interface ISendPlayerNoticeFormProps {
     playerId: string;
     username: string;
 
+    /** Shown before the kind picker, e.g. the menu this form was chosen from */
+    actionSelect?: React.ReactNode;
+
     /** Called once the notice was stored */
     onSent: (message: string) => Promise<void> | void;
 
@@ -28,7 +31,7 @@ interface ISendPlayerNoticeFormProps {
  * Sends a player a message they see at their next sign-in, e.g. a reply to a bug report they filed on Discord.
  * Warnings are not sent from here: they go with a Warning mod action, so they appear in the mod history.
  */
-const SendPlayerNoticeForm: React.FC<ISendPlayerNoticeFormProps> = ({ playerId, username, onSent, onError }) => {
+const SendPlayerNoticeForm: React.FC<ISendPlayerNoticeFormProps> = ({ playerId, username, actionSelect, onSent, onError }) => {
     const initialKind = SENDABLE_PLAYER_NOTICE_KINDS[0];
     const [kind, setKind] = useState<PlayerNoticeKind>(initialKind);
     const [message, setMessage] = useState(PLAYER_NOTICE_KINDS[initialKind].defaultMessage ?? '');
@@ -87,6 +90,7 @@ const SendPlayerNoticeForm: React.FC<ISendPlayerNoticeFormProps> = ({ playerId, 
     return (
         <Box>
             <Box sx={styles.row}>
+                {actionSelect}
                 <StyledTextField
                     select
                     label="Kind"

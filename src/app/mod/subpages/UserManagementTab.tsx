@@ -14,7 +14,6 @@ import {
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ModActionForm from '@/app/_components/_sharedcomponents/ModActions/ModActionForm';
-import SendPlayerNoticeForm from '@/app/_components/_sharedcomponents/ModActions/SendPlayerNoticeForm';
 import PlayerNoticeHistory from '@/app/_components/_sharedcomponents/ModActions/PlayerNoticeHistory';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
@@ -464,20 +463,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
                                 target={modActionTargetFromPlayer(selectedPlayer)}
                                 onSubmitted={handleActionSubmitted}
                                 onError={setSearchError}
-                            />
-                        </Box>
-                    )}
-
-                    {/* Message to the player */}
-                    {selectedPlayer && (
-                        <Box>
-                            <Typography sx={styles.sectionTitle}>Send Message</Typography>
-                            <SendPlayerNoticeForm
-                                key={selectedPlayer.id}
-                                playerId={selectedPlayer.id}
-                                username={selectedPlayer.username}
-                                onSent={handleNoticeSent}
-                                onError={setSearchError}
+                                onMessageSent={handleNoticeSent}
                             />
                         </Box>
                     )}
