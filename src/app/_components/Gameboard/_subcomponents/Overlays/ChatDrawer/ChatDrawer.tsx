@@ -37,6 +37,7 @@ import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
 import { LobbyConfirmationPopupModule } from '@/app/_components/Lobby/_subcomponents/LobbyConfirmationPopup/LobbyConfirmationPopup';
 import PlayerReportDialog from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import { Theme } from '@mui/material/styles';
+import { randomUUID } from '@/app/_utils/randomUUID';
 
 // ------------------------STYLES------------------------//
 const drawerBorder = '1px solid rgba(255, 255, 255, 0.16)';
@@ -474,7 +475,7 @@ const ChatDrawer: React.FC<IChatDrawerProps> = ({ sidebarOpen, toggleSidebar, pr
             router.push('/');
         } else {
             openPopup('leaveGame', {
-                uuid: crypto.randomUUID(),
+                uuid: randomUUID(),
                 source: PopupSource.User
             });
         }
