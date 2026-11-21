@@ -19,6 +19,8 @@ The following demonstrates how to install dependencies and run the client server
 ```bash
 # install node dependencies
 npm install
+# set up the local environment (see comments in the example file)
+cp .env.local.example .env.local
 npm run dev
 ```
 
@@ -28,11 +30,10 @@ Once this is running you can go to http://localhost:3000 to get to the home page
 
 For testing on mobile devices connected to your local network:
 
-1. Copy `.env.local.example` to `.env.local`
-2. Edit `.env.local` and replace `your-local-ip` with your computer's IP address (e.g., `192.168.4.40`)
-3. Restart the development server
-4. Follow the [backend mobile testing instructions](https://github.com/SWU-Karabast/forceteki#mobile-testing-and-custom-environment) to add your IP to the CORS allowed origins
-5. Connect to `your-local-ip:3000` on the web browser of your mobile device
+1. In `.env.local`, set `NEXTAUTH_URL=http://your-local-ip:3000` and `NEXT_PUBLIC_ROOT_URL=http://your-local-ip:9500`, using your computer's IP (e.g., `192.168.4.40`).
+2. Follow the [backend mobile testing instructions](https://github.com/SWU-Karabast/forceteki#mobile-testing-and-custom-environment) to allow the frontend origin.
+3. Restart both development servers.
+4. Open `http://your-local-ip:3000` and sign in again. Use the same IP for both servers; mixing `localhost` and an IP prevents session cookies from reaching the backend.
 
 ### Storybook
 
