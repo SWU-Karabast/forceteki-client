@@ -10,6 +10,13 @@
 //   timer        a quick match whose clock counts down; needs the game node started with USE_LOCAL_ACTION_TIMER="true"
 //   all          every scenario except timer, which needs the game node started differently
 // --headed opens the browser windows, to watch a run.
+//
+// What it is for:
+//   - checking a local setup works (both servers, card data, Playwright) before testing something specific;
+//   - checking the helpers in localPlayers.mjs still match the client: nothing else runs them (CI does not), so after
+//     a change to a flow or label they use, run this to see that they still get through;
+//   - a worked example of using the helpers, for writing a script for a particular feature;
+//   - watching the standard flows play out with --headed.
 
 import {
     checkServers, createLobby, DevUser, firstShowing, joinLobby, joinQueue, joinTestGame, launchBrowser,

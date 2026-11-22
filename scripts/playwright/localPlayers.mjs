@@ -3,6 +3,13 @@
 // and storage like a separate incognito window, so two anonymous players, or the dev users Order66 and ThisIsTheWay,
 // can play each other from one browser.
 //
+// Why this file exists: driving the site takes knowledge that is easy to get wrong and slow to rediscover, such as which
+// buttons start a game with a test deck, how to get through initiative, mulligan and resources to the first action, how
+// to find the cards in hand, leaving a game so the next one is not refused, and waiting for a page `next dev` has only
+// just compiled. Keeping it here means a script (Claude's or a developer's) starts from flows that work, and a UI change
+// has one place to be updated. When the client changes a label or a flow these helpers use, update them in the same PR;
+// `node scripts/playwright/smoke.mjs all` shows whether they still work.
+//
 // smoke.mjs plays the standard flows with these, and the local-browser-testing skill (.claude/skills/) builds on them.
 // A script anywhere can use them: import { ... } from '<forceteki-client>/scripts/playwright/localPlayers.mjs';
 
