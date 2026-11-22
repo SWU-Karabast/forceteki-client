@@ -24,6 +24,12 @@ and the helpers in the same change. That covers the game node's dev routes (`/ap
 button or tab names the helpers look for. forceteki has a pointer skill of the same name that sends Claude here, and
 it lists the server-side facts this skill depends on.
 
+**Improve it from experience, with the user's go-ahead.** If any part of testing with Playwright gave you trouble,
+note it and check with the user before changing anything. That includes a step that took several tries, a selector
+that didn't match, a wait that timed out, a flow you had to work out, or a server that misbehaved. Then propose a
+specific addition to this skill, or a new or fixed helper in `scripts/playwright/`, so the next session doesn't hit
+the same problem. Say what went wrong and what you would add, and make the change only once they agree.
+
 **Not covered yet:**
 - **Accounts in local DynamoDB.** Always run with `USE_LOCAL_DYNAMODB="false"`. Testing against the DynamoDB container
   in forceteki's `docker-compose.yml` would be a later addition to this skill, or a skill of its own.
