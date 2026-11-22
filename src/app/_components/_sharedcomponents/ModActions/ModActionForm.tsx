@@ -4,7 +4,6 @@ import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponen
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import PlayerMessageField from '@/app/_components/_sharedcomponents/ModActions/PlayerMessageField';
-import SendPlayerNoticeForm from '@/app/_components/_sharedcomponents/ModActions/SendPlayerNoticeForm';
 import {
     DurationUnit,
     modActionDefinitions,
@@ -29,9 +28,6 @@ import { MAX_PLAYER_NOTICE_LENGTH } from '@/app/_utils/playerNoticeUtils';
 
 const DAYS_PER_WEEK = 7;
 
-/** The value of the Action menu's Send Message entry, which sends the player a notice instead of issuing a mod action */
-const SEND_MESSAGE_OPTION = 'SendMessage';
-
 export interface IModActionFormProps {
     target: IModActionTarget;
 
@@ -52,12 +48,6 @@ export interface IModActionFormProps {
 
     /** The request itself failed (network, server error) */
     onError: (message: string) => void;
-
-    /**
-     * When set, the Action menu starts with Send Message, the default choice, which sends the player a message
-     * instead of issuing a mod action. Called with the success message once the message was stored.
-     */
-    onMessageSent?: (message: string) => Promise<void> | void;
 }
 
 const formatPreset = (days: number): string => {
@@ -77,9 +67,7 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
     confirmationZIndex,
     onSubmitted,
     onError,
-    onMessageSent,
 }) => {
-    const [sendingMessage, setSendingMessage] = useState(!!onMessageSent);
     const [actionType, setActionType] = useState<ModActionType>(ModActionType.Warning);
     const [durationValue, setDurationValue] = useState('');
     const [durationUnit, setDurationUnit] = useState<DurationUnit>(DurationUnit.Days);
@@ -105,15 +93,6 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
         && (!definition.requiresDuration || durationDays > 0)
         && (!definition.requiresNewUsername || (!!newUsername.trim() && !newUsernameError))
         && (!definition.supportsPlayerMessage || playerMessage.trim().length <= MAX_PLAYER_NOTICE_LENGTH);
-
-    const selectAction = (value: string) => {
-        if (value === SEND_MESSAGE_OPTION) {
-            setSendingMessage(true);
-            return;
-        }
-        setSendingMessage(false);
-        selectActionType(value as ModActionType);
-    };
 
     const selectActionType = (value: ModActionType) => {
         setActionType(value);
@@ -253,39 +232,22 @@ const ModActionForm: React.FC<IModActionFormProps> = ({
         },
     };
 
-    const actionSelect = (
-        <StyledTextField
-            select
-            label="Action"
-            value={sendingMessage ? SEND_MESSAGE_OPTION : actionType}
-            onChange={(e) => selectAction(e.target.value)}
-            size="small"
-            fullWidth={false}
-            sx={styles.actionSelect}
-        >
-            {onMessageSent && <MenuItem value={SEND_MESSAGE_OPTION}>Send Message</MenuItem>}
-            {MOD_ACTION_ORDER.map((type) => (
-                <MenuItem key={type} value={type}>{modActionDefinitions[type].label}</MenuItem>
-            ))}
-        </StyledTextField>
-    );
-
-    if (sendingMessage && onMessageSent) {
-        return (
-            <SendPlayerNoticeForm
-                playerId={target.playerId}
-                username={target.username}
-                actionSelect={actionSelect}
-                onSent={onMessageSent}
-                onError={onError}
-            />
-        );
-    }
-
     return (
         <Box>
             <Box sx={styles.row}>
-                {actionSelect}
+                <StyledTextField
+                    select
+                    label="Action"
+                    value={actionType}
+                    onChange={(e) => selectActionType(e.target.value as ModActionType)}
+                    size="small"
+                    fullWidth={false}
+                    sx={styles.actionSelect}
+                >
+                    {MOD_ACTION_ORDER.map((type) => (
+                        <MenuItem key={type} value={type}>{modActionDefinitions[type].label}</MenuItem>
+                    ))}
+                </StyledTextField>
 
                 {definition.requiresDuration && (
                     <>

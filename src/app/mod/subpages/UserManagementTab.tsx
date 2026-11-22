@@ -142,19 +142,6 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
         }
     };
 
-    const handleNoticeSent = async (message: string) => {
-        if (!selectedPlayer) return;
-
-        setSuccessMessage(message);
-        setSearchError(null);
-        try {
-            await refreshSelectedPlayerAsync(selectedPlayer.id);
-        } catch (error) {
-            const failure = error instanceof Error ? error.message : 'unknown error';
-            setSearchError(`${message} Failed to refresh the player: ${failure}`);
-        }
-    };
-
     const handleCancelAction = (action: IModActionResponse) => {
         if (!selectedPlayer) return;
 
@@ -463,7 +450,6 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
                                 target={modActionTargetFromPlayer(selectedPlayer)}
                                 onSubmitted={handleActionSubmitted}
                                 onError={setSearchError}
-                                onMessageSent={handleNoticeSent}
                             />
                         </Box>
                     )}

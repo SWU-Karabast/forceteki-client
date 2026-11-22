@@ -2,9 +2,8 @@ import {
     IFindUserResponse, IModActionResponse,
     ICosmeticEntity, IServerSettings,
     IPlayerReportDetailResponse, IPlayerReportListQuery, IPlayerReportListResponse, IPlayerReportUpdateResponse,
-    PlayerReportStatusUpdate, IPlayerNoticeHistoryEntry
+    PlayerReportStatusUpdate
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
-import type { PlayerNoticeKind } from '../_contexts/UserTypes';
 
 
 /** An error answer from the game node: its message, and the HTTP status it came with. */
@@ -215,21 +214,6 @@ export class ServerApiService {
             {
                 method: 'POST',
                 body: JSON.stringify({ playerId, modActionId }),
-            }
-        );
-    }
-
-    /** Sends a player a notice they see at their next sign-in. Warnings go with a Warning mod action instead. */
-    public static async sendPlayerNoticeAsync(
-        playerId: string,
-        kind: PlayerNoticeKind,
-        message: string,
-    ): Promise<{ success: boolean; notice: IPlayerNoticeHistoryEntry }> {
-        return await this.fetchWithErrorHandling<{ success: boolean; notice: IPlayerNoticeHistoryEntry }>(
-            `${this.baseUrl}/api/mod/send-notice`,
-            {
-                method: 'POST',
-                body: JSON.stringify({ playerId, kind, message }),
             }
         );
     }

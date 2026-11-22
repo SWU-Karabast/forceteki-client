@@ -44,11 +44,7 @@ export interface IUsernameChangesBlockedState {
 
 /** What a notice from the Karabast team is about; mirrors PlayerNoticeKind on the server */
 export enum PlayerNoticeKind {
-    BugReportFixed = 'BugReportFixed',
-    BugReportNotABug = 'BugReportNotABug',
-    BugReportNeedsInfo = 'BugReportNeedsInfo',
     Warning = 'Warning',
-    General = 'General',
 }
 
 /** A message from the Karabast team the player has not acknowledged yet */

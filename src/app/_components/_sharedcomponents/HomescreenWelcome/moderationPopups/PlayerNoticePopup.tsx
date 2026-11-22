@@ -18,7 +18,7 @@ interface PlayerNoticePopupProps {
     onAcknowledge: (notice: IPlayerNotice) => void;
 }
 
-/** A message from the Karabast team (a reply to a bug report, a warning, …), shown until the player acknowledges it */
+/** A message from the moderators (for now, one sent with a warning), shown until the player acknowledges it */
 const PlayerNoticePopup: React.FC<PlayerNoticePopupProps> = ({ notice, onAcknowledge }) => {
     const dateFormat = useDateFormat();
 

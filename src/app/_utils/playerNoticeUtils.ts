@@ -1,6 +1,6 @@
 import { PlayerNoticeKind } from '@/app/_contexts/UserTypes';
 
-/** The longest notice the server accepts, after trimming */
+/** The longest message to a player the server accepts, after trimming */
 export const MAX_PLAYER_NOTICE_LENGTH = 1000;
 
 interface IPlayerNoticeKindInfo {
@@ -13,56 +13,23 @@ interface IPlayerNoticeKindInfo {
 
     /** The colour of the heading the player sees */
     accentColor: string;
-
-    /** The text a moderator starts from when sending this kind directly; Warnings are sent with a Warning mod action */
-    defaultMessage?: string;
 }
 
-export const PLAYER_NOTICE_KINDS: Record<PlayerNoticeKind, IPlayerNoticeKindInfo> = {
-    [PlayerNoticeKind.BugReportFixed]: {
-        heading: 'Your Bug Report: Fixed',
-        modLabel: 'Bug Report: Fixed',
-        accentColor: '#4CAF50',
-        defaultMessage: 'Thanks for your bug report! This has been fixed and will be live in the next update.',
-    },
-    [PlayerNoticeKind.BugReportNotABug]: {
-        heading: 'Your Bug Report: Not a Bug',
-        modLabel: 'Bug Report: Not a Bug',
-        accentColor: '#2F7DB6',
-        defaultMessage: 'Thanks for your bug report! We looked into it and this is working as intended: ',
-    },
-    [PlayerNoticeKind.BugReportNeedsInfo]: {
-        heading: 'We Need More Information',
-        modLabel: 'Bug Report: Needs More Information',
-        accentColor: '#FFD54F',
-        defaultMessage: 'Thanks for your bug report! We could not work out what went wrong from the report alone. '
-            + 'If it happens again, please send another report describing what you expected to happen and what happened instead.',
-    },
+const PLAYER_NOTICE_KINDS: Record<PlayerNoticeKind, IPlayerNoticeKindInfo> = {
     [PlayerNoticeKind.Warning]: {
         heading: 'Warning from the Moderators',
         modLabel: 'Warning',
         accentColor: '#DC3545',
     },
-    [PlayerNoticeKind.General]: {
-        heading: 'Message from the Karabast Team',
-        modLabel: 'General',
-        accentColor: '#2F7DB6',
-        defaultMessage: '',
-    },
 };
 
-/** The kinds a moderator can send directly, in the order they are offered */
-export const SENDABLE_PLAYER_NOTICE_KINDS: PlayerNoticeKind[] = [
-    PlayerNoticeKind.BugReportFixed,
-    PlayerNoticeKind.BugReportNotABug,
-    PlayerNoticeKind.BugReportNeedsInfo,
-    PlayerNoticeKind.General,
-];
+/** Shown for a kind the server may add before this client knows it */
+const UNKNOWN_PLAYER_NOTICE_KIND: IPlayerNoticeKindInfo = {
+    heading: 'Message from the Moderators',
+    modLabel: 'Message',
+    accentColor: '#2F7DB6',
+};
 
-/** Whether a draft is still untouched, i.e. empty or one of the default texts, so picking another kind may replace it */
-export const isDefaultNoticeMessage = (message: string): boolean =>
-    !message.trim() || SENDABLE_PLAYER_NOTICE_KINDS.some((kind) => PLAYER_NOTICE_KINDS[kind].defaultMessage === message);
-
-/** The heading of a notice of a kind this client may not know yet */
+/** How to show a notice, including one of a kind this client does not know yet */
 export const getPlayerNoticeKindInfo = (kind: PlayerNoticeKind | string): IPlayerNoticeKindInfo =>
-    PLAYER_NOTICE_KINDS[kind as PlayerNoticeKind] ?? PLAYER_NOTICE_KINDS[PlayerNoticeKind.General];
+    PLAYER_NOTICE_KINDS[kind as PlayerNoticeKind] ?? UNKNOWN_PLAYER_NOTICE_KIND;
