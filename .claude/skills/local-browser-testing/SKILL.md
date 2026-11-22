@@ -13,10 +13,10 @@ with its own cookies and storage like a separate incognito window, so two anonym
 play each other on plain `http://localhost:3000`. The helpers are in `scripts/playwright/localPlayers.mjs`, and
 `scripts/playwright/smoke.mjs` plays the standard flows with them.
 
-**Ask first.** Never start a browser test on your own; a run is slow. It builds and starts both servers and drives
-browsers, which takes from about a minute to several. Offer it, say which flows you would play and about how long,
-and wait for a yes. A request from the user to test in the browser counts as the yes, and one yes covers re-runs
-within the same piece of work. forceteki's pointer skill lists the kinds of server change worth offering it for.
+**When to run it.** Run a browser test yourself, without asking, when it fits the work: a change players would see or
+feel in a game, lobby or queue, once it works and its specs pass. A run takes from about a minute to several (both
+servers, then the flows), so skip it for changes no player could see. forceteki's pointer skill lists the kinds of
+server change it suits.
 
 **Keep this skill current.** If you change, or notice a change in, anything these steps rely on, update this skill
 and the helpers in the same change. That covers the game node's dev routes (`/api/test-deck`,
@@ -103,6 +103,9 @@ Rules of thumb:
   bottom of the board (`handCards`), and cards in play carry `data-card-uuid`.
 - **Wait for what the user would see** (a text, a URL) rather than sleeping; locators wait on their own. Card art
   arrives after the board, so call `waitForImages` before judging a screenshot.
+- **Open pages without a game on them with `openPage(player, path)`**, not `page.goto`. On a page `next dev` is
+  compiling for the first time, the buttons can show before React has wired them up, so a click does nothing.
+  `openPage` waits for the network to settle first. The helpers already use it.
 - **Look at the page errors `newPlayer` prints.** A new one is often the first sign of a broken flow. React's
   `In HTML, <div> cannot be a descendant of <p>` warning is existing noise.
 - **Leave games through the UI** (`leaveGame`). A player whose page just closes stays in the game for a while, and the
@@ -111,19 +114,21 @@ Rules of thumb:
 ## 4. The scenarios
 
 **Two anonymous players, quick match** is the fastest way to get a game: `joinQueue` for both (Quick Match tab,
-Use test deck, Join Queue), then `waitForGameBoard`, then `playToFirstAction`. Both join the form's default queue
+Queue With Test Deck), then `waitForGameBoard`, then `playToFirstAction`. Both join the form's default queue
 (Premier, current card pool, best of one) and are matched within seconds. Use a lobby or a test game only when
 that is what is under test, or when a particular board is needed.
 
 **Lobby.** `createLobby(owner, { isPrivate })` returns the invite link (`http://localhost:3000/lobby?lobbyId=…`);
-`joinLobby(guest, link)` opens it and imports the test deck; `startLobbyGame` readies both and starts. A public
+`joinLobby(guest, link)` opens it and loads a test deck; `startLobbyGame` readies both and starts. A public
 lobby also shows under Available Lobbies on the home page. Private games have chat and no clock; public ones have
 the clock.
 
 **Decks page** (`/DeckPage`). An anonymous player's decks live in localStorage, and a signed-in user's on the
 server (in memory locally). Add New Deck takes only a deckbuilder link, never JSON, and resolving one calls a
-third-party site, so ask before doing it. The play forms' **Use test deck** button (development only) needs no
-outside site: the game node builds a legal deck for the selected format and card pool (`GET /api/test-deck`).
+third-party site, so ask before doing it. The development-only test deck buttons need no outside site: **Queue With Test
+Deck**, **Create Game With Test Deck** and, in a lobby, **Load Test Deck** each get a legal deck the game node builds
+for the selected format and card pool (`GET /api/test-deck`) and use it straight away, whatever deck the form holds.
+Each has an info tooltip saying so.
 
 **Dev users and test games.** `signInAsDevUser(player, DevUser.Order66)` uses the dev sign-in on `/auth`. These
 accounts exist only in development and skip OAuth and the email checks. Dev users get a Test tab listing the

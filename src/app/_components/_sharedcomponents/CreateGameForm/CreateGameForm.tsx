@@ -153,15 +153,6 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         setIsJsonDeck(false);
     }
 
-    const handleDeckLinkChange = (value: string) => {
-        clearErrors();
-        if (value.trim().length > 0) {
-            setDeckLinkTouched(false);
-        }
-        setDeckLink(value);
-        handleJsonDeck(value);
-    }
-
     const handleChangeDeckSelectionType = (value: string) => {
         if (value === 'SWU Stats Deck') {
             setShowSavedDecks(true);
@@ -178,11 +169,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     }
 
     // Handle Create Game Submission
-    const handleCreateGameSubmitActual = async () => {
+    const handleCreateGameSubmitActual = async (testDeckJson?: string) => {
         let userDeck;
         let deckType = 'url';
-        // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
-        if(showSavedDecks) {
+        // a development test deck, else whether the favourite deck was selected or a decklink was used
+        if (testDeckJson) {
+            userDeck = testDeckJson;
+        } else if(showSavedDecks) {
             if (useSwuStatsDecks && isSwuStatsLinked) {
                 // Use SWU Stats deck
                 const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
@@ -306,10 +299,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         if (isCreateGameDisabled) {
             return;
         }
+        submitCreateGame();
+    };
+
+    /** Opens the lobby with the form's deck, or with `testDeckJson` (the development-only test deck) when given. */
+    const submitCreateGame = (testDeckJson?: string) => {
         setFormat(lobbyConfig.format);
         setCardPool(lobbyConfig.cardPool);
         setGamesToWinMode(lobbyConfig.gamesToWinMode);
-        handleFormSubmissionWithUndoCheck(handleCreateGameSubmitActual);
+        handleFormSubmissionWithUndoCheck(() => handleCreateGameSubmitActual(testDeckJson));
     };
 
     const styles = {
@@ -583,18 +581,20 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                                 type="text"
                                 value={deckLink}
                                 onBlur={() => setDeckLinkTouched(true)}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => handleDeckLinkChange(e.target.value)}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>{
+                                    clearErrors();
+                                    if (e.target.value.trim().length > 0) {
+                                        setDeckLinkTouched(false);
+                                    }
+                                    setDeckLink(e.target.value);
+                                    handleJsonDeck(e.target.value);
+                                }}
                             />
                             {showDeckLinkRequiredError && (
                                 <Typography variant="body1" sx={styles.errorMessageStyle}>
                                     Enter a deck link or paste deck JSON.
                                 </Typography>
                             )}
-                            <TestDeckButton
-                                format={lobbyConfig.format}
-                                cardPool={lobbyConfig.cardPool}
-                                onDeck={handleDeckLinkChange}
-                            />
                         </FormControl>
                         {errorState.summary && (
                             <Typography variant={'body1'} sx={styles.errorMessageStyle}>
@@ -694,16 +694,24 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 )}
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={isCreateGameDisabled} variant="contained" sx={{
-                    ...styles.submitButtonStyle,
-                    '&.Mui-disabled': {
-                        backgroundColor: '#404040',
-                        color: '#9e9e9e',
-                        opacity: 1,
-                    },
-                }}>
-                    Create Game
-                </Button>
+                <TestDeckButton
+                    format={lobbyConfig.format}
+                    cardPool={lobbyConfig.cardPool}
+                    label="Create Game With Test Deck"
+                    tooltip="Development only. Opens the lobby straight away, with the settings above, using a legal deck the local game server builds for the selected format and card pool instead of the deck chosen in this form."
+                    onDeck={submitCreateGame}
+                >
+                    <Button type="submit" disabled={isCreateGameDisabled} variant="contained" sx={{
+                        ...styles.submitButtonStyle,
+                        '&.Mui-disabled': {
+                            backgroundColor: '#404040',
+                            color: '#9e9e9e',
+                            opacity: 1,
+                        },
+                    }}>
+                        Create Game
+                    </Button>
+                </TestDeckButton>
             </form>
         </Box>
     );

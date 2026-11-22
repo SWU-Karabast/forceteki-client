@@ -177,22 +177,15 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         setIsJsonDeck(false);
     }
 
-    const handleDeckLinkChange = (value: string) => {
-        clearErrors()
-        if (value.trim().length > 0) {
-            setDeckLinkTouched(false);
-        }
-        setDeckLink(value);
-        handleJsonDeck(value);
-    }
-
     // Handle Create Game Submission
-    const handleJoinGameQueueActual = async () => {
+    const handleJoinGameQueueActual = async (testDeckJson?: string) => {
         setQueueState(true);
-        // Get the deck link - either from selected favorite, SWU Stats deck, or direct input
+        // Get the deck link - either a development test deck, the selected favorite, SWU Stats deck, or direct input
         let userDeck = '';
         let deckType = 'url';
-        if(showSavedDecks) {
+        if (testDeckJson) {
+            userDeck = testDeckJson;
+        } else if(showSavedDecks) {
             if (useSwuStatsDecks && isSwuStatsLinked) {
                 // Use SWU Stats deck
                 const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
@@ -316,10 +309,15 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
         if (isJoinQueueDisabled) {
             return;
         }
+        submitJoinQueue();
+    };
+
+    /** Joins the queue with the form's deck, or with `testDeckJson` (the development-only test deck) when given. */
+    const submitJoinQueue = (testDeckJson?: string) => {
         setFormat(queueConfig.format);
         setCardPool(queueConfig.cardPool);
         setGamesToWinMode(queueConfig.gamesToWinMode)
-        handleFormSubmissionWithUndoCheck(handleJoinGameQueueActual);
+        handleFormSubmissionWithUndoCheck(() => handleJoinGameQueueActual(testDeckJson));
     };
 
     const styles = {
@@ -569,19 +567,20 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                                 type="text"
                                 value={deckLink}
                                 onBlur={() => setDeckLinkTouched(true)}
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => handleDeckLinkChange(e.target.value)}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                    clearErrors()
+                                    if (e.target.value.trim().length > 0) {
+                                        setDeckLinkTouched(false);
+                                    }
+                                    setDeckLink(e.target.value);
+                                    handleJsonDeck(e.target.value);
+                                }}
                             />
                             {showDeckLinkRequiredError && (
                                 <Typography variant="body1" sx={styles.errorMessageStyle}>
                                     Enter a deck link or paste deck JSON.
                                 </Typography>
                             )}
-                            <TestDeckButton
-                                format={queueConfig.format}
-                                cardPool={queueConfig.cardPool}
-                                onDeck={handleDeckLinkChange}
-                                disabled={queueState}
-                            />
                         </FormControl>
 
                         {/* Save Deck To Favourites Checkbox */}
@@ -684,16 +683,25 @@ const QuickGameForm: React.FC<IQuickGameFormProps> = ({
                 {CurrentGameAnnouncement && <GameAnnouncementBanner announcement={CurrentGameAnnouncement} />}
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={isJoinQueueDisabled} variant="contained" sx={{ ...styles.submitButtonStyle,
-                    '&.Mui-disabled': {
-                        backgroundColor: '#404040',
-                        color: '#9e9e9e',
-                        opacity: 1,
-                    },
-                    mb: '1rem',
-                }}>
-                    {queueState ? 'Queueing...' : 'Join Queue'}
-                </Button>
+                <TestDeckButton
+                    format={queueConfig.format}
+                    cardPool={queueConfig.cardPool}
+                    label="Queue With Test Deck"
+                    tooltip="Development only. Joins the queue straight away with a legal deck the local game server builds for the format and card pool selected above, instead of the deck chosen in this form."
+                    onDeck={submitJoinQueue}
+                    disabled={queueState}
+                >
+                    <Button type="submit" disabled={isJoinQueueDisabled} variant="contained" sx={{ ...styles.submitButtonStyle,
+                        '&.Mui-disabled': {
+                            backgroundColor: '#404040',
+                            color: '#9e9e9e',
+                            opacity: 1,
+                        },
+                        mb: '1rem',
+                    }}>
+                        {queueState ? 'Queueing...' : 'Join Queue'}
+                    </Button>
+                </TestDeckButton>
             </form>
             <FormatInfoPopup
                 open={matchmakingInfoOpen}

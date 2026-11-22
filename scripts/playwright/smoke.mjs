@@ -12,8 +12,8 @@
 // --headed opens the browser windows, to watch a run.
 
 import {
-    checkServers, ClientUrl, createLobby, DevUser, firstShowing, joinLobby, joinQueue, joinTestGame, launchBrowser,
-    leaveGame, newPlayer, OutputDir, playToFirstAction, readClock, screenshot, signInAsDevUser, startLobbyGame,
+    checkServers, createLobby, DevUser, firstShowing, joinLobby, joinQueue, joinTestGame, launchBrowser,
+    leaveGame, newPlayer, openPage, OutputDir, playToFirstAction, readClock, screenshot, signInAsDevUser, startLobbyGame,
     startTestGame, waitForGameBoard, waitForImages,
 } from './localPlayers.mjs';
 
@@ -50,7 +50,7 @@ const scenarios = {
 
     'deck-page': async (addPlayer) => {
         const player = await addPlayer('p1');
-        await player.page.goto(`${ClientUrl}/DeckPage`);
+        await openPage(player, '/DeckPage');
         await player.page.getByText('No decks found').waitFor();
         await snap([player], 'deck-page');
     },

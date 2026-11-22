@@ -91,41 +91,46 @@ export async function waitForImages(page, { timeout = 30_000 } = {}) {
     await page.waitForFunction(() => [...document.images].every((image) => image.complete), null, { timeout });
 }
 
+/**
+ * Opens a page of the site that holds no game connection (home, /auth, /DeckPage, …) and waits until its network
+ * settles. A page `next dev` is compiling for the first time can show its buttons before React has wired them up,
+ * and a click then does nothing; waiting for the network to settle gives it time to hydrate.
+ */
+export async function openPage(player, path) {
+    await player.page.goto(`${ClientUrl}${path}`);
+    await player.page.waitForLoadState('networkidle');
+}
+
 /** The home page's visible tab panel (Quick Match, Create Lobby or, for dev users, Test). */
 export const visibleTabPanel = (page) => page.locator('[role=tabpanel]:not([hidden])');
 
-/** Fills the deck field in `scope` with a legal deck from the local game node, through the dev-only "Use test deck" button. */
-export async function useTestDeck(scope) {
-    await scope.getByRole('button', { name: 'Use test deck' }).click();
-    await expect(scope.locator('input[type=text]').first()).toHaveValue(/"leader"/);
-}
+// The development-only test deck buttons below fetch a legal deck for the form's format and card pool from the local
+// game node (GET /api/test-deck) and use it straight away, whatever deck the form has.
 
-/** Joins the quick-match queue from the home page with the test deck, with the form's current format and card pool. */
+/** Joins the quick-match queue from the home page with a test deck ("Queue With Test Deck"), in the form's current queue. */
 export async function joinQueue(player) {
-    await player.page.goto(`${ClientUrl}/`);
-    const panel = visibleTabPanel(player.page);
-    await useTestDeck(panel);
-    await panel.getByRole('button', { name: 'Join Queue', exact: true }).click();
+    await openPage(player, '/');
+    await visibleTabPanel(player.page).getByRole('button', { name: 'Queue With Test Deck', exact: true }).click();
     await player.page.waitForURL('**/quickGame');
 }
 
-/** Opens a lobby from the home page's Create Lobby tab with the test deck, and returns its invite link. */
+/** Opens a lobby from the home page's Create Lobby tab with a test deck ("Create Game With Test Deck"), and returns its invite link. */
 export async function createLobby(player, { isPrivate = true } = {}) {
-    await player.page.goto(`${ClientUrl}/`);
+    await openPage(player, '/');
     await player.page.getByRole('tab', { name: 'Create Lobby' }).click();
     const panel = visibleTabPanel(player.page);
-    await useTestDeck(panel);
     await panel.getByText(isPrivate ? 'Private' : 'Public', { exact: true }).click();
-    await panel.getByRole('button', { name: 'Create Game', exact: true }).click();
+    await panel.getByRole('button', { name: 'Create Game With Test Deck', exact: true }).click();
     await player.page.waitForURL('**/lobby**');
     return player.page.locator('input[value*="lobbyId="]').inputValue();
 }
 
-/** Joins a lobby by its invite link and imports the test deck. */
+/** Joins a lobby by its invite link and loads a test deck into it ("Load Test Deck"). */
 export async function joinLobby(player, inviteLink) {
     await player.page.goto(inviteLink);
-    await useTestDeck(player.page);
-    await player.page.getByRole('button', { name: 'Import Deck', exact: true }).click();
+    await player.page.getByRole('button', { name: 'Load Test Deck', exact: true }).click();
+    // the ready button appears once the lobby has the player's deck
+    await player.page.getByRole('button', { name: 'Mark as ready' }).waitFor();
 }
 
 /** Marks both players ready, then has the lobby's owner start the game. */
@@ -196,7 +201,7 @@ export async function leaveGame(leaver, opponent) {
 
 /** Signs a player in as one of the {@link DevUser} test accounts, and returns the session's user name as a check. */
 export async function signInAsDevUser(player, devUser) {
-    await player.page.goto(`${ClientUrl}/auth`);
+    await openPage(player, '/auth');
     await player.page.getByRole('button', { name: `Login as ${devUser}`, exact: true }).click();
     await player.page.waitForURL(`${ClientUrl}/`);
     const session = await player.page.evaluate(() => fetch('/api/auth/session').then((response) => response.json()));

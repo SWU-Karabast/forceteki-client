@@ -123,23 +123,6 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         clearErrorsFunc();
     }
 
-    const handleDeckLinkChange = (value: string) => {
-        if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
-            setDisplayError(true);
-
-            if (hasSomeNonSideboardingErrors(connectedUser.deckErrors)) {
-                setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error');
-            } else {
-                setError('Sideboarding restrictions not met');
-            }
-        } else {
-            setDisplayError(false);
-            clearErrorsFunc();
-        }
-        handleJsonDeck(value);
-        setDeckLink(value);
-    }
-
     const handleChangeDeckSelectionType = (value: string) => {
         if (value === 'SWU Stats Deck') {
             setShowSavedDecks(true);
@@ -162,13 +145,16 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         );
     };
 
-    const handleOnChangeDeck = async () => {
-        if ((!favoriteDeck && !deckLink) || readyStatus) return;
+    /** Imports the form's deck, or `testDeckJson` (the development-only test deck) when given. */
+    const handleOnChangeDeck = async (testDeckJson?: string) => {
+        if ((!testDeckJson && !favoriteDeck && !deckLink) || readyStatus) return;
         let userDeck = '';
         let deckType = 'url';
-        // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
+        // a development test deck, else whether the favourite deck was selected or a decklink was used
         setDeckImportErrorsSeen(false);
-        if(showSavedDecks) {
+        if (testDeckJson) {
+            userDeck = testDeckJson;
+        } else if(showSavedDecks) {
             if (useSwuStatsDecks && isSwuStatsLinked) {
                 // Use SWU Stats deck
                 const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
@@ -668,13 +654,22 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                                     type="text"
                                     disabled={readyStatus}
                                     value={deckLink}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => handleDeckLinkChange(e.target.value)}
-                                />
-                                <TestDeckButton
-                                    format={matchConfig.format}
-                                    cardPool={matchConfig.cardPool}
-                                    onDeck={handleDeckLinkChange}
-                                    disabled={readyStatus}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                        if (connectedUser?.deckErrors && Object.keys(connectedUser.deckErrors).length > 0) {
+                                            setDisplayError(true);
+
+                                            if (hasSomeNonSideboardingErrors(connectedUser.deckErrors)) {
+                                                setError('Deck is invalid', connectedUser.deckErrors, 'Deck Validation Error','error');
+                                            } else {
+                                                setError('Sideboarding restrictions not met');
+                                            }
+                                        } else {
+                                            setDisplayError(false);
+                                            clearErrorsFunc();
+                                        }
+                                        handleJsonDeck(e.target.value);
+                                        setDeckLink(e.target.value);
+                                    }}
                                 />
                             </FormControl>
 
@@ -724,15 +719,24 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                         </Typography>
                     )}
 
-                    <Button
-                        type="button"
-                        onClick={handleOnChangeDeck}
-                        variant="contained"
+                    <TestDeckButton
+                        format={matchConfig.format}
+                        cardPool={matchConfig.cardPool}
+                        label="Load Test Deck"
+                        tooltip="Development only. Loads a legal deck the local game server builds for this lobby's format and card pool into the lobby straight away, instead of the deck chosen above."
+                        onDeck={handleOnChangeDeck}
                         disabled={readyStatus}
-                        sx={styles.submitButtonStyle}
                     >
-                        {showSavedDecks ? 'Load Deck' : 'Import Deck'}
-                    </Button>
+                        <Button
+                            type="button"
+                            onClick={() => handleOnChangeDeck()}
+                            variant="contained"
+                            disabled={readyStatus}
+                            sx={styles.submitButtonStyle}
+                        >
+                            {showSavedDecks ? 'Load Deck' : 'Import Deck'}
+                        </Button>
+                    </TestDeckButton>
                 </>
             )}
             {errorState.details && (
