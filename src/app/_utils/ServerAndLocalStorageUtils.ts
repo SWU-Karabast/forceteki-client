@@ -12,6 +12,7 @@ import { CardImageLocale } from '@/app/_utils/s3Utils';
 import { formatLongDate, getDateFormat } from '@/app/_utils/dateFormatUtils';
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import { EmailNotVerifiedError } from '@/app/_utils/SignInRefusal';
+import { randomUUID } from '@/app/_utils/randomUUID';
 
 /* Secondary functions */
 /**
@@ -348,7 +349,7 @@ export const saveDeckToServer = async (deckData: IDeckData | DeckJSON, deckLink:
         const payload = {
             user: getUserPayload(user),
             deck: {
-                id: deckData.deckID || crypto.randomUUID(), // Use existing ID or generate new one
+                id: deckData.deckID || randomUUID(), // Use existing ID or generate new one
                 userId: user?.id,
                 deck: {
                     leader: { id: deckData.leader.id },

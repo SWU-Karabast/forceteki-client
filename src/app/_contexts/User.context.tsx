@@ -12,6 +12,7 @@ import { usePathname } from 'next/navigation';
 import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { EmailNotVerifiedError, emailNotVerifiedRedirectUrl } from '@/app/_utils/SignInRefusal';
+import { randomUUID } from '@/app/_utils/randomUUID';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -98,7 +99,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             if (!session?.user) {
                 let anonymousId = localStorage.getItem('anonymousUserId');
                 if (!anonymousId) {
-                    anonymousId = crypto.randomUUID();
+                    anonymousId = randomUUID();
                     localStorage.setItem('anonymousUserId', anonymousId);
                 }
                 setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId));
