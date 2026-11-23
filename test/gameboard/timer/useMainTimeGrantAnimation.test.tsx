@@ -98,10 +98,8 @@ describe('useMainTimeGrantAnimation', () => {
         expect(result.current).toBeNull();
     });
 
-    it('starts counting rounds again in a new game', () => {
+    it('shows a new game\'s first grant, whose round is lower than the last one seen', () => {
         const { result, rerender } = renderGrantHook(playerState(100, { round: 4, seconds: 10 }));
-        rerender({ state: playerState(120) });
-        expect(result.current, 'the next game begins').toBeNull();
 
         rerender({ state: playerState(100, { round: 1, seconds: 10 }) });
 

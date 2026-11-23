@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import { Box, Stack, Typography, useMediaQuery } from '@mui/material';
 import { keyframes } from '@mui/system';
 import {
@@ -32,17 +32,52 @@ const chipFloat = keyframes`
     100% { opacity: 0; transform: translate(0, -12px); }
 `;
 
+// the chip for players who prefer reduced motion: it appears and fades where it is
+const chipFade = keyframes`
+    0% { opacity: 0; }
+    12%, 75% { opacity: 1; }
+    100% { opacity: 0; }
+`;
+
+const styles = {
+    value: {
+        position: 'relative',
+    },
+    grantChip: {
+        // just outside the ring, which the label sits in the middle of
+        position: 'absolute',
+        left: { xs: 'calc(100% + 11px)', md: 'calc(100% + 26px)' },
+        top: 0,
+        zIndex: 1,
+        fontSize: { xs: '0.6rem', md: '0.75rem' },
+        fontWeight: 700,
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+        color: MAIN_TIME_GRANT_COLOR,
+        textShadow: '0 0 4px rgba(0, 0, 0, 0.9)',
+        pointerEvents: 'none',
+        opacity: 0,
+        animation: `${chipFloat} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-out`,
+        '@media (prefers-reduced-motion: reduce)': {
+            animation: `${chipFade} ${MAIN_TIME_GRANT_ANIMATION_MS}ms linear`,
+        },
+    },
+};
+
 const Divider = () => <div style={{ height: '1px', width: '100%', background: 'white', opacity: 0.3, marginTop: '2px' }} />;
 
 /**
  * The value a main time label shows while a grant is counting up to its new value, or null once it has (or when the
  * player prefers reduced motion, which shows the new value at once).
+ *
+ * The count-up starts in a layout effect: the game state that brings a grant already carries the new main time, so
+ * starting it after the first paint would show the new value for a frame before dropping back to count up to it.
  */
 const useGrantCountUp = (grant: IMainTimeGrantAnimation | null | undefined): number | null => {
     const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
     const [valueMs, setValueMs] = useState<number | null>(null);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!grant || prefersReducedMotion) {
             setValueMs(null);
             return;
@@ -51,7 +86,8 @@ const useGrantCountUp = (grant: IMainTimeGrantAnimation | null | undefined): num
         let frame = 0;
         const start = performance.now();
         const step = (now: number) => {
-            const progress = Math.min(1, (now - start) / MAIN_TIME_GRANT_COUNT_UP_MS);
+            // a frame's timestamp can be a little earlier than `start`
+            const progress = Math.min(1, Math.max(0, (now - start) / MAIN_TIME_GRANT_COUNT_UP_MS));
             const eased = 1 - Math.pow(1 - progress, 3);
             setValueMs(progress < 1 ? grant.fromMs + (grant.toMs - grant.fromMs) * eased : null);
             if (progress < 1) {
@@ -79,7 +115,7 @@ const MainTimeValue: React.FC<MainTimeValueProps> = ({ timeRemaining, color, isA
     const countUpMs = useGrantCountUp(grant);
 
     return (
-        <Box sx={{ position: 'relative' }}>
+        <Box sx={styles.value}>
             <Typography
                 key={grant?.round}
                 variant="body1"
@@ -95,22 +131,7 @@ const MainTimeValue: React.FC<MainTimeValueProps> = ({ timeRemaining, color, isA
                 <Typography
                     key={`chip-${grant.round}`}
                     aria-label={`${grant.seconds} seconds of main time added`}
-                    sx={{
-                        // just outside the ring, which the label sits in the middle of
-                        position: 'absolute',
-                        left: { xs: 'calc(100% + 11px)', md: 'calc(100% + 26px)' },
-                        top: 0,
-                        zIndex: 1,
-                        fontSize: { xs: '0.6rem', md: '0.75rem' },
-                        fontWeight: 700,
-                        lineHeight: 1,
-                        whiteSpace: 'nowrap',
-                        color: MAIN_TIME_GRANT_COLOR,
-                        textShadow: '0 0 4px rgba(0, 0, 0, 0.9)',
-                        pointerEvents: 'none',
-                        opacity: 0,
-                        animation: `${chipFloat} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-out`,
-                    }}
+                    sx={styles.grantChip}
                 >+{grant.seconds}s</Typography>
             )}
         </Box>

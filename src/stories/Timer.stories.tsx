@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs';
 import { Box, Button, GlobalStyles, Stack, Typography } from '@mui/material';
 import Timer from '@/app/_components/_sharedcomponents/Timer/Timer';
@@ -28,10 +28,19 @@ const MainTimeGrantPreview: React.FC<MainTimeGrantPreviewProps> = ({
 }) => {
     const [round, setRound] = useState(1);
     const [showing, setShowing] = useState(true);
+
+    // each grant is shown for as long as the game timer shows one, and the story drops it after that, as the game does
+    useEffect(() => {
+        if (!showing) {
+            return;
+        }
+        const timeout = setTimeout(() => setShowing(false), MAIN_TIME_GRANT_ANIMATION_MS);
+        return () => clearTimeout(timeout);
+    }, [round, showing]);
+
     const replay = () => {
         setRound((current) => current + 1);
         setShowing(true);
-        setTimeout(() => setShowing(false), MAIN_TIME_GRANT_ANIMATION_MS);
     };
 
     const playerGrant = showing ? grantOf(round, playerFromSeconds, playerGrantSeconds) : null;
@@ -72,7 +81,7 @@ const MainTimeGrantPreview: React.FC<MainTimeGrantPreviewProps> = ({
 };
 
 const meta = {
-    title: 'Game/Main time grant',
+    title: 'Game/Timer',
     component: MainTimeGrantPreview,
     parameters: {
         layout: 'centered',
@@ -97,7 +106,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const BothPlayersGetTime: Story = {
+export const MainTimeGrantToBothPlayers: Story = {
     args: {
         playerFromSeconds: 64,
         playerGrantSeconds: 10,
@@ -107,7 +116,7 @@ export const BothPlayersGetTime: Story = {
     },
 };
 
-export const OnlyOpponentGetsTime: Story = {
+export const MainTimeGrantToOpponentOnly: Story = {
     args: {
         playerFromSeconds: 120,
         playerGrantSeconds: 0,

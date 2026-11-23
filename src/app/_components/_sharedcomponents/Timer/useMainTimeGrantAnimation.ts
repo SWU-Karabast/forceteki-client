@@ -19,8 +19,8 @@ interface IPlayerTimerState {
  *
  * The server sends a player's latest grant with every game state, so a grant is new only when its round differs from the
  * one last seen. The first state seen sets that round without showing anything, so a refresh or reconnect does not replay
- * a grant from earlier in the game. A round lower than the one last seen means a new game (the next one in a Bo3), whose
- * rounds count from the start again. An undo never changes the grant, because the time given is kept. A grant of 0 seconds,
+ * a grant from earlier in the game. Within a game the round only goes up, since an undo leaves the time given in place; a
+ * lower one is a new game's grant, whose rounds count from the start again, and shows like any other. A grant of 0 seconds,
  * to a player whose main time was full, shows nothing.
  */
 export const useMainTimeGrantAnimation = (playerState: IPlayerTimerState | undefined): IMainTimeGrantAnimation | null => {
@@ -40,7 +40,7 @@ export const useMainTimeGrantAnimation = (playerState: IPlayerTimerState | undef
 
         const lastSeenRound = lastSeenRoundRef.current;
         lastSeenRoundRef.current = round;
-        if (lastSeenRound == null || round < lastSeenRound || seconds <= 0) {
+        if (lastSeenRound == null || seconds <= 0) {
             return;
         }
 

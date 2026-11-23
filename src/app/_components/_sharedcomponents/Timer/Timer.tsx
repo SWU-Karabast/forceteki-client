@@ -56,10 +56,36 @@ interface TimerProps extends CircularProgressProps {
 }
 
 const styles = {
-    container: { 
-        position: 'relative', 
+    container: {
+        position: 'relative',
         display: 'inline-flex'
-    }
+    },
+    ringWhileGrantShown: {
+        display: 'flex',
+        animation: `${grantRingHide} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-in-out`,
+    },
+    ring: {
+        display: 'flex',
+    },
+    grantRing: {
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        opacity: 0,
+        animation: `${grantOverlayShow} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-in-out`,
+    },
+    grantRingMainTime: {
+        position: 'absolute',
+        inset: 0,
+        color: 'var(--initiative-blue)',
+    },
+    grantRingSegment: {
+        position: 'absolute',
+        inset: 0,
+        color: MAIN_TIME_GRANT_COLOR,
+        filter: `drop-shadow(0 0 3px ${MAIN_TIME_GRANT_COLOR})`,
+        animation: `${grantSegmentAppear} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-out`,
+    },
 }
 
 /** The player's main time on the ring, with the time a grant gave back appearing at the end of the arc. */
@@ -67,37 +93,13 @@ const GrantRing: React.FC<{ grant: IMainTimeGrantAnimation, size: number }> = ({
     const fromPercent = (grant.fromMs / MAX_MAIN_TIME) * 100;
     const segmentPercent = ((grant.toMs - grant.fromMs) / MAX_MAIN_TIME) * 100;
 
+    // the chip beside the label says how much time was given, so the ring is left out for screen readers
     return (
-        <Box
-            key={grant.round}
-            sx={{
-                position: 'absolute',
-                inset: 0,
-                pointerEvents: 'none',
-                opacity: 0,
-                animation: `${grantOverlayShow} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-in-out`,
-            }}
-        >
-            <CircularProgress
-                variant="determinate"
-                size={size}
-                value={fromPercent}
-                sx={{ position: 'absolute', inset: 0, color: 'var(--initiative-blue)' }}
-            />
+        <Box key={grant.round} sx={styles.grantRing} aria-hidden data-testid="main-time-grant-ring">
+            <CircularProgress variant="determinate" size={size} value={fromPercent} sx={styles.grantRingMainTime} />
             {/* the segment is drawn from the top like any arc, then turned to start where the main time ended */}
             <Box sx={{ position: 'absolute', inset: 0, transform: `rotate(${fromPercent * 3.6}deg)` }}>
-                <CircularProgress
-                    variant="determinate"
-                    size={size}
-                    value={segmentPercent}
-                    sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        color: MAIN_TIME_GRANT_COLOR,
-                        filter: `drop-shadow(0 0 3px ${MAIN_TIME_GRANT_COLOR})`,
-                        animation: `${grantSegmentAppear} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-out`,
-                    }}
-                />
+                <CircularProgress variant="determinate" size={size} value={segmentPercent} sx={styles.grantRingSegment} />
             </Box>
         </Box>
     );
@@ -119,7 +121,7 @@ const Timer: React.FC<TimerProps> = ({
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
     const size = isMobile ? 44 : 80;
-    // the ring is not drawn when hidden, and the flash is left out for players who prefer reduced motion
+    // the grant is not drawn on a hidden ring, nor for players who prefer reduced motion (the label still shows it)
     const shownGrant = hideProgressIndicator || prefersReducedMotion ? null : grantOverlay ?? null;
     // Decreases turn time every 100ms, to provide a smooth countdown animation
     React.useEffect(() => {
@@ -156,13 +158,7 @@ const Timer: React.FC<TimerProps> = ({
             }
         >
             <Box sx={styles.container}>
-                <Box
-                    key={shownGrant?.round}
-                    sx={{
-                        display: 'flex',
-                        animation: shownGrant ? `${grantRingHide} ${MAIN_TIME_GRANT_ANIMATION_MS}ms ease-in-out` : 'none',
-                    }}
-                >
+                <Box key={shownGrant?.round} sx={shownGrant ? styles.ringWhileGrantShown : styles.ring}>
                     <CircularProgress
                         variant='determinate'
                         size={size}
