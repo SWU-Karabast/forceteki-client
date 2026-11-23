@@ -23,6 +23,8 @@ export default defineConfig({
         environment: 'jsdom',
         globalSetup: ['test/helpers/downloadGameStates.ts'],
         setupFiles: ['test/helpers/setup.ts'],
+        // the backend the client connects to, as .env.development sets it for `npm run dev`
+        env: { NEXT_PUBLIC_ROOT_URL: 'http://localhost:9500' },
         clearMocks: true,
         restoreMocks: true,
     },
