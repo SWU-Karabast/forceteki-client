@@ -6,6 +6,7 @@ import CosmeticsManagerTab from './subpages/CosmeticsManagerTab';
 import UserManagementSection from './subpages/UserManagementSection';
 import { useOpenReportCount } from '@/app/_hooks/useOpenReportCount';
 import ServerControlsTab from './subpages/ServerControlsTab';
+import RolesTab from './subpages/RolesTab';
 import ModPreferencesTab from './subpages/ModPreferencesTab';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +15,7 @@ enum ModToolsTab {
     CosmeticsManager = 1,
     ModPreferences = 2,
     ServerControls = 3,
+    Roles = 4,
 }
 
 interface IModPageClientProps {
@@ -142,6 +144,7 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                     <Tab value={ModToolsTab.CosmeticsManager} label="Cosmetics Manager" sx={styles.tab} />
                     <Tab value={ModToolsTab.ModPreferences} label="Mod Preferences" sx={styles.tab} />
                     {isAdmin && <Tab value={ModToolsTab.ServerControls} label="Server Controls" sx={styles.tab} />}
+                    {isAdmin && <Tab value={ModToolsTab.Roles} label="Roles" sx={styles.tab} />}
                 </Tabs>
 
                 {/* Tab Content */}
@@ -152,6 +155,7 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                     {activeTab === ModToolsTab.CosmeticsManager && <CosmeticsManagerTab isAdmin={isAdmin} />}
                     {activeTab === ModToolsTab.ModPreferences && <ModPreferencesTab />}
                     {isAdmin && activeTab === ModToolsTab.ServerControls && <ServerControlsTab />}
+                    {isAdmin && activeTab === ModToolsTab.Roles && <RolesTab />}
                 </Box>
             </Box>
         </Box>
