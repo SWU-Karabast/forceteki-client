@@ -68,6 +68,8 @@ export const describeModAction = (action: IModActionResponse): string => {
             return `Mute ${action.durationDays} day${action.durationDays === 1 ? '' : 's'}`;
         case ModActionType.Warning:
             return 'Warning';
+        case ModActionType.Note:
+            return 'Note';
         case ModActionType.Rename:
             return 'Force Rename';
         case ModActionType.ReportingDisabled:

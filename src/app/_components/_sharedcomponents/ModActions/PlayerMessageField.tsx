@@ -9,12 +9,16 @@ interface IPlayerMessageFieldProps {
 
     /** Shown before the character count, e.g. who will see the message */
     hint?: string;
+
+    /** Shown instead of the hint, e.g. when a required message is missing */
+    errorMessage?: string;
     disabled?: boolean;
 }
 
 /** A message a moderator writes to a player, with the length the server accepts */
-const PlayerMessageField: React.FC<IPlayerMessageFieldProps> = ({ value, onChange, placeholder, hint, disabled }) => {
+const PlayerMessageField: React.FC<IPlayerMessageFieldProps> = ({ value, onChange, placeholder, hint, errorMessage, disabled }) => {
     const count = `${value.trim().length}/${MAX_PLAYER_NOTICE_LENGTH}`;
+    const helperText = errorMessage ?? hint;
 
     return (
         <StyledTextField
@@ -26,8 +30,9 @@ const PlayerMessageField: React.FC<IPlayerMessageFieldProps> = ({ value, onChang
             value={value}
             disabled={disabled}
             inputProps={{ maxLength: MAX_PLAYER_NOTICE_LENGTH }}
-            helperText={hint ? `${hint} (${count})` : count}
-            FormHelperTextProps={{ sx: { color: '#B0B0B0', mx: 0 } }}
+            error={!!errorMessage}
+            helperText={helperText ? `${helperText} (${count})` : count}
+            FormHelperTextProps={{ sx: { color: errorMessage ? undefined : '#B0B0B0', mx: 0 } }}
             onChange={(e) => onChange(e.target.value)}
         />
     );

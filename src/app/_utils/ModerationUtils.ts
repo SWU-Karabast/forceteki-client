@@ -68,6 +68,8 @@ export const getActionLabel = (action: IModActionResponse, dateFormat: DateForma
             return `${date} Muted (${formatDuration(action.durationDays)})`;
         case ModActionType.Warning:
             return `${date} Warning`;
+        case ModActionType.Note:
+            return `${date} Note`;
         case ModActionType.Rename:
             return `${date} Renamed`;
         case ModActionType.ReportingDisabled:
