@@ -85,6 +85,18 @@ export const playerMatches = [
 
 export const articles: IArticle[] = [
     {
+        title: 'Icons Joins Premier',
+        content: `
+        <p>Icons 2027 Edition cards are now legal in the <strong>Premier</strong> format. Decks that include Icons cards no longer need the Next Set Preview card pool.</p>
+
+        <p style="margin-bottom:0;">Join our <a target="_blank" href="https://discord.gg/hKRaqHND4v" style="color:lightblue;">Discord</a> with any questions or feedback.</p><p></p>
+	  `,
+        date: '11/23/26',
+        image: '/icons-preview.webp',
+        imageAlt: 'Icons 2027 Edition key art: Kylo Ren and Rey dueling with lightsabers',
+        imagePosition: 'center 40%',
+    },
+    {
         title: 'Icons Preview is Complete',
         content: `
         <p>All Icons 2027 Edition cards are now fully implemented and available in the <strong>Next Set Preview</strong> card pool. These cards will join Premier on Karabast the week of November 23rd.</p>

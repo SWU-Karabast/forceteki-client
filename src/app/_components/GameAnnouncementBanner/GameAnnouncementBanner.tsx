@@ -22,7 +22,7 @@ export type GameAnnouncement =
  */
 export const CurrentGameAnnouncement: GameAnnouncement | undefined = {
     kind: 'custom',
-    message: 'Icons is now available in Next Set Preview!'
+    message: 'Icons is now legal in Premier!'
 };
 
 interface IGameAnnouncementBannerProps {
