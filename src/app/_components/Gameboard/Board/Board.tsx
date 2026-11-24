@@ -12,7 +12,8 @@ import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 import { useTheme } from '@mui/material/styles';
 import BoardLeaders from '@/app/_components/Gameboard/_subcomponents/BoardLeaders';
 import ClaimCounterIndicators from '@/app/_components/Gameboard/_subcomponents/ClaimCounterIndicators';
-import { SwuGameFormat } from '@/app/_constants/constants';
+import OpponentResourceChoiceIndicator from '@/app/_components/Gameboard/_subcomponents/OpponentResourceChoiceIndicator';
+import { OpponentResourceChoice, SwuGameFormat } from '@/app/_constants/constants';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
@@ -46,10 +47,7 @@ const Board: React.FC<IBoardProps> = ({
     const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
     const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
     // in the regroup phase's resource step, the player without the initiative is told what the player with it has chosen
-    // (other prompts that have a description show it in their popup)
-    const promptDescription = gameState?.players[connectedPlayer].promptState.promptType === 'resource'
-        ? gameState?.players[connectedPlayer].promptState.promptDescription
-        : undefined;
+    const opponentResourceChoice: OpponentResourceChoice | undefined = gameState?.players[connectedPlayer].promptState.opponentResourceChoice;
 
     const attachCapturedCards = (
         card: ICardData,
@@ -302,14 +300,15 @@ const Board: React.FC<IBoardProps> = ({
                 ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
                 : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
         },
-        // placed under the prompt without taking up room, so a second line does not make the board taller
-        promptDescriptionStyle: {
+        // Placed under the prompt without taking up room, so it does not make the board taller. It is tucked into the
+        // prompt's bottom padding to stay clear of the base below for as long as the screen's height allows.
+        promptStatus: {
             position: 'absolute',
             top: '100%',
             left: '50%',
             transform: 'translateX(-50%)',
-            whiteSpace: 'nowrap',
-            fontSize: '0.75em',
+            marginTop: '-0.5em',
+            fontSize: '0.62em',
         },
         promptShadow: {
             position: 'absolute',
@@ -361,7 +360,11 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={styles.centralPromptContainer}>
                         <Box sx={styles.promptStyle}>
                             {menuTitle && <RichText text={menuTitle}/>}
-                            {menuTitle && promptDescription && <RichText text={promptDescription} sx={styles.promptDescriptionStyle}/>}
+                            {menuTitle && opponentResourceChoice && (
+                                <Box sx={styles.promptStatus}>
+                                    <OpponentResourceChoiceIndicator choice={opponentResourceChoice} />
+                                </Box>
+                            )}
                             <Box sx={styles.promptShadow}/>
                         </Box>
                     </Box>

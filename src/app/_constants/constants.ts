@@ -163,6 +163,16 @@ export enum ZoneName {
     SpaceArena = 'spaceArena',
 }
 
+/**
+ * In the regroup phase's resource step, what the opponent who has the initiative has chosen. The server sends it in the
+ * prompt state of the player without the initiative only, as `opponentResourceChoice`.
+ */
+export enum OpponentResourceChoice {
+    NotChosen = 'notChosen',
+    Resourced = 'resourced',
+    Passed = 'passed',
+}
+
 export enum QuickUndoAvailableState {
     NoSnapshotAvailable = 'noSnapshotAvailable',
     UndoRequestsBlocked = 'undoRequestsBlocked',

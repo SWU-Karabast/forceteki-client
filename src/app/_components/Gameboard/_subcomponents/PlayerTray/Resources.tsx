@@ -8,6 +8,20 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { usePopup } from '@/app/_contexts/Popup.context';
 import { PopupSource } from '@/app/_components/_sharedcomponents/Popup/Popup.types';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
+import { keyframes } from '@mui/system';
+import { OpponentResourceChoice } from '@/app/_constants/constants';
+
+const badgeAppear = keyframes`
+    0% {
+        scale: 0;
+    }
+    60% {
+        scale: 1.25;
+    }
+    100% {
+        scale: 1;
+    }
+`;
 
 const Resources: React.FC<IResourcesProps> = ({
     trayPlayer
@@ -20,6 +34,10 @@ const Resources: React.FC<IResourcesProps> = ({
     const availableResources = gameState.players[trayPlayer].availableResources;
     const totalResources = gameState.players[trayPlayer].cardPiles.resources.length;
     const selectableResource = gameState.players[trayPlayer].cardPiles.resources.some((item: { selectable: boolean }) => item.selectable === true);
+    // In the regroup phase's resource step the opponent's card stays in their hand until both players have chosen, so
+    // their count has not gone up yet. The player waiting on them is shown that it is about to.
+    const opponentResourcePending = trayPlayer !== connectedPlayer &&
+        gameState.players[connectedPlayer]?.promptState?.opponentResourceChoice === OpponentResourceChoice.Resourced;
 
     const handleResourceToggle = () => {
         const playerName = connectedPlayer != trayPlayer ? 'Your Opponent\'s' : 'Your';
@@ -96,6 +114,29 @@ const Resources: React.FC<IResourcesProps> = ({
                 'clamp(1.1rem, 0.50rem + 1.0vw, 1.8rem)',
             color: 'white',
         },
+        // beside the count rather than over it, so the count stays readable at every screen size
+        pendingResourceBadge: {
+            position: 'absolute',
+            left: 'calc(100% + 0.25rem)',
+            top: '50%',
+            translate: '0 -50%',
+            zIndex: 3,
+            minWidth: '1.7rem',
+            padding: '0 0.4rem',
+            borderRadius: '20px',
+            border: '2px solid var(--initiative-red)',
+            backgroundColor: 'var(--initiative-red)',
+            color: 'black',
+            fontWeight: 700,
+            fontSize: '0.85rem',
+            lineHeight: 1.5,
+            textAlign: 'center',
+            userSelect: 'none',
+            animation: `${badgeAppear} 0.4s ease-out`,
+            '@media (prefers-reduced-motion: reduce)': {
+                animation: 'none',
+            },
+        },
         resourceBorderLeft: {
             background: `
             url('border-res-lb.svg') no-repeat left bottom`,
@@ -133,6 +174,16 @@ const Resources: React.FC<IResourcesProps> = ({
         >
             <Box sx={styles.resourceBorderRight} />
             <Box sx={styles.resourceBorderLeft} />
+            {opponentResourcePending && (
+                <Box
+                    sx={styles.pendingResourceBadge}
+                    role="status"
+                    aria-label="Initiative player is about to gain a resource"
+                    data-testid="opponent-pending-resource"
+                >
+                    +1
+                </Box>
+            )}
 
             <CardContent sx={{ display: 'flex' }}>
                 <Box sx={styles.boxStyle}>
