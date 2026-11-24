@@ -12,6 +12,11 @@ export interface IParticipant {
     fullDeck: ICardData[];
 }
 
+/** Who is watching the game, merged into every gamestate by the server's Lobby (absent from older servers). */
+export interface ISpectatorSummary {
+    count: number;
+}
+
 export interface IChatDrawerProps {
     sidebarOpen: boolean;
     toggleSidebar: () => void;

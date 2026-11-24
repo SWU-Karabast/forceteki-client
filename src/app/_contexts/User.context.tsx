@@ -12,6 +12,7 @@ import { usePathname } from 'next/navigation';
 import { IUserContextType, IPreferences, IModerationAction } from './UserTypes';
 import { getUserFromServer } from '@/app/_utils/ServerAndLocalStorageUtils';
 import { EmailNotVerifiedError, emailNotVerifiedRedirectUrl } from '@/app/_utils/SignInRefusal';
+import { randomUUID } from '@/app/_utils/randomUUID';
 
 const UserContext = createContext<IUserContextType>({
     user: null,
@@ -88,7 +89,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                 setIsMod(false);
             }
             if(needsLogout){
-                logout(logoutCallbackUrl);
+                signOutTo(logoutCallbackUrl);
             }
         };
 
@@ -98,7 +99,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             if (!session?.user) {
                 let anonymousId = localStorage.getItem('anonymousUserId');
                 if (!anonymousId) {
-                    anonymousId = crypto.randomUUID();
+                    anonymousId = randomUUID();
                     localStorage.setItem('anonymousUserId', anonymousId);
                 }
                 setAnonymousUserId(prevId => (prevId === anonymousId ? prevId : anonymousId));
@@ -111,7 +112,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             setupAnonymousUserIfNeeded();
         };
         if(hideLogin && session?.user){
-            logout();
+            signOutTo('/');
         }
         initializeUser();
     }, [session, pathname]);
@@ -225,10 +226,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     };
 
 
-    const logout = (callbackUrl = '/') => {
+    const signOutTo = (callbackUrl: string) => {
         signOut({ callbackUrl });
         setUser(null);
     };
+
+    // Takes no arguments: the log out buttons pass this straight to onClick, which calls it with the click event.
+    // A parameter here would receive that event as the callback URL, and NextAuth rejects the sign-out without
+    // clearing the session cookie.
+    const logout = () => signOutTo('/');
 
     const clearAnonUser = () => {
         localStorage.removeItem('anonymousUserId');

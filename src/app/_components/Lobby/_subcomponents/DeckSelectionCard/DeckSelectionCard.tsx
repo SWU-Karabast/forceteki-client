@@ -20,6 +20,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { ILobbyUserProps, IDeckSelectionCardProps } from '@/app/_components/Lobby/LobbyTypes';
 import LobbyReadyButtons from '@/app/_components/Lobby/_subcomponents/LobbyReadyButtons/LobbyReadyButtons';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
+import TestDeckButton from '@/app/_components/_sharedcomponents/TestDeckButton/TestDeckButton';
 import SegmentedControl from '@/app/_components/_sharedcomponents/SegmentedControl/SegmentedControl';
 import { fetchDeckData, determineDeckSource, DeckSource, DeckFetchError } from '@/app/_utils/fetchDeckData';
 import {
@@ -144,13 +145,16 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
         );
     };
 
-    const handleOnChangeDeck = async () => {
-        if ((!favoriteDeck && !deckLink) || readyStatus) return;
+    /** Imports the form's deck, or `testDeckJson` (the development-only test deck) when given. */
+    const handleOnChangeDeck = async (testDeckJson?: string) => {
+        if ((!testDeckJson && !favoriteDeck && !deckLink) || readyStatus) return;
         let userDeck = '';
         let deckType = 'url';
-        // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
+        // a development test deck, else whether the favourite deck was selected or a decklink was used
         setDeckImportErrorsSeen(false);
-        if(showSavedDecks) {
+        if (testDeckJson) {
+            userDeck = testDeckJson;
+        } else if(showSavedDecks) {
             if (useSwuStatsDecks && isSwuStatsLinked) {
                 // Use SWU Stats deck
                 const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
@@ -715,15 +719,24 @@ const DeckSelectionCard: React.FC<IDeckSelectionCardProps> = ({
                         </Typography>
                     )}
 
-                    <Button
-                        type="button"
-                        onClick={handleOnChangeDeck}
-                        variant="contained"
+                    <TestDeckButton
+                        format={matchConfig.format}
+                        cardPool={matchConfig.cardPool}
+                        label="Load Test Deck"
+                        tooltip="Development only. Loads a legal deck the local game server builds for this lobby's format and card pool into the lobby straight away, instead of the deck chosen above."
+                        onDeck={handleOnChangeDeck}
                         disabled={readyStatus}
-                        sx={styles.submitButtonStyle}
                     >
-                        {showSavedDecks ? 'Load Deck' : 'Import Deck'}
-                    </Button>
+                        <Button
+                            type="button"
+                            onClick={() => handleOnChangeDeck()}
+                            variant="contained"
+                            disabled={readyStatus}
+                            sx={styles.submitButtonStyle}
+                        >
+                            {showSavedDecks ? 'Load Deck' : 'Import Deck'}
+                        </Button>
+                    </TestDeckButton>
                 </>
             )}
             {errorState.details && (

@@ -13,6 +13,7 @@ import {
     Tooltip,
 } from '@mui/material';
 import StyledTextField from '../_styledcomponents/StyledTextField';
+import TestDeckButton from '../TestDeckButton/TestDeckButton';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/app/_contexts/User.context';
 import { fetchDeckData, DeckFetchError } from '@/app/_utils/fetchDeckData';
@@ -168,11 +169,13 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
     }
 
     // Handle Create Game Submission
-    const handleCreateGameSubmitActual = async () => {
+    const handleCreateGameSubmitActual = async (testDeckJson?: string) => {
         let userDeck;
         let deckType = 'url';
-        // check whether the favourite deck was selected or a decklink was used. The decklink always has precedence
-        if(showSavedDecks) {
+        // a development test deck, else whether the favourite deck was selected or a decklink was used
+        if (testDeckJson) {
+            userDeck = testDeckJson;
+        } else if(showSavedDecks) {
             if (useSwuStatsDecks && isSwuStatsLinked) {
                 // Use SWU Stats deck
                 const selectedSwuStatsDeck = swuStatsDecks.find(deck => deck.id.toString() === favoriteDeck);
@@ -296,10 +299,15 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
         if (isCreateGameDisabled) {
             return;
         }
+        submitCreateGame();
+    };
+
+    /** Opens the lobby with the form's deck, or with `testDeckJson` (the development-only test deck) when given. */
+    const submitCreateGame = (testDeckJson?: string) => {
         setFormat(lobbyConfig.format);
         setCardPool(lobbyConfig.cardPool);
         setGamesToWinMode(lobbyConfig.gamesToWinMode);
-        handleFormSubmissionWithUndoCheck(handleCreateGameSubmitActual);
+        handleFormSubmissionWithUndoCheck(() => handleCreateGameSubmitActual(testDeckJson));
     };
 
     const styles = {
@@ -686,16 +694,24 @@ const CreateGameForm: React.FC<ICreateGameFormProps> = ({
                 )}
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={isCreateGameDisabled} variant="contained" sx={{
-                    ...styles.submitButtonStyle,
-                    '&.Mui-disabled': {
-                        backgroundColor: '#404040',
-                        color: '#9e9e9e',
-                        opacity: 1,
-                    },
-                }}>
-                    Create Game
-                </Button>
+                <TestDeckButton
+                    format={lobbyConfig.format}
+                    cardPool={lobbyConfig.cardPool}
+                    label="Create Game With Test Deck"
+                    tooltip="Development only. Opens the lobby straight away, with the settings above, using a legal deck the local game server builds for the selected format and card pool instead of the deck chosen in this form."
+                    onDeck={submitCreateGame}
+                >
+                    <Button type="submit" disabled={isCreateGameDisabled} variant="contained" sx={{
+                        ...styles.submitButtonStyle,
+                        '&.Mui-disabled': {
+                            backgroundColor: '#404040',
+                            color: '#9e9e9e',
+                            opacity: 1,
+                        },
+                    }}>
+                        Create Game
+                    </Button>
+                </TestDeckButton>
             </form>
         </Box>
     );
