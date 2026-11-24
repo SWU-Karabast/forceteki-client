@@ -188,7 +188,7 @@ export class ServerApiService {
         actionType: string,
         note: string,
         durationDays?: number,
-        options?: { newUsername?: string; reportId?: string },
+        options?: { newUsername?: string; reportId?: string; playerMessage?: string },
     ): Promise<{ success: boolean; message: string; }> {
         return await this.fetchWithErrorHandling<{
             success: boolean;
@@ -216,6 +216,15 @@ export class ServerApiService {
                 body: JSON.stringify({ playerId, modActionId }),
             }
         );
+    }
+
+    /** The signed-in player has read a notice, so it is not shown to them again */
+    public static async markNoticeSeenAsync(noticeId: string): Promise<boolean> {
+        const response = await this.fetchWithErrorHandling<{ success: boolean }>(
+            `${this.baseUrl}/api/notices/${encodeURIComponent(noticeId)}/seen`,
+            { method: 'POST', body: JSON.stringify({}) }
+        );
+        return response.success;
     }
 
     public static async getModActionsForPlayerAsync(

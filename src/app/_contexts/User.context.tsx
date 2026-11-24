@@ -30,7 +30,8 @@ const UserContext = createContext<IUserContextType>({
     updateUserPreferences: () => {},
     updateModerationSeenStatus: () => {},
     updateUndoPopupSeenDate: () => {},
-    updateTimerPopupSeenDate: () => {}
+    updateTimerPopupSeenDate: () => {},
+    removeNotice: () => {}
 });
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
@@ -71,6 +72,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
                         moderation: serverUser.moderation,
                         undoPopupSeenDate: serverUser.undoPopupSeenDate,
                         timerPopupSeenDate: serverUser.timerPopupSeenDate,
+                        notices: serverUser.notices ?? [],
                     });
                     // Fetch mod status
                     const modStatus = await import('@/app/_services/ServerApiService').then(m => m.ServerApiService.userIsModAsync());
@@ -196,6 +198,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         })
     }
 
+    const removeNotice = (noticeId: string) => {
+        setUser((prevUser) => {
+            if (!prevUser) return null;
+            return {
+                ...prevUser,
+                notices: prevUser.notices?.filter((notice) => notice.id !== noticeId)
+            };
+        });
+    };
+
     const updateModerationSeenStatus = (moderation: IModerationAction | null) => {
         setUser((prevUser) => {
             if (!prevUser) return null;
@@ -258,7 +270,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
             updateUsernameChangesBlockedSeen,
             updateReportingDisabledSeen,
             updateUserPreferences,
-            updateModerationSeenStatus
+            updateModerationSeenStatus,
+            removeNotice
         }}>
             {children}
         </UserContext.Provider>

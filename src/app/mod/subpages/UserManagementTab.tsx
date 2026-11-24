@@ -7,12 +7,14 @@ import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_s
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import {
     IModActionResponse,
+    IPlayerNoticeHistoryEntry,
     IPlayerSearchResult,
     IUsernameChangeResponse,
     modActionDefinitions,
     UsernameChangeSource
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import ModActionForm from '@/app/_components/_sharedcomponents/ModActions/ModActionForm';
+import PlayerNoticeHistory from '@/app/_components/_sharedcomponents/ModActions/PlayerNoticeHistory';
 import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { buildUserHistory, formatDate, formatDuration, formatUsernameTransition, getActionStatus, getModActionEntryLabel, getUsernameChangeLabel, getUsernameChangeSourceLabel } from '@/app/_utils/ModerationUtils';
@@ -40,6 +42,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
     const [selectedPlayer, setSelectedPlayer] = useState<IPlayerSearchResult | null>(null);
     const [modActions, setModActions] = useState<IModActionResponse[]>([]);
     const [usernameChanges, setUsernameChanges] = useState<IUsernameChangeResponse[]>([]);
+    const [notices, setNotices] = useState<IPlayerNoticeHistoryEntry[]>([]);
 
     // Action history expanded state
     const [expandedActionId, setExpandedActionId] = useState<string | null>(null);
@@ -68,6 +71,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
         setSelectedPlayer(null);
         setModActions([]);
         setUsernameChanges([]);
+        setNotices([]);
         setPlayers([]);
         setSuccessMessage(null);
 
@@ -76,6 +80,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
             setPlayers(result.players);
             setModActions(result.modActions || []);
             setUsernameChanges(result.usernameChanges || []);
+            setNotices(result.notices || []);
 
             // Auto-select if single result
             if (result.players.length === 1) {
@@ -98,6 +103,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
                 const result = await ServerApiService.getModActionsForPlayerAsync(player.id);
                 setModActions(result.modActions || []);
                 setUsernameChanges(result.usernameChanges || []);
+                setNotices(result.notices || []);
             } catch (error) {
                 console.error('Failed to fetch mod actions:', error);
             }
@@ -118,6 +124,7 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
         const refreshed = await ServerApiService.getModActionsForPlayerAsync(playerId);
         setModActions(refreshed.modActions || []);
         setUsernameChanges(refreshed.usernameChanges || []);
+        setNotices(refreshed.notices || []);
         // since we have a selected player the refreshed player will always be one.
         setSelectedPlayer(refreshed.players[0]);
     };
@@ -647,6 +654,9 @@ const UserManagementTab: React.FC<IUserManagementTabProps> = ({ searchRequest, o
                                 })}
                             </Box>
                         )}
+
+                        <Typography sx={{ ...styles.sectionTitle, mt: '1rem' }}>Messages Sent</Typography>
+                        <PlayerNoticeHistory notices={notices} />
                     </Box>
                 )}
             </Box>

@@ -10,6 +10,7 @@ import { generateResetUsername, isResetUsername } from '@/app/_utils/ModerationU
 import { forgetPlayerModeration } from '@/app/_utils/playerModerationCache';
 
 export const MOD_ACTION_HELP_TEXT: Partial<Record<ModActionType, string>> = {
+    [ModActionType.Note]: 'Adds a note to the history that only moderators can see. The player is not told.',
     [ModActionType.Rename]: 'The player must choose a new username themselves the next time they log in.',
     [ModActionType.ChangeUsername]: 'Sets the username directly. Resolves a pending Force Rename and does not lift Block Username Changes.',
     [ModActionType.UsernameChangesBlocked]: 'The player can no longer change their own username and must request changes from moderators.',
@@ -20,6 +21,7 @@ export const FORCE_RENAME_BLOCKED_MESSAGE = 'Force Rename is unavailable while u
 /** The order actions are offered in, wherever a moderator picks one */
 export const MOD_ACTION_ORDER: ModActionType[] = [
     ModActionType.Warning,
+    ModActionType.Note,
     ModActionType.Mute,
     ModActionType.Rename,
     ModActionType.ChangeUsername,
@@ -95,6 +97,7 @@ export const getModActionUnavailableReason = (actionType: ModActionType, target:
         case ModActionType.UsernameChangesBlocked:
             return target.usernameChangesBlocked ? `Username changes are already blocked for ${target.username}.` : null;
         case ModActionType.Warning:
+        case ModActionType.Note:
         case ModActionType.ChangeUsername:
             return null;
         default: {
@@ -114,7 +117,9 @@ export const describeModActionRequest = (
         case ModActionType.Mute:
             return `mute ${username} for ${options.durationDays} day${options.durationDays === 1 ? '' : 's'}`;
         case ModActionType.Warning:
-            return `issue a warning to ${username}`;
+            return `issue a warning to ${username} and show them your message at their next sign-in`;
+        case ModActionType.Note:
+            return `add a note about ${username} that only moderators can see`;
         case ModActionType.Rename:
             return `force ${username} to rename`;
         case ModActionType.ReportingDisabled:
@@ -167,6 +172,9 @@ export interface IModActionRequest {
 
     /** The report ticket the action is issued from, if any */
     reportId?: string;
+
+    /** Shown to the player at their next sign-in (Warning only); the note stays internal */
+    playerMessage?: string;
 }
 
 export interface IModActionResult {
@@ -214,6 +222,7 @@ const applyModActionAsync = async (request: IModActionRequest): Promise<IModActi
         {
             newUsername: definition.requiresNewUsername ? request.newUsername?.trim() : undefined,
             reportId: request.reportId,
+            playerMessage: definition.requiresPlayerMessage ? request.playerMessage?.trim() : undefined,
         },
     );
 

@@ -1,6 +1,7 @@
 import { SxProps } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { ReactNode } from 'react';
+import type { IPlayerNotice } from '@/app/_contexts/UserTypes';
 
 export type IButtonType = {
     variant: 'concede' | 'standard' | 'warning',
@@ -117,6 +118,9 @@ export interface IPlayerReportDialogProps {
 export enum ModActionType {
     Mute = 'Mute',
     Warning = 'Warning',
+
+    /** A record for the moderators only, such as a reminder about the player; the player is not told */
+    Note = 'Note',
     Rename = 'Rename',
     ReportingDisabled = 'ReportingDisabled',
     UsernameChangesBlocked = 'UsernameChangesBlocked',
@@ -137,6 +141,9 @@ export interface IModActionDefinition {
     cancellable: boolean;
     requiresNewUsername: boolean;
     supportsUsernameReset: boolean;
+
+    /** The action comes with a message the player sees at their next sign-in, which is required; the note stays internal */
+    requiresPlayerMessage: boolean;
 }
 
 export const modActionDefinitions: Record<ModActionType, IModActionDefinition> = {
@@ -147,6 +154,7 @@ export const modActionDefinitions: Record<ModActionType, IModActionDefinition> =
         cancellable: true,
         requiresNewUsername: false,
         supportsUsernameReset: false,
+        requiresPlayerMessage: false,
     },
     [ModActionType.Warning]: {
         label: 'Warning',
@@ -155,6 +163,16 @@ export const modActionDefinitions: Record<ModActionType, IModActionDefinition> =
         cancellable: false,
         requiresNewUsername: false,
         supportsUsernameReset: false,
+        requiresPlayerMessage: true,
+    },
+    [ModActionType.Note]: {
+        label: 'Note',
+        requiresNote: true,
+        requiresDuration: false,
+        cancellable: false,
+        requiresNewUsername: false,
+        supportsUsernameReset: false,
+        requiresPlayerMessage: false,
     },
     [ModActionType.Rename]: {
         label: 'Force User to Rename',
@@ -163,6 +181,7 @@ export const modActionDefinitions: Record<ModActionType, IModActionDefinition> =
         cancellable: false,
         requiresNewUsername: false,
         supportsUsernameReset: false,
+        requiresPlayerMessage: false,
     },
     [ModActionType.ReportingDisabled]: {
         label: 'Disable Reporting',
@@ -171,6 +190,7 @@ export const modActionDefinitions: Record<ModActionType, IModActionDefinition> =
         cancellable: true,
         requiresNewUsername: false,
         supportsUsernameReset: false,
+        requiresPlayerMessage: false,
     },
     [ModActionType.UsernameChangesBlocked]: {
         label: 'Block Username Changes',
@@ -179,6 +199,7 @@ export const modActionDefinitions: Record<ModActionType, IModActionDefinition> =
         cancellable: true,
         requiresNewUsername: false,
         supportsUsernameReset: true,
+        requiresPlayerMessage: false,
     },
     [ModActionType.ChangeUsername]: {
         label: 'Change Username',
@@ -187,6 +208,7 @@ export const modActionDefinitions: Record<ModActionType, IModActionDefinition> =
         cancellable: false,
         requiresNewUsername: true,
         supportsUsernameReset: false,
+        requiresPlayerMessage: false,
     },
 };
 
@@ -389,11 +411,26 @@ export interface IPlayerReportUpdateResponse {
     message?: string;
 }
 
+/** A notice sent to a player, as the mod tools see it */
+export interface IPlayerNoticeHistoryEntry extends IPlayerNotice {
+    senderId: string;
+    senderUsername: string;
+
+    /** When the player acknowledged it; unset while they have not */
+    seenAt?: string;
+
+    /** The Warning mod action the notice was sent with, if any */
+    relatedModActionId?: string;
+}
+
 export interface IFindUserResponse {
     success: boolean;
     players: IPlayerSearchResult[];
     modActions: IModActionResponse[];
     usernameChanges: IUsernameChangeResponse[];
+
+    /** Newest first; only sent when the search matched a single player */
+    notices?: IPlayerNoticeHistoryEntry[];
 }
 
 /**
