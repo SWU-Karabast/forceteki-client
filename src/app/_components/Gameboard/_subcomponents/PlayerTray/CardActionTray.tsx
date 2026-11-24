@@ -64,7 +64,9 @@ interface IButtonsProps {
 const CLAIM_COUNTER_ARGS = ['claimInitiative', 'claimPlan', 'claimBlast'];
 
 // disabling certain actions briefly to avoid double clicks:
-// - for a resource prompt, we disable the "done" button
+// - for a resource prompt, we disable the "done" button. A player who confirms before their opponent then gets
+//   "cancel" and a disabled "waiting", in that order, so the disabled one takes the done button's place and catches
+//   the second click of a double click; "cancel" needs no cooldown of its own
 // - for the action window, we disable the "pass" and "claim <counter>" buttons
 const hasCooldown = (buttonType: string, promptType: string) => (buttonType === 'done' && promptType === 'resource') || (promptType === 'actionWindow' && ['pass', ...CLAIM_COUNTER_ARGS].includes(buttonType));
 
