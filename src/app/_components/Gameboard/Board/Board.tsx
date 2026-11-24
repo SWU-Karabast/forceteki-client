@@ -12,6 +12,8 @@ import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 import { useTheme } from '@mui/material/styles';
 import BoardLeaders from '@/app/_components/Gameboard/_subcomponents/BoardLeaders';
 import ClaimCounterIndicators from '@/app/_components/Gameboard/_subcomponents/ClaimCounterIndicators';
+import InitiativePlayerChoiceIndicator from '@/app/_components/Gameboard/_subcomponents/InitiativePlayerChoiceIndicator';
+import { getInitiativePlayerChoice } from '@/app/_components/Gameboard/_subcomponents/InitiativePlayerChoice';
 import { SwuGameFormat } from '@/app/_constants/constants';
 
 const Board: React.FC<IBoardProps> = ({
@@ -45,6 +47,15 @@ const Board: React.FC<IBoardProps> = ({
 
     const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
     const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
+    // in the mulligan and the resource steps, the player without the initiative is told what the player with it has chosen
+    const initiativePlayerChoice = getInitiativePlayerChoice(gameState?.players[connectedPlayer].promptState);
+    // that status is shown inside the prompt, as a second row under its text
+    const hasPromptStatus = !!menuTitle && !!initiativePlayerChoice;
+    // While the initiative player is still choosing their resource, the player is in effect waiting on them, so the prompt
+    // says that, drawn as a waiting prompt. Once they have chosen it is the player's own prompt again.
+    const waitingTitle = hasPromptStatus ? initiativePlayerChoice.waitingTitle : undefined;
+    const promptText = waitingTitle ?? menuTitle;
+    const isOwnPrompt = !!promptTitle && !waitingTitle;
 
     const attachCapturedCards = (
         card: ICardData,
@@ -293,9 +304,37 @@ const Board: React.FC<IBoardProps> = ({
             padding: '0.5rem',
             position: 'relative',
             borderRadius: '20px',
-            background: !menuTitle ? 'transparent' : promptTitle
+            background: !menuTitle ? 'transparent' : isOwnPrompt
                 ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
                 : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
+            // With a status row the prompt is two rows in one bubble. Tighter line spacing and padding keep it about as
+            // tall as a prompt of one row, so it takes no more room between the bases.
+            ...(hasPromptStatus && {
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                lineHeight: 1.15,
+                padding: '0.2rem 0.75rem 0.3rem',
+            }),
+        },
+        promptStatus: {
+            display: 'flex',
+            justifyContent: 'center',
+            alignSelf: 'stretch',
+            position: 'relative',
+            fontSize: '0.66em',
+            marginTop: '0.15em',
+            paddingTop: '0.15em',
+            // a hairline between the prompt's text and its status row, fading out towards the ends
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '1px',
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55) 25%, rgba(255, 255, 255, 0.55) 75%, transparent)',
+            },
         },
         promptShadow: {
             position: 'absolute',
@@ -346,7 +385,12 @@ const Board: React.FC<IBoardProps> = ({
                     </Box>
                     <Box sx={styles.centralPromptContainer}>
                         <Box sx={styles.promptStyle}>
-                            {menuTitle && <RichText text={menuTitle}/>}
+                            {menuTitle && <RichText text={promptText}/>}
+                            {hasPromptStatus && (
+                                <Box sx={styles.promptStatus}>
+                                    <InitiativePlayerChoiceIndicator choice={initiativePlayerChoice} />
+                                </Box>
+                            )}
                             <Box sx={styles.promptShadow}/>
                         </Box>
                     </Box>

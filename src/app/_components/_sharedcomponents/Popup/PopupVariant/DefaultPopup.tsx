@@ -13,10 +13,19 @@ import {
 } from '../Popup.styles';
 import { DefaultPopup, PopupButton } from '../Popup.types';
 import RichText from '../../RichText/RichText';
+import InitiativePlayerChoiceIndicator from '@/app/_components/Gameboard/_subcomponents/InitiativePlayerChoiceIndicator';
 
 interface ButtonProps {
     data: DefaultPopup;
 }
+
+// the initiative player's choice sits under the title, centred like it
+const initiativePlayerChoiceStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    marginTop: '0.75rem',
+    fontSize: '0.95rem',
+};
 
 export const DefaultPopupModal = ({ data }: ButtonProps) => {
     const { sendGameMessage } = useGame();
@@ -26,6 +35,11 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
         if (isMinimized) return null;
         return (
             <>
+                {data.initiativePlayerChoice && (
+                    <Box sx={initiativePlayerChoiceStyle}>
+                        <InitiativePlayerChoiceIndicator choice={data.initiativePlayerChoice} />
+                    </Box>
+                )}
                 {data.description && (
                     <RichText text={data.description} sx={textStyle} component={Typography}/>
                 )}
@@ -34,6 +48,7 @@ export const DefaultPopupModal = ({ data }: ButtonProps) => {
                         <GradientBorderButton
                             key={`${button.uuid}:${index}`}
                             fillColor={button.selected ? 'rgba(102, 229, 255, 0.2)' : undefined}
+                            disabled={button.disabled}
                             onClick={() => {
                                 sendGameMessage([button.command, button.arg, button.uuid]);
                             }}
