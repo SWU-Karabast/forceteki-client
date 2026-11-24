@@ -2,18 +2,14 @@ import React from 'react';
 import Image from 'next/image';
 import { Box, Typography } from '@mui/material';
 import { keyframes } from '@mui/system';
-import { OpponentResourceChoice } from '@/app/_constants/constants';
+import PanToolRoundedIcon from '@mui/icons-material/PanToolRounded';
+import ShuffleRoundedIcon from '@mui/icons-material/ShuffleRounded';
 import { s3TokenImageURL } from '@/app/_utils/s3Utils';
+import { IInitiativePlayerChoice, InitiativePlayerChoiceIcon } from './InitiativePlayerChoice';
 
-interface IOpponentResourceChoiceIndicatorProps {
-    choice: OpponentResourceChoice;
+interface IInitiativePlayerChoiceIndicatorProps {
+    choice: IInitiativePlayerChoice;
 }
-
-const choiceLabel: Record<OpponentResourceChoice, string> = {
-    [OpponentResourceChoice.NotChosen]: 'Initiative player is choosing',
-    [OpponentResourceChoice.Resourced]: 'Initiative player resourced a card',
-    [OpponentResourceChoice.Passed]: 'Initiative player skipped resourcing',
-};
 
 // shown beside the label while the initiative player is still choosing: the player may act without waiting for them
 const CHOOSING_HINT = 'You can choose now or wait for them to decide';
@@ -60,14 +56,14 @@ const dotBounce = keyframes`
 `;
 
 /**
- * In the regroup phase's resource step the player with the initiative chooses first. This shows the other player what
- * they have done so far: still choosing, resourced a card (never which one), or skipped. The board draws it inside the
- * prompt, as a second row under the prompt's text, so it is styled as part of the prompt: the same white text on the
- * prompt's own background, with an icon for the state.
+ * In the mulligan and the resource steps the player with the initiative chooses first. This shows the other player what
+ * they have done so far: still choosing, or what they chose (never which cards they resourced). It is drawn inside the
+ * prompt, as a row under the prompt's text, so it is styled as part of the prompt: the same white text, with an icon for
+ * the choice.
  */
-const OpponentResourceChoiceIndicator: React.FC<IOpponentResourceChoiceIndicatorProps> = ({ choice }) => {
-    const decided = choice !== OpponentResourceChoice.NotChosen;
-    const resourced = choice === OpponentResourceChoice.Resourced;
+const InitiativePlayerChoiceIndicator: React.FC<IInitiativePlayerChoiceIndicatorProps> = ({ choice }) => {
+    const decided = choice.icon !== undefined;
+    const noResource = choice.icon === InitiativePlayerChoiceIcon.NoResource;
 
     // ----------------Styles----------------//
     const styles = {
@@ -132,7 +128,7 @@ const OpponentResourceChoiceIndicator: React.FC<IOpponentResourceChoiceIndicator
             alignItems: 'center',
             // a line through the resource icon when no card was resourced
             '&::after': {
-                display: resourced ? 'none' : 'block',
+                display: noResource ? 'block' : 'none',
                 content: '""',
                 position: 'absolute',
                 left: '-25%',
@@ -145,47 +141,67 @@ const OpponentResourceChoiceIndicator: React.FC<IOpponentResourceChoiceIndicator
                 transform: 'translateY(-50%) rotate(-40deg)',
             },
         },
-        icon: {
+        resourceIcon: {
             height: '1.1em',
             width: 'auto',
             aspectRatio: '1 / 1.4',
             // faded when no card was resourced
-            filter: resourced ? 'none' : 'grayscale(1)',
-            opacity: resourced ? 1 : 0.55,
+            filter: noResource ? 'grayscale(1)' : 'none',
+            opacity: noResource ? 0.55 : 1,
         },
+        mulliganIcon: {
+            fontSize: '1.1em',
+            filter: 'drop-shadow(1px 1px 3px black)',
+        },
+    };
+
+    const renderIcon = () => {
+        switch (choice.icon) {
+            case InitiativePlayerChoiceIcon.Resource:
+            case InitiativePlayerChoiceIcon.NoResource:
+                return (
+                    <Image
+                        src={s3TokenImageURL('resource-icon')}
+                        alt=""
+                        style={styles.resourceIcon}
+                        height={72}
+                        width={54}
+                    />
+                );
+            case InitiativePlayerChoiceIcon.Mulligan:
+                return <ShuffleRoundedIcon sx={styles.mulliganIcon} />;
+            case InitiativePlayerChoiceIcon.Keep:
+                return <PanToolRoundedIcon sx={styles.mulliganIcon} />;
+            default:
+                return null;
+        }
     };
 
     return (
         // keyed by the choice so the entrance animation plays again each time it changes
         <Box
-            key={choice}
+            key={choice.label}
             sx={styles.indicator}
             role="status"
-            aria-label={decided ? choiceLabel[choice] : `${choiceLabel[choice]}. ${CHOOSING_HINT}`}
-            data-testid="opponent-resource-choice"
-            data-choice={choice}
+            aria-label={decided ? choice.label : `${choice.label}. ${CHOOSING_HINT}`}
+            data-testid="initiative-player-choice"
+            data-choice={choice.icon ?? 'choosing'}
         >
             <Box sx={styles.mainLine}>
                 {decided ? (
                     <Box sx={styles.iconWrapper} aria-hidden>
-                        <Image
-                            src={s3TokenImageURL('resource-icon')}
-                            alt=""
-                            style={styles.icon}
-                            height={72}
-                            width={54}
-                        />
+                        {renderIcon()}
                     </Box>
                 ) : (
                     <Box sx={styles.dots} aria-hidden>
                         {[0, 1, 2].map((index) => <Box key={index} sx={styles.dot(index)} />)}
                     </Box>
                 )}
-                <Typography component="span" sx={styles.label}>{choiceLabel[choice]}</Typography>
+                <Typography component="span" sx={styles.label}>{choice.label}</Typography>
             </Box>
             {!decided && <Typography component="span" sx={styles.hint}>{CHOOSING_HINT}</Typography>}
         </Box>
     );
 };
 
-export default OpponentResourceChoiceIndicator;
+export default InitiativePlayerChoiceIndicator;

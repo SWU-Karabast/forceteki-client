@@ -173,6 +173,16 @@ export enum OpponentResourceChoice {
     Passed = 'passed',
 }
 
+/**
+ * In the setup phase's mulligan, what the opponent who has the initiative has chosen. The server sends it in the prompt
+ * state of the player without the initiative only, as `opponentMulliganChoice`.
+ */
+export enum OpponentMulliganChoice {
+    NotChosen = 'notChosen',
+    Mulligan = 'mulligan',
+    Keep = 'keep',
+}
+
 export enum QuickUndoAvailableState {
     NoSnapshotAvailable = 'noSnapshotAvailable',
     UndoRequestsBlocked = 'undoRequestsBlocked',

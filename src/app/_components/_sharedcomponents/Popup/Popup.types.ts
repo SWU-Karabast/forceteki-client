@@ -1,4 +1,5 @@
 import { ICardData } from '../Cards/CardTypes';
+import type { IInitiativePlayerChoice } from '@/app/_components/Gameboard/_subcomponents/InitiativePlayerChoice';
 
 export enum PopupSource {
     PromptState = 'promptstate',
@@ -53,6 +54,9 @@ export type DefaultPopup = {
     description?: string;
     buttons: PopupButton[];
     source: PopupSource;
+
+    /** In the mulligan, what the player with the initiative has chosen, shown to the player without it under the title. */
+    initiativePlayerChoice?: IInitiativePlayerChoice;
 };
 
 export type ActionTriggerPopup = {

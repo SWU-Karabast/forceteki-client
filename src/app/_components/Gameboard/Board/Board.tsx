@@ -12,8 +12,9 @@ import RichText from '@/app/_components/_sharedcomponents/RichText/RichText';
 import { useTheme } from '@mui/material/styles';
 import BoardLeaders from '@/app/_components/Gameboard/_subcomponents/BoardLeaders';
 import ClaimCounterIndicators from '@/app/_components/Gameboard/_subcomponents/ClaimCounterIndicators';
-import OpponentResourceChoiceIndicator from '@/app/_components/Gameboard/_subcomponents/OpponentResourceChoiceIndicator';
-import { OpponentResourceChoice, SwuGameFormat } from '@/app/_constants/constants';
+import InitiativePlayerChoiceIndicator from '@/app/_components/Gameboard/_subcomponents/InitiativePlayerChoiceIndicator';
+import { getInitiativePlayerChoice } from '@/app/_components/Gameboard/_subcomponents/InitiativePlayerChoice';
+import { SwuGameFormat } from '@/app/_constants/constants';
 
 const Board: React.FC<IBoardProps> = ({
     sidebarOpen,
@@ -46,10 +47,10 @@ const Board: React.FC<IBoardProps> = ({
 
     const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
     const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
-    // in the regroup phase's resource step, the player without the initiative is told what the player with it has chosen
-    const opponentResourceChoice: OpponentResourceChoice | undefined = gameState?.players[connectedPlayer].promptState.opponentResourceChoice;
+    // in the mulligan and the resource steps, the player without the initiative is told what the player with it has chosen
+    const initiativePlayerChoice = getInitiativePlayerChoice(gameState?.players[connectedPlayer].promptState);
     // that status is shown inside the prompt, as a second row under its text
-    const hasPromptStatus = !!menuTitle && !!opponentResourceChoice;
+    const hasPromptStatus = !!menuTitle && !!initiativePlayerChoice;
 
     const attachCapturedCards = (
         card: ICardData,
@@ -380,9 +381,9 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={styles.centralPromptContainer}>
                         <Box sx={styles.promptStyle}>
                             {menuTitle && <RichText text={menuTitle}/>}
-                            {menuTitle && opponentResourceChoice && (
+                            {hasPromptStatus && (
                                 <Box sx={styles.promptStatus}>
-                                    <OpponentResourceChoiceIndicator choice={opponentResourceChoice} />
+                                    <InitiativePlayerChoiceIndicator choice={initiativePlayerChoice} />
                                 </Box>
                             )}
                             <Box sx={styles.promptShadow}/>

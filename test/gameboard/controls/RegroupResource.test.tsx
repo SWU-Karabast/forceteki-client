@@ -8,7 +8,7 @@ import { loadControlChain, renderGameState } from '../../helpers/gameState';
 // The chain: player2, who does not have the initiative, is waiting on player1; player1 resources a card; player2 is
 // shown that; the next action phase.
 describe('Regroup resource', () => {
-    const choiceIndicator = () => screen.queryByTestId('opponent-resource-choice');
+    const choiceIndicator = () => screen.queryByTestId('initiative-player-choice');
     const pendingResourceBadge = () => screen.queryByTestId('opponent-pending-resource');
 
     it('shows the player without the initiative what their opponent has chosen', () => {
