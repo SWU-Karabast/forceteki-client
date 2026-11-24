@@ -45,6 +45,11 @@ const Board: React.FC<IBoardProps> = ({
 
     const promptTitle = gameState?.players[connectedPlayer].promptState.promptTitle;
     const menuTitle = gameState?.players[connectedPlayer].promptState.menuTitle;
+    // in the regroup phase's resource step, the player without the initiative is told what the player with it has chosen
+    // (other prompts that have a description show it in their popup)
+    const promptDescription = gameState?.players[connectedPlayer].promptState.promptType === 'resource'
+        ? gameState?.players[connectedPlayer].promptState.promptDescription
+        : undefined;
 
     const attachCapturedCards = (
         card: ICardData,
@@ -297,6 +302,15 @@ const Board: React.FC<IBoardProps> = ({
                 ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
                 : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
         },
+        // placed under the prompt without taking up room, so a second line does not make the board taller
+        promptDescriptionStyle: {
+            position: 'absolute',
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            whiteSpace: 'nowrap',
+            fontSize: '0.75em',
+        },
         promptShadow: {
             position: 'absolute',
             top: '27%',
@@ -347,6 +361,7 @@ const Board: React.FC<IBoardProps> = ({
                     <Box sx={styles.centralPromptContainer}>
                         <Box sx={styles.promptStyle}>
                             {menuTitle && <RichText text={menuTitle}/>}
+                            {menuTitle && promptDescription && <RichText text={promptDescription} sx={styles.promptDescriptionStyle}/>}
                             <Box sx={styles.promptShadow}/>
                         </Box>
                     </Box>
