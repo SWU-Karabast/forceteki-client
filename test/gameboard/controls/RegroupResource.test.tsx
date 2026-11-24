@@ -15,11 +15,18 @@ describe('Regroup resource', () => {
         const [waiting, , opponentResourced, nextAction] = loadControlChain('regroup-resource');
         const { receive } = renderGameState(<Board sidebarOpen={false} />, waiting.state, waiting.participant);
 
+        // while the initiative player is choosing, the prompt reads as a waiting prompt, with a hint under it
+        const waitingTitle = 'Waiting for opponent to resource';
+        const ownTitle = waiting.state.players[Object.keys(waiting.state.players)[1]].promptState.menuTitle;
         const choosingHint = 'You can choose now or wait for them to decide';
-        expect(screen.getByRole('status', { name: `Initiative player is choosing. ${choosingHint}` })).toBe(choiceIndicator());
-        expect(screen.getByText(choosingHint), 'the hint under the label').not.toBeNull();
+        expect(screen.getByText(waitingTitle), 'the waiting title').not.toBeNull();
+        expect(screen.queryByText(ownTitle), 'the prompt\'s own text while waiting').toBeNull();
+        expect(screen.getByRole('status', { name: choosingHint })).toBe(choiceIndicator());
 
+        // once they have chosen, it is the player's own prompt again, with what they chose under it
         receive(opponentResourced.state);
+        expect(screen.getByText(ownTitle), 'the prompt\'s own text').not.toBeNull();
+        expect(screen.queryByText(waitingTitle), 'the waiting title once they have chosen').toBeNull();
         expect(screen.getByRole('status', { name: 'Initiative player resourced a card' })).toBe(choiceIndicator());
         expect(screen.queryByText(choosingHint), 'the hint once they have chosen').toBeNull();
 

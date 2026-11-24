@@ -51,6 +51,11 @@ const Board: React.FC<IBoardProps> = ({
     const initiativePlayerChoice = getInitiativePlayerChoice(gameState?.players[connectedPlayer].promptState);
     // that status is shown inside the prompt, as a second row under its text
     const hasPromptStatus = !!menuTitle && !!initiativePlayerChoice;
+    // While the initiative player is still choosing their resource, the player is in effect waiting on them, so the prompt
+    // says that, drawn as a waiting prompt. Once they have chosen it is the player's own prompt again.
+    const waitingTitle = hasPromptStatus ? initiativePlayerChoice.waitingTitle : undefined;
+    const promptText = waitingTitle ?? menuTitle;
+    const isOwnPrompt = !!promptTitle && !waitingTitle;
 
     const attachCapturedCards = (
         card: ICardData,
@@ -299,7 +304,7 @@ const Board: React.FC<IBoardProps> = ({
             padding: '0.5rem',
             position: 'relative',
             borderRadius: '20px',
-            background: !menuTitle ? 'transparent' : promptTitle
+            background: !menuTitle ? 'transparent' : isOwnPrompt
                 ? 'radial-gradient(ellipse 90% 65% at center 55%, rgba(0, 123, 255, 1) 0%, rgba(0, 123, 255, 0.6) 60%, transparent 100%)'
                 : 'radial-gradient(ellipse 90% 65% at center 55%, rgba(220, 53, 69, 0.8) 0%, rgba(220, 53, 69, 0.4) 60%, transparent 100%)',
             // With a status row the prompt is two rows in one bubble. Tighter line spacing and padding keep it about as
@@ -380,7 +385,7 @@ const Board: React.FC<IBoardProps> = ({
                     </Box>
                     <Box sx={styles.centralPromptContainer}>
                         <Box sx={styles.promptStyle}>
-                            {menuTitle && <RichText text={menuTitle}/>}
+                            {menuTitle && <RichText text={promptText}/>}
                             {hasPromptStatus && (
                                 <Box sx={styles.promptStatus}>
                                     <InitiativePlayerChoiceIndicator choice={initiativePlayerChoice} />

@@ -11,9 +11,6 @@ interface IInitiativePlayerChoiceIndicatorProps {
     choice: IInitiativePlayerChoice;
 }
 
-// shown beside the label while the initiative player is still choosing: the player may act without waiting for them
-const CHOOSING_HINT = 'You can choose now or wait for them to decide';
-
 // a portrait board is too narrow for the label and the hint side by side, and has the height for two lines
 const PORTRAIT = '@media (orientation: portrait)';
 
@@ -56,14 +53,16 @@ const dotBounce = keyframes`
 `;
 
 /**
- * In the mulligan and the resource steps the player with the initiative chooses first. This shows the other player what
- * they have done so far: still choosing, or what they chose (never which cards they resourced). It is drawn inside the
- * prompt, as a row under the prompt's text, so it is styled as part of the prompt: the same white text, with an icon for
- * the choice.
+ * In the mulligan and the regroup phase's resource step the player with the initiative chooses first. This shows the other
+ * player what they have done so far: still choosing, or what they chose (never which card they resourced). It is drawn
+ * inside the prompt, as a row under the prompt's text, so it is styled as part of the prompt: the same white text, with
+ * an icon for the choice.
  */
 const InitiativePlayerChoiceIndicator: React.FC<IInitiativePlayerChoiceIndicatorProps> = ({ choice }) => {
-    const decided = choice.icon !== undefined;
+    const decided = !choice.isChoosing;
     const noResource = choice.icon === InitiativePlayerChoiceIcon.NoResource;
+    // under a waiting title the row is only a hint, so it is not set in bold like a choice
+    const isHintOnly = !!choice.waitingTitle;
 
     // ----------------Styles----------------//
     const styles = {
@@ -91,7 +90,7 @@ const InitiativePlayerChoiceIndicator: React.FC<IInitiativePlayerChoiceIndicator
         },
         label: {
             fontSize: '1em',
-            fontWeight: 600,
+            fontWeight: isHintOnly ? 400 : 600,
             lineHeight: 1.3,
             color: 'inherit',
         },
@@ -172,6 +171,12 @@ const InitiativePlayerChoiceIndicator: React.FC<IInitiativePlayerChoiceIndicator
                 return <ShuffleRoundedIcon sx={styles.mulliganIcon} />;
             case InitiativePlayerChoiceIcon.Keep:
                 return <PanToolRoundedIcon sx={styles.mulliganIcon} />;
+            case InitiativePlayerChoiceIcon.Choosing:
+                return (
+                    <Box sx={styles.dots}>
+                        {[0, 1, 2].map((index) => <Box key={index} sx={styles.dot(index)} />)}
+                    </Box>
+                );
             default:
                 return null;
         }
@@ -183,23 +188,19 @@ const InitiativePlayerChoiceIndicator: React.FC<IInitiativePlayerChoiceIndicator
             key={choice.label}
             sx={styles.indicator}
             role="status"
-            aria-label={decided ? choice.label : `${choice.label}. ${CHOOSING_HINT}`}
+            aria-label={choice.hint ? `${choice.label}. ${choice.hint}` : choice.label}
             data-testid="initiative-player-choice"
-            data-choice={choice.icon ?? 'choosing'}
+            data-choice={choice.isChoosing ? 'choosing' : choice.icon}
         >
             <Box sx={styles.mainLine}>
-                {decided ? (
+                {choice.icon && (
                     <Box sx={styles.iconWrapper} aria-hidden>
                         {renderIcon()}
-                    </Box>
-                ) : (
-                    <Box sx={styles.dots} aria-hidden>
-                        {[0, 1, 2].map((index) => <Box key={index} sx={styles.dot(index)} />)}
                     </Box>
                 )}
                 <Typography component="span" sx={styles.label}>{choice.label}</Typography>
             </Box>
-            {!decided && <Typography component="span" sx={styles.hint}>{CHOOSING_HINT}</Typography>}
+            {choice.hint && <Typography component="span" sx={styles.hint}>{choice.hint}</Typography>}
         </Box>
     );
 };
