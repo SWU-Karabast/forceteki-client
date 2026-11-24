@@ -15,6 +15,7 @@ import { theme } from '@/app/_theme/theme';
 import { PopupProvider } from '@/app/_contexts/Popup.context';
 import { CardImageLocaleProvider } from '@/app/_contexts/CardImageLocale.context';
 import { OngoingEffectHighlightProvider } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { TimerVisibilityProvider } from '@/app/_contexts/TimerVisibility.context';
 import { GameStateProvider, type IGameContextType } from '@/app/_contexts/Game.context';
 
 export type Participant = 'player1' | 'player2' | 'spectator';
@@ -78,17 +79,19 @@ export const renderGameState = (ui: ReactElement, state: any, participant: Parti
         <ThemeProvider theme={theme}>
             <PopupProvider>
                 <CardImageLocaleProvider>
-                    <OngoingEffectHighlightProvider>
-                        <GameStateProvider
-                            gameState={current}
-                            lobbyState={lobbyState}
-                            connectedPlayer={seatOf(current, participant)}
-                            isSpectator={participant === 'spectator'}
-                            emitGameMessage={sent}
-                        >
-                            {ui}
-                        </GameStateProvider>
-                    </OngoingEffectHighlightProvider>
+                    <TimerVisibilityProvider>
+                        <OngoingEffectHighlightProvider>
+                            <GameStateProvider
+                                gameState={current}
+                                lobbyState={lobbyState}
+                                connectedPlayer={seatOf(current, participant)}
+                                isSpectator={participant === 'spectator'}
+                                emitGameMessage={sent}
+                            >
+                                {ui}
+                            </GameStateProvider>
+                        </OngoingEffectHighlightProvider>
+                    </TimerVisibilityProvider>
                 </CardImageLocaleProvider>
             </PopupProvider>
         </ThemeProvider>

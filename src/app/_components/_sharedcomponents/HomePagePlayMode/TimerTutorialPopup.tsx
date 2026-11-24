@@ -62,8 +62,9 @@ const TimerTutorialPopup: React.FC<ITimerTutorialPopupProps> = ({ open, onClose 
                 <Typography component="p" sx={styles.paragraph}>
                     Each player has <Box component="span" sx={styles.emphasized}>20 seconds per action</Box> backed
                     by a <Box component="span" sx={styles.emphasized}>2 minute time bank</Box>. When a player&apos;s
-                    20 seconds runs out, their timer begins drawing from their bank. The bank does not refill — if a
-                    player&apos;s bank runs out, that player concedes the game.
+                    20 seconds runs out, their timer begins drawing from their bank. At the end of each round, each
+                    player gets <Box component="span" sx={styles.emphasized}>10 seconds</Box> back in their bank, up to
+                    the 2 minute maximum. If a player&apos;s bank runs out, that player concedes the game.
                 </Typography>
 
                 <Typography component="p" sx={styles.paragraph}>
