@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 import {
     IModActionResponse,
-    IPlayerSearchResult,
     IUsernameChangeResponse,
     PlayerReportOutcome,
     PlayerReportRole,
@@ -19,7 +18,7 @@ import {
     getUsernameChangeSourceLabel,
 } from '@/app/_utils/ModerationUtils';
 import { DateFormat } from '@/app/_contexts/UserTypes';
-import { describeModAction, getOffenseLabel, getOutcomeOption, OPEN_TICKET_COLOR } from '@/app/_utils/playerReportUtils';
+import { describeModAction, getOffenseLabel, getOutcomeOption, OPEN_TICKET_COLOR, playerFromReportContext } from '@/app/_utils/playerReportUtils';
 import { IReportPlayerHistoryProps } from './reportTypes';
 
 /** Same color as the Action Taken outcome; red is kept for open tickets */
@@ -55,16 +54,7 @@ const ReportPlayerHistory: React.FC<IReportPlayerHistoryProps> = ({ context, cur
     const dateFormat = useDateFormat();
     const rows = useMemo<IHistoryRow[]>(() => {
         // getActionStatus only reads the active rename from the player
-        const playerForStatus: IPlayerSearchResult = {
-            id: context.playerId,
-            username: context.username,
-            createdAt: context.createdAt ?? '',
-            lastLogin: '',
-            isMuted: context.isMuted,
-            activeRename: context.activeRename ?? undefined,
-            activeReportingDisabledId: context.activeReportingDisabledId,
-            activeUsernameChangesBlockedId: context.activeUsernameChangesBlockedId,
-        };
+        const playerForStatus = playerFromReportContext(context);
 
         // Pairs each forced or moderator rename with the action that caused it
         const history = buildUserHistory(context.modActions, context.usernameChanges);

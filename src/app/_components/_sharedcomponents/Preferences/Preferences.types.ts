@@ -316,11 +316,45 @@ export interface IPlayerReportIndexEntry {
     outcome?: PlayerReportOutcome;
 }
 
+/** Mirrors the server's ModerationStanding: an active, past or no mute or forced rename */
+export enum ModerationStanding {
+    Active = 'active',
+    History = 'history',
+    Clean = 'clean',
+}
+
+/** Another account with the same username as a report participant */
+export interface ISameUsernameAccount {
+    playerId: string;
+    username: string;
+    createdAt: string;
+    lastLogin: string;
+    standing: ModerationStanding;
+}
+
+export interface ISameUsernameSummary {
+
+    /** Every other account with the name, ignoring case */
+    total: number;
+
+    /** The accounts the server checked (at most 10), most severe standing first */
+    accounts: ISameUsernameAccount[];
+}
+
 export interface IPlayerReportPlayerContext {
     playerId: string;
     username: string;
+
+    /** Both missing for players without a profile (playing without an account) */
     createdAt?: string;
+    lastLogin?: string;
     isMuted: boolean;
+
+    /** Whether the player has an active or past mute or forced rename */
+    standing: ModerationStanding;
+
+    /** Other accounts with the same current username; null if the server could not look them up */
+    sameUsername: ISameUsernameSummary | null;
     activeRename: IActiveModActionCacheEntry | null;
     activeReportingDisabledId: string | null;
     activeUsernameChangesBlockedId: string | null;
