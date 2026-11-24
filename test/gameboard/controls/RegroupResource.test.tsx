@@ -15,10 +15,13 @@ describe('Regroup resource', () => {
         const [waiting, , opponentResourced, nextAction] = loadControlChain('regroup-resource');
         const { receive } = renderGameState(<Board sidebarOpen={false} />, waiting.state, waiting.participant);
 
-        expect(screen.getByRole('status', { name: 'Initiative player is choosing' })).toBe(choiceIndicator());
+        const choosingHint = 'You can choose now or wait for them to decide';
+        expect(screen.getByRole('status', { name: `Initiative player is choosing. ${choosingHint}` })).toBe(choiceIndicator());
+        expect(screen.getByText(choosingHint), 'the hint under the label').not.toBeNull();
 
         receive(opponentResourced.state);
         expect(screen.getByRole('status', { name: 'Initiative player resourced a card' })).toBe(choiceIndicator());
+        expect(screen.queryByText(choosingHint), 'the hint once they have chosen').toBeNull();
 
         receive(nextAction.state);
         expect(choiceIndicator(), 'once the resource step is over').toBeNull();
