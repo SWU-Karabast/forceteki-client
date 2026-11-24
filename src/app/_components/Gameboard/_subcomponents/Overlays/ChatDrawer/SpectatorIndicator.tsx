@@ -4,15 +4,6 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import { useGame } from '@/app/_contexts/Game.context';
 import { ISpectatorSummary } from '@/app/_components/Gameboard/GameboardTypes';
 
-// ----------------Look----------------//
-// The choices to iterate on. Other icons that fit: VisibilityOutlined (the eye), PeopleOutline,
-// GroupsOutlined, Person (filled), all from @mui/icons-material.
-const look = {
-    Icon: PersonOutlineIcon,
-    // the words beside the count; null shows the bare number
-    label: 'spectating' as string | null,
-};
-
 const peopleWatching = (count: number) => {
     if (count === 0) {
         return 'No one is watching right now.';
@@ -29,14 +20,7 @@ export const spectatorIndicatorTooltip = (count: number, isSpectator: boolean) =
 };
 
 // ----------------Styles----------------//
-// Sized in em, so the status bar's font size scales the icon and text together.
 const styles = {
-    // the coach and judge badges go beside the count, inside this container
-    container: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5em',
-    },
     count: {
         display: 'flex',
         alignItems: 'center',
@@ -81,17 +65,14 @@ const SpectatorIndicator: React.FC = () => {
     const tooltip = spectatorIndicatorTooltip(summary.count, isSpectator);
 
     return (
-        <Box sx={styles.container}>
-            <Tooltip arrow title={tooltip}>
-                <Box sx={styles.count} tabIndex={0} aria-label={tooltip}>
-                    <look.Icon aria-hidden="true" sx={styles.icon} />
-                    <Typography component="span" sx={styles.text}>
-                        <Box component="span" sx={styles.number} data-spectator-count>{summary.count}</Box>
-                        {look.label && ` ${look.label}`}
-                    </Typography>
-                </Box>
-            </Tooltip>
-        </Box>
+        <Tooltip arrow title={tooltip}>
+            <Box sx={styles.count} tabIndex={0} aria-label={tooltip}>
+                <PersonOutlineIcon aria-hidden="true" sx={styles.icon} />
+                <Typography component="span" sx={styles.text}>
+                    <Box component="span" sx={styles.number} data-spectator-count>{summary.count}</Box> spectating
+                </Typography>
+            </Box>
+        </Tooltip>
     );
 };
 
