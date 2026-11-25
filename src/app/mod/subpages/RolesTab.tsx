@@ -1,52 +1,75 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Box, Divider, MenuItem, Typography } from '@mui/material';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Box, Checkbox, Chip, CircularProgress, Divider, FormControlLabel, Typography } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
-import ConfirmationDialog from '@/app/_components/_sharedcomponents/DeckPage/ConfirmationDialog';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { ServerApiService } from '@/app/_services/ServerApiService';
 import {
     IPlayerSearchResult,
-    IServerRoleHolder,
     IServerRolesResponse,
     ServerRole,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDateTime } from '@/app/_utils/dateFormatUtils';
 
-const RoleDetails: Record<ServerRole, { label: string; description: string }> = {
-    [ServerRole.Admin]: { label: 'Admins', description: 'Everything, including server controls and this page. Passes every other role\'s check.' },
-    [ServerRole.Developer]: { label: 'Developers', description: 'Developer tools. Also counts as a contributor.' },
-    [ServerRole.Moderator]: { label: 'Moderators', description: 'The mod tools: reports, mod actions and card back cosmetics. Also counts as a contributor.' },
-    [ServerRole.Contributor]: { label: 'Contributors', description: 'Contributor-only cosmetics.' },
+const RoleDetails: Record<ServerRole, { label: string; color: string }> = {
+    [ServerRole.Admin]: { label: 'Admin', color: '#E8796D' },
+    [ServerRole.Developer]: { label: 'Developer', color: '#B39CF5' },
+    [ServerRole.Moderator]: { label: 'Moderator', color: '#5FB0E6' },
+    [ServerRole.Contributor]: { label: 'Contributor', color: '#DCB84F' },
 };
 
 const roleOrder = [ServerRole.Admin, ServerRole.Developer, ServerRole.Moderator, ServerRole.Contributor];
 
-interface IPendingRemoval {
-    holder: IServerRoleHolder;
-    role: ServerRole;
+// admins are changed only by hand in the database, so the server refuses changes to them
+const editableRoles = roleOrder.filter((role) => role !== ServerRole.Admin);
+
+const NoAccountFilter = 'noAccount';
+type RoleListFilter = ServerRole | typeof NoAccountFilter;
+
+interface IRolePlayer {
+    id: string;
+
+    /** Null when the user has no profile, for example a stale id in the stored lists. */
+    username: string | null;
+    note: string | null;
+    roles: ServerRole[];
 }
 
-const holderName = (holder: IServerRoleHolder) => holder.username ?? holder.note ?? holder.id;
+const playerName = (player: Pick<IRolePlayer, 'id' | 'username' | 'note'>) => player.username ?? player.note ?? player.id;
+
+/** Everyone holding at least one role, with all their roles, in alphabetical order. */
+const buildRolePlayers = (roles: IServerRolesResponse): IRolePlayer[] => {
+    const players = new Map<string, IRolePlayer>();
+    for (const role of roleOrder) {
+        for (const holder of roles.roles[role]) {
+            const player = players.get(holder.id) ?? { id: holder.id, username: holder.username, note: holder.note, roles: [] };
+            player.roles.push(role);
+            players.set(holder.id, player);
+        }
+    }
+
+    return [...players.values()].sort((a, b) => playerName(a).localeCompare(playerName(b), undefined, { sensitivity: 'base' }));
+};
 
 const RolesTab: React.FC = () => {
     const dateFormat = useDateFormat();
 
     const [roles, setRoles] = useState<IServerRolesResponse | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [pendingRemoval, setPendingRemoval] = useState<IPendingRemoval | null>(null);
 
-    const [roleToGrant, setRoleToGrant] = useState<ServerRole>(ServerRole.Developer);
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<IPlayerSearchResult[]>([]);
+    const [searchResults, setSearchResults] = useState<IPlayerSearchResult[] | null>(null);
     const [isSearching, setIsSearching] = useState(false);
+
+    const [selectedPlayer, setSelectedPlayer] = useState<Omit<IRolePlayer, 'roles'> | null>(null);
+    const [savingRole, setSavingRole] = useState<ServerRole | null>(null);
+
+    const [listFilterText, setListFilterText] = useState('');
+    const [listFilters, setListFilters] = useState<RoleListFilter[]>([]);
 
     const loadRoles = useCallback(async () => {
         try {
             setRoles(await ServerApiService.getServerRolesAsync());
-            setErrorMessage(null);
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : 'Failed to load roles');
         }
@@ -56,21 +79,24 @@ const RolesTab: React.FC = () => {
         void loadRoles();
     }, [loadRoles]);
 
-    const changeRole = async (userId: string, name: string, role: ServerRole, granted: boolean) => {
-        setIsSaving(true);
-        setErrorMessage(null);
-        setSuccessMessage(null);
-        try {
-            setRoles(await ServerApiService.setServerRoleAsync(userId, role, granted));
-            setSuccessMessage(`${name} ${granted ? 'is now' : 'is no longer'} in ${RoleDetails[role].label}.`);
-        } catch (error) {
-            setErrorMessage(error instanceof Error ? error.message : 'Failed to change the role');
-            // the server refuses a change made from out-of-date roles, so show it the current ones
-            void loadRoles();
-        } finally {
-            setIsSaving(false);
-        }
-    };
+    const rolePlayers = useMemo(() => (roles ? buildRolePlayers(roles) : []), [roles]);
+
+    const filteredPlayers = useMemo(() => {
+        const text = listFilterText.trim().toLowerCase();
+        return rolePlayers.filter((player) => {
+            if (text && !playerName(player).toLowerCase().includes(text) && !player.id.toLowerCase().includes(text)) {
+                return false;
+            }
+            if (listFilters.length === 0) {
+                return true;
+            }
+            return listFilters.some((filter) => (filter === NoAccountFilter ? player.username === null : player.roles.includes(filter)));
+        });
+    }, [rolePlayers, listFilterText, listFilters]);
+
+    const selectedRoles = selectedPlayer
+        ? rolePlayers.find((player) => player.id === selectedPlayer.id)?.roles ?? []
+        : [];
 
     const handleSearch = async () => {
         const query = searchQuery.trim();
@@ -80,10 +106,14 @@ const RolesTab: React.FC = () => {
 
         setIsSearching(true);
         setErrorMessage(null);
-        setSearchResults([]);
+        setSearchResults(null);
         try {
-            const response = await ServerApiService.findUserAsync(query);
-            setSearchResults(response.players);
+            const { players } = await ServerApiService.findUserAsync(query);
+            if (players.length === 1) {
+                selectPlayer({ id: players[0].id, username: players[0].username, note: null });
+            } else {
+                setSearchResults(players);
+            }
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : 'Failed to find the player');
         } finally {
@@ -91,162 +121,323 @@ const RolesTab: React.FC = () => {
         }
     };
 
-    const holdsRole = (userId: string, role: ServerRole) => roles?.roles[role].some((holder) => holder.id === userId) ?? false;
+    const selectPlayer = (player: Omit<IRolePlayer, 'roles'>) => {
+        setSelectedPlayer({ id: player.id, username: player.username, note: player.note });
+        setSearchResults(null);
+        setErrorMessage(null);
+    };
+
+    const changeRole = async (role: ServerRole, granted: boolean) => {
+        if (!selectedPlayer) {
+            return;
+        }
+
+        setSavingRole(role);
+        setErrorMessage(null);
+        try {
+            setRoles(await ServerApiService.setServerRoleAsync(selectedPlayer.id, role, granted));
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : 'Failed to change the role');
+            // the server refuses a change made at the same time as another, so show it the current roles
+            void loadRoles();
+        } finally {
+            setSavingRole(null);
+        }
+    };
+
+    const toggleListFilter = (filter: RoleListFilter) => {
+        setListFilters((current) => (current.includes(filter) ? current.filter((f) => f !== filter) : [...current, filter]));
+    };
+
+    const countWith = (filter: RoleListFilter) => rolePlayers.filter((player) =>
+        (filter === NoAccountFilter ? player.username === null : player.roles.includes(filter))
+    ).length;
 
     // ======================== STYLES ========================
     const styles = {
         container: {
-            maxWidth: '720px',
-        },
-        section: {
-            mb: '2.5rem',
+            maxWidth: '880px',
         },
         hint: {
-            color: '#878787',
+            color: '#9A9A9A',
             fontSize: '0.9rem',
-            mb: '1rem',
         },
-        row: {
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '1rem',
-            py: '0.5rem',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        },
-        rowText: {
-            display: 'flex',
-            flexDirection: 'column' as const,
-            minWidth: 0,
-        },
-        secondaryText: {
-            color: '#878787',
+        auditLine: {
+            color: '#9A9A9A',
             fontSize: '0.85rem',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+        },
+        headerRow: {
+            display: 'flex',
+            flexWrap: 'wrap' as const,
+            alignItems: 'baseline',
+            justifyContent: 'space-between',
+            gap: '0.5rem',
         },
         searchRow: {
             display: 'flex',
             alignItems: 'center',
-            flexWrap: 'wrap' as const,
             gap: '1rem',
             mb: '1rem',
         },
-        auditLine: {
-            color: '#878787',
-            fontSize: '0.85rem',
-            mb: '1.5rem',
+        searchResult: {
+            all: 'unset',
+            boxSizing: 'border-box',
+            display: 'flex',
+            width: '100%',
+            gap: '0.75rem',
+            alignItems: 'baseline',
+            p: '0.75rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            cursor: 'pointer',
+            '&:hover': { backgroundColor: 'rgba(47, 125, 182, 0.18)' },
         },
+        playerPanel: {
+            border: '1px solid #2F7DB6',
+            borderRadius: '10px',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)',
+            p: '1.25rem',
+            mb: '2rem',
+        },
+        playerName: {
+            display: 'flex',
+            flexWrap: 'wrap' as const,
+            alignItems: 'baseline',
+            gap: '0.75rem',
+            mb: '1rem',
+        },
+        roleOptions: {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '0.6rem',
+        },
+        roleOption: {
+            m: 0,
+            minHeight: '52px',
+            px: '0.5rem',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '8px',
+            color: 'white',
+            '& .MuiFormControlLabel-label': { fontWeight: 600 },
+        },
+        savingOption: {
+            borderColor: '#2F7DB6',
+        },
+        checkbox: {
+            color: '#B0B0B0',
+            '&.Mui-checked': { color: '#2F7DB6' },
+        },
+        spinner: {
+            color: '#7CC2F0',
+            m: '9px',
+        },
+        filterRow: {
+            display: 'flex',
+            flexWrap: 'wrap' as const,
+            alignItems: 'center',
+            gap: '0.6rem',
+            mb: '0.5rem',
+        },
+        filterChip: (active: boolean, color?: string) => ({
+            color: active ? 'white' : '#D6D6D6',
+            borderColor: active ? '#2F7DB6' : '#3A444A',
+            backgroundColor: active ? 'rgba(47, 125, 182, 0.35)' : 'transparent',
+            '& .MuiChip-icon': { color },
+        }),
+        colorDot: (color: string) => ({
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            backgroundColor: color,
+        }),
+        countLine: {
+            color: '#9A9A9A',
+            fontSize: '0.85rem',
+            px: '0.6rem',
+            py: '0.4rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        },
+        playerRow: (selected: boolean) => ({
+            all: 'unset',
+            boxSizing: 'border-box',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '0.75rem',
+            width: '100%',
+            p: '0.75rem 0.6rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            cursor: 'pointer',
+            backgroundColor: selected ? 'rgba(47, 125, 182, 0.18)' : 'transparent',
+            '&:hover': { backgroundColor: 'rgba(47, 125, 182, 0.18)' },
+        }),
+        rowName: {
+            flex: '1 1 200px',
+            minWidth: 0,
+        },
+        secondaryText: {
+            color: '#9A9A9A',
+            fontSize: '0.85rem',
+        },
+        noAccountText: {
+            color: '#F0B36A',
+            fontSize: '0.85rem',
+        },
+        roleChips: {
+            display: 'flex',
+            flexWrap: 'wrap' as const,
+            gap: '0.4rem',
+        },
+        roleChip: (color: string) => ({
+            color,
+            borderColor: color,
+            height: 24,
+        }),
     };
 
     return (
         <Box sx={styles.container}>
-            <Typography variant={'h3'}>Roles</Typography>
+            <Box sx={styles.headerRow}>
+                <Typography variant={'h3'}>Roles</Typography>
+                {roles?.updatedBy && (
+                    <Typography sx={styles.auditLine}>
+                        Last changed by {roles.updatedBy}
+                        {roles.updatedAt ? ` · ${formatDateTime(roles.updatedAt, dateFormat)}` : ''}
+                    </Typography>
+                )}
+            </Box>
             <Divider sx={{ mb: '20px' }} />
 
             {errorMessage && <Alert severity="error" sx={{ mb: '1rem' }}>{errorMessage}</Alert>}
-            {successMessage && <Alert severity="success" sx={{ mb: '1rem' }}>{successMessage}</Alert>}
 
-            {roles?.updatedBy && (
-                <Typography sx={styles.auditLine}>
-                    Last changed by {roles.updatedBy}
-                    {roles.updatedAt ? ` on ${formatDateTime(roles.updatedAt, dateFormat)}` : ''}
-                </Typography>
+            <Box sx={styles.searchRow}>
+                <StyledTextField
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onKeyDown={(event: React.KeyboardEvent) => {
+                        if (event.key === 'Enter') {
+                            void handleSearch();
+                        }
+                    }}
+                    placeholder="Find a player by username or user ID"
+                />
+                <PreferenceButton
+                    variant={'standard'}
+                    text={isSearching ? 'Searching...' : 'Search'}
+                    disabled={isSearching || !searchQuery.trim()}
+                    buttonFnc={() => void handleSearch()}
+                />
+            </Box>
+
+            {searchResults && searchResults.length === 0 && (
+                <Typography sx={{ ...styles.hint, mb: '1rem' }}>No player found.</Typography>
             )}
-
-            <Box sx={styles.section}>
-                <Typography variant={'h3'}>Grant a Role</Typography>
-                <Divider sx={{ mb: '20px' }} />
-                <Typography sx={styles.hint}>
-                    Find a player by username or user ID, then grant them a role. The change applies straight away.
-                </Typography>
-                <Box sx={styles.searchRow}>
-                    <StyledTextField
-                        select
-                        value={roleToGrant}
-                        onChange={(event) => setRoleToGrant(event.target.value as ServerRole)}
-                        sx={{ width: 180 }}
-                    >
-                        {roleOrder.map((role) => (
-                            <MenuItem key={role} value={role}>{RoleDetails[role].label}</MenuItem>
-                        ))}
-                    </StyledTextField>
-                    <StyledTextField
-                        value={searchQuery}
-                        onChange={(event) => setSearchQuery(event.target.value)}
-                        onKeyDown={(event: React.KeyboardEvent) => {
-                            if (event.key === 'Enter') {
-                                void handleSearch();
-                            }
-                        }}
-                        placeholder="Username or user ID"
-                        sx={{ flex: 1, minWidth: 200 }}
-                    />
-                    <PreferenceButton
-                        variant={'standard'}
-                        text={isSearching ? 'Searching...' : 'Search'}
-                        disabled={isSearching || !searchQuery.trim()}
-                        buttonFnc={() => void handleSearch()}
-                    />
-                </Box>
-                {searchResults.map((player) => (
-                    <Box key={player.id} sx={styles.row}>
-                        <Box sx={styles.rowText}>
+            {searchResults && searchResults.length > 0 && (
+                <Box sx={{ mb: '1rem' }}>
+                    {searchResults.map((player) => (
+                        <Box
+                            key={player.id}
+                            component="button"
+                            sx={styles.searchResult}
+                            onClick={() => selectPlayer({ id: player.id, username: player.username, note: null })}
+                        >
                             <Typography>{player.username}</Typography>
                             <Typography sx={styles.secondaryText}>{player.id}</Typography>
                         </Box>
-                        <PreferenceButton
-                            variant={'standard'}
-                            text={holdsRole(player.id, roleToGrant) ? `Already in ${RoleDetails[roleToGrant].label}` : `Add to ${RoleDetails[roleToGrant].label}`}
-                            disabled={isSaving || !roles || holdsRole(player.id, roleToGrant)}
-                            buttonFnc={() => void changeRole(player.id, player.username, roleToGrant, true)}
-                        />
-                    </Box>
-                ))}
-            </Box>
-
-            {roles && roleOrder.map((role) => (
-                <Box key={role} sx={styles.section}>
-                    <Typography variant={'h3'}>{RoleDetails[role].label} ({roles.roles[role].length})</Typography>
-                    <Divider sx={{ mb: '20px' }} />
-                    <Typography sx={styles.hint}>{RoleDetails[role].description}</Typography>
-                    {roles.roles[role].length === 0 && <Typography sx={styles.hint}>Nobody has this role.</Typography>}
-                    {roles.roles[role].map((holder) => (
-                        <Box key={holder.id} sx={styles.row}>
-                            <Box sx={styles.rowText}>
-                                <Typography>{holderName(holder)}</Typography>
-                                <Typography sx={styles.secondaryText}>
-                                    {holder.username === null ? `No account found for ${holder.id}` : holder.id}
-                                    {holder.note && holder.note !== holder.username ? ` · ${holder.note}` : ''}
-                                </Typography>
-                            </Box>
-                            <PreferenceButton
-                                variant={'standard'}
-                                text="Remove"
-                                disabled={isSaving}
-                                buttonFnc={() => setPendingRemoval({ holder, role })}
-                            />
-                        </Box>
                     ))}
                 </Box>
-            ))}
+            )}
 
-            <ConfirmationDialog
-                open={pendingRemoval !== null}
-                title="Remove role?"
-                message={pendingRemoval
-                    ? `Remove ${holderName(pendingRemoval.holder)} from ${RoleDetails[pendingRemoval.role].label}? They lose its access straight away.`
-                    : ''}
-                onConfirm={() => {
-                    if (pendingRemoval) {
-                        void changeRole(pendingRemoval.holder.id, holderName(pendingRemoval.holder), pendingRemoval.role, false);
-                    }
-                    setPendingRemoval(null);
-                }}
-                onCancel={() => setPendingRemoval(null)}
-                confirmButtonText="Remove"
-                cancelButtonText="Go Back"
-            />
+            {selectedPlayer && roles && (
+                <Box sx={styles.playerPanel}>
+                    <Box sx={styles.playerName}>
+                        <Typography sx={{ fontSize: '1.4rem', fontWeight: 600 }}>{playerName(selectedPlayer)}</Typography>
+                        <Typography sx={selectedPlayer.username === null ? styles.noAccountText : styles.secondaryText}>
+                            {selectedPlayer.username === null ? `No account found for ${selectedPlayer.id}` : selectedPlayer.id}
+                        </Typography>
+                    </Box>
+                    <Box sx={styles.roleOptions}>
+                        {editableRoles.map((role) => (
+                            <FormControlLabel
+                                key={role}
+                                sx={savingRole === role ? { ...styles.roleOption, ...styles.savingOption } : styles.roleOption}
+                                label={RoleDetails[role].label}
+                                control={savingRole === role
+                                    ? <CircularProgress size={22} sx={styles.spinner} aria-label={`Saving ${RoleDetails[role].label}`} />
+                                    : (
+                                        <Checkbox
+                                            checked={selectedRoles.includes(role)}
+                                            disabled={savingRole !== null}
+                                            onChange={(event) => void changeRole(role, event.target.checked)}
+                                            sx={styles.checkbox}
+                                        />
+                                    )}
+                            />
+                        ))}
+                    </Box>
+                </Box>
+            )}
+
+            <Typography variant={'h3'}>Everyone with a role ({rolePlayers.length})</Typography>
+            <Divider sx={{ mb: '14px' }} />
+
+            <Box sx={styles.filterRow}>
+                <StyledTextField
+                    value={listFilterText}
+                    onChange={(event) => setListFilterText(event.target.value)}
+                    placeholder="Filter by name or ID"
+                    size="small"
+                    sx={{ flex: '1 1 220px', width: 'auto' }}
+                />
+                <Chip
+                    label={`All ${rolePlayers.length}`}
+                    variant="outlined"
+                    clickable
+                    onClick={() => setListFilters([])}
+                    sx={styles.filterChip(listFilters.length === 0)}
+                />
+                {roleOrder.map((role) => (
+                    <Chip
+                        key={role}
+                        label={`${RoleDetails[role].label} ${countWith(role)}`}
+                        icon={<Box sx={styles.colorDot(RoleDetails[role].color)} />}
+                        variant="outlined"
+                        clickable
+                        onClick={() => toggleListFilter(role)}
+                        sx={styles.filterChip(listFilters.includes(role))}
+                    />
+                ))}
+                {countWith(NoAccountFilter) > 0 && (
+                    <Chip
+                        label={`No account ${countWith(NoAccountFilter)}`}
+                        variant="outlined"
+                        clickable
+                        onClick={() => toggleListFilter(NoAccountFilter)}
+                        sx={styles.filterChip(listFilters.includes(NoAccountFilter))}
+                    />
+                )}
+            </Box>
+
+            <Typography sx={styles.countLine}>Showing {filteredPlayers.length} of {rolePlayers.length}</Typography>
+            {filteredPlayers.map((player) => (
+                <Box
+                    key={player.id}
+                    component="button"
+                    sx={styles.playerRow(selectedPlayer?.id === player.id)}
+                    onClick={() => selectPlayer(player)}
+                >
+                    <Box sx={styles.rowName}>
+                        <Typography component="span">{playerName(player)} </Typography>
+                        <Typography component="span" sx={player.username === null ? styles.noAccountText : styles.secondaryText}>
+                            {player.username === null ? `No account found for ${player.id}` : player.id}
+                        </Typography>
+                    </Box>
+                    <Box sx={styles.roleChips}>
+                        {player.roles.map((role) => (
+                            <Chip key={role} label={RoleDetails[role].label} variant="outlined" size="small" sx={styles.roleChip(RoleDetails[role].color)} />
+                        ))}
+                    </Box>
+                </Box>
+            ))}
         </Box>
     );
 };
