@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Checkbox, Chip, CircularProgress, Divider, FormControlLabel, Typography } from '@mui/material';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Box, Checkbox, Chip, Divider, FormControlLabel, Typography } from '@mui/material';
 import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { ServerApiService } from '@/app/_services/ServerApiService';
@@ -62,7 +62,7 @@ const RolesTab: React.FC = () => {
     const [isSearching, setIsSearching] = useState(false);
 
     const [selectedPlayer, setSelectedPlayer] = useState<Omit<IRolePlayer, 'roles'> | null>(null);
-    const [savingRole, setSavingRole] = useState<ServerRole | null>(null);
+    const latestChange = useRef(0);
 
     const [listFilterText, setListFilterText] = useState('');
     const [listFilters, setListFilters] = useState<RoleListFilter[]>([]);
@@ -132,16 +132,29 @@ const RolesTab: React.FC = () => {
             return;
         }
 
-        setSavingRole(role);
+        const player = selectedPlayer;
+        const change = ++latestChange.current;
         setErrorMessage(null);
+
+        // show the change straight away; the server's reply replaces it
+        setRoles((current) => {
+            if (!current) {
+                return current;
+            }
+            const holders = current.roles[role].filter((holder) => holder.id !== player.id);
+            const updated = granted ? [...holders, { id: player.id, username: player.username, note: player.note }] : holders;
+            return { ...current, roles: { ...current.roles, [role]: updated } };
+        });
+
         try {
-            setRoles(await ServerApiService.setServerRoleAsync(selectedPlayer.id, role, granted));
+            const response = await ServerApiService.setServerRoleAsync(player.id, role, granted);
+            // an earlier reply arriving after a later change would undo that change on screen
+            if (change === latestChange.current) {
+                setRoles(response);
+            }
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : 'Failed to change the role');
-            // the server refuses a change made at the same time as another, so show it the current roles
             void loadRoles();
-        } finally {
-            setSavingRole(null);
         }
     };
 
@@ -152,6 +165,10 @@ const RolesTab: React.FC = () => {
     const countWith = (filter: RoleListFilter) => rolePlayers.filter((player) =>
         (filter === NoAccountFilter ? player.username === null : player.roles.includes(filter))
     ).length;
+
+    const chipLabel = (label: string, count: number) => (
+        <>{label}<Box component="span" sx={styles.chipCount}>{count}</Box></>
+    );
 
     // ======================== STYLES ========================
     const styles = {
@@ -219,16 +236,9 @@ const RolesTab: React.FC = () => {
             color: 'white',
             '& .MuiFormControlLabel-label': { fontWeight: 600 },
         },
-        savingOption: {
-            borderColor: '#2F7DB6',
-        },
         checkbox: {
             color: '#B0B0B0',
             '&.Mui-checked': { color: '#2F7DB6' },
-        },
-        spinner: {
-            color: '#7CC2F0',
-            m: '9px',
         },
         filterRow: {
             display: 'flex',
@@ -243,6 +253,9 @@ const RolesTab: React.FC = () => {
             backgroundColor: active ? 'rgba(47, 125, 182, 0.35)' : 'transparent',
             '& .MuiChip-icon': { color },
         }),
+        chipCount: {
+            ml: '8px',
+        },
         colorDot: (color: string) => ({
             width: 8,
             height: 8,
@@ -359,18 +372,15 @@ const RolesTab: React.FC = () => {
                         {editableRoles.map((role) => (
                             <FormControlLabel
                                 key={role}
-                                sx={savingRole === role ? { ...styles.roleOption, ...styles.savingOption } : styles.roleOption}
+                                sx={styles.roleOption}
                                 label={RoleDetails[role].label}
-                                control={savingRole === role
-                                    ? <CircularProgress size={22} sx={styles.spinner} aria-label={`Saving ${RoleDetails[role].label}`} />
-                                    : (
-                                        <Checkbox
-                                            checked={selectedRoles.includes(role)}
-                                            disabled={savingRole !== null}
-                                            onChange={(event) => void changeRole(role, event.target.checked)}
-                                            sx={styles.checkbox}
-                                        />
-                                    )}
+                                control={
+                                    <Checkbox
+                                        checked={selectedRoles.includes(role)}
+                                        onChange={(event) => void changeRole(role, event.target.checked)}
+                                        sx={styles.checkbox}
+                                    />
+                                }
                             />
                         ))}
                     </Box>
@@ -389,7 +399,7 @@ const RolesTab: React.FC = () => {
                     sx={{ flex: '1 1 220px', width: 'auto' }}
                 />
                 <Chip
-                    label={`All ${rolePlayers.length}`}
+                    label={chipLabel('All', rolePlayers.length)}
                     variant="outlined"
                     clickable
                     onClick={() => setListFilters([])}
@@ -398,7 +408,7 @@ const RolesTab: React.FC = () => {
                 {roleOrder.map((role) => (
                     <Chip
                         key={role}
-                        label={`${RoleDetails[role].label} ${countWith(role)}`}
+                        label={chipLabel(RoleDetails[role].label, countWith(role))}
                         icon={<Box sx={styles.colorDot(RoleDetails[role].color)} />}
                         variant="outlined"
                         clickable
@@ -408,7 +418,7 @@ const RolesTab: React.FC = () => {
                 ))}
                 {countWith(NoAccountFilter) > 0 && (
                     <Chip
-                        label={`No account ${countWith(NoAccountFilter)}`}
+                        label={chipLabel('No account', countWith(NoAccountFilter))}
                         variant="outlined"
                         clickable
                         onClick={() => toggleListFilter(NoAccountFilter)}
