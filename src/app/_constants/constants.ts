@@ -36,6 +36,14 @@ export const PlayerTicketingChannelUrl = 'https://discord.com/channels/122005775
 /** Discord's help article on verifying the email address of a Discord account. */
 export const DiscordVerifyEmailHelpUrl = 'https://support.discord.com/hc/en-us/articles/213219267-Resending-Verification-Email';
 
+/** Declared in the order the mod page lists roles. */
+export enum ServerRole {
+    Admin = 'admin',
+    Developer = 'developer',
+    Moderator = 'moderator',
+    Contributor = 'contributor',
+}
+
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
     BestOfThree = 'bestOfThree',

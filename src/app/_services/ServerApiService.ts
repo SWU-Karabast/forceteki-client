@@ -1,9 +1,10 @@
 import {
     IFindUserResponse, IModActionResponse,
-    ICosmeticEntity, IServerSettings,
+    ICosmeticEntity, IServerSettings, IServerRolesResponse,
     IPlayerReportDetailResponse, IPlayerReportListQuery, IPlayerReportListResponse, IPlayerReportUpdateResponse,
     PlayerReportStatusUpdate
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import { ServerRole } from '../_constants/constants';
 
 
 /** An error answer from the game node: its message, and the HTTP status it came with. */
@@ -284,6 +285,25 @@ export class ServerApiService {
             {
                 method: 'POST',
                 body: JSON.stringify(updates),
+            }
+        );
+    }
+
+    // Server role API methods (admin only)
+    public static async getServerRolesAsync(): Promise<IServerRolesResponse> {
+        return await this.fetchWithErrorHandling<IServerRolesResponse>(
+            `${this.baseUrl}/api/mod/server-roles`,
+            { method: 'GET' }
+        );
+    }
+
+    /** Grants a role to a user, or takes it away; answers with the roles as they now stand. */
+    public static async setServerRoleAsync(userId: string, role: ServerRole, granted: boolean): Promise<IServerRolesResponse> {
+        return await this.fetchWithErrorHandling<IServerRolesResponse>(
+            `${this.baseUrl}/api/mod/server-roles`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ userId, role, granted }),
             }
         );
     }
