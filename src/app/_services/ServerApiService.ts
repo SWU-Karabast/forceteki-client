@@ -1,10 +1,11 @@
 import {
     IFindUserResponse, IModActionResponse,
     ICosmeticEntity, IServerSettings, IServerRolesResponse,
+    FeatureFlagUpdate, IFeatureFlagState,
     IPlayerReportDetailResponse, IPlayerReportListQuery, IPlayerReportListResponse, IPlayerReportUpdateResponse,
     PlayerReportStatusUpdate
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
-import { ServerRole } from '../_constants/constants';
+import { FeatureFlag, ServerRole } from '../_constants/constants';
 
 
 /** An error answer from the game node: its message, and the HTTP status it came with. */
@@ -306,5 +307,26 @@ export class ServerApiService {
                 body: JSON.stringify({ userId, role, granted }),
             }
         );
+    }
+
+    // Feature flag API methods (admin only)
+    public static async getFeatureFlagsAsync(): Promise<IFeatureFlagState[]> {
+        const response = await this.fetchWithErrorHandling<{ success: boolean; flags: IFeatureFlagState[] }>(
+            `${this.baseUrl}/api/mod/feature-flags`,
+            { method: 'GET' }
+        );
+        return response.flags;
+    }
+
+    /** Changes who a flag is on for; answers with the flag as it now stands. */
+    public static async updateFeatureFlagAsync(flag: FeatureFlag, updates: FeatureFlagUpdate): Promise<IFeatureFlagState> {
+        const response = await this.fetchWithErrorHandling<{ success: boolean; flag: IFeatureFlagState }>(
+            `${this.baseUrl}/api/mod/feature-flags/${encodeURIComponent(flag)}`,
+            {
+                method: 'POST',
+                body: JSON.stringify(updates),
+            }
+        );
+        return response.flag;
     }
 }

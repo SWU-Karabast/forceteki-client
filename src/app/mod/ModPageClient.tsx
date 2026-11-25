@@ -7,6 +7,7 @@ import UserManagementSection from './subpages/UserManagementSection';
 import { useOpenReportCount } from '@/app/_hooks/useOpenReportCount';
 import ServerControlsTab from './subpages/ServerControlsTab';
 import RolesTab from './subpages/RolesTab';
+import FeatureFlagsTab from './subpages/FeatureFlagsTab';
 import ModPreferencesTab from './subpages/ModPreferencesTab';
 import { useRouter } from 'next/navigation';
 
@@ -16,6 +17,7 @@ enum ModToolsTab {
     ModPreferences = 2,
     ServerControls = 3,
     Roles = 4,
+    FeatureFlags = 5,
 }
 
 interface IModPageClientProps {
@@ -145,6 +147,7 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                     <Tab value={ModToolsTab.ModPreferences} label="Mod Preferences" sx={styles.tab} />
                     {isAdmin && <Tab value={ModToolsTab.ServerControls} label="Server Controls" sx={styles.tab} />}
                     {isAdmin && <Tab value={ModToolsTab.Roles} label="Roles" sx={styles.tab} />}
+                    {isAdmin && <Tab value={ModToolsTab.FeatureFlags} label="Feature Flags" sx={styles.tab} />}
                 </Tabs>
 
                 {/* Tab Content */}
@@ -156,6 +159,7 @@ const ModPageClient: React.FC<IModPageClientProps> = ({ isAdmin }) => {
                     {activeTab === ModToolsTab.ModPreferences && <ModPreferencesTab />}
                     {isAdmin && activeTab === ModToolsTab.ServerControls && <ServerControlsTab />}
                     {isAdmin && activeTab === ModToolsTab.Roles && <RolesTab />}
+                    {isAdmin && activeTab === ModToolsTab.FeatureFlags && <FeatureFlagsTab />}
                 </Box>
             </Box>
         </Box>
