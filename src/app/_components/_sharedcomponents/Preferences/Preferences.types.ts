@@ -406,7 +406,6 @@ export interface IServerSettings {
     updatedAt?: string;
 }
 
-/** The server-wide roles the game node grants. An admin passes every role's check. */
 export enum ServerRole {
     Admin = 'admin',
     Developer = 'developer',
@@ -414,22 +413,15 @@ export enum ServerRole {
     Contributor = 'contributor',
 }
 
-/** A user holding a server role, as the admin role editor shows them. */
 export interface IServerRoleHolder {
     id: string;
-
-    /** Null when the user has no profile, for example a stale id in the stored lists. */
     username: string | null;
-
-    /** What the stored lists say about the user, if anything. */
     note: string | null;
 }
 
 export interface IServerRolesResponse {
     success: boolean;
     roles: Record<ServerRole, IServerRoleHolder[]>;
-
-    /** When an admin last changed the roles here, and who. Null while they have only been edited by hand. */
     updatedAt: string | null;
     updatedBy: string | null;
 }
