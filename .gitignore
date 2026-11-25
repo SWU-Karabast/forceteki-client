@@ -9,6 +9,9 @@
 # testing
 /coverage
 
+# screenshots from the Playwright scripts (scripts/playwright/)
+/test-results/
+
 # next.js
 /.next/
 /out/
