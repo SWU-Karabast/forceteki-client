@@ -1,7 +1,7 @@
 import { SxProps } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { ReactNode } from 'react';
-import { ServerRole } from '@/app/_constants/constants';
+import { FeatureFlag, ServerRole } from '@/app/_constants/constants';
 
 export type IButtonType = {
     variant: 'concede' | 'standard' | 'warning',
@@ -419,6 +419,36 @@ export interface IServerRolesResponse {
     updatedAt: string | null;
     updatedBy: string | null;
 }
+
+export interface IFeatureFlagUser {
+    id: string;
+
+    /** Null when the id has no account behind it. */
+    username: string | null;
+}
+
+/** A server feature flag as the admin routes return it: its definition merged with who it is on for. */
+export interface IFeatureFlagState {
+    flag: FeatureFlag;
+    description: string;
+    defaultEnabled: boolean;
+
+    /** Whether the server tells the client this flag's value. False for flags only the server reads. */
+    exposeToClient: boolean;
+
+    /** On for everyone. While false, the flag is on only for `roles` and `userIds`. */
+    enabled: boolean;
+    roles: ServerRole[];
+    userIds: string[];
+
+    /** The players in `userIds` with their usernames, once the server sends them. */
+    users?: IFeatureFlagUser[];
+    updatedBy?: string;
+    updatedAt?: string;
+}
+
+/** Changes to one flag. Fields left out keep their value, and the lists are replaced whole. */
+export type FeatureFlagUpdate = Partial<Pick<IFeatureFlagState, 'enabled' | 'roles' | 'userIds'>>;
 
 export enum DurationUnit {
     Days = 'Days',

@@ -44,6 +44,11 @@ export enum ServerRole {
     Contributor = 'contributor',
 }
 
+/** The server's feature flags. Admins assign them from the mod page; `user.featureFlags` has the ones sent to the client. */
+export enum FeatureFlag {
+    FauxSunsAccess = 'fauxSunsAccess',
+}
+
 export enum GamesToWinMode {
     BestOfOne = 'bestOfOne',
     BestOfThree = 'bestOfThree',
