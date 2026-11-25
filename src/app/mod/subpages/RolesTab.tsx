@@ -1,22 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Box, Checkbox, Chip, Divider, FormControlLabel, Typography } from '@mui/material';
-import PreferenceButton from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PreferenceButton';
 import StyledTextField from '@/app/_components/_sharedcomponents/_styledcomponents/StyledTextField';
 import { ServerApiService } from '@/app/_services/ServerApiService';
-import {
-    IPlayerSearchResult,
-    IServerRolesResponse,
-} from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { IServerRolesResponse } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { ServerRole } from '@/app/_constants/constants';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDateTime } from '@/app/_utils/dateFormatUtils';
-
-const ServerRoles: Record<ServerRole, { label: string; color: string }> = {
-    [ServerRole.Admin]: { label: 'Admin', color: '#E8796D' },
-    [ServerRole.Developer]: { label: 'Developer', color: '#B39CF5' },
-    [ServerRole.Moderator]: { label: 'Moderator', color: '#5FB0E6' },
-    [ServerRole.Contributor]: { label: 'Contributor', color: '#DCB84F' },
-};
+import PlayerSearch from './PlayerSearch';
+import { ServerRoles } from './serverRoles';
 
 // admins are changed only by hand in the database, so the server refuses changes to them
 const editableRoles = Object.values(ServerRole).filter((role) => role !== ServerRole.Admin);
@@ -55,10 +46,6 @@ const RolesTab: React.FC = () => {
     const [roles, setRoles] = useState<IServerRolesResponse | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<IPlayerSearchResult[] | null>(null);
-    const [isSearching, setIsSearching] = useState(false);
-
     const [selectedPlayer, setSelectedPlayer] = useState<Omit<IRolePlayer, 'roles'> | null>(null);
     const latestChange = useRef(0);
 
@@ -96,32 +83,8 @@ const RolesTab: React.FC = () => {
         ? rolePlayers.find((player) => player.id === selectedPlayer.id)?.roles ?? []
         : [];
 
-    const handleSearch = async () => {
-        const query = searchQuery.trim();
-        if (!query) {
-            return;
-        }
-
-        setIsSearching(true);
-        setErrorMessage(null);
-        setSearchResults(null);
-        try {
-            const { players } = await ServerApiService.findUserAsync(query);
-            if (players.length === 1) {
-                selectPlayer({ id: players[0].id, username: players[0].username, note: null });
-            } else {
-                setSearchResults(players);
-            }
-        } catch (error) {
-            setErrorMessage(error instanceof Error ? error.message : 'Failed to find the player');
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
     const selectPlayer = (player: Omit<IRolePlayer, 'roles'>) => {
         setSelectedPlayer({ id: player.id, username: player.username, note: player.note });
-        setSearchResults(null);
         setErrorMessage(null);
     };
 
@@ -173,10 +136,6 @@ const RolesTab: React.FC = () => {
         container: {
             maxWidth: '880px',
         },
-        hint: {
-            color: '#9A9A9A',
-            fontSize: '0.9rem',
-        },
         auditLine: {
             color: '#9A9A9A',
             fontSize: '0.85rem',
@@ -187,24 +146,6 @@ const RolesTab: React.FC = () => {
             alignItems: 'baseline',
             justifyContent: 'space-between',
             gap: '0.5rem',
-        },
-        searchRow: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            mb: '1rem',
-        },
-        searchResult: {
-            all: 'unset',
-            boxSizing: 'border-box',
-            display: 'flex',
-            width: '100%',
-            gap: '0.75rem',
-            alignItems: 'baseline',
-            p: '0.75rem',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            cursor: 'pointer',
-            '&:hover': { backgroundColor: 'rgba(47, 125, 182, 0.18)' },
         },
         playerPanel: {
             border: '1px solid #2F7DB6',
@@ -320,43 +261,7 @@ const RolesTab: React.FC = () => {
 
             {errorMessage && <Alert severity="error" sx={{ mb: '1rem' }}>{errorMessage}</Alert>}
 
-            <Box sx={styles.searchRow}>
-                <StyledTextField
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    onKeyDown={(event: React.KeyboardEvent) => {
-                        if (event.key === 'Enter') {
-                            void handleSearch();
-                        }
-                    }}
-                    placeholder="Find a player by username or user ID"
-                />
-                <PreferenceButton
-                    variant={'standard'}
-                    text={isSearching ? 'Searching...' : 'Search'}
-                    disabled={isSearching || !searchQuery.trim()}
-                    buttonFnc={() => void handleSearch()}
-                />
-            </Box>
-
-            {searchResults && searchResults.length === 0 && (
-                <Typography sx={{ ...styles.hint, mb: '1rem' }}>No player found.</Typography>
-            )}
-            {searchResults && searchResults.length > 0 && (
-                <Box sx={{ mb: '1rem' }}>
-                    {searchResults.map((player) => (
-                        <Box
-                            key={player.id}
-                            component="button"
-                            sx={styles.searchResult}
-                            onClick={() => selectPlayer({ id: player.id, username: player.username, note: null })}
-                        >
-                            <Typography>{player.username}</Typography>
-                            <Typography sx={styles.secondaryText}>{player.id}</Typography>
-                        </Box>
-                    ))}
-                </Box>
-            )}
+            <PlayerSearch onSelect={(player) => selectPlayer({ id: player.id, username: player.username, note: null })} />
 
             {selectedPlayer && roles && (
                 <Box sx={styles.playerPanel}>
