@@ -48,8 +48,8 @@ export const DropdownPopupModal = ({ data }: ButtonProps) => {
     const [isMinimized, setIsMinimized] = useState(false);
     const [selectedOption, setSelectedOption] = useState('');
 
-    const handleChange = (event: React.SyntheticEvent) => {
-        setSelectedOption((event.target as HTMLElement).innerHTML);
+    const handleChange = (_event: React.SyntheticEvent, option: string | null) => {
+        setSelectedOption(option ?? '');
     };
     
     const handleDone = () => {
