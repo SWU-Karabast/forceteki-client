@@ -10,7 +10,7 @@ import { ServerRole } from '@/app/_constants/constants';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDateTime } from '@/app/_utils/dateFormatUtils';
 import PlayerSearch from './PlayerSearch';
-import { ServerRoles } from './serverRoles';
+import { ServerRoles } from './RolesTab';
 
 // admins are changed only by hand in the database, so they are not offered as an audience here
 const assignableRoles = Object.values(ServerRole).filter((role) => role !== ServerRole.Admin);
