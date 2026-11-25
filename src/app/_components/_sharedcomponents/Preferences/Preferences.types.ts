@@ -1,6 +1,7 @@
 import { SxProps } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { ReactNode } from 'react';
+import { ServerRole } from '@/app/_constants/constants';
 
 export type IButtonType = {
     variant: 'concede' | 'standard' | 'warning',
@@ -404,13 +405,6 @@ export interface IServerSettings {
     maintenanceMessage?: string;
     updatedBy?: string;
     updatedAt?: string;
-}
-
-export enum ServerRole {
-    Admin = 'admin',
-    Developer = 'developer',
-    Moderator = 'moderator',
-    Contributor = 'contributor',
 }
 
 export interface IServerRoleHolder {

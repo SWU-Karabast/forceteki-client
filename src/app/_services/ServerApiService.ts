@@ -1,9 +1,10 @@
 import {
     IFindUserResponse, IModActionResponse,
-    ICosmeticEntity, IServerSettings, IServerRolesResponse, ServerRole,
+    ICosmeticEntity, IServerSettings, IServerRolesResponse,
     IPlayerReportDetailResponse, IPlayerReportListQuery, IPlayerReportListResponse, IPlayerReportUpdateResponse,
     PlayerReportStatusUpdate
 } from '../_components/_sharedcomponents/Preferences/Preferences.types';
+import { ServerRole } from '../_constants/constants';
 
 
 /** An error answer from the game node: its message, and the HTTP status it came with. */

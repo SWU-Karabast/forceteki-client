@@ -6,8 +6,8 @@ import { ServerApiService } from '@/app/_services/ServerApiService';
 import {
     IPlayerSearchResult,
     IServerRolesResponse,
-    ServerRole,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { ServerRole } from '@/app/_constants/constants';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDateTime } from '@/app/_utils/dateFormatUtils';
 
@@ -18,10 +18,8 @@ const RoleDetails: Record<ServerRole, { label: string; color: string }> = {
     [ServerRole.Contributor]: { label: 'Contributor', color: '#DCB84F' },
 };
 
-const roleOrder = [ServerRole.Admin, ServerRole.Developer, ServerRole.Moderator, ServerRole.Contributor];
-
 // admins are changed only by hand in the database, so the server refuses changes to them
-const editableRoles = roleOrder.filter((role) => role !== ServerRole.Admin);
+const editableRoles = Object.values(ServerRole).filter((role) => role !== ServerRole.Admin);
 
 const NoAccountFilter = 'noAccount';
 type RoleListFilter = ServerRole | typeof NoAccountFilter;
@@ -40,7 +38,7 @@ const playerName = (player: Pick<IRolePlayer, 'id' | 'username' | 'note'>) => pl
 /** Everyone holding at least one role, with all their roles, in alphabetical order. */
 const buildRolePlayers = (roles: IServerRolesResponse): IRolePlayer[] => {
     const players = new Map<string, IRolePlayer>();
-    for (const role of roleOrder) {
+    for (const role of Object.values(ServerRole)) {
         for (const holder of roles.roles[role]) {
             const player = players.get(holder.id) ?? { id: holder.id, username: holder.username, note: holder.note, roles: [] };
             player.roles.push(role);
@@ -405,7 +403,7 @@ const RolesTab: React.FC = () => {
                     onClick={() => setListFilters([])}
                     sx={styles.filterChip(listFilters.length === 0)}
                 />
-                {roleOrder.map((role) => (
+                {Object.values(ServerRole).map((role) => (
                     <Chip
                         key={role}
                         label={chipLabel(RoleDetails[role].label, countWith(role))}
