@@ -36,7 +36,7 @@ export const MUTE_DURATION_PRESETS_DAYS = [7, 14, 28];
  */
 export const MOD_ACTION_NOTE_TEMPLATES: Partial<Record<ModActionType, string[]>> = {
     [ModActionType.Warning]: ['Insulting the opponent in chat.', 'Spamming the chat.'],
-    [ModActionType.Mute]: ['Insulting the opponent in chat.', 'Spamming the chat.'],
+    [ModActionType.Mute]: ['Insulting the opponent in chat.', 'Spamming the chat.', 'Standard Mute.', 'Standard Mute with Bigot Tax.'],
     [ModActionType.ReportingDisabled]: ['Repeated false reports.'],
     [ModActionType.UsernameChangesBlocked]: ['Repeatedly choosing offensive usernames.'],
 };

@@ -1,8 +1,17 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import { ModActionType } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
+import { ModActionType, ModerationStanding } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { getMuteDisplayText } from '@/app/_utils/ModerationUtils';
-import { RECENT_FALSE_REPORT_DAYS } from '@/app/_utils/playerReportUtils';
+import {
+    daysSince,
+    formatAccountAge,
+    formatTimeAgoPhrase,
+    MODERATION_STANDING_STYLES,
+    mostSevereStanding,
+    NEW_ACCOUNT_DAYS,
+    RECENT_FALSE_REPORT_DAYS,
+} from '@/app/_utils/playerReportUtils';
+import PlayerProfileTooltip from './PlayerProfileTooltip';
 import { IReportPlayerPanelProps } from './reportTypes';
 
 /**
@@ -30,6 +39,23 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
         muteText = 'Mute pending (starts at next login)';
     } else if (context.isMuted) {
         muteText = 'Muted';
+    }
+
+    const standingStyle = MODERATION_STANDING_STYLES[context.standing];
+    const accountAgeDays = daysSince(context.createdAt);
+    const isNewAccount = accountAgeDays !== null && accountAgeDays < NEW_ACCOUNT_DAYS;
+
+    // Players without a profile have no name of their own to compare
+    const sameUsername = context.createdAt ? context.sameUsername : undefined;
+    let sameUsernameText: string | null = null;
+    let sameUsernameColor = '#B0B0B0';
+    if (sameUsername === null) {
+        sameUsernameText = 'Same-name check failed';
+    } else if (sameUsername && sameUsername.total > 0) {
+        const worst = mostSevereStanding(sameUsername.accounts.map((account) => account.standing));
+        sameUsernameText = `${sameUsername.total} other account${sameUsername.total === 1 ? '' : 's'} with this name`
+            + (worst === ModerationStanding.Clean ? '' : ` (${MODERATION_STANDING_STYLES[worst].label.toLowerCase()})`);
+        sameUsernameColor = MODERATION_STANDING_STYLES[worst].color;
     }
 
     // ----------------Styles----------------//
@@ -60,10 +86,13 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             gap: '0.5rem',
         },
         name: {
-            color: 'white',
+            color: standingStyle.color,
             fontSize: '1.05rem',
             fontWeight: 600,
             mb: 0,
+            cursor: 'help',
+            textDecoration: 'underline dotted',
+            textUnderlineOffset: '3px',
         },
         profileLink: {
             color: '#64b5f6',
@@ -101,12 +130,15 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             mb: 0,
         },
     };
+    const sameUsernameStyle = { ...styles.stat, color: sameUsernameColor };
 
     return (
         <Box sx={styles.card} onClick={onSelect} role="button" aria-pressed={selected}>
             <Typography sx={styles.roleLabel}>{roleLabel}{selected ? ' · selected' : ''}</Typography>
             <Box sx={styles.nameRow}>
-                <Typography sx={styles.name}>{context.username}</Typography>
+                <PlayerProfileTooltip context={context}>
+                    <Typography sx={styles.name} aria-label={`${context.username}: ${standingStyle.label}`}>{context.username}</Typography>
+                </PlayerProfileTooltip>
                 {/* Players without a profile cannot be found in Find User */}
                 {context.createdAt && (
                     <Typography
@@ -123,6 +155,13 @@ const ReportPlayerPanel: React.FC<IReportPlayerPanelProps> = ({ roleLabel, conte
             {context.username !== usernameAtReport && (
                 <Typography sx={styles.renamedHint}>was {usernameAtReport} at report time</Typography>
             )}
+            {context.createdAt && (
+                <Typography sx={isNewAccount ? styles.statWarning : styles.stat}>
+                    Account {formatAccountAge(context.createdAt)} old{isNewAccount ? ' (new)' : ''}
+                    {context.lastLogin ? ` · last login ${formatTimeAgoPhrase(context.lastLogin)}` : ''}
+                </Typography>
+            )}
+            {sameUsernameText && <Typography sx={sameUsernameStyle}>{sameUsernameText}</Typography>}
             <Typography sx={styles.stat}>Reports against: {context.reportsAgainst.length}</Typography>
             <Typography sx={styles.stat}>Reports filed: {context.reportsFiled.length}</Typography>
             {!!recentFalseReportCount && (

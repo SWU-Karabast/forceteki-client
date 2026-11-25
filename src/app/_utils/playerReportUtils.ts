@@ -1,7 +1,10 @@
 import { REPORT_TYPES } from '@/app/_components/_sharedcomponents/Preferences/_subComponents/PlayerReportDialog';
 import {
     IModActionResponse,
+    IPlayerReportPlayerContext,
+    IPlayerSearchResult,
     ModActionType,
+    ModerationStanding,
     PlayerReportOutcome,
 } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 
@@ -111,6 +114,73 @@ export const formatTimeAgoPhrase = (dateStr: string, now: number = Date.now()): 
     const ago = formatTimeAgo(dateStr, now);
     return ago && ago !== JUST_NOW ? `${ago} ago` : ago;
 };
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const DAYS_PER_MONTH = 30;
+const DAYS_PER_YEAR = 365;
+
+/** Accounts younger than this are flagged on report tickets; moderators judge them more strictly */
+export const NEW_ACCOUNT_DAYS = 7;
+
+/** Whole days since the date, or null for a missing or invalid date */
+export const daysSince = (dateStr: string | undefined, now: number = Date.now()): number | null => {
+    if (!dateStr) {
+        return null;
+    }
+    const diffMs = now - new Date(dateStr).getTime();
+    return Number.isNaN(diffMs) ? null : Math.max(0, Math.floor(diffMs / MS_PER_DAY));
+};
+
+/** Age of an account in words: "today", "5 days", "3 months", "2 years" */
+export const formatAccountAge = (createdAt: string | undefined, now: number = Date.now()): string => {
+    const days = daysSince(createdAt, now);
+    if (days === null) {
+        return '';
+    }
+    if (days === 0) {
+        return 'today';
+    }
+    const plural = (count: number, unit: string) => `${count} ${unit}${count === 1 ? '' : 's'}`;
+    if (days < 2 * DAYS_PER_MONTH) {
+        return plural(days, 'day');
+    }
+    if (days < 2 * DAYS_PER_YEAR) {
+        return plural(Math.floor(days / DAYS_PER_MONTH), 'month');
+    }
+    return plural(Math.floor(days / DAYS_PER_YEAR), 'year');
+};
+
+export interface IModerationStandingStyle {
+    color: string;
+    label: string;
+}
+
+/** Red for an active mute or forced rename, yellow for a past one, green for a clean record */
+export const MODERATION_STANDING_STYLES: Record<ModerationStanding, IModerationStandingStyle> = {
+    [ModerationStanding.Active]: { color: '#ef5350', label: 'Active mute or forced rename' },
+    [ModerationStanding.History]: { color: '#ffd54f', label: 'Past mute or forced rename' },
+    [ModerationStanding.Clean]: { color: '#81c784', label: 'No mutes or forced renames' },
+};
+
+/** Of several standings, the one to call out: active over history over clean */
+export const mostSevereStanding = (standings: ModerationStanding[]): ModerationStanding => {
+    if (standings.includes(ModerationStanding.Active)) {
+        return ModerationStanding.Active;
+    }
+    return standings.includes(ModerationStanding.History) ? ModerationStanding.History : ModerationStanding.Clean;
+};
+
+/** A report participant in the shape the Find User helpers (action status, history labels) expect */
+export const playerFromReportContext = (context: IPlayerReportPlayerContext): IPlayerSearchResult => ({
+    id: context.playerId,
+    username: context.username,
+    createdAt: context.createdAt ?? '',
+    lastLogin: context.lastLogin ?? '',
+    isMuted: context.isMuted,
+    activeRename: context.activeRename ?? undefined,
+    activeReportingDisabledId: context.activeReportingDisabledId,
+    activeUsernameChangesBlockedId: context.activeUsernameChangesBlockedId,
+});
 
 /** Time of day for a log line, e.g. "21:05:12" */
 export const formatLogTime = (dateStr: string): string => {
