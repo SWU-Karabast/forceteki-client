@@ -11,7 +11,7 @@ import { ServerRole } from '@/app/_constants/constants';
 import { useDateFormat } from '@/app/_hooks/useDateFormat';
 import { formatDateTime } from '@/app/_utils/dateFormatUtils';
 
-const RoleDetails: Record<ServerRole, { label: string; color: string }> = {
+const ServerRoles: Record<ServerRole, { label: string; color: string }> = {
     [ServerRole.Admin]: { label: 'Admin', color: '#E8796D' },
     [ServerRole.Developer]: { label: 'Developer', color: '#B39CF5' },
     [ServerRole.Moderator]: { label: 'Moderator', color: '#5FB0E6' },
@@ -371,7 +371,7 @@ const RolesTab: React.FC = () => {
                             <FormControlLabel
                                 key={role}
                                 sx={styles.roleOption}
-                                label={RoleDetails[role].label}
+                                label={ServerRoles[role].label}
                                 control={
                                     <Checkbox
                                         checked={selectedRoles.includes(role)}
@@ -406,8 +406,8 @@ const RolesTab: React.FC = () => {
                 {Object.values(ServerRole).map((role) => (
                     <Chip
                         key={role}
-                        label={chipLabel(RoleDetails[role].label, countWith(role))}
-                        icon={<Box sx={styles.colorDot(RoleDetails[role].color)} />}
+                        label={chipLabel(ServerRoles[role].label, countWith(role))}
+                        icon={<Box sx={styles.colorDot(ServerRoles[role].color)} />}
                         variant="outlined"
                         clickable
                         onClick={() => toggleListFilter(role)}
@@ -441,7 +441,7 @@ const RolesTab: React.FC = () => {
                     </Box>
                     <Box sx={styles.roleChips}>
                         {player.roles.map((role) => (
-                            <Chip key={role} label={RoleDetails[role].label} variant="outlined" size="small" sx={styles.roleChip(RoleDetails[role].color)} />
+                            <Chip key={role} label={ServerRoles[role].label} variant="outlined" size="small" sx={styles.roleChip(ServerRoles[role].color)} />
                         ))}
                     </Box>
                 </Box>
