@@ -3,10 +3,45 @@ import { Box } from '@mui/material';
 import { debugBorder, isBreakpointOverlayEnabled } from '@/app/_utils/debug';
 import useScreenOrientation from '@/app/_utils/useScreenOrientation';
 import GameCard from '../../_sharedcomponents/Cards/GameCard';
-import { ICardData, CardStyle } from '../../_sharedcomponents/Cards/CardTypes';
+import { ICardData, CardStyle, IOngoingEffectSummary } from '../../_sharedcomponents/Cards/CardTypes';
 import { IUnitsBoardProps } from '@/app/_components/Gameboard/GameboardTypes';
 import { useGame } from '@/app/_contexts/Game.context';
 import BreakpointOverlay from './BreakpointOverlay';
+import TokenStack from '../../_sharedcomponents/Cards/TokenStack';
+import { cannotBeAttacked, hasSentinel, isBlanked, isStolen } from '../../_sharedcomponents/Cards/cardUtils';
+
+/**
+ * Groups identical token units into stacks; a group sits where its first card was. Everything else
+ * (non-token units, clones, units holding captured cards) is a group of one.
+ *
+ * Tokens share a stack when everything a player can see or act on matches: state, stats, status icons,
+ * selection, upgrades, ongoing effects from other cards (e.g. Scramble Fighters' "can't attack bases"),
+ * and the amount assigned to them in a distribution prompt.
+ */
+const groupUnits = (cards: ICardData[], effects: IOngoingEffectSummary[], assigned: ReadonlyMap<string, number>): ICardData[][] => {
+    const groups = new Map<string, ICardData[]>();
+    for (const card of cards) {
+        let key = card.uuid;
+        if (card.printedType === 'tokenUnit' && !card.clonedCardId && !card.capturedCards?.length) {
+            const subcards = card.subcards ?? [];
+            const ownUuids = new Set([card.uuid, ...subcards.map((s) => s.uuid)]);
+            key = JSON.stringify([
+                card.id, card.exhausted, card.damage, card.power, card.hp,
+                card.selectable, card.selected, card.isAttacker, card.isDefender,
+                hasSentinel(card, CardStyle.InPlay), cannotBeAttacked(card, CardStyle.InPlay),
+                isBlanked(card, CardStyle.InPlay), isStolen(card, CardStyle.InPlay),
+                subcards.map((s) => JSON.stringify([s.id, s.selectable, s.selected])).sort(),
+                effects
+                    .filter((e) => e.targets.includes(card.uuid) && !ownUuids.has(e.sourceCardUuid))
+                    .map((e) => `${e.sourceCardUuid}:${e.source.effectDescription ?? ''}`)
+                    .sort(),
+                assigned.get(card.uuid) ?? 0,
+            ]);
+        }
+        groups.set(key, [...(groups.get(key) ?? []), card]);
+    }
+    return [...groups.values()];
+};
 
 const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     arena
@@ -30,7 +65,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
                 upgradesByParentId[card.parentCardId].push(card);
             }
         });
-        return upgradesByParentId
+        return upgradesByParentId;
     }
 
     /**
@@ -77,7 +112,7 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         }));
     };
 
-    const { gameState, connectedPlayer, getOpponent } = useGame();
+    const { gameState, connectedPlayer, getOpponent, distributionPromptData } = useGame();
 
     const rawPlayerUnits = gameState?.players[connectedPlayer].cardPiles[arena];
     const rawOpponentUnits = gameState?.players[getOpponent(connectedPlayer)].cardPiles[arena];
@@ -97,6 +132,14 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
     // attach capturedCards to the unit cards
     const playerUnits = attachCapturedCards(playerUnitsWithUpgrades, allCapturedCards);
     const opponentUnits = attachCapturedCards(opponentUnitsWithUpgrades, allCapturedCards);
+
+    // During a distribution prompt, tokens stack by the amount assigned to them (0 when none)
+    const assigned = new Map(
+        (distributionPromptData?.valueDistribution ?? []).map((entry) => [entry.uuid, entry.amount] as [string, number])
+    );
+    const ongoingEffects: IOngoingEffectSummary[] = gameState?.ongoingEffects ?? [];
+    const playerGroups = groupUnits(playerUnits, ongoingEffects, assigned);
+    const opponentGroups = groupUnits(opponentUnits, ongoingEffects, assigned);
 
     // Portrait mode grid configuration -- far less here as we are dealing with
     // one set of breakpoints (we don't have landscape ones.. yet)
@@ -176,27 +219,28 @@ const UnitsBoard: React.FC<IUnitsBoardProps> = ({
         },
     };
 
+    const renderGroup = (group: ICardData[]) => (
+        <Box key={group[0].uuid} sx={styles.unitStyle}>
+            {group.length > 1 ? (
+                <TokenStack cards={group} />
+            ) : (
+                <GameCard card={group[0]} subcards={group[0].subcards} capturedCards={group[0].capturedCards} cardStyle={CardStyle.InPlay}/>
+            )}
+        </Box>
+    );
 
     return (
         <Box sx={styles.mainBoxStyle}>
             <Box sx={styles.containerStyle}>
                 {/* Opponent's Ground Units */}
                 <Box sx={styles.opponentGridStyle}>
-                    {opponentUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={styles.unitStyle}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
-                        </Box>
-                    ))}
+                    {opponentGroups.map(renderGroup)}
                 </Box>
                 {/* Enforce some minimum spacing between the two player's grids */}
                 <Box sx={{ flex: '1 1 10px', minHeight: '10px', width: '100%' }} />
                 {/* Player's Ground Units */}
                 <Box sx={styles.playerGridStyle}>
-                    {playerUnits.map((card: ICardData) => (
-                        <Box key={card.uuid} sx={styles.unitStyle}>
-                            <GameCard key={card.uuid} card={card} subcards={card.subcards} capturedCards={card.capturedCards} cardStyle={CardStyle.InPlay}/>
-                        </Box>
-                    ))}
+                    {playerGroups.map(renderGroup)}
                 </Box>
             </Box>
             {/* Show BreakpointOverlay when enabled in environment variables */}
