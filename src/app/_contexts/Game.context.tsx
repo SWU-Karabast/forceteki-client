@@ -22,6 +22,7 @@ import { useDistributionPrompt, IDistributionPromptData } from '@/app/_hooks/use
 import { useSoundHandler } from '@/app/_hooks/useSoundHandler';
 import { IStatsNotification } from '@/app/_components/_sharedcomponents/Preferences/Preferences.types';
 import { hasSelectedCards } from '../_utils/gameStateHelpers';
+import { getInitiativePlayerChoice } from '@/app/_components/Gameboard/_subcomponents/InitiativePlayerChoice';
 import { useGameMessages, IMessageDelta, IMessageRetransmit } from '@/app/_hooks/useGameMessages';
 import { IChatEntry } from '@/app/_components/_sharedcomponents/Chat/ChatTypes';
 import { useErrorScreen } from '@/app/_contexts/ErrorScreen.context';
@@ -202,12 +203,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 });
             }
             else if (buttons.length > 0 && menuTitle && promptUuid && !selectCardMode) {
-                const promptPopupType = promptType === 'triggerWindow' ? 'actionTrigger' : 'default';
-                return openPopup(promptPopupType, {
+                if (promptType === 'triggerWindow') {
+                    return openPopup('actionTrigger', {
+                        uuid: promptUuid,
+                        title: menuTitle,
+                        buttons,
+                        source: PopupSource.PromptState
+                    });
+                }
+                return openPopup('default', {
                     uuid: promptUuid,
                     title: menuTitle,
                     buttons,
-                    source: PopupSource.PromptState
+                    source: PopupSource.PromptState,
+                    // in the mulligan, the player without the initiative is shown what the player with it has chosen
+                    initiativePlayerChoice: getInitiativePlayerChoice(promptState),
                 });
             }
             else if (promptType === 'number' && selectNumber && menuTitle && promptUuid && !selectCardMode) {

@@ -8,6 +8,7 @@ import { useGame } from '@/app/_contexts/Game.context';
 import { PlayerTimeRemainingStatus, TimerVisibility } from '@/app/_contexts/UserTypes';
 import { useTimerVisibilityContext } from '@/app/_contexts/TimerVisibility.context';
 import TimerWarningIcon from './TimerWarningIcon';
+import { useMainTimeGrantAnimation } from '@/app/_components/_sharedcomponents/Timer/useMainTimeGrantAnimation';
 
 const TIMER_STEP = 100;
 
@@ -88,6 +89,11 @@ const GameTimer: React.FC = ({ ...props }) => {
         return () => clearInterval(interval);
     }, [opponentIsActive, opponentIsTurnTime, playerIsActive]);
 
+    // the main time each player was just given back at the end of a round, while it is being shown: beside each player's
+    // main time, and for the player's own also on the ring (which `Timer` leaves out when the ring is hidden)
+    const playerGrant = useMainTimeGrantAnimation(playerState);
+    const opponentGrant = useMainTimeGrantAnimation(opponentState);
+
     const activeTurn = playerIsActive ? 'player' : opponentIsActive ? 'opponent' : undefined;
     // Show opponent's main time in the circle when they are active on main time and player is not active
     const showOpponentMainTime = !playerIsActive && opponentIsActive && !isTurnTime;
@@ -121,6 +127,7 @@ const GameTimer: React.FC = ({ ...props }) => {
     return (
         <Timer
             activeTurn={activeTurn}
+            grantOverlay={playerGrant}
             hideProgressIndicator={timerVisibility === TimerVisibility.HideTurnTimer}
             isTurnTime={isTurnTime}
             isRunning={isTurnTime ? (playerIsActive || opponentIsActive) : (playerIsActive || showOpponentMainTime)}
@@ -140,6 +147,8 @@ const GameTimer: React.FC = ({ ...props }) => {
                 opponentIsTurnTime={opponentIsTurnTime}
                 playerTimeRemaining={playerMainTimeRemainingMs}
                 opponentTimeRemaining={opponentMainTimeRemainingMs}
+                playerGrant={playerGrant}
+                opponentGrant={opponentGrant}
             />
         </Timer>
     );
@@ -158,7 +167,7 @@ const TooltipContent = (
                     Game Timer
                 </Typography>
                 <Typography variant="body2">
-                    Once turn time reaches zero, main time will be used. Once a player&apos;s main time reaches zero, that player conceeds the game.
+                    Once turn time reaches zero, main time will be used. At the end of each round, each player gets 10 seconds of main time back, up to 2 minutes. Once a player&apos;s main time reaches zero, that player concedes the game.
                 </Typography>
             </Stack>
 

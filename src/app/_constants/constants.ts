@@ -99,18 +99,18 @@ export interface IFormatModeConfig {
 }
 
 export const LobbyFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Open, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.NextSet, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Limited, cardPools: [CardPool.Current, CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     ...(process.env.NODE_ENV === 'development'
         ? [{ format: SwuGameFormat.FauxSuns, cardPools: [CardPool.Unlimited], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] }]
         : []),
 ];
 
 export const QueueFormatConfigs: IFormatModeConfig[] = [
-    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
-    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current, CardPool.NextSet], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Premier, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
+    { format: SwuGameFormat.Eternal, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne, GamesToWinMode.BestOfThree] },
     { format: SwuGameFormat.Limited, cardPools: [CardPool.Current], gamesToWinModes: [GamesToWinMode.BestOfOne] },
 ];
 
@@ -161,6 +161,26 @@ export enum ZoneName {
     OutsideTheGame = 'outsideTheGame',
     Resource = 'resource',
     SpaceArena = 'spaceArena',
+}
+
+/**
+ * In the regroup phase's resource step, what the opponent who has the initiative has chosen. The server sends it in the
+ * prompt state of the player without the initiative only, as `opponentResourceChoice`.
+ */
+export enum OpponentResourceChoice {
+    NotChosen = 'notChosen',
+    Resourced = 'resourced',
+    Passed = 'passed',
+}
+
+/**
+ * In the setup phase's mulligan, what the opponent who has the initiative has chosen. The server sends it in the prompt
+ * state of the player without the initiative only, as `opponentMulliganChoice`.
+ */
+export enum OpponentMulliganChoice {
+    NotChosen = 'notChosen',
+    Mulligan = 'mulligan',
+    Keep = 'keep',
 }
 
 export enum QuickUndoAvailableState {

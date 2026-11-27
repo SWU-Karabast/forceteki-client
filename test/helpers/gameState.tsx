@@ -15,6 +15,7 @@ import { theme } from '@/app/_theme/theme';
 import { PopupProvider } from '@/app/_contexts/Popup.context';
 import { CardImageLocaleProvider } from '@/app/_contexts/CardImageLocale.context';
 import { OngoingEffectHighlightProvider } from '@/app/_contexts/OngoingEffectHighlight.context';
+import { TimerVisibilityProvider } from '@/app/_contexts/TimerVisibility.context';
 import { GameStateProvider, type IGameContextType } from '@/app/_contexts/Game.context';
 
 export type Participant = 'player1' | 'player2' | 'spectator';
@@ -54,6 +55,12 @@ export const unitsInPlay = (state: any): any[] => Object.values(state.players).f
 export const leadersByPlayer = (state: any): string[][] => Object.values(state.players)
     .map((player: any) => player.leaders.map((leader: any) => leader.uuid));
 
+/**
+ * The state as the server's Lobby sends it: the captures record what the engine's `getState` returns,
+ * and the Lobby adds `spectatorSummary` on top, so no capture has it.
+ */
+export const withSpectatorSummary = (state: any, count: number): any => ({ ...state, spectatorSummary: { count } });
+
 /** Which player's seat a participant's state is read from, as GameProvider decides it. */
 const seatOf = (state: any, participant: Participant) => {
     const playerIds = Object.keys(state.players);
@@ -64,24 +71,27 @@ const seatOf = (state: any, participant: Participant) => {
 /**
  * Renders `ui` as `participant` sees `state`, through the real GameStateProvider. `sent` records
  * every message sent on the `game` socket event, and `receive(nextState)` delivers the next state,
- * as a `gamestate` socket message would.
+ * as a `gamestate` socket message would. `lobbyState` is the last `lobbystate` the participant received.
  */
-export const renderGameState = (ui: ReactElement, state: any, participant: Participant) => {
+export const renderGameState = (ui: ReactElement, state: any, participant: Participant, { lobbyState }: { lobbyState?: any } = {}) => {
     const sent = vi.fn<IGameContextType['sendGameMessage']>();
     const withState = (current: any) => (
         <ThemeProvider theme={theme}>
             <PopupProvider>
                 <CardImageLocaleProvider>
-                    <OngoingEffectHighlightProvider>
-                        <GameStateProvider
-                            gameState={current}
-                            connectedPlayer={seatOf(current, participant)}
-                            isSpectator={participant === 'spectator'}
-                            emitGameMessage={sent}
-                        >
-                            {ui}
-                        </GameStateProvider>
-                    </OngoingEffectHighlightProvider>
+                    <TimerVisibilityProvider>
+                        <OngoingEffectHighlightProvider>
+                            <GameStateProvider
+                                gameState={current}
+                                lobbyState={lobbyState}
+                                connectedPlayer={seatOf(current, participant)}
+                                isSpectator={participant === 'spectator'}
+                                emitGameMessage={sent}
+                            >
+                                {ui}
+                            </GameStateProvider>
+                        </OngoingEffectHighlightProvider>
+                    </TimerVisibilityProvider>
                 </CardImageLocaleProvider>
             </PopupProvider>
         </ThemeProvider>

@@ -20,10 +20,7 @@ export type GameAnnouncement =
  *
  * Only one announcement is shown at a time — overwrite this value when rolling out the next one.
  */
-export const CurrentGameAnnouncement: GameAnnouncement | undefined = {
-    kind: 'custom',
-    message: 'Icons is now available in Next Set Preview!'
-};
+export const CurrentGameAnnouncement: GameAnnouncement | undefined = undefined;
 
 interface IGameAnnouncementBannerProps {
     announcement: GameAnnouncement;
